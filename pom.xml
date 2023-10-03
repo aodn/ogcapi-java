@@ -29,6 +29,8 @@
 	</repositories>
 	<modules>
 		<module>common</module>
+		<module>features</module>
+		<module>maps</module>
 		<module>tile</module>
 	</modules>
 	<dependencyManagement>

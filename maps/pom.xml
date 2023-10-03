@@ -4,15 +4,15 @@
 
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>au.org.aodn.ocgapi</groupId>
-	<artifactId>ogcapi-common-java</artifactId>
+	<artifactId>ogcapi-maps-java</artifactId>
 	<version>${revision}</version>
-	<name>ogcapi-common-java</name>
+	<name>ogcapi-maps-java</name>
 	<parent>
 		<groupId>au.org.aodn.ocgapi</groupId>
 		<artifactId>ogcapi-java</artifactId>
 		<version>${revision}</version>
 	</parent>
-	<description>REST API that implements OGC Common API</description>
+	<description>REST API that implements OGC Maps API</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -46,11 +46,6 @@
 			<groupId>com.github.joschi.jackson</groupId>
 			<artifactId>jackson-datatype-threetenbp</artifactId>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api -->
-		<dependency>
-			<groupId>jakarta.annotation</groupId>
-			<artifactId>jakarta.annotation-api</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
@@ -80,21 +75,23 @@
 				<version>${swagger.codegen.version}</version>
 				<executions>
 					<execution>
-						<id>generate-ogcapi-common</id>
+						<id>generate-ogcapi-tile</id>
 						<phase>generate-sources</phase>
 						<goals>
 							<goal>generate</goal>
 						</goals>
 						<configuration>
 							<language>spring</language>
-							<modelPackage>${project.groupId}.common.model</modelPackage>
-							<apiPackage>${project.groupId}.common.api</apiPackage>
-							<invokerPackage>${project.groupId}.common.invoker</invokerPackage>
-							<inputSpec>${project.basedir}/src/main/resources/schema/common/openapi.yaml</inputSpec>
+							<modelPackage>${project.groupId}.maps.model</modelPackage>
+							<apiPackage>${project.groupId}.maps.api</apiPackage>
+							<invokerPackage>${project.groupId}.maps.invoker</invokerPackage>
+							<inputSpec>${project.basedir}/src/main/resources/schema/maps/ogcapi-maps-1.yaml</inputSpec>
 							<output>${project.build.directory}/generated-sources</output>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
-								<dateLibrary>java11-localdatetime</dateLibrary>
+								<java8>true</java8>
+								<hideGenerationTimestamp>true</hideGenerationTimestamp>
+								<dateLibrary>java8</dateLibrary>
 							</configOptions>
 						</configuration>
 					</execution>
@@ -124,8 +121,8 @@
 									<value>import jakarta</value>
 								</replacement>
 								<replacement>
-									<token>@javax.annotation</token>
-									<value>@jakarta.annotation</value>
+									<token>import au\.org\.aodn\.ocgapi\.maps\.model\.TimeStamp;</token>
+									<value></value>
 								</replacement>
 							</replacements>
 						</configuration>
