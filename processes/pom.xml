@@ -9,9 +9,9 @@
 		<relativePath/>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>ogcapi-tile-java</artifactId>
-	<name>ogcapi-tile-java</name>
-	<description>REST API that implements OGC Tile API</description>
+	<artifactId>ogcapi-processes-java</artifactId>
+	<name>ogcapi-processes-java</name>
+	<description>REST API that implements OGC Processes API</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -81,10 +81,10 @@
 						</goals>
 						<configuration>
 							<language>spring</language>
-							<modelPackage>${project.groupId}.tile.model</modelPackage>
-							<apiPackage>${project.groupId}.tile.api</apiPackage>
-							<invokerPackage>${project.groupId}.tile.invoker</invokerPackage>
-							<inputSpec>${project.basedir}/src/main/resources/schema/tile/ogcapi-tiles-1.yaml</inputSpec>
+							<modelPackage>${project.groupId}.processes.model</modelPackage>
+							<apiPackage>${project.groupId}.processes.api</apiPackage>
+							<invokerPackage>${project.groupId}.processes.invoker</invokerPackage>
+							<inputSpec>${project.basedir}/src/main/resources/schema/processes/openapi.yaml</inputSpec>
 							<output>${project.build.directory}/generated-sources</output>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
@@ -120,8 +120,12 @@
 									<value>import jakarta</value>
 								</replacement>
 								<replacement>
-									<token>import au\.org\.aodn\.ogcapi\.tile\.model\.TimeStamp;</token>
+									<token>import au\.org\.aodn\.ocgapi\.processes\.model\.TimeStamp;</token>
 									<value></value>
+								</replacement>
+								<replacement>
+									<token>implements Schema</token>
+									<value>implements au.org.aodn.ogcapi.processes.model.Schema</value>
 								</replacement>
 							</replacements>
 						</configuration>

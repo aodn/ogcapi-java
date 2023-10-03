@@ -1,0 +1,44 @@
+#$schema: 'http://json-schema.org/draft-04/schema#'
+title: Coverage object
+description: 'Component of OGC Coverage Implementation Schema 1.1. Last updated: 2016-may-18. Copyright (c) 2016 Open Geospatial Consortium, Inc. All Rights Reserved. To obtain additional rights of use, visit http://www.opengeospatial.org/legal/.'
+type: object
+oneOf:
+  - required:
+      - type
+      - domainSet
+      - rangeSet
+      - rangeType
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+          - CoverageByDomainAndRange
+      envelope:
+        $ref: 'schemas/cis/envelope.yaml'
+      domainSet:
+        $ref: 'schemas/cis/domainSet.yaml'
+      rangeSet:
+        $ref: 'schemas/cis/rangeSet.yaml'
+      rangeType:
+        $ref: 'schemas/cis/rangeType.yaml'
+      metadata:
+        $ref: 'schemas/cis/metadata.yaml'
+  - required:
+      - type
+      - partitionSet
+      - rangeType
+    properties:
+      id:
+        type: string
+      type:
+        enum:
+          - CoverageByPartitioning
+      envelope:
+        $ref: 'schemas/cis/envelope.yaml'
+      partitionSet:
+        $ref: 'schemas/cis/partitioningSet.yaml'
+      rangeType:
+        $ref: 'schemas/cis/rangeType.yaml'
+      metadata:
+        $ref: 'schemas/cis/metadata.yaml'

@@ -9,9 +9,9 @@
 		<relativePath/>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>ogcapi-tile-java</artifactId>
-	<name>ogcapi-tile-java</name>
-	<description>REST API that implements OGC Tile API</description>
+	<artifactId>ogcapi-coverages-java</artifactId>
+	<name>ogcapi-coverages-java</name>
+	<description>REST API that implements OGC Coverages API</description>
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -81,10 +81,10 @@
 						</goals>
 						<configuration>
 							<language>spring</language>
-							<modelPackage>${project.groupId}.tile.model</modelPackage>
-							<apiPackage>${project.groupId}.tile.api</apiPackage>
-							<invokerPackage>${project.groupId}.tile.invoker</invokerPackage>
-							<inputSpec>${project.basedir}/src/main/resources/schema/tile/ogcapi-tiles-1.yaml</inputSpec>
+							<modelPackage>${project.groupId}.coverages.model</modelPackage>
+							<apiPackage>${project.groupId}.coverages.api</apiPackage>
+							<invokerPackage>${project.groupId}.coverages.invoker</invokerPackage>
+							<inputSpec>${project.basedir}/src/main/resources/schema/coverages/ogcapi-coverages-1.yaml</inputSpec>
 							<output>${project.build.directory}/generated-sources</output>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
@@ -120,7 +120,7 @@
 									<value>import jakarta</value>
 								</replacement>
 								<replacement>
-									<token>import au\.org\.aodn\.ogcapi\.tile\.model\.TimeStamp;</token>
+									<token>import au\.org\.aodn\.ogcapi\.coverages\.model\.TimeStamp</token>
 									<value></value>
 								</replacement>
 							</replacements>

@@ -8,15 +8,14 @@
 		<version>3.1.4</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>au.org.aodn.ocgapi</groupId>
+	<groupId>au.org.aodn.ogcapi</groupId>
 	<artifactId>ogcapi-java</artifactId>
-	<version>${revision}</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>ogcapi-java</name>
 	<packaging>pom</packaging>
 
 	<description>REST API that implements OGC API</description>
 	<properties>
-		<revision>1.0.0-SNAPSHOT</revision>
 		<java.version>17</java.version>
 		<springdoc.version>1.7.0</springdoc.version>
 		<swagger.codegen.version>3.0.42</swagger.codegen.version>
@@ -29,8 +28,10 @@
 	</repositories>
 	<modules>
 		<module>common</module>
+		<module>coverages</module>
 		<module>features</module>
 		<module>maps</module>
+		<module>processes</module>
 		<module>tile</module>
 	</modules>
 	<dependencyManagement>

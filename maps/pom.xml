@@ -2,16 +2,14 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
-	<groupId>au.org.aodn.ocgapi</groupId>
-	<artifactId>ogcapi-maps-java</artifactId>
-	<version>${revision}</version>
-	<name>ogcapi-maps-java</name>
 	<parent>
-		<groupId>au.org.aodn.ocgapi</groupId>
+		<groupId>au.org.aodn.ogcapi</groupId>
 		<artifactId>ogcapi-java</artifactId>
-		<version>${revision}</version>
-	</parent>
+		<version>1.0.0-SNAPSHOT</version>
+		<relativePath/>
+	</parent>	<modelVersion>4.0.0</modelVersion>
+	<artifactId>ogcapi-maps-java</artifactId>
+	<name>ogcapi-maps-java</name>
 	<description>REST API that implements OGC Maps API</description>
 	<dependencies>
 		<dependency>
@@ -106,7 +104,7 @@
 						<!--
 							Problem with the generated class with name crash with Timestamp in jdk11
 						-->
-						<id>replace-line-in-tile-files</id>
+						<id>replace-line-in-files</id>
 						<phase>generate-sources</phase>
 						<goals>
 							<goal>replace</goal>
@@ -121,7 +119,7 @@
 									<value>import jakarta</value>
 								</replacement>
 								<replacement>
-									<token>import au\.org\.aodn\.ocgapi\.maps\.model\.TimeStamp;</token>
+									<token>import au\.org\.aodn\.ogcapi\.maps\.model\.TimeStamp;</token>
 									<value></value>
 								</replacement>
 							</replacements>
