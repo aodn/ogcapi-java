@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.1.4</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+	<groupId>au.org.aodn.ocgapi</groupId>
+	<artifactId>ogcapi-java</artifactId>
+	<version>${revision}</version>
+	<name>ogcapi-java</name>
+	<packaging>pom</packaging>
+
+	<description>REST API that implements OGC API</description>
+	<properties>
+		<revision>1.0.0-SNAPSHOT</revision>
+		<java.version>17</java.version>
+		<springdoc.version>1.7.0</springdoc.version>
+		<swagger.codegen.version>3.0.42</swagger.codegen.version>
+	</properties>
+	<repositories>
+		<repository>
+			<id>mvnrepository.com</id>
+			<url>https://repo1.maven.org/maven2/</url>
+		</repository>
+	</repositories>
+	<modules>
+		<module>common</module>
+		<module>tile</module>
+	</modules>
+	<dependencyManagement>
+		<dependencies>
+			<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
+			<dependency>
+				<groupId>org.springdoc</groupId>
+				<artifactId>springdoc-openapi-ui</artifactId>
+				<version>${springdoc.version}</version>
+			</dependency>
+			<!--SpringFox dependencies -->
+			<dependency>
+				<groupId>io.springfox</groupId>
+				<artifactId>springfox-swagger2</artifactId>
+				<version>3.0.0</version>
+			</dependency>
+			<dependency>
+				<groupId>io.springfox</groupId>
+				<artifactId>springfox-swagger-ui</artifactId>
+				<version>3.0.0</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
+			<dependency>
+				<groupId>io.swagger.core.v3</groupId>
+				<artifactId>swagger-annotations</artifactId>
+				<version>2.2.9</version>
+			</dependency>
+			<dependency>
+				<groupId>com.github.joschi.jackson</groupId>
+				<artifactId>jackson-datatype-threetenbp</artifactId>
+				<version>2.6.4</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+</project>

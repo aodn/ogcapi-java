@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>au.org.aodn.ocgapi</groupId>
+	<artifactId>ogcapi-common-java</artifactId>
+	<version>${revision}</version>
+	<name>ogcapi-common-java</name>
+	<parent>
+		<groupId>au.org.aodn.ocgapi</groupId>
+		<artifactId>ogcapi-java</artifactId>
+		<version>${revision}</version>
+	</parent>
+	<description>REST API that implements OGC Common API</description>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+		</dependency>
+		<!--SpringFox dependencies -->
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger2</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.springfox</groupId>
+			<artifactId>springfox-swagger-ui</artifactId>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
+		<dependency>
+			<groupId>io.swagger.core.v3</groupId>
+			<artifactId>swagger-annotations</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.joschi.jackson</groupId>
+			<artifactId>jackson-datatype-threetenbp</artifactId>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/jakarta.annotation/jakarta.annotation-api -->
+		<dependency>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!--
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>
+							<groupId>org.projectlombok</groupId>
+							<artifactId>lombok</artifactId>
+						</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
+			-->
+			<plugin>
+				<groupId>io.swagger.codegen.v3</groupId>
+				<artifactId>swagger-codegen-maven-plugin</artifactId>
+				<version>${swagger.codegen.version}</version>
+				<executions>
+					<execution>
+						<id>generate-ogcapi-common</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<language>spring</language>
+							<modelPackage>${project.groupId}.common.model</modelPackage>
+							<apiPackage>${project.groupId}.common.api</apiPackage>
+							<invokerPackage>${project.groupId}.common.invoker</invokerPackage>
+							<inputSpec>${project.basedir}/src/main/resources/schema/common/openapi.yaml</inputSpec>
+							<output>${project.build.directory}/generated-sources</output>
+							<configOptions>
+								<interfaceOnly>true</interfaceOnly>
+								<dateLibrary>java11-localdatetime</dateLibrary>
+							</configOptions>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.google.code.maven-replacer-plugin</groupId>
+				<artifactId>replacer</artifactId>
+				<version>1.5.3</version>
+				<executions>
+					<execution>
+						<!--
+							Problem with the generated class with name crash with Timestamp in jdk11
+						-->
+						<id>replace-line-in-tile-files</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>${project.build.directory}/generated-sources/src/main/**/*.java</include>
+							</includes>
+							<replacements>
+								<replacement>
+									<token>import javax</token>
+									<value>import jakarta</value>
+								</replacement>
+							</replacements>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+</project>
