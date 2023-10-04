@@ -6,17 +6,18 @@ import au.org.aodn.ogcapi.common.api.DefaultApi;
 import au.org.aodn.ogcapi.common.model.ConfClasses;
 import au.org.aodn.ogcapi.common.model.LandingPage;
 import au.org.aodn.ogcapi.server.core.InternalService;
-import au.org.aodn.ogcapi.server.core.OGCMapper;
+import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RestController;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
-@Controller("CommonRestApi")
+@RestController("CommonRestApi")
 public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
     @Autowired
@@ -25,7 +26,20 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
     @Override
     public ResponseEntity<Void> apiGet(String f) {
-        return null;
+        switch(OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
+            case json: {
+                return ResponseEntity
+                        .status(HttpStatus.TEMPORARY_REDIRECT)
+                        .location(URI.create("v3/api-docs"))
+                        .build();
+            }
+            default: {
+                return ResponseEntity
+                        .status(HttpStatus.TEMPORARY_REDIRECT)
+                        .location(URI.create("swagger-ui/index.html"))
+                        .build();
+            }
+        }
     }
 
     @Override
@@ -40,14 +54,28 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
         // Support the following services
         result.addAll(commonService.getConformanceDeclaration());
 
-        switch(OGCMapper.valueOf(f.toLowerCase())) {
+        switch(OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
             case json: {
                 return ResponseEntity.ok()
-                        .contentType(OGCMapper.json.getMediaType())
+                        .contentType(OGCMediaTypeMapper.json.getMediaType())
                         .body(new ConfClasses().conformsTo(result));
             }
             default: {
-                // TODO: html return needed but how?
+                /**
+                 * https://opengeospatial.github.io/ogcna-auto-review/19-072.html
+                 *
+                 * The OGC API — Common Standard does not mandate a specific encoding or format for
+                 * representations of resources. However, both HTML and JSON are commonly used encodings for spatial
+                 * data on the web. The HTML and JSON requirements classes specify the encoding of resource
+                 * representations using:
+                 *
+                 *     HTML
+                 *     JSON
+                 *
+                 * Neither of these encodings is mandatory. An implementer of the API-Common Standard may decide
+                 * to implement other encodings instead of, or in addition to, these two.
+                 */
+                // TODO: html return
                 return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
             }
         }
