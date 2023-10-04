@@ -89,9 +89,8 @@
 							<output>${project.build.directory}/generated-sources</output>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
-								<java8>true</java8>
 								<hideGenerationTimestamp>true</hideGenerationTimestamp>
-								<dateLibrary>java8</dateLibrary>
+								<dateLibrary>java11-localdatetime</dateLibrary>
 							</configOptions>
 						</configuration>
 					</execution>

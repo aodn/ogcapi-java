@@ -22,19 +22,13 @@
 			<artifactId>lombok</artifactId>
 			<optional>true</optional>
 		</dependency>
-		<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->
 		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-		</dependency>
-		<!--SpringFox dependencies -->
-		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger2</artifactId>
+			<groupId>jakarta.annotation</groupId>
+			<artifactId>jakarta.annotation-api</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>io.springfox</groupId>
-			<artifactId>springfox-swagger-ui</artifactId>
+			<groupId>jakarta.validation</groupId>
+			<artifactId>jakarta.validation-api</artifactId>
 		</dependency>
 		<!-- https://mvnrepository.com/artifact/io.swagger.core.v3/swagger-annotations -->
 		<dependency>
@@ -88,9 +82,8 @@
 							<output>${project.build.directory}/generated-sources</output>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
-								<java8>true</java8>
 								<hideGenerationTimestamp>true</hideGenerationTimestamp>
-								<dateLibrary>java8</dateLibrary>
+								<dateLibrary>java11-localdatetime</dateLibrary>
 							</configOptions>
 						</configuration>
 					</execution>
