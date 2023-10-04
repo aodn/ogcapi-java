@@ -24,6 +24,14 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
     @Qualifier("CommonRestService")
     protected InternalService commonService;
 
+    @Autowired
+    @Qualifier("TileRestService")
+    protected InternalService tileService;
+
+    @Autowired
+    @Qualifier("FeaturesRestService")
+    protected InternalService featuresService;
+
     @Override
     public ResponseEntity<Void> apiGet(String f) {
         switch(OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
@@ -49,13 +57,16 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
     @Override
     public ResponseEntity<ConfClasses> getConformanceDeclaration(String f) {
-        List<String> result = new ArrayList<>();
-
-        // Support the following services
-        result.addAll(commonService.getConformanceDeclaration());
 
         switch(OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
             case json: {
+                List<String> result = new ArrayList<>();
+
+                // Support the following services
+                result.addAll(commonService.getConformanceDeclaration());
+                result.addAll(tileService.getConformanceDeclaration());
+                result.addAll(featuresService.getConformanceDeclaration());
+
                 return ResponseEntity.ok()
                         .contentType(OGCMediaTypeMapper.json.getMediaType())
                         .body(new ConfClasses().conformsTo(result));
