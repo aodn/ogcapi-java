@@ -80,6 +80,14 @@
 							<invokerPackage>${project.groupId}.tile.invoker</invokerPackage>
 							<inputSpec>${project.basedir}/src/main/resources/schema/tile/ogcapi-tiles-1.yaml</inputSpec>
 							<output>${project.build.directory}/generated-sources</output>
+							<typeMappings>
+								<!--
+								The openapi specify an enum array for collection id, this makes, this creates
+								a generated enum class with fixed value, we do not want this behavior and want a
+								pure string instead. We can override this by using the mapping below.
+								-->
+								<typeMapping>VectorTilesCollections=java.lang.String</typeMapping>
+							</typeMappings>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
 								<hideGenerationTimestamp>true</hideGenerationTimestamp>

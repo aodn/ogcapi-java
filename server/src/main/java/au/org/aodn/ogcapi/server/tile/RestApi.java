@@ -76,34 +76,35 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     }
 
     @Override
-    public ResponseEntity<String> collectionStyleVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, VectorTilesCollections collectionId, String styleId, TileMatrixSets tileMatrixSetId, String datetime, List<VectorTilesCollections> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
+    public ResponseEntity<String> collectionStyleVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, String styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
         return null;
     }
 
     @Override
-    public ResponseEntity<TileSet> collectionStyleVectorGetTileSet(VectorTilesCollections collectionId, String styleId, TileMatrixSets tileMatrixSetId, List<VectorTilesCollections> collections, String f) {
+    public ResponseEntity<TileSet> collectionStyleVectorGetTileSet(String collectionId, String styleId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
         return null;
     }
 
     @Override
-    public ResponseEntity<InlineResponse2002> collectionStyleVectorGetTileSetsList(VectorTilesCollections collectionId, String styleId, String f) {
+    public ResponseEntity<InlineResponse2002> collectionStyleVectorGetTileSetsList(String collectionId, String styleId, String f) {
         return null;
     }
 
     @Override
-    public ResponseEntity<String> collectionVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, VectorTilesCollections collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<VectorTilesCollections> collections, List<String> subset, String crs, String subsetCrs, String f) {
+    public ResponseEntity<String> collectionVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
         return null;
     }
 
     @Override
-    public ResponseEntity<TileSet> collectionVectorGetTileSet(VectorTilesCollections collectionId, TileMatrixSets tileMatrixSetId, List<VectorTilesCollections> collections, String f) {
+    public ResponseEntity<TileSet> collectionVectorGetTileSet(String collectionId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
         return null;
     }
 
     @Override
-    public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(VectorTilesCollections collectionId, String f) {
+    public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(String collectionId, String f) {
         return null;
     }
+
     /**
      * Bean always found, this effectively disable this REST point because it is common in many places and
      * should not implement it here, @Hiden disable swagger doc
@@ -162,7 +163,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     }
 
     @Override
-    public ResponseEntity<String> datasetStyleVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, Styles styleId, TileMatrixSets tileMatrixSetId, String datetime, List<VectorTilesCollections> collections, List<String> subset, String crs, String subsetCrs, String f) {
+    public ResponseEntity<String> datasetStyleVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, Styles styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
         return null;
     }
 
@@ -187,7 +188,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     }
 
     @Override
-    public ResponseEntity<String> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<VectorTilesCollections> collections, List<String> subset, String crs, String subsetCrs, String f) {
+    public ResponseEntity<String> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
         return null;
     }
 
