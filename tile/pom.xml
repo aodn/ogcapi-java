@@ -82,8 +82,8 @@
 							<output>${project.build.directory}/generated-sources</output>
 							<typeMappings>
 								<!--
-								The openapi specify an enum array for collection id, this makes, this creates
-								a generated enum class with fixed value, we do not want this behavior and want a
+								The openapi specify an enum array for collection id, this makes generator created
+								enum class with fixed value which is wrong, we do not want this behavior and want a
 								pure string instead. We can override this by using the mapping below.
 								-->
 								<typeMapping>VectorTilesCollections=java.lang.String</typeMapping>

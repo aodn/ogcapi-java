@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.EsToInlineResponse2002;
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
@@ -102,7 +103,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Override
     public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(String collectionId, String f) {
-        return null;
+        return internalGetTileSetsList(collectionId, f);
     }
 
     /**
@@ -199,11 +200,19 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Override
     public ResponseEntity<InlineResponse2002> datasetVectorGetTileSetsList(String f) {
+        return internalGetTileSetsList(null, f);
+    }
+
+    protected ResponseEntity<InlineResponse2002> internalGetTileSetsList(String id, String f) {
         try {
             switch (f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
                 case json: {
+                    List<StacCollectionModel> result = (id == null) ?
+                            elasticSearch.searchAllCollectionsWithGeometry() :
+                            elasticSearch.searchCollectionWithGeometry(id);
+
                     return ResponseEntity.ok()
-                            .body(esToInlineResponse2002.convertFrom(elasticSearch.searchAllCollectionsWithGeometry()));
+                            .body(esToInlineResponse2002.convertFrom(result));
                 }
                 default: {
                     /**
