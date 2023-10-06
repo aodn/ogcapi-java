@@ -1,12 +1,12 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.InternalService;
+import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service("CommonRestService")
-public class RestService implements InternalService {
+public class RestService implements OGCApiService {
 
     @Override
     public List<String> getConformanceDeclaration() {

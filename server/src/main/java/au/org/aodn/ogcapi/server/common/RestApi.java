@@ -5,7 +5,7 @@ import au.org.aodn.ogcapi.common.api.ConformanceApi;
 import au.org.aodn.ogcapi.common.api.DefaultApi;
 import au.org.aodn.ogcapi.common.model.ConfClasses;
 import au.org.aodn.ogcapi.common.model.LandingPage;
-import au.org.aodn.ogcapi.server.core.InternalService;
+import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -22,15 +22,15 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
     @Autowired
     @Qualifier("CommonRestService")
-    protected InternalService commonService;
+    protected OGCApiService commonService;
 
     @Autowired
     @Qualifier("TileRestService")
-    protected InternalService tileService;
+    protected OGCApiService tileService;
 
     @Autowired
     @Qualifier("FeaturesRestService")
-    protected InternalService featuresService;
+    protected OGCApiService featuresService;
 
     @Override
     public ResponseEntity<Void> apiGet(String f) {
