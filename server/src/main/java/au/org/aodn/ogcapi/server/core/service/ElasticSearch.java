@@ -33,13 +33,17 @@ public class ElasticSearch {
     @Autowired
     protected ObjectMapper mapper;
 
-    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, Boolean isAndOperation) throws IOException {
+    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, Boolean isShouldOperation) throws IOException {
 
         SearchRequest request = SearchRequest.of(g -> g
+//                .size(10000)
                 .index(indexName)
                 .source(f -> f.fetch(true))
-//                .size(10000)
-                .query(q -> q.bool(b -> isAndOperation ? b.must(queries) : b.should(queries))));
+                .query(q -> q.bool(b -> {
+                    b.minimumShouldMatch("1");
+                    if(isShouldOperation) b.should(queries); else b.must(queries);
+                    return b;
+                })));
 
         logger.info(request.source().toString());
 
@@ -78,7 +82,7 @@ public class ElasticSearch {
                 .query(id))._toQuery()
         );
 
-        return searchCollectionBy(queries, Boolean.TRUE);
+        return searchCollectionBy(queries, Boolean.FALSE);
     }
 
     public List<StacCollectionModel> searchAllCollectionsWithGeometry() throws IOException {
@@ -91,7 +95,7 @@ public class ElasticSearch {
                         .field(StacSummeries.Geometry.field))._toQuery()
         );
 
-        return searchCollectionBy(queries, Boolean.TRUE);
+        return searchCollectionBy(queries, Boolean.FALSE);
     }
 
     public List<StacCollectionModel> searchAllCollections() throws IOException {
@@ -101,7 +105,7 @@ public class ElasticSearch {
                         .query(StacType.Collection.value))._toQuery()
         );
 
-        return searchCollectionBy(queries, Boolean.TRUE);
+        return searchCollectionBy(queries, Boolean.FALSE);
     }
 
     public List<StacCollectionModel> searchByTitleDescKeywords(List<String> targets) throws IOException {
@@ -113,22 +117,24 @@ public class ElasticSearch {
             List<Query> queries = new ArrayList<>();
 
             for (String t : targets) {
-                Query q = FuzzyQuery.of(m -> m
+                Query q = MatchQuery.of(m -> m
                         .fuzziness("AUTO")
                         .field(StacTitle.field)
-                        .value(t))._toQuery();
+                        .prefixLength(0)
+                        .query(t))._toQuery();
                 queries.add(q);
 
-                q = FuzzyQuery.of(m -> m
+                q = MatchQuery.of(m -> m
                         .fuzziness("AUTO")
                         .field(StacDescription.field)
-                        .value(t))._toQuery();
+                        .prefixLength(0)
+                        .query(t))._toQuery();
                 queries.add(q);
 
                 //TODO: what keywords we want to search?
             }
 
-            return searchCollectionBy(queries, Boolean.FALSE);
+            return searchCollectionBy(queries, Boolean.TRUE);
         }
     }
 }
