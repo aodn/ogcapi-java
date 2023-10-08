@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service("FeaturesRestService")
-public class RestServices implements OGCApiService {
+public class RestServices extends OGCApiService {
 
     @Override
     public List<String> getConformanceDeclaration() {

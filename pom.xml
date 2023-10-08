@@ -37,8 +37,9 @@
 		<module>maps</module>
 		<module>processes</module>
 		<module>tile</module>
+		<module>records</module>
 		<module>server</module>
-	</modules>
+    </modules>
 	<dependencyManagement>
 		<dependencies>
 			<!-- https://mvnrepository.com/artifact/org.springdoc/springdoc-openapi-ui -->

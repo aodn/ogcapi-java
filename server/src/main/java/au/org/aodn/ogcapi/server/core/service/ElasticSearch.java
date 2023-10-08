@@ -10,6 +10,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch.core.GetResponse;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -25,7 +26,7 @@ public class ElasticSearch {
     @Autowired
     protected ElasticsearchClient esClient;
 
-    public List<StacCollectionModel> searchCollectionWithGeometry(String id) throws IOException {
+    protected List<StacCollectionModel> searchCollectionBy(String id, Boolean isNeededGeometry) throws IOException {
         List<Query> queries = new ArrayList<>();
 
         Query byType = MatchQuery.of(m -> m
@@ -33,9 +34,11 @@ public class ElasticSearch {
                 .query(StacType.Collection.value))._toQuery();
         queries.add(byType);
 
-        Query geoExist = ExistsQuery.of(m -> m
-                .field(StacSummeries.Geometry.field))._toQuery();
-        queries.add(geoExist);
+        if(isNeededGeometry) {
+            Query geoExist = ExistsQuery.of(m -> m
+                    .field(StacSummeries.Geometry.field))._toQuery();
+            queries.add(geoExist);
+        }
 
         if(id != null) {
             Query uuid = MatchQuery.of(m -> m
@@ -53,11 +56,17 @@ public class ElasticSearch {
         return response.hits()
                 .hits()
                 .stream()
-                .map(h -> h.source())
+                .map(Hit::source)
                 .collect(Collectors.toList());
     }
 
+    public List<StacCollectionModel> searchCollectionWithGeometry(String id) throws IOException {
+        return searchCollectionBy(id, true);
+    }
     public List<StacCollectionModel> searchAllCollectionsWithGeometry() throws IOException {
         return searchCollectionWithGeometry(null);
+    }
+    public List<StacCollectionModel> searchAllCollections() throws IOException {
+        return searchCollectionBy(null, false);
     }
 }
