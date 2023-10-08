@@ -33,18 +33,20 @@ public class ElasticSearch {
     @Autowired
     protected ObjectMapper mapper;
 
-    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, Boolean isShouldOperation) throws IOException {
+    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, Boolean isShouldOperation, Integer from, Integer size) throws IOException {
 
-        SearchRequest request = SearchRequest.of(g -> g
-//                .size(10000)
+        SearchRequest.Builder builder = new SearchRequest.Builder();
+        builder.source(f -> f.fetch(true))
                 .index(indexName)
-                .source(f -> f.fetch(true))
+                .size(size)         // Max hit to return
+                .from(from)         // Skip how many record
                 .query(q -> q.bool(b -> {
-                    b.minimumShouldMatch("1");
-                    if(isShouldOperation) b.should(queries); else b.must(queries);
-                    return b;
-                })));
+                            b.minimumShouldMatch("1");
+                            if(isShouldOperation) b.should(queries); else b.must(queries);
+                            return b;
+                        }));
 
+        SearchRequest request = builder.build();
         logger.info(request.source().toString());
 
         SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);
@@ -82,7 +84,7 @@ public class ElasticSearch {
                 .query(id))._toQuery()
         );
 
-        return searchCollectionBy(queries, Boolean.FALSE);
+        return searchCollectionBy(queries, Boolean.FALSE, null, null);
     }
 
     public List<StacCollectionModel> searchAllCollectionsWithGeometry() throws IOException {
@@ -95,7 +97,7 @@ public class ElasticSearch {
                         .field(StacSummeries.Geometry.field))._toQuery()
         );
 
-        return searchCollectionBy(queries, Boolean.FALSE);
+        return searchCollectionBy(queries, Boolean.FALSE, null, null);
     }
 
     public List<StacCollectionModel> searchAllCollections() throws IOException {
@@ -105,7 +107,7 @@ public class ElasticSearch {
                         .query(StacType.Collection.value))._toQuery()
         );
 
-        return searchCollectionBy(queries, Boolean.FALSE);
+        return searchCollectionBy(queries, Boolean.FALSE, null, null);
     }
 
     public List<StacCollectionModel> searchByTitleDescKeywords(List<String> targets) throws IOException {
@@ -134,7 +136,7 @@ public class ElasticSearch {
                 //TODO: what keywords we want to search?
             }
 
-            return searchCollectionBy(queries, Boolean.TRUE);
+            return searchCollectionBy(queries, Boolean.TRUE, null, null);
         }
     }
 }
