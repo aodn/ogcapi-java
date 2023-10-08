@@ -17,7 +17,7 @@ public class StacCollectionModel {
     protected ExtentModel extent;
 
     @JsonProperty("id")
-    protected UUID uuid;
+    protected String uuid;
 
     @JsonProperty("stac_version")
     protected String stacVersion;

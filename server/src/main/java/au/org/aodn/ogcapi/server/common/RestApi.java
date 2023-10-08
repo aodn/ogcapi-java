@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.common.model.ConfClasses;
 import au.org.aodn.ogcapi.common.model.LandingPage;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.Exception;
+import au.org.aodn.ogcapi.server.core.mapper.StacToCollections;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,8 +18,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -45,6 +44,9 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
     @Autowired
     @Qualifier("FeaturesRestService")
     protected OGCApiService featuresService;
+
+    @Autowired
+    protected StacToCollections stacToCollection;
 
     @Override
     public ResponseEntity<Void> apiGet(String f) {
@@ -106,9 +108,9 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
         }
     }
     /**
-     * In ogc api, it define the same getCollections in a couple of place, and it assume that user will extend the same
-     * function with different argument, which cannot be done with openapi directly. Hence all those getCollections are
-     * marked @Hidden and replace by this one.
+     * In ogc api, it defines the same getCollections (/collections) in a couple of places, and it assumed that
+     * user will extend the same function with different argument, which cannot be done with openapi directly.
+     * Hence, all those getCollections are marked @Hidden and replace by this one.
      * @return
      */
     @Operation(summary = "The collections in the dataset", description = "", tags = {"Capabilities"})
@@ -130,8 +132,8 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             @Parameter(in = ParameterIn.QUERY, description = "The optional q parameter supports keyword searching.  Only records whose text fields contain one or more of the specified search terms are selected.  The specific set of text keys/fields/properties of a record to which the q operator is applied is up to the description of the server.   Implementations should, however, apply the q operator to the title, description and keywords keys/fields/properties." ,schema=@Schema())
             @Valid @RequestParam(value = "q", required = false) List<String> q,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
-            @Valid @RequestParam(value = "sortby", required = false) List<String> sortby) {
+            @Valid @RequestParam(value = "sortby", required = false, defaultValue = "ranking") List<String> sortby) {
 
-            return null;
+            return commonService.getCollectionList(q, "json", stacToCollection::convert);
     }
 }

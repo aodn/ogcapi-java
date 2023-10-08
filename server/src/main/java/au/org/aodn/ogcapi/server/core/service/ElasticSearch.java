@@ -1,16 +1,18 @@
 package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
-import au.org.aodn.ogcapi.server.core.model.enumeration.StacType;
-import au.org.aodn.ogcapi.server.core.model.enumeration.StacUUID;
+import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.query_dsl.ExistsQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import co.elastic.clients.elasticsearch.core.GetResponse;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
@@ -20,53 +22,113 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ElasticSearch {
+    protected Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
+
     @Value("${elasticsearch.index.name}")
     protected String indexName;
 
     @Autowired
     protected ElasticsearchClient esClient;
 
-    protected List<StacCollectionModel> searchCollectionBy(String id, Boolean isNeededGeometry) throws IOException {
-        List<Query> queries = new ArrayList<>();
+    @Autowired
+    protected ObjectMapper mapper;
 
-        Query byType = MatchQuery.of(m -> m
-                .field(StacType.field)
-                .query(StacType.Collection.value))._toQuery();
-        queries.add(byType);
+    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, Boolean isAndOperation) throws IOException {
 
-        if(isNeededGeometry) {
-            Query geoExist = ExistsQuery.of(m -> m
-                    .field(StacSummeries.Geometry.field))._toQuery();
-            queries.add(geoExist);
-        }
+        SearchRequest request = SearchRequest.of(g -> g
+                .index(indexName)
+                .source(f -> f.fetch(true))
+//                .size(10000)
+                .query(q -> q.bool(b -> isAndOperation ? b.must(queries) : b.should(queries))));
 
-        if(id != null) {
-            Query uuid = MatchQuery.of(m -> m
-                    .field(StacUUID.field)
-                    .query(id))._toQuery();
+        logger.info(request.source().toString());
 
-            queries.add(uuid);
-        }
+        SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);
 
-        SearchResponse<StacCollectionModel> response = esClient.search(g -> g
-                        .index(indexName)
-                        .query(q -> q.bool(b -> b.must(queries))),
-                StacCollectionModel.class);
-
-        return response.hits()
+        return response
+                .hits()
                 .hits()
                 .stream()
-                .map(Hit::source)
+                .map(m -> {
+                    String json = m.source().toPrettyString();
+                    logger.debug("Concert json to StacCollectionModel {}", json);
+                    try {
+                        return mapper.readValue(json, StacCollectionModel.class);
+                    }
+                    catch (JsonProcessingException e) {
+                        logger.error("Failed to convert text to StacCollectionModel", e);
+                        return null;
+                    }
+                })
+                .filter(f -> f != null)
                 .collect(Collectors.toList());
     }
 
     public List<StacCollectionModel> searchCollectionWithGeometry(String id) throws IOException {
-        return searchCollectionBy(id, true);
+        List<Query> queries = List.of(
+            MatchQuery.of(m -> m
+                    .field(StacType.field)
+                    .query(StacType.Collection.value))._toQuery(),
+
+            ExistsQuery.of(m -> m
+                .field(StacSummeries.Geometry.field))._toQuery(),
+
+            MatchQuery.of(m -> m
+                .field(StacUUID.field)
+                .query(id))._toQuery()
+        );
+
+        return searchCollectionBy(queries, Boolean.TRUE);
     }
+
     public List<StacCollectionModel> searchAllCollectionsWithGeometry() throws IOException {
-        return searchCollectionWithGeometry(null);
+        List<Query> queries = List.of(
+                MatchQuery.of(m -> m
+                        .field(StacType.field)
+                        .query(StacType.Collection.value))._toQuery(),
+
+                ExistsQuery.of(m -> m
+                        .field(StacSummeries.Geometry.field))._toQuery()
+        );
+
+        return searchCollectionBy(queries, Boolean.TRUE);
     }
+
     public List<StacCollectionModel> searchAllCollections() throws IOException {
-        return searchCollectionBy(null, false);
+        List<Query> queries = List.of(
+                MatchQuery.of(m -> m
+                        .field(StacType.field)
+                        .query(StacType.Collection.value))._toQuery()
+        );
+
+        return searchCollectionBy(queries, Boolean.TRUE);
+    }
+
+    public List<StacCollectionModel> searchByTitleDescKeywords(List<String> targets) throws IOException {
+
+        if(targets == null || targets.isEmpty()) {
+            return searchAllCollections();
+        }
+        else {
+            List<Query> queries = new ArrayList<>();
+
+            for (String t : targets) {
+                Query q = FuzzyQuery.of(m -> m
+                        .fuzziness("AUTO")
+                        .field(StacTitle.field)
+                        .value(t))._toQuery();
+                queries.add(q);
+
+                q = FuzzyQuery.of(m -> m
+                        .fuzziness("AUTO")
+                        .field(StacDescription.field)
+                        .value(t))._toQuery();
+                queries.add(q);
+
+                //TODO: what keywords we want to search?
+            }
+
+            return searchCollectionBy(queries, Boolean.FALSE);
+        }
     }
 }
