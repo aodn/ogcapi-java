@@ -191,7 +191,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     public ResponseEntity<TileSet> datasetVectorGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
         return null;
     }
-    
+
     @Override
     public ResponseEntity<InlineResponse2002> datasetVectorGetTileSetsList(String f) {
         return restService.getTileSetsList(null, f, stacToInlineResponse2002::convert);
