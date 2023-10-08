@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
+import au.org.aodn.ogcapi.server.core.service.Search;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
@@ -41,7 +42,7 @@ public class ElasticSearchConfig {
     }
 
     @Bean
-    public ElasticSearch createElasticSearch() {
+    public Search createElasticSearch() {
         return new ElasticSearch();
     }
 }

@@ -6,9 +6,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
@@ -21,7 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class ElasticSearch {
+public class ElasticSearch implements Search {
     protected Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
 
     @Value("${elasticsearch.index.name}")
@@ -70,6 +68,7 @@ public class ElasticSearch {
                 .collect(Collectors.toList());
     }
 
+    @Override
     public List<StacCollectionModel> searchCollectionWithGeometry(String id) throws IOException {
         List<Query> queries = List.of(
             MatchQuery.of(m -> m
@@ -87,6 +86,7 @@ public class ElasticSearch {
         return searchCollectionBy(queries, Boolean.FALSE, null, null);
     }
 
+    @Override
     public List<StacCollectionModel> searchAllCollectionsWithGeometry() throws IOException {
         List<Query> queries = List.of(
                 MatchQuery.of(m -> m
@@ -100,6 +100,7 @@ public class ElasticSearch {
         return searchCollectionBy(queries, Boolean.FALSE, null, null);
     }
 
+    @Override
     public List<StacCollectionModel> searchAllCollections() throws IOException {
         List<Query> queries = List.of(
                 MatchQuery.of(m -> m
@@ -110,6 +111,7 @@ public class ElasticSearch {
         return searchCollectionBy(queries, Boolean.FALSE, null, null);
     }
 
+    @Override
     public List<StacCollectionModel> searchByTitleDescKeywords(List<String> targets) throws IOException {
 
         if(targets == null || targets.isEmpty()) {

@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.slf4j.Logger;
@@ -21,7 +20,7 @@ public abstract class OGCApiService {
     protected Logger logger = LoggerFactory.getLogger(RestApi.class);
 
     @Autowired
-    protected ElasticSearch elasticSearch;
+    protected Search search;
 
     /**
      * You can find conformance id here https://docs.ogc.org/is/19-072/19-072.html#ats_core
@@ -33,7 +32,7 @@ public abstract class OGCApiService {
         try {
             switch (f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
                 case json: {
-                    List<StacCollectionModel> result = elasticSearch.searchAllCollections();
+                    List<StacCollectionModel> result = search.searchAllCollections();
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
@@ -69,8 +68,8 @@ public abstract class OGCApiService {
             switch (f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
                 case json: {
                     List<StacCollectionModel> result = (id == null) ?
-                            elasticSearch.searchAllCollectionsWithGeometry() :
-                            elasticSearch.searchCollectionWithGeometry(id);
+                            search.searchAllCollectionsWithGeometry() :
+                            search.searchCollectionWithGeometry(id);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
@@ -105,7 +104,7 @@ public abstract class OGCApiService {
         try {
             switch (f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
                 case json: {
-                    List<StacCollectionModel> result = elasticSearch.searchByTitleDescKeywords(targets);
+                    List<StacCollectionModel> result = search.searchByTitleDescKeywords(targets);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
