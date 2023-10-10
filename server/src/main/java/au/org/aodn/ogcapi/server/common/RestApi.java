@@ -111,6 +111,8 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
      * In ogc api, it defines the same getCollections (/collections) in a couple of places, and it assumed that
      * user will extend the same function with different argument, which cannot be done with openapi directly.
      * Hence, all those getCollections are marked @Hidden and replace by this one.
+     *
+     * TODO: Need text/html output?
      * @return
      */
     @Operation(summary = "The collections in the dataset", description = "", tags = {"Capabilities"})
@@ -122,7 +124,10 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                     description = "A server error occurred.",
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Exception.class)))})
     @RequestMapping(value = "/collections",
-            produces = {"application/json", "text/html"},
+            produces = {
+                    "application/json"
+            //        "text/html"
+            },
             method = RequestMethod.GET)
     public ResponseEntity<Collections> getCollections(
             @Parameter(in = ParameterIn.QUERY, description = "Only records that have a geometry that intersects the bounding box are selected. The bounding box is provided as four or six numbers, depending on whether the coordinate reference system includes a vertical axis (height or depth):  * Lower left corner, coordinate axis 1 * Lower left corner, coordinate axis 2 * Minimum value, coordinate axis 3 (optional) * Upper right corner, coordinate axis 1 * Upper right corner, coordinate axis 2 * Maximum value, coordinate axis 3 (optional)  The coordinate reference system of the values is WGS 84 long/lat (http://www.opengis.net/def/crs/OGC/1.3/CRS84) unless a different coordinate reference system is specified in the parameter `bbox-crs`.  For WGS 84 longitude/latitude the values are in most cases the sequence of minimum longitude, minimum latitude, maximum longitude and maximum latitude.  However, in cases where the box spans the antimeridian the first value (west-most box edge) is larger than the third value (east-most box edge).  If the vertical axis is included, the third and the sixth number are the bottom and the top of the 3-dimensional bounding box.  If a record has multiple spatial geometry properties, it is the decision of the server whether only a single spatial geometry property is used to determine the extent or all relevant geometries." ,schema=@Schema())

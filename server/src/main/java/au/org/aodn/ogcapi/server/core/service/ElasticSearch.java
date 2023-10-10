@@ -39,8 +39,13 @@ public class ElasticSearch implements Search {
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
                 .query(q -> q.bool(b -> {
-                            b.minimumShouldMatch("1");
-                            if(isShouldOperation) b.should(queries); else b.must(queries);
+                            if(isShouldOperation) {
+                                b.minimumShouldMatch("1");
+                                b.should(queries);
+                            }
+                            else {
+                                b.must(queries);
+                            }
                             return b;
                         }));
 
