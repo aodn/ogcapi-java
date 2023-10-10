@@ -139,6 +139,6 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
             @Valid @RequestParam(value = "sortby", required = false, defaultValue = "ranking") List<String> sortby) {
 
-            return commonService.getCollectionList(q, "json", stacToCollection::convert);
+            return commonService.getCollectionList(q, OGCMediaTypeMapper.json, stacToCollection::convert);
     }
 }

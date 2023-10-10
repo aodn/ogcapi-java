@@ -20,4 +20,8 @@ public enum OGCMediaTypeMapper {
     public MediaType getMediaType() {
         return mediaType;
     }
+
+    public static OGCMediaTypeMapper convert(String f) {
+        return f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.trim().toLowerCase());
+    }
 }

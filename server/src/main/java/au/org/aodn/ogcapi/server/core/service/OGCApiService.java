@@ -28,9 +28,9 @@ public abstract class OGCApiService {
      */
     public abstract List<String> getConformanceDeclaration();
 
-    public <R> ResponseEntity<R> getTileSetsList(String id, String f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getTileSetsList(String id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
-            switch (f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
+            switch (f) {
                 case json: {
                     List<StacCollectionModel> result = (id == null) ?
                             search.searchAllCollectionsWithGeometry() :
@@ -65,9 +65,9 @@ public abstract class OGCApiService {
         }
     }
 
-    public <R> ResponseEntity<R> getCollectionList(List<String> targets, String f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getCollectionList(List<String> targets, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
-            switch (f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
+            switch (f) {
                 case json: {
                     List<StacCollectionModel> result = search.searchByTitleDescKeywords(targets);
 

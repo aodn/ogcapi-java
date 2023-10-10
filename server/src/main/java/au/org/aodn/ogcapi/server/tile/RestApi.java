@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.tile;
 
+import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
@@ -95,7 +96,10 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Override
     public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(String collectionId, String f) {
-        return restService.getTileSetsList(collectionId, f, stacToInlineResponse2002::convert);
+        return restService.getTileSetsList(
+                collectionId,
+                OGCMediaTypeMapper.convert(f),
+                stacToInlineResponse2002::convert);
     }
 
     /**
@@ -194,6 +198,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Override
     public ResponseEntity<InlineResponse2002> datasetVectorGetTileSetsList(String f) {
-        return restService.getTileSetsList(null, f, stacToInlineResponse2002::convert);
+        return restService.getTileSetsList(
+                null,
+                OGCMediaTypeMapper.convert(f),
+                stacToInlineResponse2002::convert);
     }
 }
