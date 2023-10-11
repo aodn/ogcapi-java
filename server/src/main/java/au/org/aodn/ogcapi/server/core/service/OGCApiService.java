@@ -1,8 +1,11 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.tile.RestApi;
+import org.geotools.filter.text.commons.CompilerUtil;
+import org.geotools.filter.text.commons.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,11 +68,11 @@ public abstract class OGCApiService {
         }
     }
 
-    public <R> ResponseEntity<R> getCollectionList(List<String> targets, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getCollectionList(List<String> keywords, String filter, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json: {
-                    List<StacCollectionModel> result = search.searchByTitleDescKeywords(targets);
+                    List<StacCollectionModel> result = search.searchByTitleDescKeywords(keywords, filter);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));

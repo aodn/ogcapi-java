@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.tile;
 
-import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;

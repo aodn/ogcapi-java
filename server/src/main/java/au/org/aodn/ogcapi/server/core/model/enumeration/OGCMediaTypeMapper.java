@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core;
+package au.org.aodn.ogcapi.server.core.model.enumeration;
 
 import org.springframework.http.MediaType;
 

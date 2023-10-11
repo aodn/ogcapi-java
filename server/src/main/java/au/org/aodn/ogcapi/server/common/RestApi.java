@@ -8,8 +8,10 @@ import au.org.aodn.ogcapi.common.model.LandingPage;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollections;
+import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import au.org.aodn.ogcapi.server.core.OGCMediaTypeMapper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -18,7 +20,12 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.geotools.filter.text.commons.CompilerUtil;
+import org.geotools.filter.text.commons.Language;
+import org.geotools.filter.text.cql2.CQL;
+import org.geotools.filter.text.cql2.CQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -136,9 +143,15 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             @Valid @RequestParam(value = "datetime", required = false) String datetime,
             @Parameter(in = ParameterIn.QUERY, description = "The optional q parameter supports keyword searching.  Only records whose text fields contain one or more of the specified search terms are selected.  The specific set of text keys/fields/properties of a record to which the q operator is applied is up to the description of the server.   Implementations should, however, apply the q operator to the title, description and keywords keys/fields/properties." ,schema=@Schema())
             @Valid @RequestParam(value = "q", required = false) List<String> q,
+            @Parameter(in = ParameterIn.QUERY, description = "Support CQL only, we only implemented limit support")
+            @Pattern(regexp = "cql-text") @RequestParam(value = "filter-lang", required = false) String filterLang,
+            @Parameter(in = ParameterIn.QUERY, description = "Coordinate system, http://www.opengis.net/def/crs/OGC/1.3/CRS84 ")
+            @Pattern(regexp = "http://www.opengis.net/def/crs/OGC/1.3/CRS84") @RequestParam(value = "crs", required = false, defaultValue = "http://www.opengis.net/def/crs/OGC/1.3/CRS84") String crs,
+            @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
+            @RequestParam(value = "filter", required = false) String filter,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
-            @Valid @RequestParam(value = "sortby", required = false, defaultValue = "ranking") List<String> sortby) {
+            @Valid @RequestParam(value = "sortby", required = false, defaultValue = "ranking") List<String> sortby) throws CQLException {
 
-            return commonService.getCollectionList(q, OGCMediaTypeMapper.json, stacToCollection::convert);
+        return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, stacToCollection::convert);
     }
 }

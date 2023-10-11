@@ -29,6 +29,10 @@
 			<id>mvnrepository.com</id>
 			<url>https://repo1.maven.org/maven2/</url>
 		</repository>
+		<repository>
+			<id>repo.osgeo.org</id>
+			<url>https://repo.osgeo.org/repository/release/</url>
+		</repository>
 	</repositories>
 	<modules>
 		<module>common</module>
@@ -101,6 +105,17 @@
 				<groupId>org.projectlombok</groupId>
 				<artifactId>lombok-mapstruct-binding</artifactId>
 				<version>${org.projectlombok.binding}</version>
+			</dependency>
+			<!-- https://mvnrepository.com/artifact/org.geotools/gt-cql -->
+			<dependency>
+				<groupId>org.geotools</groupId>
+				<artifactId>gt-cql</artifactId>
+				<version>29.2</version>
+			</dependency>
+			<dependency>
+				<groupId>org.geotools</groupId>
+				<artifactId>gt-geojson</artifactId>
+				<version>29.2</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

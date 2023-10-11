@@ -3,3 +3,7 @@ elasticsearch:
     name: portal_records
   serverUrl: http://3.27.147.190:9200
   apiKey: NC1Dc19Jb0JsbTJqVmhzNy1OS1k6LTdqN0Y0QktRVHVKRHVpYU1TNkhSZw==
+
+logging:
+  level:
+    au.org.aodn.ogcapi.server: debug
