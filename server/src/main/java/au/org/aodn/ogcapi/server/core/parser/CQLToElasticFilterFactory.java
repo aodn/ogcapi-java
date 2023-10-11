@@ -45,21 +45,27 @@ public class CQLToElasticFilterFactory extends FilterFactoryImpl {
         return queries;
     }
 
+    protected String convertToGeoJson(LiteralExpressionImpl literalExpression) throws ParseException, IOException {
+        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
+        WKTReader reader = new WKTReader(geometryFactory);
+        Geometry geo = reader.read(literalExpression.toString());
+
+        try(StringWriter writer = new StringWriter()) {
+            GeometryJSON geometryJson = new GeometryJSON();
+            geometryJson.write(geo, writer);
+
+            String r = writer.toString();
+            logger.debug("Converted to GeoJson {}", r);
+            return r;
+        }
+    }
+
     @Override
     public Intersects intersects(Expression geometry1, Expression geometry2) {
         logger.debug("INTERSECTS {}, {}", geometry1, geometry2);
         if(geometry1 instanceof AttributeExpressionImpl attribute && geometry2 instanceof LiteralExpressionImpl literal) {
             try {
-                GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
-                WKTReader reader = new WKTReader(geometryFactory);
-                Geometry geo = reader.read(literal.toString());
-
-                StringWriter writer = new StringWriter();
-                GeometryJSON geometryJson = new GeometryJSON();
-                geometryJson.write(geo, writer);
-
-                String geojson = writer.toString();
-                logger.debug("Converted to GeoJson {}", geojson);
+                String geojson = convertToGeoJson(literal);
 
                 // Create elastic query here
                 Query geoShapeQuery = new GeoShapeQuery.Builder()
