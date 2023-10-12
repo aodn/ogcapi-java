@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldMapper;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
 import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
 import co.elastic.clients.json.JsonData;
@@ -72,7 +71,18 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> extends FilterFactoryI
             return r;
         }
     }
-
+    /**
+     * Expect statement like this:
+     * INTERSECTS(geometry,
+     *  POLYGON(
+     *      (1379213.867288 3610774.164192,1379233.837424 3610769.696029,1379246.149564 3610812.389132,1379226.494235 3610816.884823,1379213.867288 3610774.164192)
+     *  )
+     * )
+     *
+     * @param geometry1 - The attribute value, it will be mapped by the type T enum to the real field name in Elastic
+     * @param geometry2 - The Polygon and will convert to GeoJson
+     * @return
+     */
     @Override
     public Intersects intersects(Expression geometry1, Expression geometry2) {
         logger.debug("INTERSECTS {}, {}", geometry1, geometry2);

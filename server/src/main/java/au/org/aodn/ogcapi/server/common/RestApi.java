@@ -8,6 +8,9 @@ import au.org.aodn.ogcapi.common.model.LandingPage;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollections;
+import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
@@ -31,6 +34,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpServerErrorException;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -136,22 +140,42 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             //        "text/html"
             },
             method = RequestMethod.GET)
-    public ResponseEntity<Collections> getCollections(
+    public ResponseEntity<?> getCollections(
             @Parameter(in = ParameterIn.QUERY, description = "Only records that have a geometry that intersects the bounding box are selected. The bounding box is provided as four or six numbers, depending on whether the coordinate reference system includes a vertical axis (height or depth):  * Lower left corner, coordinate axis 1 * Lower left corner, coordinate axis 2 * Minimum value, coordinate axis 3 (optional) * Upper right corner, coordinate axis 1 * Upper right corner, coordinate axis 2 * Maximum value, coordinate axis 3 (optional)  The coordinate reference system of the values is WGS 84 long/lat (http://www.opengis.net/def/crs/OGC/1.3/CRS84) unless a different coordinate reference system is specified in the parameter `bbox-crs`.  For WGS 84 longitude/latitude the values are in most cases the sequence of minimum longitude, minimum latitude, maximum longitude and maximum latitude.  However, in cases where the box spans the antimeridian the first value (west-most box edge) is larger than the third value (east-most box edge).  If the vertical axis is included, the third and the sixth number are the bottom and the top of the 3-dimensional bounding box.  If a record has multiple spatial geometry properties, it is the decision of the server whether only a single spatial geometry property is used to determine the extent or all relevant geometries." ,schema=@Schema())
-            @Valid @RequestParam(value = "bbox", required = false) List<BigDecimal> bbox,
+                @Valid @RequestParam(value = "bbox", required = false) List<BigDecimal> bbox,
             @Parameter(in = ParameterIn.QUERY, description = "Either a date-time or an interval, open or closed. Date and time expressions adhere to RFC 3339. Open intervals are expressed using double-dots.  Examples:  * A date-time: \"2018-02-12T23:20:50Z\" * A closed interval: \"2018-02-12T00:00:00Z/2018-03-18T12:31:12Z\" * Open intervals: \"2018-02-12T00:00:00Z/..\" or \"../2018-03-18T12:31:12Z\"  Only records that have a temporal property that intersects the value of `datetime` are selected.  It is left to the decision of the server whether only a single temporal property is used to determine the extent or all relevant temporal properties." ,schema=@Schema())
-            @Valid @RequestParam(value = "datetime", required = false) String datetime,
+                @Valid @RequestParam(value = "datetime", required = false) String datetime,
             @Parameter(in = ParameterIn.QUERY, description = "The optional q parameter supports keyword searching.  Only records whose text fields contain one or more of the specified search terms are selected.  The specific set of text keys/fields/properties of a record to which the q operator is applied is up to the description of the server.   Implementations should, however, apply the q operator to the title, description and keywords keys/fields/properties." ,schema=@Schema())
-            @Valid @RequestParam(value = "q", required = false) List<String> q,
+                @Valid @RequestParam(value = "q", required = false) List<String> q,
             @Parameter(in = ParameterIn.QUERY, description = "Support CQL only, we only implemented limit support")
-            @Pattern(regexp = "cql-text") @RequestParam(value = "filter-lang", required = false) String filterLang,
+                @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang,
             @Parameter(in = ParameterIn.QUERY, description = "Coordinate system, http://www.opengis.net/def/crs/OGC/1.3/CRS84 ")
-            @Pattern(regexp = "http://www.opengis.net/def/crs/OGC/1.3/CRS84") @RequestParam(value = "crs", required = false, defaultValue = "http://www.opengis.net/def/crs/OGC/1.3/CRS84") String crs,
+                @RequestParam(value = "crs", required = false, defaultValue = "http://www.opengis.net/def/crs/OGC/1.3/CRS84") String crs,
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
-            @RequestParam(value = "filter", required = false) String filter,
+                @RequestParam(value = "filter", required = false) String filter,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
-            @Valid @RequestParam(value = "sortby", required = false, defaultValue = "ranking") List<String> sortby) throws CQLException {
+                @Valid @RequestParam(value = "sortby", required = false, defaultValue = "score") List<String> sortby) throws CQLException {
 
-        return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, stacToCollection::convert);
+        // TODO: Support or CRS.
+        if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.CRS84) {
+            return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, stacToCollection::convert);
+        }
+        else {
+            List<String> reasons = new ArrayList<>();
+
+            if(CQLFilterType.convert(filterLang) != CQLFilterType.CQL) {
+                reasons.add("Unknown filter language, support cql-text only");
+            }
+
+            if(CQLCrsType.convertFromUrl(crs) != CQLCrsType.CRS84) {
+                reasons.add("Unknown crs, support CRS84 only");
+            }
+
+            ErrorMessage msg = ErrorMessage.builder()
+                    .reasons(reasons)
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(msg);
+        }
     }
 }

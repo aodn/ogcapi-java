@@ -1,8 +1,10 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import java.util.Arrays;
+
 public enum CQLFilterType {
     CQL("cql-text"),
-    UNKNOWN("");
+    UNKNOWN(null);
 
     private String lang;
 
@@ -11,11 +13,9 @@ public enum CQLFilterType {
     }
 
     public static CQLFilterType convert(String l) {
-        for(CQLFilterType v : CQLFilterType.values()) {
-            if(v.lang.equals(l)) {
-                return v;
-            }
-        }
-        return UNKNOWN;
+        return Arrays.stream(CQLFilterType.values())
+                .filter(f -> f.equals(l))
+                .findFirst()
+                .orElse(UNKNOWN);
     }
 }

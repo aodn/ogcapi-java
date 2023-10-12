@@ -174,7 +174,7 @@ public class ElasticSearch implements Search {
 
             List<Query> filters = null;
             if(cql != null) {
-                CQLToElasticFilterFactory<CQLFieldMapper> factory = new CQLToElasticFilterFactory<>(CQLFieldMapper.class);
+                CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(CQLCollectionsField.class);
                 CompilerUtil.parseFilter(Language.CQL, cql, factory);
                 filters = factory.getQueries();
             }
