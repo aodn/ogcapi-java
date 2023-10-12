@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldMapper;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
 import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
 import co.elastic.clients.json.JsonData;
@@ -44,7 +45,13 @@ public class CQLToElasticFilterFactory extends FilterFactoryImpl {
     public List<Query> getQueries() {
         return queries;
     }
-
+    /**
+     * Convert the WKT format from the cql to GeoJson use by Elastic search
+     * @param literalExpression
+     * @return
+     * @throws ParseException
+     * @throws IOException
+     */
     protected String convertToGeoJson(LiteralExpressionImpl literalExpression) throws ParseException, IOException {
         GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
         WKTReader reader = new WKTReader(geometryFactory);
@@ -69,7 +76,7 @@ public class CQLToElasticFilterFactory extends FilterFactoryImpl {
 
                 // Create elastic query here
                 Query geoShapeQuery = new GeoShapeQuery.Builder()
-                        .field(attribute.getPropertyName())
+                        .field(CQLFieldMapper.valueOf(attribute.getPropertyName()).field)
                         .shape(builder -> builder
                                 .relation(GeoShapeRelation.Intersects)
                                 .shape(JsonData.from(new StringReader(geojson))))
