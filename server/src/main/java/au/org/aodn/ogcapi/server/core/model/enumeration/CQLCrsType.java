@@ -18,7 +18,7 @@ public enum CQLCrsType {
 
     public static CQLCrsType convertFromUrl(String url) {
         return Arrays.stream(CQLCrsType.values())
-                .filter(f -> f.equals(url))
+                .filter(f -> f.url.equals(url))
                 .findFirst()
                 .orElse(UNKNOWN);
     }

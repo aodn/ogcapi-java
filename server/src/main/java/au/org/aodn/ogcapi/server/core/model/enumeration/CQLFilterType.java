@@ -14,7 +14,7 @@ public enum CQLFilterType {
 
     public static CQLFilterType convert(String l) {
         return Arrays.stream(CQLFilterType.values())
-                .filter(f -> f.equals(l))
+                .filter(f -> f.lang.equals(l))
                 .findFirst()
                 .orElse(UNKNOWN);
     }
