@@ -7,9 +7,14 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 public enum CQLFieldMapper {
     geometry("summaries.proj:geometry");
 
-    public final String field;
+    protected final String field;
 
     CQLFieldMapper(String field) {
         this.field = field;
+    }
+
+    @Override
+    public String toString() {
+        return this.field;
     }
 }

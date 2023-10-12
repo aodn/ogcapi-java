@@ -36,11 +36,17 @@ import org.geotools.geojson.geom.GeometryJSON;
  *
  * TODO: Need to implement all functions later, right now only a small amount of functions is done.
  */
-public class CQLToElasticFilterFactory extends FilterFactoryImpl {
+public class CQLToElasticFilterFactory<T extends Enum<T>> extends FilterFactoryImpl {
 
     protected Logger logger = LoggerFactory.getLogger(CQLToElasticFilterFactory.class);
 
     protected List<Query> queries = new ArrayList<>();
+
+    protected Class<T> enumType;
+
+    public CQLToElasticFilterFactory(Class<T> tClass) {
+        this.enumType = tClass;
+    }
 
     public List<Query> getQueries() {
         return queries;
@@ -76,7 +82,7 @@ public class CQLToElasticFilterFactory extends FilterFactoryImpl {
 
                 // Create elastic query here
                 Query geoShapeQuery = new GeoShapeQuery.Builder()
-                        .field(CQLFieldMapper.valueOf(attribute.getPropertyName()).field)
+                        .field(Enum.valueOf(enumType,attribute.getPropertyName()).toString())
                         .shape(builder -> builder
                                 .relation(GeoShapeRelation.Intersects)
                                 .shape(JsonData.from(new StringReader(geojson))))
