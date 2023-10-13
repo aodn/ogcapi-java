@@ -40,6 +40,10 @@
 			<artifactId>jackson-datatype-threetenbp</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.openapitools</groupId>
+			<artifactId>jackson-databind-nullable</artifactId>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
@@ -63,9 +67,9 @@
 			</plugin>
 			-->
 			<plugin>
-				<groupId>io.swagger.codegen.v3</groupId>
-				<artifactId>swagger-codegen-maven-plugin</artifactId>
-				<version>${swagger.codegen.version}</version>
+				<groupId>org.openapitools</groupId>
+				<artifactId>openapi-generator-maven-plugin</artifactId>
+				<version>7.0.1</version>
 				<executions>
 					<execution>
 						<id>generate-ogcapi-tile</id>
@@ -73,23 +77,29 @@
 						<goals>
 							<goal>generate</goal>
 						</goals>
+						<!-- https://github.com/swagger-api/swagger-codegen/issues/9720-->
 						<configuration>
-							<language>spring</language>
+							<generatorName>spring</generatorName>
 							<modelPackage>${project.groupId}.tile.model</modelPackage>
 							<apiPackage>${project.groupId}.tile.api</apiPackage>
 							<invokerPackage>${project.groupId}.tile.invoker</invokerPackage>
 							<inputSpec>${project.basedir}/src/main/resources/schema/tile/ogcapi-tiles-1.yaml</inputSpec>
 							<output>${project.build.directory}/generated-sources</output>
+							<cleanupOutput>true</cleanupOutput>
 							<typeMappings>
 								<!--
 								The openapi specify an enum array for collection id, this makes generator created
 								enum class with fixed value which is wrong, we do not want this behavior and want a
 								pure string instead. We can override this by using the mapping below.
 								-->
-								<typeMapping>VectorTilesCollections=java.lang.String</typeMapping>
+								<typeMapping>TileMatrixSets=java.lang.String</typeMapping>
 								<typeMapping>AllCollections=java.lang.String</typeMapping>
+								<typeMapping>VectorTilesCollections=java.lang.String</typeMapping>
 								<typeMapping>CoverageCollections=java.lang.String</typeMapping>
 							</typeMappings>
+							<schemaMappings>
+								<schemaMapping>TileMatrixSets=java.lang.String</schemaMapping>
+							</schemaMappings>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
 								<hideGenerationTimestamp>true</hideGenerationTimestamp>
@@ -118,12 +128,30 @@
 								<include>${project.build.directory}/generated-sources/src/main/**/*.java</include>
 							</includes>
 							<replacements>
+								<!-- Replace wrong type, we do not want fix enum -->
+								<replacement>
+									<token>VectorTilesCollections collectionId</token>
+									<value>String collectionId</value>
+								</replacement>
+								<replacement>
+									<token>AllCollections collectionId</token>
+									<value>String collectionId</value>
+								</replacement>
+								<replacement>
+									<token>CoverageCollections collectionId</token>
+									<value>String collectionId</value>
+								</replacement>
+								<replacement>
+									<token>TileMatrixSets tileMatrixSetId</token>
+									<value>String tileMatrixSetId</value>
+								</replacement>
+								<!-- end fix wrong type enum -->
 								<replacement>
 									<token>import javax</token>
 									<value>import jakarta</value>
 								</replacement>
 								<replacement>
-									<token>import au\.org\.aodn\.ogcapi\.tile\.model\.TimeStamp;</token>
+									<token>import au\.org\.aodn\.ogcapi\.tile\.model\.OneOfobjectobjectobject;</token>
 									<value></value>
 								</replacement>
 							</replacements>
