@@ -4,6 +4,9 @@ elasticsearch:
   serverUrl: http://3.27.147.190:9200
   apiKey: NC1Dc19Jb0JsbTJqVmhzNy1OS1k6LTdqN0Y0QktRVHVKRHVpYU1TNkhSZw==
 
+api:
+  host: http://localhost:8080
+
 logging:
   level:
     au.org.aodn.ogcapi.server: debug

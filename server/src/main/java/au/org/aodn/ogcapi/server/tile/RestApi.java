@@ -9,10 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.context.request.NativeWebRequest;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Implements the rest api of tile
@@ -27,7 +25,77 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     protected StacToInlineResponse2002 stacToInlineResponse2002;
 
     @Override
-    public ResponseEntity<DatasetVectorGetTileSetsList200Response> collectionVectorGetTileSetsList(String collectionId, String f) {
+    public ResponseEntity<String> collectionCoverageGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> collectionCoverageGetTileSet(String collectionId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> collectionCoverageGetTileSetsList(String collectionId, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<String> collectionMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> collectionMapGetTileSet(String collectionId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> collectionMapGetTileSetsList(String collectionId, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<String> collectionStyleMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, String styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> collectionStyleMapGetTileSet(String collectionId, String styleId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> collectionStyleMapGetTileSetsList(String collectionId, String styleId, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<String> collectionStyleVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, String styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> collectionStyleVectorGetTileSet(String collectionId, String styleId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> collectionStyleVectorGetTileSetsList(String collectionId, String styleId, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<String> collectionVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> collectionVectorGetTileSet(String collectionId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(String collectionId, String f) {
         return restService.getTileSetsList(
                 collectionId,
                 OGCMediaTypeMapper.convert(f),
@@ -57,25 +125,82 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
      */
     @Hidden
     @Override
-    public ResponseEntity<Collections> getCollectionsList(String datetime, GetCollectionsListBboxParameter bbox, Integer limit, String f) {
+    public ResponseEntity<Collections> getCollectionsList(String datetime, List bbox, Integer limit, String f) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override
-    public ResponseEntity<TileMatrixSet> getTileMatrixSet(String tileMatrixSetId, String f) {
+    public ResponseEntity<String> datasetMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
         return null;
     }
 
     @Override
-    public ResponseEntity<DatasetVectorGetTileSetsList200Response> datasetVectorGetTileSetsList(String f) {
+    public ResponseEntity<TileSet> datasetMapGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> datasetMapGetTileSetsList(String f) {
+        return null;
+    }
+
+
+    @Override
+    public ResponseEntity<String> datasetStyleMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, Styles styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> datasetStyleMapGetTileSet(Styles styleId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> datasetStyleMapGetTileSetsList(Styles styleId, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<String> datasetStyleVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, Styles styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> datasetStyleVectorGetTileSet(Styles styleId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+
+    @Override
+    public ResponseEntity<InlineResponse2002> datasetStyleVectorGetTileSetsList(Styles styleId, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileMatrixSet> getTileMatrixSet(TileMatrixSets tileMatrixSetId, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2001> getTileMatrixSetsList(String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<String> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<TileSet> datasetVectorGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        return null;
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse2002> datasetVectorGetTileSetsList(String f) {
         return restService.getTileSetsList(
                 null,
                 OGCMediaTypeMapper.convert(f),
                 stacToInlineResponse2002::convert);
-    }
-
-    @Override
-    public Optional<NativeWebRequest> getRequest() {
-        return CollectionsApi.super.getRequest();
     }
 }
