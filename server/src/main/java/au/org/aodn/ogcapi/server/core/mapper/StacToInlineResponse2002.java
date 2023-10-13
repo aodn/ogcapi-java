@@ -49,6 +49,12 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
                     self.href(String.format("%s/collections/%s/tiles",hostname, m.getUuid()));
                     item.addLinksItem(self);
 
+                    Link metadata = new Link();
+                    metadata.rel("metadata");
+                    metadata.type(MediaType.APPLICATION_JSON_VALUE);
+                    metadata.href(String.format("%s/collections/%s/tiles/metadata",hostname, m.getUuid()));
+                    item.addLinksItem(metadata);
+
                     return item;
                 })
                 .collect(Collectors.toList());
