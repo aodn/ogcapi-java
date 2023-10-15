@@ -101,7 +101,6 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
                 OGCMediaTypeMapper.convert(f),
                 stacToInlineResponse2002::convert);
     }
-
     /**
      * Bean always found, this effectively disable this REST point because it is common in many places and
      * should not implement it here, @Hiden disable swagger doc
@@ -131,43 +130,43 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Override
     public ResponseEntity<String> datasetMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override
     public ResponseEntity<TileSet> datasetMapGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override
     public ResponseEntity<InlineResponse2002> datasetMapGetTileSetsList(String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
 
     @Override
     public ResponseEntity<String> datasetStyleMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, Styles styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override
     public ResponseEntity<TileSet> datasetStyleMapGetTileSet(Styles styleId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override
     public ResponseEntity<InlineResponse2002> datasetStyleMapGetTileSetsList(Styles styleId, String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override
     public ResponseEntity<String> datasetStyleVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, Styles styleId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override
     public ResponseEntity<TileSet> datasetStyleVectorGetTileSet(Styles styleId, TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
 
@@ -193,6 +192,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Override
     public ResponseEntity<TileSet> datasetVectorGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
+        if(tileMatrixSetId != TileMatrixSets.WEBMERCATORQUAD) {
+            return ResponseEntity.status(HttpStatus.OK).body(new TileSet());
+        }
         return null;
     }
 

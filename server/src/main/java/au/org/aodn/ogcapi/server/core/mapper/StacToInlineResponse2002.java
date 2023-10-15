@@ -41,18 +41,20 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
                 .map(m -> {
                     TitleSetItemExt item = new TitleSetItemExt();
                     item.setTitle(m.getTitle());
-
-                    // Link to self
+                    // From spec https://docs.ogc.org/is/20-057/20-057.html#toc33
+                    // Links to related resources. A 'self' link to the tileset as well as a
+                    // 'http://www.opengis.net/def/rel/ogc/1.0/tiling-scheme' link to a definition
+                    // of the TileMatrixSet are required.
                     Link self = new Link();
                     self.rel("self");
                     self.type(MediaType.APPLICATION_JSON_VALUE);
-                    self.href(String.format("%s/collections/%s/tiles",hostname, m.getUuid()));
+                    self.href(String.format("%s/collections/%s/tiles/WebMercatorQuad",hostname, m.getUuid()));
                     item.addLinksItem(self);
 
                     Link metadata = new Link();
-                    metadata.rel("metadata");
+                    metadata.rel("http://www.opengis.net/def/rel/ogc/1.0/tiling-scheme");
                     metadata.type(MediaType.APPLICATION_JSON_VALUE);
-                    metadata.href(String.format("%s/collections/%s/tiles/metadata",hostname, m.getUuid()));
+                    metadata.href(String.format("%s/tileMatrixSets/WebMercatorQuad",hostname));
                     item.addLinksItem(metadata);
 
                     return item;
