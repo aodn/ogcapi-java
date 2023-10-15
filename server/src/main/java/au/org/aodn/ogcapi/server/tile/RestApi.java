@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.tile;
 
+import au.org.aodn.ogcapi.server.core.mapper.StacToTileSetWmWGS84Q;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.tile.api.*;
@@ -23,6 +24,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Autowired
     protected StacToInlineResponse2002 stacToInlineResponse2002;
+
+    @Autowired
+    protected StacToTileSetWmWGS84Q stacToTileSet;
 
     @Override
     public ResponseEntity<String> collectionCoverageGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
@@ -97,7 +101,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     @Override
     public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(String collectionId, String f) {
         return restService.getTileSetsList(
-                collectionId,
+                List.of(collectionId),
                 OGCMediaTypeMapper.convert(f),
                 stacToInlineResponse2002::convert);
     }
@@ -193,9 +197,15 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     @Override
     public ResponseEntity<TileSet> datasetVectorGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
         if(tileMatrixSetId != TileMatrixSets.WEBMERCATORQUAD) {
+            // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
             return ResponseEntity.status(HttpStatus.OK).body(new TileSet());
         }
-        return null;
+        else {
+            return restService.getTileSetsList(
+                    collections,
+                    OGCMediaTypeMapper.convert(f),
+                    stacToTileSet::convert);
+        }
     }
 
     @Override

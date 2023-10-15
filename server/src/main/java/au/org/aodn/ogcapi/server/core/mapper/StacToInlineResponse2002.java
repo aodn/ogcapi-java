@@ -30,12 +30,13 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
     protected class TitleSetItemExt extends TileSetItem {
 
         @JsonProperty("crs")
-        public String getNCrs() { return CQLCrsType.CRS84.url; }
+        public String getCrs2() { return CQLCrsType.CRS84.url; }
 
         @JsonProperty("dataType")
-        public String datatype() { return "vector"; }
+        public String getDataType2() { return "vector"; }
     }
 
+    @Override
     public InlineResponse2002 convert(List<StacCollectionModel> model) {
         List<TileSetItem> items = model.stream()
                 .map(m -> {
@@ -45,17 +46,8 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
                     // Links to related resources. A 'self' link to the tileset as well as a
                     // 'http://www.opengis.net/def/rel/ogc/1.0/tiling-scheme' link to a definition
                     // of the TileMatrixSet are required.
-                    Link self = new Link();
-                    self.rel("self");
-                    self.type(MediaType.APPLICATION_JSON_VALUE);
-                    self.href(String.format("%s/collections/%s/tiles/WebMercatorQuad",hostname, m.getUuid()));
-                    item.addLinksItem(self);
-
-                    Link metadata = new Link();
-                    metadata.rel("http://www.opengis.net/def/rel/ogc/1.0/tiling-scheme");
-                    metadata.type(MediaType.APPLICATION_JSON_VALUE);
-                    metadata.href(String.format("%s/tileMatrixSets/WebMercatorQuad",hostname));
-                    item.addLinksItem(metadata);
+                    item.addLinksItem(getSelfLink(hostname, m.getUuid()));
+                    item.addLinksItem(getTileSchema(hostname));
 
                     return item;
                 })

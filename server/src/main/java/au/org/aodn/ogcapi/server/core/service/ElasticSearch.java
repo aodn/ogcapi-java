@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -36,16 +37,11 @@ public class ElasticSearch implements Search {
     @Autowired
     protected ObjectMapper mapper;
 
-    protected BoolQuery createBoolQuery(List<Query> queries, List<Query> filters, Boolean isShouldOperation) {
+    protected BoolQuery createBoolQuery(List<Query> must, List<Query> should, List<Query> filters) {
         BoolQuery.Builder builder = new BoolQuery.Builder();
 
-        if(queries != null && !queries.isEmpty()) {
-            if (isShouldOperation) {
-                builder.minimumShouldMatch("1");
-                builder.should(queries);
-            } else {
-                builder.must(queries);
-            }
+        if(must != null && !must.isEmpty()) {
+            builder.must(must);
         }
         else {
             /*
@@ -54,20 +50,25 @@ public class ElasticSearch implements Search {
             builder.must(QueryBuilders.matchAll().build()._toQuery());
         }
 
+        if(should != null && !should.isEmpty()) {
+            builder.minimumShouldMatch("1");
+            builder.should(should);
+        }
+
         if(filters != null && !filters.isEmpty()) {
             builder.filter(filters);
         }
         return builder.build();
     }
 
-    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, List<Query> filters, Boolean isShouldOperation, Integer from, Integer size) throws IOException {
+    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, List<Query> should, List<Query> filters, Integer from, Integer size) throws IOException {
 
         SearchRequest.Builder builder = new SearchRequest.Builder();
         builder.source(f -> f.fetch(true))
                 .index(indexName)
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
-                .query(q -> q.bool(createBoolQuery(queries, filters, isShouldOperation)));
+                .query(q -> q.bool(createBoolQuery(queries, should, filters)));
 
         SearchRequest request = builder.build();
         logger.debug("Final elastic search payload {}", request.toString());
@@ -99,21 +100,28 @@ public class ElasticSearch implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchCollectionWithGeometry(String id) throws IOException {
+    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws IOException {
+
+        List<FieldValue> values = ids.stream()
+                .map(id -> FieldValue.of(id))
+                .collect(Collectors.toList());
+
         List<Query> queries = List.of(
             MatchQuery.of(m -> m
                     .field(StacType.field)
                     .query(StacType.Collection.value))._toQuery(),
 
             ExistsQuery.of(m -> m
-                .field(StacSummeries.Geometry.field))._toQuery(),
-
-            MatchQuery.of(m -> m
-                .field(StacUUID.field)
-                .query(id))._toQuery()
+                .field(StacSummeries.Geometry.field))._toQuery()
         );
 
-        return searchCollectionBy(queries, null, Boolean.FALSE, null, null);
+        List<Query> filters = List.of(
+                TermsQuery.of(t -> t
+                        .field(StacUUID.field)
+                        .terms(s -> s.value(values)))._toQuery()
+        );
+
+        return searchCollectionBy(queries, null, filters, null, null);
     }
 
     @Override
@@ -127,7 +135,7 @@ public class ElasticSearch implements Search {
                         .field(StacSummeries.Geometry.field))._toQuery()
         );
 
-        return searchCollectionBy(queries, null, Boolean.FALSE, null, null);
+        return searchCollectionBy(queries, null, null, null, null);
     }
 
     @Override
@@ -138,7 +146,7 @@ public class ElasticSearch implements Search {
                         .query(StacType.Collection.value))._toQuery()
         );
 
-        return searchCollectionBy(queries, null, Boolean.FALSE, null, null);
+        return searchCollectionBy(queries, null, null, null, null);
     }
 
     @Override
@@ -154,21 +162,13 @@ public class ElasticSearch implements Search {
                 queries = new ArrayList<>();
 
                 for (String t : targets) {
-                    Query q = MatchQuery.of(m -> m
+                    Query q = MultiMatchQuery.of(m -> m
                             .fuzziness("AUTO")
-                            .field(StacTitle.field)
+                            //TODO: what keywords we want to search?
+                            .fields(StacTitle.field, StacDescription.field)
                             .prefixLength(0)
                             .query(t))._toQuery();
                     queries.add(q);
-
-                    q = MatchQuery.of(m -> m
-                            .fuzziness("AUTO")
-                            .field(StacDescription.field)
-                            .prefixLength(0)
-                            .query(t))._toQuery();
-                    queries.add(q);
-
-                    //TODO: what keywords we want to search?
                 }
             }
 
@@ -179,7 +179,7 @@ public class ElasticSearch implements Search {
                 filters = factory.getQueries();
             }
 
-            return searchCollectionBy(queries, filters, Boolean.TRUE, null, null);
+            return searchCollectionBy(null, queries, filters,  null, null);
         }
     }
 }

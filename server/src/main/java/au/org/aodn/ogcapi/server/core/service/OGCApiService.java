@@ -31,7 +31,7 @@ public abstract class OGCApiService {
      */
     public abstract List<String> getConformanceDeclaration();
 
-    public <R> ResponseEntity<R> getTileSetsList(String id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getTileSetsList(List<String> id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json: {

@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 @Service
 @Mapper(componentModel = "spring")
 public abstract class StacToCollections implements Converter<List<StacCollectionModel>, Collections> {
+
+    @Override
     public Collections convert(List<StacCollectionModel> model) {
         List<Collection> collections = model.stream()
                 .map(m -> {
