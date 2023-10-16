@@ -1,15 +1,27 @@
 package au.org.aodn.ogcapi.server.tile;
 
+import au.org.aodn.ogcapi.server.core.mapper.BinaryResponseToString;
 import au.org.aodn.ogcapi.server.core.mapper.StacToTileSetWmWGS84Q;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
+import au.org.aodn.ogcapi.tile.model.Exception;
+import co.elastic.clients.transport.endpoints.BinaryResponse;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -27,6 +39,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Autowired
     protected StacToTileSetWmWGS84Q stacToTileSet;
+
+    @Autowired
+    protected BinaryResponseToString binaryResponseToString;
 
     @Override
     public ResponseEntity<String> collectionCoverageGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
@@ -100,7 +115,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     @Override
     public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(String collectionId, String f) {
-        return restService.getTileSetsList(
+        return restService.getTileSetsListOfCollection(
                 List.of(collectionId),
                 OGCMediaTypeMapper.convert(f),
                 stacToInlineResponse2002::convert);
@@ -188,29 +203,55 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     public ResponseEntity<InlineResponse2001> getTileMatrixSetsList(String f) {
         return null;
     }
-
+    /**
+     * Return mvt from search instance, type should be protocol buffer
+     * @param tileMatrix
+     * @param tileRow
+     * @param tileCol
+     * @param tileMatrixSetId
+     * @param datetime
+     * @param collections
+     * @param subset
+     * @param crs
+     * @param subsetCrs
+     * @param f
+     * @return
+     */
+    @CrossOrigin(origins = "*") //TODO: Just good for testing
     @Override
-    public ResponseEntity<String> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
-        return null;
+    public ResponseEntity<?> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
+        // TODO: Implements additional filters
+        switch(tileMatrixSetId) {
+            case WEBMERCATORQUAD: {
+                return restService.getVectorTileOfCollection(collections, Integer.valueOf(tileMatrix), tileRow, tileCol, binaryResponseToString::convert);
+            }
+            default: {
+                // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
+                return ResponseEntity.status(HttpStatus.OK).body(null);
+            }
+        }
     }
 
     @Override
     public ResponseEntity<TileSet> datasetVectorGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
-        if(tileMatrixSetId != TileMatrixSets.WEBMERCATORQUAD) {
-            // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
-            return ResponseEntity.status(HttpStatus.OK).body(new TileSet());
-        }
-        else {
-            return restService.getTileSetsList(
-                    collections,
-                    OGCMediaTypeMapper.convert(f),
-                    stacToTileSet::convert);
+        switch(tileMatrixSetId) {
+            case WEBMERCATORQUAD: {
+                //TODO: The return set seems not correct more study needed.
+                return restService.getTileSetsListOfCollection(
+                        collections,
+                        OGCMediaTypeMapper.convert(f),
+                        stacToTileSet::convert);
+            }
+            default: {
+                // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
+                return ResponseEntity.status(HttpStatus.OK).body(new TileSet());
+            }
         }
     }
 
     @Override
     public ResponseEntity<InlineResponse2002> datasetVectorGetTileSetsList(String f) {
-        return restService.getTileSetsList(
+        return restService.getTileSetsListOfCollection(
                 null,
                 OGCMediaTypeMapper.convert(f),
                 stacToInlineResponse2002::convert);

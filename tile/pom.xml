@@ -129,6 +129,14 @@
 									<token>import au\.org\.aodn\.ogcapi\.tile\.model\.TimeStamp;</token>
 									<value></value>
 								</replacement>
+								<replacement>
+									<!--
+									Multiple return type allow for this function, set it to ? to make it generic
+									ResponseEntity<String> -> ResponseEntity<?>
+									-->
+									<token>ResponseEntity&lt;String&gt; datasetVectorGetTile</token>
+									<value>ResponseEntity&lt;?&gt; datasetVectorGetTile</value>
+								</replacement>
 							</replacements>
 						</configuration>
 					</execution>

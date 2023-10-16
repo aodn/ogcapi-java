@@ -3,14 +3,11 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.server.core.model.enumeration.Constants;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
-import au.org.aodn.ogcapi.tile.model.Link;
 import au.org.aodn.ogcapi.tile.model.TileSetItem;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

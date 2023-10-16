@@ -2,16 +2,15 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.tile.RestApi;
-import org.geotools.filter.text.commons.CompilerUtil;
-import org.geotools.filter.text.commons.Language;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.function.Function;
 
@@ -31,7 +30,19 @@ public abstract class OGCApiService {
      */
     public abstract List<String> getConformanceDeclaration();
 
-    public <R> ResponseEntity<R> getTileSetsList(List<String> id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
+    public <T, R> ResponseEntity<R> getVectorTileOfCollection(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol, Function<T, R> converter) {
+        try {
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType("application/vnd.mapbox-vector-tile"))
+                    .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol)));
+        }
+        catch (IOException e) {
+            logger.error("Error during request", e);
+            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json: {
@@ -72,7 +83,7 @@ public abstract class OGCApiService {
         try {
             switch (f) {
                 case json: {
-                    List<StacCollectionModel> result = search.searchByTitleDescKeywords(keywords, filter);
+                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));

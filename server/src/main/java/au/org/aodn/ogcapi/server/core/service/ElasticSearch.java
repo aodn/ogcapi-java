@@ -7,8 +7,11 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
+import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -37,7 +40,7 @@ public class ElasticSearch implements Search {
     @Autowired
     protected ObjectMapper mapper;
 
-    protected BoolQuery createBoolQuery(List<Query> must, List<Query> should, List<Query> filters) {
+    protected BoolQuery createBoolQueryForProperties(List<Query> must, List<Query> should, List<Query> filters) {
         BoolQuery.Builder builder = new BoolQuery.Builder();
 
         if(must != null && !must.isEmpty()) {
@@ -68,7 +71,7 @@ public class ElasticSearch implements Search {
                 .index(indexName)
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
-                .query(q -> q.bool(createBoolQuery(queries, should, filters)));
+                .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
 
         SearchRequest request = builder.build();
         logger.debug("Final elastic search payload {}", request.toString());
@@ -150,7 +153,7 @@ public class ElasticSearch implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchByTitleDescKeywords(List<String> targets, String cql) throws IOException, CQLException {
+    public List<StacCollectionModel> searchByParameters(List<String> targets, String cql) throws IOException, CQLException {
 
         if((targets == null || targets.isEmpty()) && cql == null) {
             return searchAllCollections();
@@ -181,5 +184,31 @@ public class ElasticSearch implements Search {
 
             return searchCollectionBy(null, queries, filters,  null, null);
         }
+    }
+
+    @Override
+    public BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException {
+        List<FieldValue> values = ids.stream()
+                .map(id -> FieldValue.of(id))
+                .collect(Collectors.toList());
+
+        List<Query> filters = List.of(
+                TermsQuery.of(t -> t
+                        .field(StacUUID.field)
+                        .terms(s -> s.value(values)))._toQuery());
+
+        SearchMvtRequest m = SearchMvtRequest.of(r -> r
+                .index(indexName)
+                .query(q -> q.bool(b -> b.filter(filters)))
+                .field(StacSummeries.Geometry.field)
+                .zoom(tileMatrix)
+                .x(tileCol)
+                .y(tileCol));
+
+        logger.debug("Final elastic search mvt payload {}", m.toString());
+
+        BinaryResponse er = esClient.searchMvt(m);
+
+        return er;
     }
 }
