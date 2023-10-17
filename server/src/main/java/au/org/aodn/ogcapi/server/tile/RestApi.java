@@ -208,27 +208,41 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
      */
     @CrossOrigin(origins = "*") //TODO: Just good for testing
     @Override
-    public ResponseEntity<?> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
-        return restService.getVectorTileOfCollection(
-                tileMatrixSetId,
-                collections,
-                Integer.valueOf(tileMatrix),
-                tileRow,
-                tileCol,
-                binaryResponseToByte::convert);
+    public ResponseEntity<?> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol,
+                                                  TileMatrixSets tileMatrixSetId, String datetime,
+                                                  List<String> collections, List<String> subset,
+                                                  String crs, String subsetCrs, String f) {
+
+        OGCMediaTypeMapper type = OGCMediaTypeMapper.convert(f, OGCMediaTypeMapper.mapbox);
+
+        switch(type) {
+            case mapbox -> {
+                return restService.getVectorTileOfCollection(
+                        tileMatrixSetId,
+                        collections,
+                        Integer.valueOf(tileMatrix),
+                        tileRow,
+                        tileCol,
+                        binaryResponseToByte::convert);
+            }
+
+            default -> {
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+            }
+        }
     }
 
     @Override
     public ResponseEntity<TileSet> datasetVectorGetTileSet(TileMatrixSets tileMatrixSetId, List<String> collections, String f) {
         switch(tileMatrixSetId) {
-            case WEBMERCATORQUAD: {
+            case WEBMERCATORQUAD -> {
                 //TODO: The return set seems not correct more study needed.
                 return restService.getTileSetsListOfCollection(
                         collections,
                         OGCMediaTypeMapper.convert(f),
                         stacToTileSet::convert);
             }
-            default: {
+            default -> {
                 // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
                 return ResponseEntity.status(HttpStatus.OK).body(new TileSet());
             }

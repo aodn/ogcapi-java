@@ -42,13 +42,12 @@ public abstract class OGCApiService {
         try {
             // TODO: Implements additional filters
             switch (coordinateSystem) {
-                case WEBMERCATORQUAD: {
+                case WEBMERCATORQUAD -> {
                     return ResponseEntity.ok()
-                            .contentType(MediaType.parseMediaType("application/vnd.mapbox-vector-tile"))
+                            .contentType(OGCMediaTypeMapper.mapbox.getMediaType())
                             .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol)));
-
                 }
-                default: {
+                default -> {
                     // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
                     ErrorMessage message = ErrorMessage.builder()
                             .reasons(List.of("Unknown type to convert"))
@@ -74,7 +73,7 @@ public abstract class OGCApiService {
     public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
-                case json: {
+                case json -> {
                     List<StacCollectionModel> result = (id == null) ?
                             search.searchAllCollectionsWithGeometry() :
                             search.searchCollectionWithGeometry(id);
@@ -82,7 +81,7 @@ public abstract class OGCApiService {
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
                 }
-                default: {
+                default -> {
                     /**
                      * https://opengeospatial.github.io/ogcna-auto-review/19-072.html
                      *
@@ -111,13 +110,13 @@ public abstract class OGCApiService {
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords, String filter, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
-                case json: {
+                case json -> {
                     List<StacCollectionModel> result = search.searchByParameters(keywords, filter);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
                 }
-                default: {
+                default -> {
                     /**
                      * https://opengeospatial.github.io/ogcna-auto-review/19-072.html
                      *

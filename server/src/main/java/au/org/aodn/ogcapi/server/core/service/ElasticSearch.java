@@ -195,7 +195,10 @@ public class ElasticSearch implements Search {
                 .zoom(tileMatrix)
                 .x(tileRow.intValue())
                 .y(tileCol.intValue())
-                .exactBounds(Boolean.TRUE)
+                // If true, the meta layer’s feature is a bounding box resulting from a geo_bounds aggregation.
+                // The aggregation runs on <field> values that intersect the <zoom>/<x>/<y> tile with wrap_longitude
+                // set to false. The resulting bounding box may be larger than the vector tile.
+                .exactBounds(Boolean.FALSE)
                 .gridType(GridType.Grid);
 
         if(ids != null && !ids.isEmpty()) {

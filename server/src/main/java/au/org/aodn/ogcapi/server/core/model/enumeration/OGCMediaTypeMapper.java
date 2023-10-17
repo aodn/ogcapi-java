@@ -7,7 +7,9 @@ import org.springframework.http.MediaType;
  */
 public enum OGCMediaTypeMapper {
     html("html", MediaType.TEXT_HTML),
-    json("json", MediaType.APPLICATION_JSON);
+    json("json", MediaType.APPLICATION_JSON),
+    geojson("application/geo+json", MediaType.parseMediaType("application/geo+json")),
+    mapbox("application/vnd.mapbox-vector-tile", MediaType.parseMediaType("application/vnd.mapbox-vector-tile"));
 
     protected MediaType mediaType;
     protected String ogcFormat;
@@ -22,6 +24,10 @@ public enum OGCMediaTypeMapper {
     }
 
     public static OGCMediaTypeMapper convert(String f) {
-        return f == null ? OGCMediaTypeMapper.json : OGCMediaTypeMapper.valueOf(f.trim().toLowerCase());
+        return convert(f, OGCMediaTypeMapper.json);
+    }
+
+    public static OGCMediaTypeMapper convert(String f, OGCMediaTypeMapper defaultValue) {
+        return f == null ? defaultValue : OGCMediaTypeMapper.valueOf(f.trim().toLowerCase());
     }
 }
