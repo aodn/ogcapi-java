@@ -2,6 +2,15 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 
 import java.util.Arrays;
 
+import org.geotools.geometry.jts.JTS;
+import org.geotools.geometry.jts.JTSFactoryFinder;
+import org.geotools.referencing.CRS;
+import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.impl.CoordinateArraySequence;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.MathTransform;
+import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,5 +36,24 @@ public enum CQLCrsType {
                 .filter(f -> f.url.equals(url))
                 .findFirst()
                 .orElse(UNKNOWN);
+    }
+
+    public static Point transformPoint(Integer x, Integer y, Integer z, CQLCrsType source, CQLCrsType target) throws FactoryException, TransformException {
+
+        GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
+        Point p = new Point(new CoordinateArraySequence(new CoordinateXYZM[]{new CoordinateXYZM(x, y, z, 0)}), factory);
+
+        CoordinateReferenceSystem sourceCRS = CRS.decode(source.code);
+        CoordinateReferenceSystem targetCRS = CRS.decode(target.code);
+
+        MathTransform mTrans = CRS.findMathTransform(sourceCRS, targetCRS, true);
+        Geometry t = JTS.transform(p, mTrans);
+
+        logger.debug(
+                "Coordinate value transform from {} to {} with value zoom = {} x = {} y = {} -> {}",
+                source, target,
+                z, x, y, t);
+
+        return t.getInteriorPoint();
     }
 }

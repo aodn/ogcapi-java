@@ -151,7 +151,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 @Valid @RequestParam(value = "sortby", required = false, defaultValue = "score") List<String> sortby) throws CQLException {
 
         // TODO: Support other CRS.
-        if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG3857) {
+        if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
             // TODO , transform EPSG3857 to EPSG4326
             return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, stacToCollection::convert);
         }
