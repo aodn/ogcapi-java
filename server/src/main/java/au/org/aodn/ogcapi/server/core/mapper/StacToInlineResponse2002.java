@@ -27,7 +27,7 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
     protected class TitleSetItemExt extends TileSetItem {
 
         @JsonProperty("crs")
-        public String getCrs2() { return CQLCrsType.CRS84.url; }
+        public String getCrs2() { return CQLCrsType.EPSG4326.url; }
 
         @JsonProperty("dataType")
         public String getDataType2() { return "vector"; }

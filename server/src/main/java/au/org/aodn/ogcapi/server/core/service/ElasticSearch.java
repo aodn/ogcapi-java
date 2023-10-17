@@ -188,26 +188,32 @@ public class ElasticSearch implements Search {
 
     @Override
     public BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException {
-        List<FieldValue> values = ids.stream()
-                .map(id -> FieldValue.of(id))
-                .collect(Collectors.toList());
 
-        List<Query> filters = List.of(
-                TermsQuery.of(t -> t
-                        .field(StacUUID.field)
-                        .terms(s -> s.value(values)))._toQuery());
-
-        SearchMvtRequest m = SearchMvtRequest.of(r -> r
-                .index(indexName)
-                .query(q -> q.bool(b -> b.filter(filters)))
+        SearchMvtRequest.Builder builder = new SearchMvtRequest.Builder();
+        builder.index(indexName)
                 .field(StacSummeries.Geometry.field)
                 .zoom(tileMatrix)
-                .x(tileCol)
-                .y(tileCol));
+                .x(tileRow.intValue())
+                .y(tileCol.intValue())
+                .exactBounds(Boolean.TRUE)
+                .gridType(GridType.Grid);
 
-        logger.debug("Final elastic search mvt payload {}", m.toString());
+        if(ids != null && !ids.isEmpty()) {
+            List<FieldValue> values = ids.stream()
+                    .map(id -> FieldValue.of(id))
+                    .collect(Collectors.toList());
 
-        BinaryResponse er = esClient.searchMvt(m);
+            List<Query> filters = List.of(
+                    TermsQuery.of(t -> t
+                            .field(StacUUID.field)
+                            .terms(s -> s.value(values)))._toQuery());
+
+            builder.query(q -> q.bool(b -> b.filter(filters)));
+        }
+
+        logger.debug("Final elastic search mvt payload {}", builder.toString());
+
+        BinaryResponse er = esClient.searchMvt(builder.build());
 
         return er;
     }

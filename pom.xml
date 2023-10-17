@@ -23,6 +23,7 @@
 		<org.projectlombok.version>1.18.30</org.projectlombok.version>
 		<org.projectlombok.binding>0.2.0</org.projectlombok.binding>
 		<swagger.codegen.version>3.0.42</swagger.codegen.version>
+		<org.geotools.version>29.2</org.geotools.version>
 	</properties>
 	<repositories>
 		<repository>
@@ -110,12 +111,26 @@
 			<dependency>
 				<groupId>org.geotools</groupId>
 				<artifactId>gt-cql</artifactId>
-				<version>29.2</version>
+				<version>${org.geotools.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>org.geotools</groupId>
 				<artifactId>gt-geojson</artifactId>
-				<version>29.2</version>
+				<version>${org.geotools.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.geotools</groupId>
+				<artifactId>gt-referencing</artifactId>
+				<version>${org.geotools.version}</version>
+			</dependency>
+			<!--
+			https://mvnrepository.com/artifact/org.geotools/gt-epsg-hsql
+			it is use to lookup EPSG values
+			-->
+			<dependency>
+				<groupId>org.geotools</groupId>
+				<artifactId>gt-epsg-hsql</artifactId>
+				<version>22.2</version>
 			</dependency>
 			<dependency>
 				<groupId>org.openapitools</groupId>

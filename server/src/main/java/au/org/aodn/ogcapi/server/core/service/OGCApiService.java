@@ -1,8 +1,16 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.tile.RestApi;
+import au.org.aodn.ogcapi.tile.model.TileMatrixSets;
+import org.geotools.referencing.CRS;
+import org.locationtech.jts.geom.Point;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,15 +38,36 @@ public abstract class OGCApiService {
      */
     public abstract List<String> getConformanceDeclaration();
 
-    public <T, R> ResponseEntity<R> getVectorTileOfCollection(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol, Function<T, R> converter) {
+    public <T, R> ResponseEntity<?> getVectorTileOfCollection(TileMatrixSets coordinateSystem, List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol, Function<T, R> converter) {
         try {
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType("application/vnd.mapbox-vector-tile"))
-                    .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol)));
+            // TODO: Implements additional filters
+            switch (coordinateSystem) {
+                case WEBMERCATORQUAD: {
+                    return ResponseEntity.ok()
+                            .contentType(MediaType.parseMediaType("application/vnd.mapbox-vector-tile"))
+                            .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol)));
+
+                }
+                default: {
+                    // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
+                    ErrorMessage message = ErrorMessage.builder()
+                            .reasons(List.of("Unknown type to convert"))
+                            .build();
+
+                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .body(message);
+                }
+            }
         }
-        catch (IOException e) {
-            logger.error("Error during request", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+        catch(IOException ioe) {
+            ErrorMessage errorMessage = ErrorMessage.builder()
+                    .reasons(List.of(ioe.getMessage()))
+                    .build();
+
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(errorMessage);
         }
     }
 

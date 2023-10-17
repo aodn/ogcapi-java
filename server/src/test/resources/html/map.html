@@ -55,7 +55,7 @@
     map.addSource("built_source", {
       type: "vector",
       tiles: [
-        `http://localhost:8080/tiles/WebMercatorQuad/{z}/{x}/{y}?collections=72dbe843-2fb1-4b2e-8b7e-4661d857affb`,
+        `http://localhost:8080/tiles/WebMercatorQuad/{z}/{x}/{y}`,
       ],
       minzoom: 2,
       maxzoom: 14,
@@ -63,7 +63,7 @@
 
     map.addLayer({
       id: "raillines_layer",
-      type: "fill",
+      type: "line",
       source: "built_source",
       "source-layer": "hits"
     });

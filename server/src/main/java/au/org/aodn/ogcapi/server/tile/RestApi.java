@@ -1,23 +1,12 @@
 package au.org.aodn.ogcapi.server.tile;
 
-import au.org.aodn.ogcapi.server.core.mapper.BinaryResponseToString;
+import au.org.aodn.ogcapi.server.core.mapper.BinaryResponseToBytes;
 import au.org.aodn.ogcapi.server.core.mapper.StacToTileSetWmWGS84Q;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
-import au.org.aodn.ogcapi.tile.model.Exception;
-import co.elastic.clients.transport.endpoints.BinaryResponse;
 import io.swagger.v3.oas.annotations.Hidden;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import jakarta.validation.Valid;
-import jakarta.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -41,7 +30,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     protected StacToTileSetWmWGS84Q stacToTileSet;
 
     @Autowired
-    protected BinaryResponseToString binaryResponseToString;
+    protected BinaryResponseToBytes binaryResponseToByte;
 
     @Override
     public ResponseEntity<String> collectionCoverageGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
@@ -220,16 +209,13 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     @CrossOrigin(origins = "*") //TODO: Just good for testing
     @Override
     public ResponseEntity<?> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
-        // TODO: Implements additional filters
-        switch(tileMatrixSetId) {
-            case WEBMERCATORQUAD: {
-                return restService.getVectorTileOfCollection(collections, Integer.valueOf(tileMatrix), tileRow, tileCol, binaryResponseToString::convert);
-            }
-            default: {
-                // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
-                return ResponseEntity.status(HttpStatus.OK).body(null);
-            }
-        }
+        return restService.getVectorTileOfCollection(
+                tileMatrixSetId,
+                collections,
+                Integer.valueOf(tileMatrix),
+                tileRow,
+                tileCol,
+                binaryResponseToByte::convert);
     }
 
     @Override
