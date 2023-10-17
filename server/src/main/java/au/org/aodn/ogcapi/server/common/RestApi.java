@@ -27,6 +27,7 @@ import org.geotools.filter.text.cql2.CQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -130,7 +131,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                     content = @Content(mediaType = "application/json", schema = @Schema(implementation = Exception.class)))})
     @RequestMapping(value = "/collections",
             produces = {
-                    "application/json"
+                    MediaType.APPLICATION_JSON_VALUE
             //        "text/html"
             },
             method = RequestMethod.GET)
@@ -161,8 +162,8 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 reasons.add("Unknown filter language, support cql-text only");
             }
 
-            if(CQLCrsType.convertFromUrl(crs) != CQLCrsType.EPSG3857) {
-                reasons.add("Unknown crs, support EPSG3857 only");
+            if(CQLCrsType.convertFromUrl(crs) != CQLCrsType.EPSG4326) {
+                reasons.add("Unknown crs, support EPSG4326 only");
             }
 
             ErrorMessage msg = ErrorMessage.builder()
