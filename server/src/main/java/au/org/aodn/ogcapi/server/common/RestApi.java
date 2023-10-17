@@ -152,8 +152,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
-            // TODO , transform EPSG3857 to EPSG4326
-            return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, stacToCollection::convert);
+            return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, CQLCrsType.convertFromUrl(crs), stacToCollection::convert);
         }
         else {
             List<String> reasons = new ArrayList<>();

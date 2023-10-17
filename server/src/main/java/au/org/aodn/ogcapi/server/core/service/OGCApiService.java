@@ -50,7 +50,7 @@ public abstract class OGCApiService {
                 default -> {
                     // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
                     ErrorMessage message = ErrorMessage.builder()
-                            .reasons(List.of("Unknown type to convert"))
+                            .reasons(List.of("Unknown coordinate system"))
                             .build();
 
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
@@ -107,11 +107,13 @@ public abstract class OGCApiService {
         }
     }
 
-    public <R> ResponseEntity<R> getCollectionList(List<String> keywords, String filter, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
+                                                   String filter, OGCMediaTypeMapper f,
+                                                   CQLCrsType coor, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json -> {
-                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter);
+                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, coor);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));

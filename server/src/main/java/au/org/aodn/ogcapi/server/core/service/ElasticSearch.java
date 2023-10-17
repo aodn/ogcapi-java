@@ -153,7 +153,7 @@ public class ElasticSearch implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> targets, String cql) throws IOException, CQLException {
+    public List<StacCollectionModel> searchByParameters(List<String> targets, String cql, CQLCrsType coor) throws IOException, CQLException {
 
         if((targets == null || targets.isEmpty()) && cql == null) {
             return searchAllCollections();
@@ -177,7 +177,7 @@ public class ElasticSearch implements Search {
 
             List<Query> filters = null;
             if(cql != null) {
-                CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(CQLCollectionsField.class);
+                CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
                 CompilerUtil.parseFilter(Language.CQL, cql, factory);
                 filters = factory.getQueries();
             }
