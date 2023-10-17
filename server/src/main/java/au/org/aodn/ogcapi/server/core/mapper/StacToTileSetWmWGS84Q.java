@@ -24,7 +24,7 @@ public abstract class StacToTileSetWmWGS84Q implements Converter<List<StacCollec
         public String getDataType2() { return "vector"; }
 
         @JsonProperty("crs")
-        public String getCrs2() { return CQLCrsType.CRS84.url; }
+        public String getCrs2() { return CQLCrsType.EPSG4326.url; }
     }
 
     @Override

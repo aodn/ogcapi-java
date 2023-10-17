@@ -3,14 +3,11 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.server.core.model.enumeration.Constants;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
-import au.org.aodn.ogcapi.tile.model.Link;
 import au.org.aodn.ogcapi.tile.model.TileSetItem;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -30,7 +27,7 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
     protected class TitleSetItemExt extends TileSetItem {
 
         @JsonProperty("crs")
-        public String getCrs2() { return CQLCrsType.CRS84.url; }
+        public String getCrs2() { return CQLCrsType.EPSG4326.url; }
 
         @JsonProperty("dataType")
         public String getDataType2() { return "vector"; }

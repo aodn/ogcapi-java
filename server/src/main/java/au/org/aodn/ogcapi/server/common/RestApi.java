@@ -12,7 +12,6 @@ import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,18 +22,13 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
-import org.geotools.filter.text.commons.CompilerUtil;
-import org.geotools.filter.text.commons.Language;
-import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.text.cql2.CQLException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpServerErrorException;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -149,15 +143,16 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 @Valid @RequestParam(value = "q", required = false) List<String> q,
             @Parameter(in = ParameterIn.QUERY, description = "Support CQL only, we only implemented limit support")
                 @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang,
-            @Parameter(in = ParameterIn.QUERY, description = "Coordinate system, http://www.opengis.net/def/crs/OGC/1.3/CRS84 ")
-                @RequestParam(value = "crs", required = false, defaultValue = "http://www.opengis.net/def/crs/OGC/1.3/CRS84") String crs,
+            @Parameter(in = ParameterIn.QUERY, description = "Coordinate system, https://epsg.io/4326 ")
+                @RequestParam(value = "crs", required = false, defaultValue = "https://epsg.io/4326") String crs,
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
                 @RequestParam(value = "filter", required = false) String filter,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
                 @Valid @RequestParam(value = "sortby", required = false, defaultValue = "score") List<String> sortby) throws CQLException {
 
-        // TODO: Support or CRS.
-        if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.CRS84) {
+        // TODO: Support other CRS.
+        if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
+            // TODO , transform EPSG3857 to EPSG4326
             return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, stacToCollection::convert);
         }
         else {
@@ -167,8 +162,8 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 reasons.add("Unknown filter language, support cql-text only");
             }
 
-            if(CQLCrsType.convertFromUrl(crs) != CQLCrsType.CRS84) {
-                reasons.add("Unknown crs, support CRS84 only");
+            if(CQLCrsType.convertFromUrl(crs) != CQLCrsType.EPSG3857) {
+                reasons.add("Unknown crs, support EPSG3857 only");
             }
 
             ErrorMessage msg = ErrorMessage.builder()
