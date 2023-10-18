@@ -1,0 +1,28 @@
+version: '3.1'
+
+# Copy from here
+# https://git.cepal.org/geo/geo-facility-geonetwork/-/blob/main/docker-compose.yml
+
+# These steps to push image to ECR
+# aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com
+# docker tag IMAGE_ID 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/my-repository/xxxx
+# docker push 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/my-repository/xxx
+#
+# When running in dev env, you should uncomment build . instead of image from ECR
+
+services:
+  ogcapi:
+    container_name: ogcapi-java
+    build: .
+    #    image: 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/raymond/ogcapi-java
+    image: ogcapi-java
+    ports:
+      - "8081:8081"
+    environment:
+      HOST: ${API_HOST:-http://localhost}
+      PORT: ${API_PORT:-8081}
+      ELASTIC_URL: ${ELASTIC_URL:-https://dev-descovery-index.es.ap-southeast-2.aws.found.io}
+      ELASTIC_KEY: ${ELASTIC_KEY}
+    network_mode: "host"
+    volumes:
+      - /tmp:/tmp
