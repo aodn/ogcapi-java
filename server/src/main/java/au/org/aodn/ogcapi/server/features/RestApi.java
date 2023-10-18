@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import io.swagger.v3.oas.annotations.Hidden;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
@@ -16,9 +17,12 @@ import java.util.List;
 @RestController("FeaturesRestApi")
 public class RestApi implements CollectionsApi {
 
+    @Autowired
+    protected RestServices featuresService;
+
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
-        return null;
+        return featuresService.getCollection(collectionId);
     }
 
     @Override
@@ -31,8 +35,8 @@ public class RestApi implements CollectionsApi {
         return null;
     }
     /**
-     * Bean always found, this effectively disable this REST point because it is common in many places and
-     * should not implement it here, @Hiden disable swagger doc
+     * @Hidden effectively disable this REST point because it is common in many places and
+     * should not implement it here, @Hidden disable swagger doc too
      * @return
      */
     @Hidden

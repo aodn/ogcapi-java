@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
 import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
 import co.elastic.clients.json.JsonData;
@@ -15,6 +16,8 @@ import org.locationtech.jts.io.WKTReader;
 import org.opengis.filter.MultiValuedFilter;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.spatial.Intersects;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -43,7 +46,10 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> extends FilterFactoryI
 
     protected Class<T> enumType;
 
-    public CQLToElasticFilterFactory(Class<T> tClass) {
+    protected CQLCrsType cqlCoorSystem;
+
+    public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass) {
+        this.cqlCoorSystem = cqlCoorSystem;
         this.enumType = tClass;
     }
 
@@ -57,14 +63,15 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> extends FilterFactoryI
      * @throws ParseException
      * @throws IOException
      */
-    protected String convertToGeoJson(LiteralExpressionImpl literalExpression) throws ParseException, IOException {
+    protected String convertToGeoJson(LiteralExpressionImpl literalExpression) throws ParseException, IOException, FactoryException, TransformException {
         GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
         WKTReader reader = new WKTReader(geometryFactory);
         Geometry geo = reader.read(literalExpression.toString());
 
         try(StringWriter writer = new StringWriter()) {
             GeometryJSON geometryJson = new GeometryJSON();
-            geometryJson.write(geo, writer);
+            Geometry t = CQLCrsType.transformGeometry(geo, cqlCoorSystem, CQLCrsType.EPSG4326);
+            geometryJson.write(t, writer);
 
             String r = writer.toString();
             logger.debug("Converted to GeoJson {}", r);
@@ -101,7 +108,11 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> extends FilterFactoryI
 
                 queries.add(geoShapeQuery);
 
-            } catch (ParseException | IOException e) {
+            }
+            catch (ParseException | IOException e) {
+                e.printStackTrace();
+            }
+            catch (FactoryException | TransformException e) {
                 e.printStackTrace();
             }
 

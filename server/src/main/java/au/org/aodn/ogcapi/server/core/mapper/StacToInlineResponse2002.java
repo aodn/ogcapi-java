@@ -43,7 +43,7 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
                     // Links to related resources. A 'self' link to the tileset as well as a
                     // 'http://www.opengis.net/def/rel/ogc/1.0/tiling-scheme' link to a definition
                     // of the TileMatrixSet are required.
-                    item.addLinksItem(getSelfLink(hostname, m.getUuid()));
+                    item.addLinksItem(getSelfTileLink(hostname, m.getUuid()));
                     item.addLinksItem(getTileSchema(hostname));
 
                     return item;
