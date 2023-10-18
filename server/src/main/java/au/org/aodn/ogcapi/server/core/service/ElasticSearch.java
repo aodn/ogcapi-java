@@ -34,11 +34,14 @@ public class ElasticSearch implements Search {
     @Value("${elasticsearch.index.name}")
     protected String indexName;
 
-    @Autowired
     protected ElasticsearchClient esClient;
 
     @Autowired
     protected ObjectMapper mapper;
+
+    public ElasticSearch(ElasticsearchClient client) {
+        this.esClient = client;
+    }
 
     protected BoolQuery createBoolQueryForProperties(List<Query> must, List<Query> should, List<Query> filters) {
         BoolQuery.Builder builder = new BoolQuery.Builder();
