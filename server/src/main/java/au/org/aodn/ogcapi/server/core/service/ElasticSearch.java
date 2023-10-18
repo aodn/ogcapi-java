@@ -102,69 +102,66 @@ public class ElasticSearch implements Search {
         }
     }
 
-    @Override
-    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws IOException {
+    protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry) throws IOException {
 
-        List<FieldValue> values = ids.stream()
-                .map(id -> FieldValue.of(id))
-                .collect(Collectors.toList());
+        List<Query> queries = List.of(MatchQuery.of(m -> m
+                            .field(StacType.field)
+                            .query(StacType.Collection.value))._toQuery());
 
-        List<Query> queries = List.of(
-            MatchQuery.of(m -> m
-                    .field(StacType.field)
-                    .query(StacType.Collection.value))._toQuery(),
+        if(isWithGeometry) {
+            queries.add(ExistsQuery.of(m -> m
+                    .field(StacSummeries.Geometry.field))._toQuery());
+        }
 
-            ExistsQuery.of(m -> m
-                .field(StacSummeries.Geometry.field))._toQuery()
-        );
+        List<Query> filters = null;
+        if(ids != null && !ids.isEmpty()) {
+            List<FieldValue> values = ids.stream()
+                    .map(id -> FieldValue.of(id))
+                    .collect(Collectors.toList());
 
-        List<Query> filters = List.of(
-                TermsQuery.of(t -> t
-                        .field(StacUUID.field)
-                        .terms(s -> s.value(values)))._toQuery()
-        );
+            filters = List.of(
+                    TermsQuery.of(t -> t
+                            .field(StacUUID.field)
+                            .terms(s -> s.value(values)))._toQuery()
+            );
+        }
 
         return searchCollectionBy(queries, null, filters, null, null);
     }
 
     @Override
+    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws Exception {
+        return searchCollectionsByIds(ids, Boolean.TRUE);
+    }
+
+    @Override
     public List<StacCollectionModel> searchAllCollectionsWithGeometry() throws IOException {
-        List<Query> queries = List.of(
-                MatchQuery.of(m -> m
-                        .field(StacType.field)
-                        .query(StacType.Collection.value))._toQuery(),
+        return searchCollectionsByIds(null, Boolean.TRUE);
+    }
 
-                ExistsQuery.of(m -> m
-                        .field(StacSummeries.Geometry.field))._toQuery()
-        );
-
-        return searchCollectionBy(queries, null, null, null, null);
+    @Override
+    public List<StacCollectionModel> searchCollections(List<String> ids) throws Exception {
+        return searchCollectionsByIds(ids, Boolean.FALSE);
     }
 
     @Override
     public List<StacCollectionModel> searchAllCollections() throws IOException {
-        List<Query> queries = List.of(
-                MatchQuery.of(m -> m
-                        .field(StacType.field)
-                        .query(StacType.Collection.value))._toQuery()
-        );
-
-        return searchCollectionBy(queries, null, null, null, null);
+        return searchCollectionsByIds(null, Boolean.FALSE);
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> targets, String cql, CQLCrsType coor) throws IOException, CQLException {
+    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor) throws IOException, CQLException {
 
-        if((targets == null || targets.isEmpty()) && cql == null) {
+        if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections();
         }
         else {
 
             List<Query> queries = null;
-            if(targets != null && !targets.isEmpty()) {
+            if(keywords != null && !keywords.isEmpty()) {
                 queries = new ArrayList<>();
 
-                for (String t : targets) {
+                for (String t : keywords) {
                     Query q = MultiMatchQuery.of(m -> m
                             .fuzziness("AUTO")
                             //TODO: what keywords we want to search?

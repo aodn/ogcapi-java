@@ -8,9 +8,13 @@ import java.io.IOException;
 import java.util.List;
 
 public interface Search {
-    List<StacCollectionModel> searchCollectionWithGeometry(List<String> id) throws Exception;
+    List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws Exception;
     List<StacCollectionModel> searchAllCollectionsWithGeometry() throws Exception;
+
+    List<StacCollectionModel> searchCollections(List<String> ids) throws Exception;
     List<StacCollectionModel> searchAllCollections() throws Exception;
+
     List<StacCollectionModel> searchByParameters(List<String> targets, String filter, CQLCrsType coor) throws Exception;
+
     BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException;
 }

@@ -35,7 +35,7 @@ public abstract class StacToTileSetWmWGS84Q implements Converter<List<StacCollec
         tileSet.addLinksItem(getTileSchema(hostname));
 
         for(StacCollectionModel s : from) {
-            tileSet.addLinksItem(getSelfLink(hostname, s.getUuid()));
+            tileSet.addLinksItem(getSelfTileLink(hostname, s.getUuid()));
 
         }
 
