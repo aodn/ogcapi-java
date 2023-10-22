@@ -53,15 +53,15 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.geotools.geojson.geom.GeometryJSON;
 import org.xml.sax.helpers.NamespaceSupport;
 
 /**
- * Here we use the CQL parser from org.geotools, but the default CQL parser do not fit our purpose. So we need to extends
- * FilterFactoryImpl and add the needed items for our purpose.
+ * Here we use the CQL parser from org.geotools, but the default CQL parser do not fit our purpose. So we need to implement
+ * FilterFactory2 and add the needed items for our purpose. Some call is copy from FilterFactoryImpl, those with
+ * Elastic Query are customized function.
  *
  * Not thread-safe, please create factory each time before compile
  *
@@ -142,8 +142,20 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     }
 
     @Override
+    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry) {
+        logger.debug("INTERSECTS {}, {}", s, geometry);
+        return null;
+    }
+
+    @Override
+    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+        logger.debug("INTERSECTS {}, {} {}", s, geometry, matchAction);
+        return null;
+    }
+
+    @Override
     public <T> Parameter<T> parameter(String name, Class<T> type, InternationalString title, InternationalString description, boolean required, int minOccurs, int maxOccurs, T defaultValue) {
-        return new org.geotools.data.Parameter(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, (Map)null);
+        return new org.geotools.data.Parameter(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, null);
     }
 
     @Override
@@ -172,12 +184,20 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     }
 
     @Override
+    public PropertyName property(String name) {
+        logger.debug("property string name {}", name);
+        return new AttributeExpressionImpl(name);
+    }
+
+    @Override
     public PropertyName property(Name name) {
+        logger.debug("property name {}", name);
         return new AttributeExpressionImpl(name);
     }
 
     @Override
     public PropertyName property(String name, NamespaceSupport namespaceContext) {
+        logger.debug("property name namespace {}", name, namespaceContext);
         return (namespaceContext == null ? this.property(name) : new AttributeExpressionImpl(name, namespaceContext));
     }
 
@@ -208,41 +228,48 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public And and(Filter filter, Filter filter1) {
+        logger.debug("AND {}, {}", filter, filter1);
         return null;
     }
 
     @Override
     public And and(List<Filter> list) {
+        logger.debug("AND {}", list);
         return null;
     }
 
     @Override
     public Or or(Filter filter, Filter filter1) {
+        logger.debug("OR {}, {}", filter, filter1);
         return null;
     }
 
     @Override
     public Or or(List<Filter> list) {
+        logger.debug("OR {}", list);
         return null;
     }
 
     @Override
     public Not not(Filter filter) {
-        return null;
+        logger.debug("NOT {}", filter);
+        if(filter instanceof ElasticFilter elasticFilter) {
+            return new NotImpl(elasticFilter);
+        }
+        else {
+            return null;
+        }
     }
 
     @Override
     public Id id(Set<? extends Identifier> set) {
+        logger.debug("id {}", set);
         return null;
     }
 
     @Override
-    public PropertyName property(String name) {
-        return new AttributeExpressionImpl(name);
-    }
-
-    @Override
     public PropertyIsBetween between(Expression expression, Expression expression1, Expression expression2) {
+        logger.debug("BETWEEN {} {}, {}", expression, expression1, expression2);
         return null;
     }
 
@@ -253,31 +280,37 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public PropertyIsEqualTo equals(Expression expression, Expression expression1) {
+        logger.debug("PropertyIsEqualTo {} {}", expression, expression1);
         return null;
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b) {
+        logger.debug("PropertyIsEqualTo {} {}, {}", expression, expression1, b);
         return null;
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
+        logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
         return null;
     }
 
     @Override
     public PropertyIsNotEqualTo notEqual(Expression expression, Expression expression1) {
+        logger.debug("PropertyIsNotEqualTo {} {}", expression, expression1);
         return null;
     }
 
     @Override
     public PropertyIsNotEqualTo notEqual(Expression expression, Expression expression1, boolean b) {
+        logger.debug("PropertyIsNotEqualTo {} {}, {}", expression, expression1, b);
         return null;
     }
 
     @Override
     public PropertyIsNotEqualTo notEqual(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
+        logger.debug("PropertyIsNotEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
         return null;
     }
 
@@ -363,11 +396,13 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public PropertyIsNull isNull(Expression expression) {
-        return null;
+        logger.debug("PropertyIsNull {}", expression);
+        return new IsNullImpl(expression, enumType);
     }
 
     @Override
     public PropertyIsNil isNil(Expression expression, Object o) {
+        logger.debug("PropertyIsNil {} {}", expression, o);
         return null;
     }
 
@@ -458,16 +493,6 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public Equals equals(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
-        return null;
-    }
-
-    @Override
-    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry) {
-        return null;
-    }
-
-    @Override
-    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
