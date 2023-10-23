@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.service;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
+import au.org.aodn.ogcapi.server.core.parser.ElasticFilter;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -18,6 +19,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
+import org.opengis.filter.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -178,8 +180,11 @@ public class ElasticSearch implements Search {
             List<Query> filters = null;
             if(cql != null) {
                 CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
-                CompilerUtil.parseFilter(Language.CQL, cql, factory);
-                filters = factory.getQueries();
+                Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
+
+                if(filter instanceof ElasticFilter elasticFilter) {
+                    filters = List.of(elasticFilter.getQuery());
+                }
             }
 
             return searchCollectionBy(null, queries, filters,  null, null);
