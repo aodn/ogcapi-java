@@ -1,9 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
-import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
-import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.IllegalFilterException;
 import org.geotools.filter.LiteralExpressionImpl;
@@ -11,11 +8,6 @@ import org.geotools.filter.identity.FeatureIdImpl;
 import org.geotools.filter.identity.FeatureIdVersionedImpl;
 import org.geotools.filter.identity.GmlObjectIdImpl;
 import org.geotools.filter.identity.ResourceIdImpl;
-import org.geotools.geometry.jts.JTSFactoryFinder;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.io.ParseException;
-import org.locationtech.jts.io.WKTReader;
 import org.opengis.feature.type.Name;
 import org.opengis.filter.*;
 import org.opengis.filter.capability.*;
@@ -41,21 +33,14 @@ import org.opengis.filter.temporal.*;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.geometry.BoundingBox3D;
 import org.opengis.parameter.Parameter;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
 import org.opengis.util.InternationalString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
-import org.geotools.geojson.geom.GeometryJSON;
 import org.xml.sax.helpers.NamespaceSupport;
 
 /**
@@ -71,35 +56,13 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     protected Logger logger = LoggerFactory.getLogger(CQLToElasticFilterFactory.class);
 
-    protected Class<T> enumType;
+    protected Class<T> collectionFieldType;
 
     protected CQLCrsType cqlCoorSystem;
 
     public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass) {
         this.cqlCoorSystem = cqlCoorSystem;
-        this.enumType = tClass;
-    }
-    /**
-     * Convert the WKT format from the cql to GeoJson use by Elastic search
-     * @param literalExpression
-     * @return
-     * @throws ParseException
-     * @throws IOException
-     */
-    protected String convertToGeoJson(LiteralExpressionImpl literalExpression) throws ParseException, IOException, FactoryException, TransformException {
-        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
-        WKTReader reader = new WKTReader(geometryFactory);
-        Geometry geo = reader.read(literalExpression.toString());
-
-        try(StringWriter writer = new StringWriter()) {
-            GeometryJSON geometryJson = new GeometryJSON();
-            Geometry t = CQLCrsType.transformGeometry(geo, cqlCoorSystem, CQLCrsType.EPSG4326);
-            geometryJson.write(t, writer);
-
-            String r = writer.toString();
-            logger.debug("Converted to GeoJson {}", r);
-            return r;
-        }
+        this.collectionFieldType = tClass;
     }
     /**
      * Expect statement like this:
@@ -116,29 +79,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public Intersects intersects(Expression geometry1, Expression geometry2) {
         logger.debug("INTERSECTS {}, {}", geometry1, geometry2);
-        Query geoShapeQuery = null;
-
-        if(geometry1 instanceof AttributeExpressionImpl attribute && geometry2 instanceof LiteralExpressionImpl literal) {
-            try {
-                String geojson = convertToGeoJson(literal);
-
-                // Create elastic query here
-                geoShapeQuery = new GeoShapeQuery.Builder()
-                        .field(Enum.valueOf(enumType,attribute.getPropertyName()).toString())
-                        .shape(builder -> builder
-                                .relation(GeoShapeRelation.Intersects)
-                                .shape(JsonData.from(new StringReader(geojson))))
-                        .build()
-                        ._toQuery();
-            }
-            catch (ParseException | IOException e) {
-                return new IntersectsImpl(geometry1, geometry2, null);
-            }
-            catch (FactoryException | TransformException e) {
-                return new IntersectsImpl(geometry1, geometry2, null);
-            }
-        }
-        return new IntersectsImpl(geometry1, geometry2, geoShapeQuery);
+        return new IntersectsImpl(geometry1, geometry2, collectionFieldType, cqlCoorSystem);
     }
 
     @Override
@@ -397,7 +338,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public PropertyIsNull isNull(Expression expression) {
         logger.debug("PropertyIsNull {}", expression);
-        return new IsNullImpl(expression, enumType);
+        return new IsNullImpl(expression, collectionFieldType);
     }
 
     @Override
