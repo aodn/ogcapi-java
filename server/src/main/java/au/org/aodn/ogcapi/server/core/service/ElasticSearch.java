@@ -90,7 +90,7 @@ public class ElasticSearch implements Search {
                     .stream()
                     .map(m -> {
                         String json = m.source().toPrettyString();
-                        logger.debug("Concert json to StacCollectionModel {}", json);
+                        logger.debug("Converted json to StacCollectionModel {}", json);
                         try {
                             return mapper.readValue(json, StacCollectionModel.class);
                         } catch (JsonProcessingException e) {
