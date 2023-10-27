@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Extent;
 import au.org.aodn.ogcapi.features.model.ExtentSpatial;
+import au.org.aodn.ogcapi.features.model.ExtentTemporal;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import org.springframework.http.MediaType;
 
@@ -56,7 +57,9 @@ public interface Converter<F, T> {
         extent.getSpatial().bbox(m.getExtent().getBbox());
         collection.setExtent(extent);
 
-        collection.addLinksItem(getSelfCollectionLink(host, m.getUuid()));
+        extent.setTemporal(new ExtentTemporal());
+        extent.getTemporal().interval(m.getExtent().getTemporal());
+        collection.setExtent(extent);
 
         return collection;
     }
