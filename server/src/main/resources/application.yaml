@@ -1,11 +1,14 @@
+server:
+  port: 8080
+
 elasticsearch:
   index:
     name: dev_portal_records
-  serverUrl: http://3.27.147.190:9200
-  apiKey: NC1Dc19Jb0JsbTJqVmhzNy1OS1k6LTdqN0Y0QktRVHVKRHVpYU1TNkhSZw==
+  serverUrl: http://localhost:9200
+  apiKey: <sample-api-key>
 
 api:
-  host: http://localhost:8080
+  host: http://localhost:${server.port}
 
 logging:
   level:
