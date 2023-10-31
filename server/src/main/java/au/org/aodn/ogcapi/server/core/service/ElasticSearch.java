@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.service;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
+import au.org.aodn.ogcapi.server.core.parser.DatetimeParser;
 import au.org.aodn.ogcapi.server.core.parser.ElasticFilter;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
@@ -12,6 +13,7 @@ import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
+import co.elastic.clients.json.JsonData;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -40,6 +42,9 @@ public class ElasticSearch implements Search {
 
     @Autowired
     protected ObjectMapper mapper;
+
+    @Autowired
+    DatetimeParser datetimeParserService;
 
     public ElasticSearch(ElasticsearchClient client) {
         this.esClient = client;
@@ -155,9 +160,9 @@ public class ElasticSearch implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor) throws IOException, CQLException {
+    public List<StacCollectionModel> searchByParameters(String datetime, List<String> keywords, String cql, CQLCrsType coor) throws IOException, CQLException {
 
-        if((keywords == null || keywords.isEmpty()) && cql == null) {
+        if((keywords == null || keywords.isEmpty()) && cql == null && datetime == null) {
             return searchAllCollections();
         }
         else {
@@ -177,6 +182,29 @@ public class ElasticSearch implements Search {
                 }
             }
 
+            if (datetime != null) {
+                if (queries == null) {
+                    queries = new ArrayList<>();
+                }
+
+                // A date time
+                String[] interval = datetimeParserService.parseDateOrInterval(datetime);
+
+                Query q = NestedQuery.of(n -> n
+                    .path(StacExtentTemporal.path)
+                    .query(q1 -> q1
+                        .range(r -> r
+                            .field(StacExtentTemporal.field)
+                            .gte(JsonData.of(interval[0]))
+                            .lte(JsonData.of(interval[1]))
+                            .format("strict_date_optional_time")
+                        )
+                    )
+                )._toQuery();
+
+                queries.add(q);
+            }
+
             List<Query> filters = null;
             if(cql != null) {
                 CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
@@ -190,6 +218,7 @@ public class ElasticSearch implements Search {
             return searchCollectionBy(null, queries, filters,  null, null);
         }
     }
+
 
     @Override
     public BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException {
