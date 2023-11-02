@@ -14,14 +14,14 @@ services:
   ogcapi:
     container_name: ogcapi-java
     build: .
-    #    image: 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/raymond/ogcapi-java
-    image: ogcapi-java
-    ports:
-      - "${API_LOCAL_PORT:-8081}:${API_CONTAINER_PORT:-8081}"
+    image: 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/raymond/ogcapi-java
+    env_file:
+      - .env
     environment:
       HOST: ${API_HOST:-http://localhost}
       PORT: ${API_CONTAINER_PORT:-8081}
-      ELASTIC_URL: ${ELASTIC_URL:-https://dev-descovery-index.es.ap-southeast-2.aws.found.io}
+      ELASTIC_URL: ${ELASTIC_URL:-https://dev-discovery-index.es.ap-southeast-2.aws.found.io}
       ELASTIC_KEY: ${ELASTIC_KEY}
+    network_mode: "host"
     volumes:
       - /tmp:/tmp
