@@ -12,6 +12,7 @@ import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.parser.DatetimeInputProcessor;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -153,6 +154,10 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
+            String[] datetimeInput = new String[2];
+            if (datetime != null) {
+                datetimeInput = DatetimeInputProcessor.parseDateOrInterval(datetime);
+            }
             return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, CQLCrsType.convertFromUrl(crs), stacToCollection::convert);
         }
         else {

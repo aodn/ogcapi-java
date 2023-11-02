@@ -1,47 +1,52 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
-import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
+import au.org.aodn.ogcapi.server.core.model.enumeration.StacExtent;
 import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
-import org.opengis.filter.spatial.Intersects;
+import org.opengis.filter.temporal.After;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
 
 import java.io.IOException;
-import java.io.StringReader;
+import java.text.SimpleDateFormat;
 
-public class IntersectsImpl<T extends Enum<T>> extends ElasticFilter implements Intersects {
-
+public class AfterImpl<T extends Enum<T>> extends ElasticFilter implements After {
     protected Logger logger = LoggerFactory.getLogger(IntersectsImpl.class);
 
     protected Expression expression1;
     protected Expression expression2;
 
-    public IntersectsImpl(Expression expression1, Expression expression2, Class<T> enumType, CQLCrsType cqlCrsType) {
+
+    public AfterImpl(Expression expression1, Expression expression2, Class<T> enumType) {
+
         this.expression1 = expression1;
         this.expression2 = expression2;
 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
-                String geojson = convertToGeoJson(literal, cqlCrsType);
-                // Create elastic query here
-                this.query = new GeoShapeQuery.Builder()
-                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                        .shape(builder -> builder
-                                .relation(GeoShapeRelation.Intersects)
-                                .shape(JsonData.from(new StringReader(geojson))))
-                        .build()
-                        ._toQuery();
-            }
-            catch (FactoryException | TransformException | ParseException | IOException e) {
+                if (attribute.toString().equals("datetime")) {
+                    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                    this.query = NestedQuery.of(n -> n
+                        .path(StacExtent.path)
+                        .query(q1 -> q1
+                            .range(r -> r
+                                .field(Enum.valueOf(enumType, "temporal").toString())
+                                .gte(JsonData.of(dateFormatter.format(literal.getValue())))
+                                .format("strict_date_optional_time")
+                            )
+                        )
+                    )._toQuery();
+                }
+            } catch (Exception e) {
                 logger.warn("Exception in parsing, query result will be wrong", e);
                 this.query = null;
             }
@@ -64,12 +69,12 @@ public class IntersectsImpl<T extends Enum<T>> extends ElasticFilter implements 
     }
 
     @Override
-    public boolean evaluate(Object o) {
+    public boolean evaluate(Object object) {
         return false;
     }
 
     @Override
-    public Object accept(FilterVisitor filterVisitor, Object o) {
+    public Object accept(FilterVisitor visitor, Object extraData) {
         return null;
     }
 }
