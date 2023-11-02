@@ -519,7 +519,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public During during(Expression expression, Expression expression1) {
-        return null;
+        return new DuringImpl<>(expression, expression1, collectionFieldType);
     }
 
     @Override
