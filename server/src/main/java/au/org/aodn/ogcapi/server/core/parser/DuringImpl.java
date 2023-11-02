@@ -28,21 +28,19 @@ public class DuringImpl<T extends Enum<T>> extends ElasticFilter implements Duri
 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
-                if (attribute.toString().equals("datetime")) {
-                    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                    DefaultPeriod period = (DefaultPeriod) literal.getValue();
-                    this.query = NestedQuery.of(n -> n
+                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                DefaultPeriod period = (DefaultPeriod) literal.getValue();
+                this.query = NestedQuery.of(n -> n
                         .path(StacExtent.path)
                         .query(q1 -> q1
-                            .range(r -> r
-                                .field(Enum.valueOf(enumType, "temporal").toString())
-                                .gte(JsonData.of(dateFormatter.format(period.getBeginning().getPosition().getDate())))
-                                .lte(JsonData.of(dateFormatter.format(period.getEnding().getPosition().getDate())))
-                                .format("strict_date_optional_time")
-                            )
+                                .range(r -> r
+                                        .field(Enum.valueOf(enumType, attribute.toString()).toString())
+                                        .gte(JsonData.of(dateFormatter.format(period.getBeginning().getPosition().getDate())))
+                                        .lte(JsonData.of(dateFormatter.format(period.getEnding().getPosition().getDate())))
+                                        .format("strict_date_optional_time")
+                                )
                         )
-                    )._toQuery();
-                }
+                )._toQuery();
             } catch (Exception e) {
                 logger.warn("Exception in parsing, query result will be wrong", e);
                 this.query = null;

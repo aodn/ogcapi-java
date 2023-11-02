@@ -27,19 +27,17 @@ public class BeforeImpl<T extends Enum<T>> extends ElasticFilter implements Befo
 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
-                if (attribute.toString().equals("datetime")) {
-                    SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-                    this.query = NestedQuery.of(n -> n
-                        .path(StacExtent.path)
-                        .query(q1 -> q1
-                            .range(r -> r
-                                .field(Enum.valueOf(enumType, "temporal").toString())
-                                .lte(JsonData.of(dateFormatter.format(literal.getValue())))
-                                .format("strict_date_optional_time")
-                            )
+                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+                this.query = NestedQuery.of(n -> n
+                    .path(StacExtent.path)
+                    .query(q1 -> q1
+                        .range(r -> r
+                            .field(Enum.valueOf(enumType, attribute.toString()).toString())
+                            .lte(JsonData.of(dateFormatter.format(literal.getValue())))
+                            .format("strict_date_optional_time")
                         )
-                    )._toQuery();
-                }
+                    )
+            )._toQuery();
             } catch (Exception e) {
                 logger.warn("Exception in parsing, query result will be wrong", e);
                 this.query = null;
