@@ -1,26 +1,26 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacExtent;
+import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
-import org.opengis.filter.temporal.After;
+import org.opengis.filter.temporal.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import co.elastic.clients.elasticsearch._types.query_dsl.*;
 
 import java.text.SimpleDateFormat;
 
-public class AfterImpl<T extends Enum<T>> extends ElasticFilter implements After {
+public class BeforeImpl<T extends Enum<T>> extends ElasticFilter implements Before {
     protected Logger logger = LoggerFactory.getLogger(IntersectsImpl.class);
 
     protected Expression expression1;
     protected Expression expression2;
 
 
-    public AfterImpl(Expression expression1, Expression expression2, Class<T> enumType) {
+    public BeforeImpl(Expression expression1, Expression expression2, Class<T> enumType) {
 
         this.expression1 = expression1;
         this.expression2 = expression2;
@@ -34,7 +34,7 @@ public class AfterImpl<T extends Enum<T>> extends ElasticFilter implements After
                         .query(q1 -> q1
                             .range(r -> r
                                 .field(Enum.valueOf(enumType, "temporal").toString())
-                                .gte(JsonData.of(dateFormatter.format(literal.getValue())))
+                                .lte(JsonData.of(dateFormatter.format(literal.getValue())))
                                 .format("strict_date_optional_time")
                             )
                         )

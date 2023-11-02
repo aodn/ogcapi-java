@@ -489,7 +489,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public Before before(Expression expression, Expression expression1) {
-        return null;
+        return new BeforeImpl<>(expression, expression1, collectionFieldType);
     }
 
     @Override
