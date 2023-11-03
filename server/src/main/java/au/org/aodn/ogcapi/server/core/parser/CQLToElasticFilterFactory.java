@@ -469,7 +469,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public After after(Expression expression, Expression expression1) {
-        return null;
+        return new AfterImpl<>(expression, expression1, collectionFieldType);
     }
 
     @Override
@@ -489,7 +489,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public Before before(Expression expression, Expression expression1) {
-        return null;
+        return new BeforeImpl<>(expression, expression1, collectionFieldType);
     }
 
     @Override
@@ -519,7 +519,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public During during(Expression expression, Expression expression1) {
-        return null;
+        return new DuringImpl<>(expression, expression1, collectionFieldType);
     }
 
     @Override

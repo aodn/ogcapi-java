@@ -16,10 +16,13 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
 
 public abstract class ElasticFilter {
     protected Logger logger = LoggerFactory.getLogger(ElasticFilter.class);
     protected Query query;
+
+    protected final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 
     public Query getQuery() { return query;}
 

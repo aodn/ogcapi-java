@@ -1,10 +1,8 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
 import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
@@ -34,10 +32,9 @@ public class IntersectsImpl<T extends Enum<T>> extends ElasticFilter implements 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
                 String geojson = convertToGeoJson(literal, cqlCrsType);
-
                 // Create elastic query here
                 this.query = new GeoShapeQuery.Builder()
-                        .field(Enum.valueOf(enumType, attribute.toString()).toString())
+                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
                         .shape(builder -> builder
                                 .relation(GeoShapeRelation.Intersects)
                                 .shape(JsonData.from(new StringReader(geojson))))
