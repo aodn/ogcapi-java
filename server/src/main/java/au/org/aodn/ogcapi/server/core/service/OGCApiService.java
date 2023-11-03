@@ -78,13 +78,16 @@ public abstract class OGCApiService {
 
         // for now, assumption is that temporal is the only filter
         if (filter == null) {
-            if (datetime.contains("/")) {
-                operator = "during";
-                filter = String.format("temporal %s %s", operator, datetime);
-            } else {
-                // TODO: this where problem is, should be after or before if input is a single timestamp instant?
+            if (datetime.contains("../")) {
+                operator = "before";
+            } else if (datetime.contains("/..")) {
                 operator = "after";
+            } else if (datetime.contains("/") && !datetime.contains("..")) {
+                operator = "during";
+            } else {
+                operator = "tequals";
             }
+            filter = String.format("temporal %s %s", operator, datetime);
         }
 
         return filter;
