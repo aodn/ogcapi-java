@@ -78,9 +78,9 @@ public abstract class OGCApiService {
 
         // for now, assumption is that temporal is the only filter
         if (filter == null) {
-            if (datetime.contains("../")) {
+            if (datetime.startsWith("../") || datetime.startsWith("/")) {
                 operator = "before";
-            } else if (datetime.contains("/..")) {
+            } else if (datetime.endsWith("/..") || datetime.endsWith("/")) {
                 operator = "after";
             } else if (datetime.contains("/") && !datetime.contains("..")) {
                 operator = "during";
