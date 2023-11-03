@@ -67,6 +67,7 @@ public abstract class OGCApiService {
     }
 
     public static String processDatetimeParameter(String datetime, String filter) {
+        /* this method for translating datetime parameter to filter parameter to use with CQL expression */
 
         // TODO: the AND operator yet supported, when it is, append the datetime input to existing filter after with the AND prefix
 
