@@ -66,7 +66,7 @@ public abstract class OGCApiService {
         }
     }
 
-    public String processDatetimeParameter(String datetime, String filter) {
+    public static String processDatetimeParameter(String datetime, String filter) {
 
         // TODO: the AND operator yet supported, when it is, append the datetime input to existing filter after with the AND prefix
 
@@ -78,11 +78,20 @@ public abstract class OGCApiService {
 
         // for now, assumption is that temporal is the only filter
         if (filter == null) {
-            if (datetime.startsWith("../") || datetime.startsWith("/")) {
+            if (datetime.startsWith("../")) {
                 operator = "before";
-            } else if (datetime.endsWith("/..") || datetime.endsWith("/")) {
+            } else if (datetime.startsWith("/"))  {
+                operator = "before";
+                // because CQL won't support temporal filter's value without just a slash "/" without ".."
+                // e,g ?filter=temporal before /2020-01-01T00:00:00Z will not be allowed
+                datetime = datetime.replace("/", "");
+            } else if (datetime.endsWith("/..")) {
                 operator = "after";
-            } else if (datetime.contains("/") && !datetime.contains("..")) {
+            } else if (datetime.endsWith("/")) {
+                operator = "after";
+                // e,g ?filter=temporal after 2020-01-01T00:00:00Z/ will not be allowed
+                datetime = datetime.replace("/", "");
+            } else if (datetime.contains("/") && !datetime.contains("..") && !datetime.startsWith("/") && !datetime.endsWith("/")) {
                 operator = "during";
             } else {
                 operator = "tequals";
