@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
 
 public class DuringImpl<T extends Enum<T>> extends ElasticFilter implements During {
-    protected Logger logger = LoggerFactory.getLogger(IntersectsImpl.class);
+    protected Logger logger = LoggerFactory.getLogger(DuringImpl.class);
 
     protected Expression expression1;
     protected Expression expression2;
@@ -28,7 +28,6 @@ public class DuringImpl<T extends Enum<T>> extends ElasticFilter implements Duri
 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
-                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                 DefaultPeriod period = (DefaultPeriod) literal.getValue();
                 this.query = NestedQuery.of(n -> n
                         .path(StacExtent.path)

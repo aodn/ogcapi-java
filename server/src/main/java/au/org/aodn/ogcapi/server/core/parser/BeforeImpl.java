@@ -14,7 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.text.SimpleDateFormat;
 
 public class BeforeImpl<T extends Enum<T>> extends ElasticFilter implements Before {
-    protected Logger logger = LoggerFactory.getLogger(IntersectsImpl.class);
+    protected Logger logger = LoggerFactory.getLogger(BeforeImpl.class);
 
     protected Expression expression1;
     protected Expression expression2;
@@ -27,7 +27,6 @@ public class BeforeImpl<T extends Enum<T>> extends ElasticFilter implements Befo
 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
-                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                 this.query = NestedQuery.of(n -> n
                     .path(StacExtent.path)
                     .query(q1 -> q1

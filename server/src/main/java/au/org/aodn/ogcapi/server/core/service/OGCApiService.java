@@ -65,4 +65,28 @@ public abstract class OGCApiService {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
+
+    public String processDatetimeParameter(String datetime, String filter) {
+
+        // TODO: the AND operator yet supported, when it is, append the datetime input to existing filter after with the AND prefix
+
+        // TODO. should support "anyinteracts"? otherwise need to have a proper method to find correct operator without hackaround with string processing,
+        //  e.g how to know if it is before or after if ?datetime=<timestamp instant>
+
+        // I will hack around with string processing for now
+        String operator;
+
+        // for now, assumption is that temporal is the only filter
+        if (filter == null) {
+            if (datetime.contains("/")) {
+                operator = "during";
+                filter = String.format("temporal %s %s", operator, datetime);
+            } else {
+                // TODO: this where problem is, should be after or before if input is a single timestamp instant?
+                operator = "after";
+            }
+        }
+
+        return filter;
+    }
 }

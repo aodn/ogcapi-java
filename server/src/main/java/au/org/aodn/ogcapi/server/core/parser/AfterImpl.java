@@ -14,7 +14,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import java.text.SimpleDateFormat;
 
 public class AfterImpl<T extends Enum<T>> extends ElasticFilter implements After {
-    protected Logger logger = LoggerFactory.getLogger(IntersectsImpl.class);
+    protected Logger logger = LoggerFactory.getLogger(AfterImpl.class);
 
     protected Expression expression1;
     protected Expression expression2;
@@ -27,7 +27,6 @@ public class AfterImpl<T extends Enum<T>> extends ElasticFilter implements After
 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
-                SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
                 this.query = NestedQuery.of(n -> n
                     .path(StacExtent.path)
                     .query(q1 -> q1

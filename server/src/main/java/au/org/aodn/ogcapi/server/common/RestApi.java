@@ -154,24 +154,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
             if (datetime != null) {
-                // TODO: the AND operator yet supported, when it is, append the datetime input to existing filter after with the AND prefix
-
-                // TODO. should support "anyinteracts"? otherwise need to have a proper method to find correct operator without hackaround with string processing,
-                //  e.g how to know if it is before or after if ?datetime=<timestamp instant>
-
-                // I will hack around with string processing for now
-                String operator;
-
-                // for now, assumption is that temporal is the only filter
-                if (filter == null) {
-                    if (datetime.contains("/")) {
-                        operator = "during";
-                        filter = String.format("temporal %s %s", operator, datetime);
-                    } else {
-                        // TODO: this where problem is, should be after or before if input is a single timestamp instant?
-                        operator = "after";
-                    }
-                }
+                filter = commonService.processDatetimeParameter(datetime, filter);
             }
             return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, CQLCrsType.convertFromUrl(crs), stacToCollection::convert);
         }
