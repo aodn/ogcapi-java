@@ -12,7 +12,6 @@ import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.parser.DatetimeInputProcessor;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -154,9 +153,25 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
-            String[] datetimeInput = new String[2];
             if (datetime != null) {
-                datetimeInput = DatetimeInputProcessor.parseDateOrInterval(datetime);
+                // TODO: the AND operator yet supported, when it is, append the datetime input to existing filter after with the AND prefix
+
+                // TODO. should support "anyinteracts"? otherwise need to have a proper method to find correct operator without hackaround with string processing,
+                //  e.g how to know if it is before or after if ?datetime=<timestamp instant>
+
+                // I will hack around with string processing for now
+                String operator;
+
+                // for now, assumption is that temporal is the only filter
+                if (filter == null) {
+                    if (datetime.contains("/")) {
+                        operator = "during";
+                        filter = String.format("temporal %s %s", operator, datetime);
+                    } else {
+                        // TODO: this where problem is, should be after or before if input is a single timestamp instant?
+                        operator = "after";
+                    }
+                }
             }
             return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, CQLCrsType.convertFromUrl(crs), stacToCollection::convert);
         }
