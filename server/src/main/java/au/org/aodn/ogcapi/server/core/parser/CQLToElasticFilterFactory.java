@@ -168,15 +168,15 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     }
 
     @Override
-    public And and(Filter filter, Filter filter1) {
-        logger.debug("AND {}, {}", filter, filter1);
-        return null;
+    public And and(Filter filter1, Filter filter2) {
+        logger.debug("AND {}, {}", filter1, filter2);
+        return new AndImpl(filter1, filter2);
     }
 
     @Override
     public And and(List<Filter> list) {
         logger.debug("AND {}", list);
-        return null;
+        return new AndImpl(list);
     }
 
     @Override
@@ -598,8 +598,8 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     }
 
     @Override
-    public TEquals tequals(Expression expression, Expression expression1) {
-        return null;
+    public TEquals tequals(Expression expression1, Expression expression2) {
+        return new TEqualsImpl<>(expression1, expression2, collectionFieldType);
     }
 
     @Override

@@ -1,0 +1,61 @@
+package au.org.aodn.ogcapi.server.core.parser;
+
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import org.geotools.filter.AttributeExpressionImpl;
+import org.geotools.filter.LiteralExpressionImpl;
+import org.opengis.filter.FilterVisitor;
+import org.opengis.filter.expression.Expression;
+import org.opengis.filter.temporal.TEquals;
+
+public class TEqualsImpl<T extends Enum<T>> extends ElasticFilter implements TEquals {
+
+    protected Expression expression1;
+    protected Expression expression2;
+
+    public TEqualsImpl(Expression expression1, Expression expression2, Class<T> enumType) {
+        this.expression1 = expression1;
+        this.expression2 = expression2;
+
+        if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
+
+            try {
+                String d = dateFormatter.format(literal.getValue());
+
+                this.query = new MatchQuery.Builder()
+                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
+                        .query(d)
+                        .build()
+                        ._toQuery();
+            }
+            catch(Exception e) {
+                logger.warn("Exception in parsing, query result will be wrong", e);
+                this.query = null;
+            }
+        }
+    }
+
+    @Override
+    public Expression getExpression1() {
+        return expression1;
+    }
+
+    @Override
+    public Expression getExpression2() {
+        return expression2;
+    }
+
+    @Override
+    public MatchAction getMatchAction() {
+        return null;
+    }
+
+    @Override
+    public boolean evaluate(Object o) {
+        return false;
+    }
+
+    @Override
+    public Object accept(FilterVisitor filterVisitor, Object o) {
+        return null;
+    }
+}
