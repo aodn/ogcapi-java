@@ -154,7 +154,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
             if (datetime != null) {
-                filter = commonService.processDatetimeParameter(datetime, filter);
+                filter = OGCApiService.processDatetimeParameter(datetime, filter);
             }
             return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, CQLCrsType.convertFromUrl(crs), stacToCollection::convert);
         }

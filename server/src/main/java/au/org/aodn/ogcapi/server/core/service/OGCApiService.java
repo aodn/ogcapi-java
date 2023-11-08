@@ -1,9 +1,9 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.common.RestApi;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +18,7 @@ import java.util.function.Function;
  */
 public abstract class OGCApiService {
 
-    protected Logger logger = LoggerFactory.getLogger(RestApi.class);
+    protected static Logger logger = LoggerFactory.getLogger(OGCApiService.class);
 
     @Autowired
     protected Search search;
@@ -79,27 +79,41 @@ public abstract class OGCApiService {
 
         // for now, assumption is that temporal is the only filter
         if (filter == null) {
-            if (datetime.startsWith("../")) {
+            // Remove the leading "../" or "/" for 'before' operator
+            if (datetime.startsWith("../") || datetime.startsWith("/")) {
                 operator = "before";
-            } else if (datetime.startsWith("/"))  {
-                operator = "before";
-                // because CQL won't support temporal filter's value without just a slash "/" without ".."
-                // e,g ?filter=temporal before /2020-01-01T00:00:00Z will not be allowed
-                datetime = datetime.replace("/", "");
-            } else if (datetime.endsWith("/..")) {
+                datetime = datetime.substring(datetime.lastIndexOf("/") + 1);
+            }
+            // Remove the trailing "/.." or "/" for 'after' operator
+            else if (datetime.endsWith("/..") || datetime.endsWith("/")) {
                 operator = "after";
-            } else if (datetime.endsWith("/")) {
-                operator = "after";
-                // e,g ?filter=temporal after 2020-01-01T00:00:00Z/ will not be allowed
-                datetime = datetime.replace("/", "");
-            } else if (datetime.contains("/") && !datetime.contains("..") && !datetime.startsWith("/") && !datetime.endsWith("/")) {
-                operator = "during";
-            } else {
+                // TODO: should allow or NOT "/" without ".." at the end to avoid confusion with the usual "/" at the end of an url
+                // e.g localhost:8082/collections?datetime=2003-11-10T00:00:00.000Z/ will return different results from
+                // localhost:8082/collections?datetime=2003-11-10T00:00:00.000Z
+                datetime = datetime.substring(0, datetime.indexOf("/"));
+            }
+            // Check for 'during' operator which is indicated by a single "/"
+            else if (datetime.contains("/") && !datetime.startsWith("/") && !datetime.endsWith("/")) {
+                String[] parts = datetime.split("/");
+                // Ensure that the parts before and after the "/" are not the same
+                if (!parts[0].equals(parts[1])) {
+                    operator = "during";
+                } else {
+                    // if don't make it "tequals", GeoTools will throw exception
+                    operator = "tequals";
+                    datetime = parts[0];
+                }
+            }
+            // Default operator is 'equals'
+            // not implemented yet, will return all records
+            else {
                 operator = "tequals";
             }
-            filter = String.format("temporal %s %s", operator, datetime);
-        }
+            // Format the filter string
 
+            filter = String.format("temporal %s %s", operator, datetime);
+            logger.debug("CQL filter: " + filter);
+        }
         return filter;
     }
 }
