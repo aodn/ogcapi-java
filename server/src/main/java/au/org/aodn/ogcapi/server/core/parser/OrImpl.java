@@ -2,22 +2,22 @@ package au.org.aodn.ogcapi.server.core.parser;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import org.opengis.filter.And;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterVisitor;
+import org.opengis.filter.Or;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class AndImpl extends ElasticFilter implements And {
+public class OrImpl extends ElasticFilter implements Or {
 
     protected List<Filter> children = new ArrayList<>();
 
-    public AndImpl(Filter filter1, Filter filter2) {
+    public OrImpl(Filter filter1, Filter filter2) {
         if(filter1 instanceof ElasticFilter elasticFilter1 && filter2 instanceof ElasticFilter elasticFilter2) {
             this.query = BoolQuery.of(f -> f
-                    .filter(elasticFilter1.query, elasticFilter2.query)
+                    .should(elasticFilter1.query, elasticFilter2.query)
             )._toQuery();
 
             children.add(filter1);
@@ -29,7 +29,7 @@ public class AndImpl extends ElasticFilter implements And {
         }
     }
 
-    public AndImpl(List<Filter> filters) {
+    public OrImpl(List<Filter> filters) {
         // Extract query object in the filters, it must be an ElasitcFilter
         List<ElasticFilter> elasticFilters = filters.stream()
                 .filter(f -> f instanceof ElasticFilter)
@@ -41,8 +41,8 @@ public class AndImpl extends ElasticFilter implements And {
                 .collect(Collectors.toList());
 
         this.query = BoolQuery.of(f -> f
-                .filter(queries)
-        )._toQuery();
+                .should(queries))
+                ._toQuery();
 
         children.addAll(filters);
 

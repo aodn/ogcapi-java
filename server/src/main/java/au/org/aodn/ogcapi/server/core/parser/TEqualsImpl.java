@@ -7,6 +7,21 @@ import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.temporal.TEquals;
 
+/**
+ * It means time:intervalEquals
+ *
+ * If a proper interval T1 is intervalEquals another proper interval T2, then the beginning of T1 is coincident with
+ * the beginning of T2, and the end of T1 is coincident with the end of T2.
+ *
+ * TEQUALS <datetime> | <duration> is allowed,
+ *
+ * <duration> is like
+ *  A time duration specified as P [ y Y m M d D ] T [ h H m M s S ]. The duration can be specified to any
+ *  desired precision by including only the required year, month, day, hour, minute and second components.
+ *  Examples: P1Y2M, P4Y2M20D, P4Y2M1DT20H3M36S
+ *
+ * @param <T>
+ */
 public class TEqualsImpl<T extends Enum<T>> extends ElasticFilter implements TEquals {
 
     protected Expression expression1;

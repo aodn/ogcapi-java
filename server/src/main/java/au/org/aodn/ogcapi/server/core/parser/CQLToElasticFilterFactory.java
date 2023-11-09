@@ -180,15 +180,15 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     }
 
     @Override
-    public Or or(Filter filter, Filter filter1) {
-        logger.debug("OR {}, {}", filter, filter1);
-        return null;
+    public Or or(Filter filter1, Filter filter2) {
+        logger.debug("OR {}, {}", filter1, filter2);
+        return new OrImpl(filter1, filter2);
     }
 
     @Override
     public Or or(List<Filter> list) {
         logger.debug("OR {}", list);
-        return null;
+        return new OrImpl(list);
     }
 
     @Override
