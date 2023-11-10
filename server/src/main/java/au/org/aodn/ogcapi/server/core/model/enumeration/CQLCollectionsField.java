@@ -5,7 +5,8 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
  * internal stac field.
  */
 public enum CQLCollectionsField {
-    geometry(StacSummeries.Geometry.field), temporal(StacExtent.Temporal.field);
+    geometry(StacSummeries.Geometry.field),
+    temporal(StacSummeries.Temporal.field);
 
     protected final String field;
 

@@ -9,8 +9,10 @@ public class NotImpl extends ElasticFilter implements Not {
 
     public NotImpl(ElasticFilter filter) {
         this.query = BoolQuery.of(b -> b
-                .mustNot(filter.getQuery()))
+                        .mustNot(filter.getQuery()))
                 ._toQuery();
+
+        this.addErrors(filter.getErrors());
     }
 
     @Override
