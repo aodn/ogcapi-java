@@ -74,9 +74,9 @@ public class DuringImpl<T extends Enum<T>> extends ElasticFilter implements Duri
                                     .format("strict_date_optional_time"))._toQuery();
 
                     Query lte = RangeQuery.of(r -> r
-                            .field(StacSummeries.TemporalEnd.field)
-                            .lte(JsonData.of(dateFormatter.format(period.getEnding().getPosition().getDate())))
-                            .format("strict_date_optional_time"))._toQuery();
+                                    .field(StacSummeries.TemporalEnd.field)
+                                    .lte(JsonData.of(dateFormatter.format(period.getEnding().getPosition().getDate())))
+                                    .format("strict_date_optional_time"))._toQuery();
 
 
                     this.query = NestedQuery.of(n -> n
@@ -87,15 +87,15 @@ public class DuringImpl<T extends Enum<T>> extends ElasticFilter implements Duri
                     )._toQuery();
                 }
                 else {
-                    this.addError(new CQLException("DURING operation not support for non temporal field"));
+                    this.addErrors(new CQLException("DURING operation not support for non temporal field"));
                 }
             }
             catch (Exception e) {
-                this.addError(new CQLException("Exception in parsing, query result will be wrong", e.getMessage()));
+                this.addErrors(new CQLException("Exception in parsing, query result will be wrong", e.getMessage()));
             }
         }
         else {
-            this.addError(new CQLException("Non support argument for DURING operation, require attribute and period"));
+            this.addErrors(new CQLException("Non support argument for DURING operation, require attribute and period"));
         }
     }
 
