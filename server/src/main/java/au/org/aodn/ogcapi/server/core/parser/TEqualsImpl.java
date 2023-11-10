@@ -1,8 +1,13 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
+import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
+import org.geotools.filter.text.cql2.CQLException;
+import org.geotools.temporal.object.DefaultPeriod;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.temporal.TEquals;
@@ -31,22 +36,8 @@ public class TEqualsImpl<T extends Enum<T>> extends ElasticFilter implements TEq
         this.expression1 = expression1;
         this.expression2 = expression2;
 
-        if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-
-            try {
-                String d = dateFormatter.format(literal.getValue());
-
-                this.query = new MatchQuery.Builder()
-                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                        .query(d)
-                        .build()
-                        ._toQuery();
-            }
-            catch(Exception e) {
-                logger.warn("Exception in parsing, query result will be wrong", e);
-                this.query = null;
-            }
-        }
+        // TODO: Pending implement, the parse accept TEQUALS date_time | duration/date_time but
+        // the second one do not parse correctly
     }
 
     @Override

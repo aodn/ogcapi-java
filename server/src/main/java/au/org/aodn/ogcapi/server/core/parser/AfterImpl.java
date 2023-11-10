@@ -16,12 +16,16 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 
 import java.text.SimpleDateFormat;
 
+/**
+ * Only works for temporal field for now.
+ *
+ * @param <T>
+ */
 public class AfterImpl<T extends Enum<T>> extends ElasticFilter implements After {
     protected Logger logger = LoggerFactory.getLogger(AfterImpl.class);
 
     protected Expression expression1;
     protected Expression expression2;
-
 
     public AfterImpl(Expression expression1, Expression expression2, Class<T> enumType) {
 

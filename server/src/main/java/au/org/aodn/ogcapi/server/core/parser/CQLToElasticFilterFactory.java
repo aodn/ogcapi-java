@@ -599,7 +599,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public TEquals tequals(Expression expression1, Expression expression2) {
-        return new TEqualsImpl<>(expression1, expression2, collectionFieldType);
+        return null;
     }
 
     @Override
