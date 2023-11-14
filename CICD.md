@@ -1,6 +1,18 @@
 ## CI/CD Steps
 ```mermaid
-flowchart TD
+%%{
+  init: {
+    'theme': 'base',
+    'themeVariables': {
+      'edgeLabelBackground': '#ffffff',
+      'tertiaryTextColor': '#0f00aa',
+      'clusterBkg': '#FFFF00',  // Change to yellow (#FFFF00)
+      'clusterBorder': '#0f00aa'
+    }
+  }
+}%%
+
+graph TD
     subgraph Build
         1(Build Docker container)
         2(Scan container)
@@ -34,7 +46,7 @@ flowchart TD
     8 --> 9
     9 --> 10
 
-
+```
 
 ## CI/CD Pipeline
 
