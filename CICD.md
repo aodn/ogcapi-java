@@ -55,7 +55,7 @@ graph TD
 This project includes a CI/CD pipeline for automating the build and deployment process. The pipeline includes the following steps:
 
 1. **Build the Docker container:**
-   - Automated step to build the Docker container whenever changes are pushed to the repository.
+   - Automated steps to build the Docker container whenever changes are pushed to the repository.
 
 2. **Scan the container (Optional):**
    - Optional automated step to scan the Docker container for security vulnerabilities.
