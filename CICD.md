@@ -1,5 +1,4 @@
 ## CI/CD Steps
-
 ```mermaid
 %%{
   init: {
@@ -13,7 +12,7 @@
   }
 }%%
 
-graph TD
+flowchart TD
     subgraph Build
         1(Build Docker container)
         2(Scan container)
