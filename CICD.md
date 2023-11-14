@@ -1,17 +1,5 @@
 ## CI/CD Steps
 ```mermaid
-%%{
-  init: {
-    'theme': 'base',
-    'themeVariables': {
-      'edgeLabelBackground': '#ffffff',
-      'tertiaryTextColor': '#0f00aa',
-      'clusterBkg': '#fafaff',
-      'clusterBorder': '#0f00aa'
-    }
-  }
-}%%
-
 flowchart TD
     subgraph Build
         1(Build Docker container)
