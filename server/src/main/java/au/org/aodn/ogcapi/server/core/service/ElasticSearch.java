@@ -11,6 +11,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
+import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,14 +71,27 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
-    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries, List<Query> should, List<Query> filters, Integer from, Integer size) throws IOException {
+    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries,
+                                                           List<Query> should,
+                                                           List<Query> filters,
+                                                           List<String> property,
+                                                           Integer from,
+                                                           Integer size) throws IOException {
 
         SearchRequest.Builder builder = new SearchRequest.Builder();
-        builder.source(f -> f.fetch(true))
-                .index(indexName)
+        builder.index(indexName)
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
                 .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
+
+        if(property != null) {
+            // Set fetch to false so that it do not return the original document but just the field
+            // we set
+            builder.source(f -> f.filter(sf -> sf.includes(property)));
+        }
+        else {
+            builder.source(f -> f.fetch(true));
+        }
 
         SearchRequest request = builder.build();
         logger.debug("Final elastic search payload {}", request.toString());
@@ -88,22 +103,32 @@ public class ElasticSearch implements Search {
                     .hits()
                     .hits()
                     .stream()
-                    .map(m -> {
-                        String json = m.source().toPrettyString();
-                        logger.debug("Converted json to StacCollectionModel {}", json);
-                        try {
-                            return mapper.readValue(json, StacCollectionModel.class);
-                        } catch (JsonProcessingException e) {
-                            logger.error("Failed to convert text to StacCollectionModel", e);
-                            return null;
-                        }
-                    })
+                    .map(m -> formatResult(m))
                     .filter(f -> f != null)
                     .collect(Collectors.toList());
         }
         catch(ElasticsearchException ee) {
             logger.warn("Elastic exception on query, reason is {}", ee.error().rootCause());
             throw ee;
+        }
+    }
+
+    protected StacCollectionModel formatResult(Hit<ObjectNode> nodes) {
+        try {
+            if(nodes.source() != null) {
+                String json = nodes.source().toPrettyString();
+                logger.debug("Converted json to StacCollectionModel {}", json);
+
+                return mapper.readValue(json, StacCollectionModel.class);
+            }
+            else {
+                logger.error("Failed to convert text to StacCollectionModel");
+                return null;
+            }
+        }
+        catch (JsonProcessingException e) {
+            logger.error("Exception failed to convert text to StacCollectionModel", e);
+            return null;
         }
     }
 
@@ -131,7 +156,7 @@ public class ElasticSearch implements Search {
             );
         }
 
-        return searchCollectionBy(queries, null, filters, null, null);
+        return searchCollectionBy(queries, null, filters, null, null, null);
     }
 
     @Override
@@ -155,7 +180,7 @@ public class ElasticSearch implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor) throws IOException, CQLException {
+    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor, List<String> property) throws IOException, CQLException {
 
         if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections();
@@ -187,7 +212,7 @@ public class ElasticSearch implements Search {
                 }
             }
 
-            return searchCollectionBy(null, queries, filters,  null, null);
+            return searchCollectionBy(null, queries, filters,  property, null, null);
         }
     }
 

@@ -53,13 +53,16 @@ public interface Converter<F, T> {
         collection.setItemType("Collection");
 
         Extent extent = new Extent();
-        extent.setSpatial(new ExtentSpatial());
-        extent.getSpatial().bbox(m.getExtent().getBbox());
-        collection.setExtent(extent);
 
-        extent.setTemporal(new ExtentTemporal());
-        extent.getTemporal().interval(m.getExtent().getTemporal());
-        collection.setExtent(extent);
+        if(m.getExtent() != null) {
+            extent.setSpatial(new ExtentSpatial());
+            extent.getSpatial().bbox(m.getExtent().getBbox());
+            collection.setExtent(extent);
+
+            extent.setTemporal(new ExtentTemporal());
+            extent.getTemporal().interval(m.getExtent().getTemporal());
+            collection.setExtent(extent);
+        }
 
         return collection;
     }

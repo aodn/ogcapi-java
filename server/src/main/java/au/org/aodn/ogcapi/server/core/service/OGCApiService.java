@@ -30,12 +30,15 @@ public abstract class OGCApiService {
     public abstract List<String> getConformanceDeclaration();
 
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
-                                                   String filter, OGCMediaTypeMapper f,
-                                                   CQLCrsType coor, Function<List<StacCollectionModel>, R> converter) {
+                                                   String filter,
+                                                   OGCMediaTypeMapper f,
+                                                   CQLCrsType coor,
+                                                   Function<List<StacCollectionModel>, R> converter,
+                                                   List<String> property) {
         try {
             switch (f) {
                 case json -> {
-                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, coor);
+                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, coor, property);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));

@@ -14,7 +14,7 @@ public interface Search {
     List<StacCollectionModel> searchCollections(List<String> ids) throws Exception;
     List<StacCollectionModel> searchAllCollections() throws Exception;
 
-    List<StacCollectionModel> searchByParameters(List<String> targets, String filter, CQLCrsType coor) throws Exception;
+    List<StacCollectionModel> searchByParameters(List<String> targets, String filter, CQLCrsType coor, List<String> property) throws Exception;
 
     BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException;
 }
