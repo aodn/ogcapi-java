@@ -56,8 +56,13 @@ public interface Converter<F, T> {
 
         if(m.getExtent() != null) {
             extent.setSpatial(new ExtentSpatial());
-            extent.getSpatial().bbox(m.getExtent().getBbox());
-            collection.setExtent(extent);
+
+            if(m.getExtent().getBbox() != null) {
+                // The first item is the overall bbox, this is requirement from STAC but not for
+                // OGC collection, hence we remove the first item.
+                extent.getSpatial().bbox(m.getExtent().getBbox().subList(1, m.getExtent().getBbox().size()));
+                collection.setExtent(extent);
+            }
 
             extent.setTemporal(new ExtentTemporal());
             extent.getTemporal().interval(m.getExtent().getTemporal());
