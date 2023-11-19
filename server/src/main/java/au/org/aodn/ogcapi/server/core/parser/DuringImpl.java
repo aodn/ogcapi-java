@@ -69,18 +69,18 @@ public class DuringImpl<T extends Enum<T>> extends ElasticFilter implements Duri
                         && cqlCollectionsField == CQLCollectionsField.temporal) {
 
                     Query gte = RangeQuery.of(r -> r
-                                    .field(StacSummeries.TemporalStart.field)
+                                    .field(StacSummeries.TemporalStart.searchField)
                                     .gte(JsonData.of(dateFormatter.format(period.getBeginning().getPosition().getDate())))
                                     .format("strict_date_optional_time"))._toQuery();
 
                     Query lte = RangeQuery.of(r -> r
-                                    .field(StacSummeries.TemporalEnd.field)
+                                    .field(StacSummeries.TemporalEnd.searchField)
                                     .lte(JsonData.of(dateFormatter.format(period.getEnding().getPosition().getDate())))
                                     .format("strict_date_optional_time"))._toQuery();
 
 
                     this.query = NestedQuery.of(n -> n
-                            .path(StacSummeries.Temporal.field)
+                            .path(StacSummeries.Temporal.searchField)
                                 .query(BoolQuery.of(q -> q
                                         .must(gte, lte))._toQuery()
                             )

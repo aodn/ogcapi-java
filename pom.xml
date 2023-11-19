@@ -22,7 +22,7 @@
 		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
 		<org.projectlombok.version>1.18.30</org.projectlombok.version>
 		<org.projectlombok.binding>0.2.0</org.projectlombok.binding>
-		<swagger.codegen.version>3.0.42</swagger.codegen.version>
+		<swagger.codegen.version>3.0.50</swagger.codegen.version>
 		<org.geotools.version>29.2</org.geotools.version>
 	</properties>
 	<repositories>

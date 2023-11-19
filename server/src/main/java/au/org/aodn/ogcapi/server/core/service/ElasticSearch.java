@@ -27,7 +27,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
-import java.lang.reflect.Parameter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -85,9 +84,19 @@ public class ElasticSearch implements Search {
                 .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
 
         if(property != null) {
+            // Convert the income field name to the real field name in STAC
+            List<String> fs = property
+                    .stream()
+                    .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
+                    .collect(Collectors.toList());
+
             // Set fetch to false so that it do not return the original document but just the field
             // we set
-            builder.source(f -> f.filter(sf -> sf.includes(property)));
+            builder.source(f -> f
+                    .filter(sf -> sf
+                            .includes(fs)
+                    )
+            );
         }
         else {
             builder.source(f -> f.fetch(true));
@@ -135,12 +144,12 @@ public class ElasticSearch implements Search {
     protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry) throws IOException {
 
         List<Query> queries = List.of(MatchQuery.of(m -> m
-                            .field(StacType.field)
+                            .field(StacType.searchField)
                             .query(StacType.Collection.value))._toQuery());
 
         if(isWithGeometry) {
             queries.add(ExistsQuery.of(m -> m
-                    .field(StacSummeries.Geometry.field))._toQuery());
+                    .field(StacSummeries.Geometry.searchField))._toQuery());
         }
 
         List<Query> filters = null;
@@ -151,7 +160,7 @@ public class ElasticSearch implements Search {
 
             filters = List.of(
                     TermsQuery.of(t -> t
-                            .field(StacUUID.field)
+                            .field(StacUUID.UUID.searchField)
                             .terms(s -> s.value(values)))._toQuery()
             );
         }
@@ -195,7 +204,7 @@ public class ElasticSearch implements Search {
                     Query q = MultiMatchQuery.of(m -> m
                             .fuzziness("AUTO")
                             //TODO: what keywords we want to search?
-                            .fields(StacTitle.field, StacDescription.field)
+                            .fields(StacTitle.searchField, StacDescription.searchField)
                             .prefixLength(0)
                             .query(t))._toQuery();
                     queries.add(q);
@@ -221,7 +230,7 @@ public class ElasticSearch implements Search {
 
         SearchMvtRequest.Builder builder = new SearchMvtRequest.Builder();
         builder.index(indexName)
-                .field(StacSummeries.Geometry.field)
+                .field(StacSummeries.Geometry.searchField)
                 .zoom(tileMatrix)
                 .x(tileRow.intValue())
                 .y(tileCol.intValue())
@@ -238,7 +247,7 @@ public class ElasticSearch implements Search {
 
             List<Query> filters = List.of(
                     TermsQuery.of(t -> t
-                            .field(StacUUID.field)
+                            .field(StacUUID.UUID.searchField)
                             .terms(s -> s.value(values)))._toQuery());
 
             builder.query(q -> q.bool(b -> b.filter(filters)));

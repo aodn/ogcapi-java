@@ -5,17 +5,25 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
  * internal stac field.
  */
 public enum CQLCollectionsField {
-    geometry(StacSummeries.Geometry.field),
-    temporal(StacSummeries.Temporal.field);
+    geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField),
+    temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField),
+    title(StacTitle.searchField, StacTitle.displayField),
+    description(StacDescription.searchField, StacDescription.displayField),
+    id(StacUUID.UUID.searchField, StacUUID.UUID.displayField);
 
-    protected final String field;
+    protected final String searchField;
+    protected final String displayField;
 
-    CQLCollectionsField(String field) {
-        this.field = field;
+    CQLCollectionsField(String field, String displayField) {
+        this.searchField = field;
+        this.displayField = displayField;
     }
 
-    @Override
-    public String toString() {
-        return this.field;
+    public String getSearchField() {
+        return this.searchField;
     }
+    public String getDisplayField() {
+        return this.displayField;
+    }
+
 }

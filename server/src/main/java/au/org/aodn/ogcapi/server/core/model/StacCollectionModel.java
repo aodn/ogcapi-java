@@ -7,6 +7,9 @@ import lombok.Data;
 import java.util.List;
 import java.util.UUID;
 
+/**
+ * This is used to map the json from Elastic search to object
+ */
 @Data
 @Builder
 public class StacCollectionModel {
@@ -15,6 +18,7 @@ public class StacCollectionModel {
     protected String description;
     protected String type;
     protected ExtentModel extent;
+    protected SummariesModel summaries;
 
     @JsonProperty("id")
     protected String uuid;
