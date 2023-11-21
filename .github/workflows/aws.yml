@@ -79,17 +79,6 @@ jobs:
         
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1.7.0
-      with:
-        role-to-assume: ${{ env.ROLE_ARN }}
-        role-session-name: GitHub_to_AWS_via_FederatedOIDC
-        aws-region: ${{ env.AWS_REGION }}
-    # Hello from AWS: WhoAmI
-    - name: Sts GetCallerIdentity
-      run: |
-        aws sts get-caller-identity
       # - name: Configure AWS credentials
     #   uses: ./.github/workflows/github-actions.yml
     # - name: Configure AWS credentials
