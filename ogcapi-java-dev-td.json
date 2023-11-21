@@ -1,0 +1,36 @@
+{
+    "containerDefinitions": [
+        {
+            "name": "aodn-dev-container",
+            "image": "704910415367.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2",
+            "cpu": 0,
+            "portMappings": [
+                {
+                    "containerPort": 80,
+                    "hostPort": 80,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "entryPoint": [],
+            "command": [],
+            "environment": [],
+            "mountPoints": [],
+            "volumesFrom": []
+        }
+    ],
+    "family": "aodn-dev",
+    "networkMode": "awsvpc",
+    "revision": 1,
+    "volumes": [],
+    "placementConstraints": [],
+    "compatibilities": [
+        "EC2"
+    ],
+    "requiresCompatibilities": [
+        "EC2"
+    ],
+    "cpu": "1024",
+    "memory": "1024",
+    "tags": []
+}
