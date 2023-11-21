@@ -82,7 +82,7 @@ jobs:
       # - name: Configure AWS credentials
     #   uses: ./.github/workflows/github-actions.yml
     # - name: Configure AWS credentials
-    #   uses: aws-actions/configure-aws-credentials@v1.7.0
+    #   uses: aws-actions/configure-aws-credentials@v1
     #   with:
     #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
     #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -90,7 +90,7 @@ jobs:
 
     # - name: Login to Amazon ECR
     #   id: login-ecr
-    #   uses: aws-actions/amazon-ecr-login@v1.7.0
+    #   uses: aws-actions/amazon-ecr-login@v1
 
     - name: Build and tag image
       id: build-image
@@ -141,14 +141,14 @@ jobs:
 
     - name: Fill in the new image ID in the Amazon ECS task definition
       id: task-def
-      uses: aws-actions/amazon-ecs-render-task-definition@v1.7.0
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
       with:
         task-definition: ${{ env.ECS_TASK_DEFINITION }}
         container-name: ${{ env.CONTAINER_NAME }}
         image: ${{ steps.push-image.outputs.image }}
 
     - name: Deploy Amazon ECS task definition
-      uses: aws-actions/amazon-ecs-deploy-task-definition@v1.7.0
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
       with:
         task-definition: ${{ steps.task-def.outputs.task-definition }}
         cluster: ${{ env.ECS_CLUSTER }}
