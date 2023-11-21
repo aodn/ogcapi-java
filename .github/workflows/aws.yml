@@ -39,6 +39,7 @@ env:
                                                # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: aodn-dev-container     #MY_CONTAINER_NAME           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
+  ROLE_ARN: arn:aws:iam::704910415367:role/tlc-ci-cd
 
 permissions:
   contents: read
@@ -80,7 +81,17 @@ jobs:
       run: mvn -B package --file pom.xml
 
     - name: Configure AWS credentials
-      uses: ./.github/workflows/github-actions.yml
+      uses: aws-actions/configure-aws-credentials@v1.7.0
+      with:
+        role-to-assume: ${{ env.ROLE_ARN }}
+        role-session-name: GitHub_to_AWS_via_FederatedOIDC
+        aws-region: ${{ env.AWS_REGION }}
+    # Hello from AWS: WhoAmI
+    - name: Sts GetCallerIdentity
+      run: |
+        aws sts get-caller-identity
+      # - name: Configure AWS credentials
+    #   uses: ./.github/workflows/github-actions.yml
     # - name: Configure AWS credentials
     #   uses: aws-actions/configure-aws-credentials@v1
     #   with:
