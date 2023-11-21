@@ -58,7 +58,7 @@ public interface Converter<F, T> {
             extent.setSpatial(new ExtentSpatial());
 
             if(m.getExtent().getBbox() != null) {
-                // The first item is the overall bbox, this is requirement from STAC but not for
+                // The first item is the overall bbox, this is STAC spec requirement but not for
                 // OGC collection, hence we remove the first item.
                 extent.getSpatial().bbox(m.getExtent().getBbox().subList(1, m.getExtent().getBbox().size()));
                 collection.setExtent(extent);
@@ -68,10 +68,6 @@ public interface Converter<F, T> {
             extent.getTemporal().interval(m.getExtent().getTemporal());
             collection.setExtent(extent);
         }
-
-
-
-
 
         return collection;
     }

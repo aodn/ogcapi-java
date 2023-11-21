@@ -6,6 +6,10 @@ swagger generator and do not expect any manual changes.
 
 # How code generated
 
+> WARNING: You may experience code generation problem when the code is running in Windows machine
+> . Namely some enum will generated in two classes where one prefix with Api and the other emum contains
+> empty skeleton.
+
 All code generated using swagger generator with openapi file download online, these pages provide link to a website which 
 store the openapi file.
 
@@ -22,6 +26,8 @@ The generator generates the interface and model only, the implementor need to im
 > Noted: There are typeMappings in api generator pom to force mapping to desire class instead of enum, this is because
 > some of the definition in the openapi file is too restricted and not fit for purpose. The change will not break
 > the api contract.
+> 
+
 
 Another change will be on the file replacer, this is due to the following reasons:
 * javax package is removed in jdk17 and replaced by jakarta

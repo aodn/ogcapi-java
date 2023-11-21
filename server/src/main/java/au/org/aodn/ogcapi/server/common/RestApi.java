@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestController("CommonRestApi")
+@RequestMapping(value = "/api/v1/ogc")
 public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
     @Autowired

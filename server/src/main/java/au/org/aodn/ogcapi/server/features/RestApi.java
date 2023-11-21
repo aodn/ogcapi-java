@@ -9,12 +9,14 @@ import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 @RestController("FeaturesRestApi")
+@RequestMapping(value = "/api/v1/ogc")
 public class RestApi implements CollectionsApi {
 
     @Autowired

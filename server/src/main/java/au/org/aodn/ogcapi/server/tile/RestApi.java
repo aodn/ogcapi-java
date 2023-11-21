@@ -18,6 +18,7 @@ import java.util.List;
  * Implements the rest api of tile
  */
 @RestController("TileRestApi")
+@RequestMapping(value = "/api/v1/ogc")
 public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSetsApi, TilesApi {
 
     @Autowired
