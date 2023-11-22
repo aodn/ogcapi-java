@@ -160,7 +160,7 @@ public class ElasticSearch implements Search {
 
             filters = List.of(
                     TermsQuery.of(t -> t
-                            .field(StacUUID.UUID.searchField)
+                            .field(StacBasicField.UUID.searchField)
                             .terms(s -> s.value(values)))._toQuery()
             );
         }
@@ -204,7 +204,7 @@ public class ElasticSearch implements Search {
                     Query q = MultiMatchQuery.of(m -> m
                             .fuzziness("AUTO")
                             //TODO: what keywords we want to search?
-                            .fields(StacTitle.searchField, StacDescription.searchField)
+                            .fields(StacBasicField.Title.searchField, StacBasicField.Description.searchField)
                             .prefixLength(0)
                             .query(t))._toQuery();
                     queries.add(q);
@@ -247,7 +247,7 @@ public class ElasticSearch implements Search {
 
             List<Query> filters = List.of(
                     TermsQuery.of(t -> t
-                            .field(StacUUID.UUID.searchField)
+                            .field(StacBasicField.UUID.searchField)
                             .terms(s -> s.value(values)))._toQuery());
 
             builder.query(q -> q.bool(b -> b.filter(filters)));

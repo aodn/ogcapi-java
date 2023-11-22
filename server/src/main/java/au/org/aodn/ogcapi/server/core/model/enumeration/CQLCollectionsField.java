@@ -7,9 +7,10 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 public enum CQLCollectionsField {
     geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField),
     temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField),
-    title(StacTitle.searchField, StacTitle.displayField),
-    description(StacDescription.searchField, StacDescription.displayField),
-    id(StacUUID.UUID.searchField, StacUUID.UUID.displayField);
+    title(StacBasicField.Title.searchField, StacBasicField.Title.displayField),
+    description(StacBasicField.Description.searchField, StacBasicField.Description.displayField),
+    providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField),
+    id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField);
 
     protected final String searchField;
     protected final String displayField;
@@ -24,6 +25,11 @@ public enum CQLCollectionsField {
     }
     public String getDisplayField() {
         return this.displayField;
+    }
+
+    @Override
+    public String toString() {
+        return searchField;
     }
 
 }

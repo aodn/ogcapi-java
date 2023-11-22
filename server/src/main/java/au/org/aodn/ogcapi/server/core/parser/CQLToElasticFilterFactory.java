@@ -317,22 +317,40 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public PropertyIsLike like(Expression expression, String s) {
-        return null;
+        logger.debug("PropertyIsLike {} {}", expression, s);
+        return new LikeImpl(expression,s, collectionFieldType);
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3) {
-        return null;
+    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar, String escapeChar) {
+        logger.debug("PropertyIsLike {} {} {} {} {}",
+                expression, literal, wildCardChar, singleChar, escapeChar);
+
+        LikeImpl i = new LikeImpl(expression,literal, collectionFieldType);
+        i.setEscapeChar(escapeChar);
+        i.setSingleChar(singleChar);
+        i.setWildcard(wildCardChar);
+
+        return i;
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3, boolean b) {
-        return null;
+    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar,
+                               String escapeChar, boolean matchingCase) {
+
+        logger.debug("PropertyIsLike {} {} {} {} {} {}, but matchingCase is ignore on purpose",
+                expression, literal, wildCardChar, singleChar, escapeChar, matchingCase);
+
+        return this.like(expression,literal,wildCardChar,singleChar,escapeChar);
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3, boolean b, MultiValuedFilter.MatchAction matchAction) {
-        return null;
+    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar,
+                               String escapeChar, boolean matchingCase, MultiValuedFilter.MatchAction matchAction) {
+        logger.debug("PropertyIsLike {} {} {} {} {} {}, {}",
+                expression, literal, wildCardChar, singleChar, escapeChar, matchingCase, matchAction);
+
+        return this.like(expression,literal,wildCardChar,singleChar,escapeChar,matchingCase);
     }
 
     @Override
