@@ -10,15 +10,16 @@ on:
 
 env:
   AWS_REGION: ap-southeast-2 #MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
-  ECR_REPOSITORY: 704910415367.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2           # set this to your Amazon ECR repository name
+  #ECR_REPOSITORY: #########.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2           # set this to your Amazon ECR repository name
   ECS_SERVICE: ogcapi-java-service #MY_ECS_SERVICE                 # set this to your Amazon ECS service name
   ECS_CLUSTER: aodn-imos-v2                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json     #MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
                                                # file, e.g. .aws/task-definition.json
   CONTAINER_NAME: aodn-dev-container     #MY_CONTAINER_NAME           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
-  ROLE_ARN: arn:aws:iam::704910415367:role/tlc-ci-cd
-
+  #ROLE_ARN: arn:aws:iam::#########:role/tlc-ci-cd
+  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+             
 # Permission can be added at job level or workflow level
 permissions:
   id-token: write   # This is required for requesting the JWT
@@ -33,7 +34,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::704910415367:role/tlc-ci-cd
+          role-to-assume: ${{ secrets.ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
       # Hello from AWS: WhoAmI
@@ -68,15 +69,7 @@ jobs:
           
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-        # - name: Configure AWS credentials
-      #   uses: ./.github/workflows/github-actions.yml
-      # - name: Configure AWS credentials
-      #   uses: aws-actions/configure-aws-credentials@v1
-      #   with:
-      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      #     aws-region: ${{ env.AWS_REGION }}
-
+      
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -87,7 +80,6 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
-          ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           HOST: ${API_HOST:-http://localhost}
           PORT: ${API_CONTAINER_PORT:-8081}
           ELASTIC_URL: ${ELASTIC_URL:-https://dev-discovery-index.es.ap-southeast-2.aws.found.io}
@@ -118,7 +110,6 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
-          ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
         run: |
           # Build a docker container and
           # be deployed to ECS.
