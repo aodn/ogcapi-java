@@ -9,7 +9,7 @@ on:
     branches: [5165-cicd]
 
 env:
-  env_var: development
+  ENVIRONMENT: development
   AWS_REGION: ap-southeast-2 #MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
   #ECR_REPOSITORY: #########.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2           # set this to your Amazon ECR repository name
   ECS_SERVICE: ogcapi-java-service #MY_ECS_SERVICE                 # set this to your Amazon ECS service name
@@ -20,8 +20,7 @@ env:
                                                # containerDefinitions section of your task definition
   #ROLE_ARN: arn:aws:iam::#########:role/tlc-ci-cd
   ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
-  ENVIRONMENT: development
-  Name: development
+  name: development
   ROLE_ARN: ${{ vars.ROLE_ARN }}
              
 # Permission can be added at job level or workflow level
