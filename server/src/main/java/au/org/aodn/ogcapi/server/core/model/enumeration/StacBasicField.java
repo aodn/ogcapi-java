@@ -4,7 +4,10 @@ public enum StacBasicField {
     UUID("id", "id"),
     Title("title", "title"),
     Description("description", "description"),
-    Providers("providers", "providers.name");
+    Providers(
+            "providers",    // This result in the whole provider section return
+            "providers.name"
+    );
 
     public final String searchField;    // Field in STAC object
     public final String displayField;   // Field that is named externally
