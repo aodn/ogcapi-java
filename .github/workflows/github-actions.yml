@@ -22,6 +22,7 @@ env:
   ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
   ENVIRONMENT: development
   Name: development
+  ROLE_ARN: ${{ vars.ROLE_ARN }}
              
 # Permission can be added at job level or workflow level
 permissions:
