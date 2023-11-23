@@ -81,6 +81,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
@@ -107,6 +108,7 @@ jobs:
         id: push-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
