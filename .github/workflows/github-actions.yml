@@ -132,7 +132,7 @@ jobs:
             HOST=${{ vars.HOST }} 
             PORT=${{ vars.PORT }} 
             ELASTIC_URL=${{ vars.ELASTIC_URL }} 
-            ELASTIC_KEY=${{ secrets.ELASTIC_KEY }}
+            ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
         
 
