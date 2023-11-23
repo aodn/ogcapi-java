@@ -133,7 +133,7 @@ jobs:
             PORT: ${{ vars.PORT }} 
             ELASTIC_URL: ${{ vars.ELASTIC_URL }} 
             ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
-            IMAGE: ${{ vars.IMAGE }}
+            IMAGE: ${{ steps.push-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
