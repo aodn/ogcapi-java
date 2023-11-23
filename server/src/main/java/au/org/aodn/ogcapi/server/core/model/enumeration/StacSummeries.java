@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum StacSummeries {
+    Score("summaries.score"),
     Geometry("summaries.proj:geometry"),
     TemporalStart("summaries.temporal.start"),
     TemporalEnd("summaries.temporal.end"),
