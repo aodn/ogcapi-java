@@ -8,25 +8,12 @@
                 {
                     "containerPort": 80,
                     "hostPort": 80,
-                    "protocol": "tcp"
+                    "protocol": "tcp",
+                    "appProtocol": "http"
                 }
             ],
             "essential": true,
-            "entryPoint": [],
-            "command": [],
             "environment": [
-                {
-                    "name": "ENV",
-                    "value": "<ENVIRONMENT>"
-                },
-                {
-                    "name": "HOST",
-                    "value": "<HOST>"
-                },
-                {
-                    "name": "PORT",
-                    "value": "<PORT>"
-                },
                 {
                     "name": "ELASTIC_URL",
                     "value": "<ELASTIC_URL>"
@@ -34,16 +21,40 @@
                 {
                     "name": "ELASTIC_KEY",
                     "value": "<ELASTIC_KEY>"
+                },
+                {
+                    "name": "HOST",
+                    "value": "<HOST>"
+                },
+                {
+                    "name": "ENVIRONMENT",
+                    "value": "<ENVIRONMENT>"
+                },
+                {
+                    "name": "PORT",
+                    "value": "<PORT>"
                 }
             ],
+            "environmentFiles": [],
             "mountPoints": [],
-            "volumesFrom": []
+            "volumesFrom": [],
+            "ulimits": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-create-group": "true",
+                    "awslogs-group": "/ecs/aodn-dev1",
+                    "awslogs-region": "ap-southeast-2",
+                    "awslogs-stream-prefix": "ecs"
+                },
+                "secretOptions": []
+            }
         }
     ],
     "family": "aodn-dev1",
     "executionRoleArn": "arn:aws:iam::704910415367:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
-    "revision": 1,
+    "revision": 4,
     "volumes": [],
     "placementConstraints": [],
     "compatibilities": [
