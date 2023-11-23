@@ -40,7 +40,8 @@
             "volumesFrom": []
         }
     ],
-    "family": "aodn-dev",
+    "family": "aodn-dev1",
+    "executionRoleArn": "arn:aws:iam::704910415367:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "revision": 1,
     "volumes": [],
