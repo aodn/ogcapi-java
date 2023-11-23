@@ -127,13 +127,14 @@ jobs:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.push-image.outputs.image }}
-        env:
+          environment-variables: |
             ENVIRONMENT: ${{ env.ENVIRONMENT }}
             HOST: ${{ vars.HOST }} 
             PORT: ${{ vars.PORT }} 
             ELASTIC_URL: ${{ vars.ELASTIC_URL }} 
             ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
             IMAGE: ${{ steps.push-image.outputs.image }}
+        
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
