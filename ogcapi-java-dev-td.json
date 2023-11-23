@@ -2,7 +2,7 @@
     "containerDefinitions": [
         {
             "name": "aodn-dev-container",
-            "image": "704910415367.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2",
+            "image": "<IMAGE>",
             "cpu": 0,
             "portMappings": [
                 {
@@ -14,7 +14,28 @@
             "essential": true,
             "entryPoint": [],
             "command": [],
-            "environment": [],
+            "environment": [
+                {
+                    "name": "ENV",
+                    "value": "<ENVIRONMENT>"
+                },
+                {
+                    "name": "HOST",
+                    "value": "<HOST>"
+                },
+                {
+                    "name": "PORT",
+                    "value": "<PORT>"
+                },
+                {
+                    "name": "ELASTIC_URL",
+                    "value": "<ELASTIC_URL>"
+                },
+                {
+                    "name": "ELASTIC_KEY",
+                    "value": "<ELASTIC_KEY>"
+                }
+            ],
             "mountPoints": [],
             "volumesFrom": []
         }

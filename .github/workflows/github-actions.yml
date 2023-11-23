@@ -9,6 +9,7 @@ on:
     branches: [5165-cicd]
 
 env:
+  env_var: development
   AWS_REGION: ap-southeast-2 #MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
   #ECR_REPOSITORY: #########.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2           # set this to your Amazon ECR repository name
   ECS_SERVICE: ogcapi-java-service #MY_ECS_SERVICE                 # set this to your Amazon ECS service name
@@ -18,7 +19,9 @@ env:
   CONTAINER_NAME: aodn-dev-container     #MY_CONTAINER_NAME           # set this to the name of the container in the
                                                # containerDefinitions section of your task definition
   #ROLE_ARN: arn:aws:iam::#########:role/tlc-ci-cd
-  ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+  ELASTIC_KEY: ${{ secrets.ELASTIC_KEY }}
+  ENVIRONMENT: development
+  Name: development
              
 # Permission can be added at job level or workflow level
 permissions:
@@ -34,7 +37,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.ROLE_ARN }}
+          role-to-assume: ${{ env.ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
       # Hello from AWS: WhoAmI
@@ -126,10 +129,18 @@ jobs:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ env.CONTAINER_NAME }}
           image: ${{ steps.push-image.outputs.image }}
+        env:
+            ENVIRONMENT: ${{ env.ENVIRONMENT }}
+            HOST: ${{ vars.HOST }} 
+            PORT: ${{ vars.PORT }} 
+            ELASTIC_URL: ${{ vars.ELASTIC_URL }} 
+            ELASTIC_KEY: ${{ vars.ELASTIC_KEY }}
+            IMAGE: ${{ vars.IMAGE }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
