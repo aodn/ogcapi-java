@@ -6,7 +6,9 @@ import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.ElasticFilter;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
+import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
@@ -76,7 +78,12 @@ public class ElasticSearch implements Search {
                 .index(indexName)
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
-                .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
+                .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
+                .sort(so -> so
+                    .field(FieldSort.of(f -> f
+                        .field(StacSummeries.Score.field)
+                        .order(SortOrder.Desc))
+                    ));
 
         SearchRequest request = builder.build();
         logger.debug("Final elastic search payload {}", request.toString());
