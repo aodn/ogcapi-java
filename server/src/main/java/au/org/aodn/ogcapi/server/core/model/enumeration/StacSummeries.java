@@ -1,8 +1,10 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public enum StacSummeries {
+    Score("summaries.score", "summaries.score"),
     Geometry("summaries.proj:geometry","extent.bbox"),
     TemporalStart("summaries.temporal.start", ""),
     TemporalEnd("summaries.temporal.end", ""),
