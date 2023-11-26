@@ -86,7 +86,7 @@ public class ElasticSearch implements Search {
                 .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
                 .sort(so -> so
                     .field(FieldSort.of(f -> f
-                        .field(StacSummeries.Score.field)
+                        .field(StacSummeries.Score.searchField)
                         .order(SortOrder.Desc))
                     ));
 
