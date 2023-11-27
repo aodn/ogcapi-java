@@ -19,6 +19,7 @@ public class StacCollectionModel {
     protected String type;
     protected ExtentModel extent;
     protected SummariesModel summaries;
+    protected List<LinkModel> links;
 
     @JsonProperty("id")
     protected String uuid;

@@ -1,11 +1,10 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
-import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.features.model.Extent;
-import au.org.aodn.ogcapi.features.model.ExtentSpatial;
-import au.org.aodn.ogcapi.features.model.ExtentTemporal;
+import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import org.springframework.http.MediaType;
+
+import java.util.stream.Collectors;
 
 @FunctionalInterface
 public interface Converter<F, T> {
@@ -67,6 +66,20 @@ public interface Converter<F, T> {
             extent.setTemporal(new ExtentTemporal());
             extent.getTemporal().interval(m.getExtent().getTemporal());
             collection.setExtent(extent);
+        }
+
+        if(m.getLinks() != null) {
+            // Convert object type.
+            collection.setLinks(
+                    m.getLinks()
+                            .stream()
+                            .map(l -> new Link()
+                                .href(l.getHref())
+                                .type(l.getType())
+                                .rel(l.getRel())
+                                .title(l.getTitle())
+                            )
+                    .collect(Collectors.toList()));
         }
 
         return collection;
