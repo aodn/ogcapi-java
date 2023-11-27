@@ -67,7 +67,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             default: {
                 return ResponseEntity
                         .status(HttpStatus.TEMPORARY_REDIRECT)
-                        .location(URI.create("/api/v1/ogcv/swagger-ui/index.html"))
+                        .location(URI.create("/api/v1/ogc/swagger-ui/index.html"))
                         .build();
             }
         }
