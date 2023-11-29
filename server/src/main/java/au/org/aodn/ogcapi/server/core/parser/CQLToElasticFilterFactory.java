@@ -222,19 +222,19 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public PropertyIsEqualTo equals(Expression expression, Expression expression1) {
         logger.debug("PropertyIsEqualTo {} {}", expression, expression1);
-        return null;
+        return equal(expression, expression1, false);
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b) {
         logger.debug("PropertyIsEqualTo {} {}, {}", expression, expression1, b);
-        return null;
+        return equal(expression, expression1, b, null);
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
-        return null;
+        return new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
     }
 
     @Override

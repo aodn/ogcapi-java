@@ -5,6 +5,8 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
  * internal stac field.
  */
 public enum CQLCollectionsField {
+    dataset_provider(StacSummeries.Provider.searchField, StacSummeries.Provider.displayField),
+    update_frequency(StacSummeries.UpdateFrequency.searchField, StacSummeries.UpdateFrequency.displayField),
     geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField),
     temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField),
     title(StacBasicField.Title.searchField, StacBasicField.Title.displayField),
