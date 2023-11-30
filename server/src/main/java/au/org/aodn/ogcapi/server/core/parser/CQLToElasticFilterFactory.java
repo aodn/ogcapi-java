@@ -222,19 +222,19 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public PropertyIsEqualTo equals(Expression expression, Expression expression1) {
         logger.debug("PropertyIsEqualTo {} {}", expression, expression1);
-        return null;
+        return equal(expression, expression1, false);
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b) {
         logger.debug("PropertyIsEqualTo {} {}, {}", expression, expression1, b);
-        return null;
+        return equal(expression, expression1, b, null);
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
-        return null;
+        return new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
     }
 
     @Override
@@ -317,22 +317,40 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public PropertyIsLike like(Expression expression, String s) {
-        return null;
+        logger.debug("PropertyIsLike {} {}", expression, s);
+        return new LikeImpl(expression,s, collectionFieldType);
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3) {
-        return null;
+    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar, String escapeChar) {
+        logger.debug("PropertyIsLike {} {} {} {} {}",
+                expression, literal, wildCardChar, singleChar, escapeChar);
+
+        LikeImpl i = new LikeImpl(expression,literal, collectionFieldType);
+        i.setEscapeChar(escapeChar);
+        i.setSingleChar(singleChar);
+        i.setWildcard(wildCardChar);
+
+        return i;
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3, boolean b) {
-        return null;
+    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar,
+                               String escapeChar, boolean matchingCase) {
+
+        logger.debug("PropertyIsLike {} {} {} {} {} {}, but matchingCase is ignore on purpose",
+                expression, literal, wildCardChar, singleChar, escapeChar, matchingCase);
+
+        return this.like(expression,literal,wildCardChar,singleChar,escapeChar);
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3, boolean b, MultiValuedFilter.MatchAction matchAction) {
-        return null;
+    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar,
+                               String escapeChar, boolean matchingCase, MultiValuedFilter.MatchAction matchAction) {
+        logger.debug("PropertyIsLike {} {} {} {} {} {}, {}",
+                expression, literal, wildCardChar, singleChar, escapeChar, matchingCase, matchAction);
+
+        return this.like(expression,literal,wildCardChar,singleChar,escapeChar,matchingCase);
     }
 
     @Override

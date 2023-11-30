@@ -4,19 +4,23 @@ import java.util.ArrayList;
 import java.util.List;
 
 public enum StacSummeries {
-    Score("summaries.score"),
-    Geometry("summaries.proj:geometry"),
-    TemporalStart("summaries.temporal.start"),
-    TemporalEnd("summaries.temporal.end"),
-    Temporal("summaries.temporal", List.of(TemporalStart, TemporalEnd));
+    Score("summaries.score", "summaries.score"),
+    Geometry("summaries.proj:geometry","extent.bbox"),
+    TemporalStart("summaries.temporal.start", ""),
+    TemporalEnd("summaries.temporal.end", ""),
+    Temporal("summaries.temporal", "extent.temporal", List.of(TemporalStart, TemporalEnd)),
+    UpdateFrequency("summaries.update_frequency", "summaries.update_frequency"),
+    Provider("summaries.dataset_provider", "summaries.dataset_provider");
 
-    public final String field;
+    public final String searchField;
+    public final String displayField;
     public final List<StacSummeries> subfields;
 
-    StacSummeries(String s) { this(s, null); }
+    StacSummeries(String s, String d) { this(s,d, null); }
 
-    StacSummeries(String s, List<StacSummeries> f) {
-        field = s;
+    StacSummeries(String s, String d, List<StacSummeries> f) {
+        searchField = s;
+        displayField = d;
         subfields = f;
     }
 }

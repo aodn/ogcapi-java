@@ -1,11 +1,10 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
-import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.features.model.Extent;
-import au.org.aodn.ogcapi.features.model.ExtentSpatial;
-import au.org.aodn.ogcapi.features.model.ExtentTemporal;
+import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import org.springframework.http.MediaType;
+
+import java.util.stream.Collectors;
 
 @FunctionalInterface
 public interface Converter<F, T> {
@@ -53,13 +52,35 @@ public interface Converter<F, T> {
         collection.setItemType("Collection");
 
         Extent extent = new Extent();
-        extent.setSpatial(new ExtentSpatial());
-        extent.getSpatial().bbox(m.getExtent().getBbox());
-        collection.setExtent(extent);
 
-        extent.setTemporal(new ExtentTemporal());
-        extent.getTemporal().interval(m.getExtent().getTemporal());
-        collection.setExtent(extent);
+        if(m.getExtent() != null) {
+            extent.setSpatial(new ExtentSpatial());
+
+            if(m.getExtent().getBbox() != null) {
+                // The first item is the overall bbox, this is STAC spec requirement but not for
+                // OGC collection, hence we remove the first item.
+                extent.getSpatial().bbox(m.getExtent().getBbox().subList(1, m.getExtent().getBbox().size()));
+                collection.setExtent(extent);
+            }
+
+            extent.setTemporal(new ExtentTemporal());
+            extent.getTemporal().interval(m.getExtent().getTemporal());
+            collection.setExtent(extent);
+        }
+
+        if(m.getLinks() != null) {
+            // Convert object type.
+            collection.setLinks(
+                    m.getLinks()
+                            .stream()
+                            .map(l -> new Link()
+                                .href(l.getHref())
+                                .type(l.getType())
+                                .rel(l.getRel())
+                                .title(l.getTitle())
+                            )
+                    .collect(Collectors.toList()));
+        }
 
         return collection;
     }

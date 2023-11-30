@@ -10,6 +10,13 @@ elasticsearch:
 api:
   host: http://localhost:${server.port}
 
+springdoc:
+  swagger-ui:
+    disable-swagger-default-url: true
+    path: /api/v1/ogc/swagger-ui
+  api-docs:
+    path: /api/v1/ogc/api-docs/v3
+
 logging:
   level:
     au.org.aodn.ogcapi.server: debug

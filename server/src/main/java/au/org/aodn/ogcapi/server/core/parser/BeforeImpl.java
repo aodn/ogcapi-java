@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
-import au.org.aodn.ogcapi.server.core.model.enumeration.StacExtent;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.json.JsonData;
@@ -13,8 +12,6 @@ import org.opengis.filter.expression.Expression;
 import org.opengis.filter.temporal.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.text.SimpleDateFormat;
 
 /**
  * Only works for temporal field for now
@@ -41,10 +38,10 @@ public class BeforeImpl<T extends Enum<T>> extends ElasticFilter implements Befo
                         && cqlCollectionsField == CQLCollectionsField.temporal) {
 
                     this.query = NestedQuery.of(n -> n
-                            .path(StacSummeries.Temporal.field)
+                            .path(StacSummeries.Temporal.searchField)
                             .query(q1 -> q1
                                     .range(r -> r
-                                            .field(StacSummeries.TemporalEnd.field)
+                                            .field(StacSummeries.TemporalEnd.searchField)
                                             .lte(JsonData.of(dateFormatter.format(literal.getValue())))
                                             .format("strict_date_optional_time")
                                     )

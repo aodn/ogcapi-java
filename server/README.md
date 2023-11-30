@@ -51,4 +51,7 @@ found another Search, the default ElasticSearch will not be provisioned.
 ### Common Query Language (CQL) parser
 
 We use the geotools' CQl parser and extend it so that it generated the needed Elastic Search Query, please read
-CQLToElasticFilterFactory.java
+CQLToElasticFilterFactory.java. Please get some understanding of
+[ElasticSearch](https://www.elastic.co/blog/find-strings-within-strings-faster-with-the-new-elasticsearch-wildcard-field) 
+before you begin your coding, in short Elastic search have the following fields, text, keywords and wildcard. Each 
+have its own behavior and will impact your search result.
