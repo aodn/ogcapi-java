@@ -75,7 +75,7 @@ public class ElasticSearch implements Search {
     protected List<StacCollectionModel> searchCollectionBy(List<Query> queries,
                                                            List<Query> should,
                                                            List<Query> filters,
-                                                           List<String> property,
+                                                           List<String> properties,
                                                            Integer from,
                                                            Integer size) throws IOException {
 
@@ -90,9 +90,9 @@ public class ElasticSearch implements Search {
                         .order(SortOrder.Desc))
                     ));
 
-        if(property != null) {
+        if(properties != null && !properties.isEmpty()) {
             // Convert the income field name to the real field name in STAC
-            List<String> fs = property
+            List<String> fs = properties
                     .stream()
                     .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
                     .collect(Collectors.toList());
@@ -196,7 +196,7 @@ public class ElasticSearch implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor, List<String> property) throws IOException, CQLException {
+    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor, List<String> properties) throws IOException, CQLException {
 
         if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections();
@@ -228,7 +228,7 @@ public class ElasticSearch implements Search {
                 }
             }
 
-            return searchCollectionBy(null, queries, filters,  property, null, null);
+            return searchCollectionBy(null, queries, filters,  properties, null, null);
         }
     }
 

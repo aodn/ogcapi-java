@@ -34,11 +34,11 @@ public abstract class OGCApiService {
                                                    OGCMediaTypeMapper f,
                                                    CQLCrsType coor,
                                                    Function<List<StacCollectionModel>, R> converter,
-                                                   List<String> property) {
+                                                   List<String> properties) {
         try {
             switch (f) {
                 case json -> {
-                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, coor, property);
+                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, coor, properties);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
