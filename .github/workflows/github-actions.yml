@@ -44,6 +44,47 @@ jobs:
       - name: Sts GetCallerIdentity
         run: |
           aws sts get-caller-identity
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+  
+      - name: Retrieve Parameters - ssm parameter store
+        id: getParameters
+        run: |
+          # Replace '--path' with your specific path from Parameter Store
+          parameters=$(aws ssm get-parameters-by-path --path "/core/es_indexer/dev_ecr_ecs_config/" --recursive --query 'Parameters[*].[Name,Value]' --output json)
+          echo "$parameters" > parameters.json
+          echo "::set-output name=parameters_json::$parameters"
+      
+      - name: Process Parameters - ssm parameter store
+        run: |
+          parameters=$(cat parameters.json)
+          # Loop through the JSON array of parameters using jq
+          for row in $(echo "${parameters}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo "${row}" | base64 --decode | jq -r "${1}"
+            }
+            name=$(_jq '.[0]')
+            value=$(_jq '.[1]')
+
+            echo "Name: $name, Value: $value"
+
+            # Perform actions using parameter values here
+            # For example, set environment variables
+            if [ "$name" = "/core/es_indexer/dev_ecr_ecs_config/ecr_repo" ]; then
+              echo "ECR_REPOSITORY=$value" >> "$GITHUB_ENV"
+            fi
+            if [ "$name" = "/core/es_indexer/dev_ecr_ecs_config/ecs_cluster" ]; then
+              echo "ECS_CLUSTER=$value" >> "$GITHUB_ENV"
+            fi
+            if [ "$name" = "/core/es_indexer/dev_ecr_ecs_config/ecs_service" ]; then
+              echo "ECS_SERVICE=$value" >> "$GITHUB_ENV"
+            fi
+            if [ "$name" = "/core/es_indexer/dev_ecr_ecs_config/container_name" ]; then
+              echo "CONTAINER_NAME=$value" >> "$GITHUB_ENV"
+            fi
+          done
+
       - name: Prepare
         id: prep
         run: |
