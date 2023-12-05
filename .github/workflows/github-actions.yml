@@ -7,6 +7,7 @@ on:
     branches: [5165-cicd]
   pull_request:
     branches: [5165-cicd]
+  workflow_dispatch:
 
 env:
   ENVIRONMENT: development
@@ -34,20 +35,19 @@ jobs:
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v3
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
+
       # Hello from AWS: WhoAmI
       - name: Sts GetCallerIdentity
         run: |
           aws sts get-caller-identity
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-  
       - name: Retrieve Parameters - ssm parameter store
         id: getParameters
         run: |
