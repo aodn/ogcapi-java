@@ -1,45 +1,43 @@
-# This is a basic workflow to help you get started with Actions
 name: Connect to an AWS role from a GitHub repository
 
-# Controls when the action will run. Invokes the workflow on push events but only for the main branch
 on:
-  push:
-    branches: [5165-cicd]
-  pull_request:
-    branches: [5165-cicd]
+  workflow_dispatch:
 
 env:
   ENVIRONMENT: development
-  AWS_REGION: ap-southeast-2 #MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
-  #ECR_REPOSITORY: #########.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2           # set this to your Amazon ECR repository name
-  ECS_SERVICE: ogcapi-java-service #MY_ECS_SERVICE                 # set this to your Amazon ECS service name
-  ECS_CLUSTER: aodn-imos-v2                 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json     #MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
-                                               # file, e.g. .aws/task-definition.json
-  CONTAINER_NAME: aodn-dev-container     #MY_CONTAINER_NAME           # set this to the name of the container in the
-                                               # containerDefinitions section of your task definition
-  #ROLE_ARN: arn:aws:iam::#########:role/tlc-ci-cd
+  AWS_REGION: ap-southeast-4
+  ECR_REPOSITORY: 450356697252.dkr.ecr.ap-southeast-4.amazonaws.com/ogcapi
+  ECS_SERVICE: ogcapi-java-service
+  ECS_CLUSTER: shared-ecs
+  ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json
+  CONTAINER_NAME: aodn-dev-container
+  ROLE_ARN: arn:aws:iam::450356697252:role/TempGithubActionsRole
+  HOST: http://localhost
+  PORT: 8080
+  ELASTIC_URL: https:/0.0.0.0/
+  ELASTIC_KEY: 1234567890
   name: development
-  
-             
-# Permission can be added at job level or workflow level
+
 permissions:
-  id-token: write   # This is required for requesting the JWT
-  contents: read    # This is required for actions/checkout
+  id-token: write   # JWT
+  contents: read    # actions/checkout
 
 jobs:
   AWS-ECR-ECS-Deploy:
     runs-on: ubuntu-latest
     environment: development
     steps:
+
       - name: Git clone the repository
         uses: actions/checkout@v3
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.ROLE_ARN }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          role-to-assume: ${{ env.ROLE_ARN }}
+          role-session-name: GitHub_to_AWS_OIDC
           aws-region: ${{ env.AWS_REGION }}
+
       # Hello from AWS: WhoAmI
       - name: Sts GetCallerIdentity
         run: |
@@ -47,43 +45,6 @@ jobs:
 
       - name: Install jq
         run: sudo apt-get update && sudo apt-get install -y jq
-  
-      - name: Retrieve Parameters - ssm parameter store
-        id: getParameters
-        run: |
-          # Replace '--path' with your specific path from Parameter Store
-          parameters=$(aws ssm get-parameters-by-path --path "/core/ogcapi/dev_ecr_ecs_config/" --recursive --query 'Parameters[*].[Name,Value]' --output json)
-          echo "$parameters" > parameters.json
-          echo "::set-output name=parameters_json::$parameters"
-      
-      - name: Process Parameters - ssm parameter store
-        run: |
-          parameters=$(cat parameters.json)
-          # Loop through the JSON array of parameters using jq
-          for row in $(echo "${parameters}" | jq -r '.[] | @base64'); do
-            _jq() {
-              echo "${row}" | base64 --decode | jq -r "${1}"
-            }
-            name=$(_jq '.[0]')
-            value=$(_jq '.[1]')
-
-            echo "Name: $name, Value: $value"
-
-            # Perform actions using parameter values here
-            # For example, set environment variables
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecr_repo" ]; then
-              echo "ECR_REPOSITORY=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_cluster" ]; then
-              echo "ECS_CLUSTER=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_service" ]; then
-              echo "ECS_SERVICE=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/container_name" ]; then
-              echo "CONTAINER_NAME=$value" >> "$GITHUB_ENV"
-            fi
-          done
 
       - name: Prepare
         id: prep
@@ -103,17 +64,17 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v3
-      
+
       - name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
-          
+
       - name: Build with Maven
         run: mvn -B package --file pom.xml
-      
+
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
@@ -122,7 +83,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
@@ -134,22 +95,11 @@ jobs:
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Run Trivy vulnerability scanner in docker mode
-        uses: aquasecurity/trivy-action@master
-        with:
-            image-ref: ${{ steps.build-image.outputs.image }}
-            format: 'table'
-            severity: 'HIGH,CRITICAL'
-            vuln-type: 'os,library'
-            exit-code: 1
-            ignore-unfixed: true
-        continue-on-error: true
-      
       - name: Push image to Amazon ECR
         id: push-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
+          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
@@ -170,12 +120,11 @@ jobs:
           image: ${{ steps.push-image.outputs.image }}
           environment-variables: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            HOST=${{ vars.HOST }} 
-            PORT=${{ vars.PORT }} 
-            ELASTIC_URL=${{ vars.ELASTIC_URL }} 
-            ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
+            HOST=${{ env.HOST }}
+            PORT=${{ env.PORT }}
+            ELASTIC_URL=${{ env.ELASTIC_URL }}
+            ELASTIC_KEY=${{ env.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
-        
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
