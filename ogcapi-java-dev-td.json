@@ -1,7 +1,7 @@
 {
     "containerDefinitions": [
         {
-            "name": "aodn-dev-container",
+            "name": "ogcapi-java-container",
             "image": "<IMAGE>",
             "cpu": 0,
             "portMappings": [
@@ -43,15 +43,15 @@
                 "logDriver": "awslogs",
                 "options": {
                     "awslogs-create-group": "true",
-                    "awslogs-group": "/ecs/aodn-dev1",
-                    "awslogs-region": "ap-southeast-2",
+                    "awslogs-group": "/ecs/tfintegration",
+                    "awslogs-region": "ap-southeast-4",
                     "awslogs-stream-prefix": "ecs"
                 },
                 "secretOptions": []
             }
         }
     ],
-    "family": "aodn-dev1",
+    "family": "ogcapi-java",
     "executionRoleArn": "<ROLE_EXEC>",
     "taskRoleArn": "<ROLE_TASK>",
     "networkMode": "awsvpc",

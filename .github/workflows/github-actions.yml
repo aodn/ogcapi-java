@@ -1,4 +1,5 @@
 name: Connect to an AWS role from a GitHub repository
+#name: Terraform GitHub Actions Integration Application
 
 on:
   workflow_dispatch:
@@ -10,7 +11,7 @@ env:
   ECS_SERVICE: ogcapi-java-service
   ECS_CLUSTER: shared-ecs
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json
-  CONTAINER_NAME: aodn-dev-container
+  CONTAINER_NAME: ogcapi-java-container
   ROLE_ARN: arn:aws:iam::450356697252:role/TempGithubActionsRole
   ROLE_EXEC: arn:aws:iam::450356697252:role/nginx-fgate-ecs-agent-role
   ROLE_TASK: arn:aws:iam::450356697252:role/nginx-fgate-ecs-container-role
@@ -113,7 +114,7 @@ jobs:
           docker push $ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
+      - name: Render ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -128,10 +129,10 @@ jobs:
             ELASTIC_KEY=${{ env.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+#     - name: Deploy Amazon ECS task definition
+#       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#       with:
+#         task-definition: ${{ steps.task-def.outputs.task-definition }}
+#         service: ${{ env.ECS_SERVICE }}
+#         cluster: ${{ env.ECS_CLUSTER }}
+#         wait-for-service-stability: true
