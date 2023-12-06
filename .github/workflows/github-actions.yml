@@ -12,6 +12,8 @@ env:
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json
   CONTAINER_NAME: aodn-dev-container
   ROLE_ARN: arn:aws:iam::450356697252:role/TempGithubActionsRole
+  ROLE_EXEC: arn:aws:iam::450356697252:role/nginx-fgate-ecs-agent-role
+  ROLE_TASK: arn:aws:iam::450356697252:role/nginx-fgate-ecs-container-role
   HOST: http://localhost
   PORT: 8080
   ELASTIC_URL: https:/0.0.0.0/

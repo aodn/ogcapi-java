@@ -52,7 +52,8 @@
         }
     ],
     "family": "aodn-dev1",
-    "executionRoleArn": "arn:aws:iam::704910415367:role/ecsTaskExecutionRole",
+    "executionRoleArn": "<ROLE_EXEC>",
+    "taskRoleArn": "<ROLE_TASK>",
     "networkMode": "awsvpc",
     "volumes": [],
     "placementConstraints": [],
