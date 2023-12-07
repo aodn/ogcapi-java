@@ -5,21 +5,21 @@ on:
   workflow_dispatch:
 
 env:
-  ENVIRONMENT: development
-  AWS_REGION: ap-southeast-4
-  ECR_REPOSITORY: 450356697252.dkr.ecr.ap-southeast-4.amazonaws.com/ogcapi
+  ENVIRONMENT: tfintegration
+# AWS_REGION: ap-southeast-4
+# ECR_REPOSITORY: 450356697252.dkr.ecr.ap-southeast-4.amazonaws.com/ogcapi
   ECS_SERVICE: ogcapi-java-service
   ECS_CLUSTER: shared-ecs
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json
   CONTAINER_NAME: ogcapi-java-container
-  ROLE_ARN: arn:aws:iam::450356697252:role/TempGithubActionsRole
-  ROLE_EXEC: arn:aws:iam::450356697252:role/nginx-fgate-ecs-agent-role
-  ROLE_TASK: arn:aws:iam::450356697252:role/nginx-fgate-ecs-container-role
+# ROLE_ARN: arn:aws:iam::450356697252:role/TempGithubActionsRole
+# ROLE_EXEC: arn:aws:iam::450356697252:role/nginx-fgate-ecs-agent-role
+# ROLE_TASK: arn:aws:iam::450356697252:role/nginx-fgate-ecs-container-role
   HOST: http://localhost
-  PORT: 8080
-  ELASTIC_URL: https:/0.0.0.0/
-  ELASTIC_KEY: 1234567890
-  name: development
+  PORT: 8082
+# ELASTIC_URL: https:/0.0.0.0/
+# ELASTIC_KEY: 1234567890
+# name: development
 
 permissions:
   id-token: write   # JWT
@@ -37,9 +37,9 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ env.ROLE_ARN }}
+          role-to-assume: ${{ vars.ROLE_ARN }}
           role-session-name: GitHub_to_AWS_OIDC
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
 
       # Hello from AWS: WhoAmI
       - name: Sts GetCallerIdentity
@@ -86,7 +86,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
@@ -102,7 +102,7 @@ jobs:
         id: push-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ env.ECR_REPOSITORY }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
@@ -123,10 +123,12 @@ jobs:
           image: ${{ steps.push-image.outputs.image }}
           environment-variables: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
+            ROLE_EXEC=${{ vars.ROLE_EXEC }}
+            ROLE_TASK=${{ vars.ROLE_TASK }}
             HOST=${{ env.HOST }}
             PORT=${{ env.PORT }}
-            ELASTIC_URL=${{ env.ELASTIC_URL }}
-            ELASTIC_KEY=${{ env.ELASTIC_KEY }}
+            ELASTIC_URL=${{ vars.ELASTIC_URL }}
+            ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
 #     - name: Deploy Amazon ECS task definition
