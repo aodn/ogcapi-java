@@ -28,7 +28,7 @@ permissions:
 jobs:
   AWS-ECR-ECS-Deploy:
     runs-on: ubuntu-latest
-    environment: development
+    environment: ${{ env.ENVIRONMENT }}   # tfintegration
     steps:
 
       - name: Git clone the repository
