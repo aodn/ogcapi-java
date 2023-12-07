@@ -146,7 +146,7 @@ jobs:
         continue-on-error: true
 
       - name: Run Trivy vulnerability scanner - sub workflow
-        uses: ./.github/workflows/vulnerability-scan-actions.yml
+        uses: ./.github/actions/vulnerability-scan
         with:
           image-ref: ${{ steps.build-image.outputs.image }}
           
