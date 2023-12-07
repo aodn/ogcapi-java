@@ -144,6 +144,12 @@ jobs:
             exit-code: 1
             ignore-unfixed: true
         continue-on-error: true
+
+      - name: Run Trivy vulnerability scanner - sub workflow
+        uses: ./.github/workflows/vulnerability-scan-actions.yml
+        with:
+          image-ref: ${{ steps.build-image.outputs.image }}
+          
       
       - name: Push image to Amazon ECR
         id: push-image
