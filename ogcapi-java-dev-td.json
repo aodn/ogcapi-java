@@ -6,10 +6,10 @@
             "cpu": 0,
             "portMappings": [
                 {
-                    "containerPort": "<PORT>",
-                    "hostPort": "<PORT>",
-                    "protocol": "<PROTOCOL>",
-                    "appProtocol": "<APP_PROTOCOL>"
+                    "containerPort": 8081,
+                    "hostPort": 8081,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
                 }
             ],
             "essential": true,
@@ -52,7 +52,7 @@
         }
     ],
     "family": "aodn-dev1",
-    "executionRoleArn": "<EXECUTION_ROLE_ARN>",
+    "executionRoleArn": "arn:aws:iam::704910415367:role/ecsTaskExecutionRole",
     "networkMode": "awsvpc",
     "volumes": [],
     "placementConstraints": [],
