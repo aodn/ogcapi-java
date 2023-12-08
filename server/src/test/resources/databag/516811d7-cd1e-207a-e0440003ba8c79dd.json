@@ -1,0 +1,179 @@
+{
+  "extent": {
+    "bbox": [
+      [
+        113,
+        -24.5,
+        117.5,
+        -20
+      ],
+      [
+        113,
+        -24.5,
+        117.5,
+        -24.5,
+        117.5,
+        -20,
+        113,
+        -20,
+        113,
+        -24.5
+      ]
+    ],
+    "temporal": [
+      [
+        null,
+        "2007-06-05T14:00:00Z"
+      ],
+      [
+        null,
+        "2007-06-05T14:00:00Z"
+      ]
+    ]
+  },
+  "stac_version": "1.0.0",
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "description": "Collection of coral specimens for research to quantify metabolic consequences of reproduction in zooxanthellate scleractinian corals at Ningaloo Reef and assess their vulnerability to stress during the reproductive period.",
+  "title": "Impacts of stress on coral reproduction.",
+  "type": "Collection",
+  "license": "",
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Oceans | Coastal Processes | Coral Reefs"
+        },
+        {
+          "id": "Human Dimensions | Environmental Impacts"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "NASA/Global Change Master Directory (GCMD) Earth Science Keywords Version 5.3.8"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Stress"
+        },
+        {
+          "id": "Spawning"
+        },
+        {
+          "id": "Marine Features (Australia) | Ningaloo Marine Park, WA"
+        },
+        {
+          "id": "Reproductive Biology"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Keywords Thesaurus"
+    }
+  ],
+  "links": [],
+  "id": "516811d7-cd1e-207a-e0440003ba8c79dd",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "contacts": [
+    {
+      "emails": [
+        "J.P.Webb@murdoch.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "90 South St"
+          ],
+          "country": "Australia",
+          "city": "Murdoch",
+          "postalCode": "6150",
+          "administrativeArea": "WA"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "School of Veterinary and Life Sciences (VLS), Murdoch University",
+      "name": "Webb, J.",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "+61 8 9360 6000"
+        },
+        {
+          "roles": "facsimile",
+          "value": "+61 8 9310 5090"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://www.murdoch.edu.au/",
+          "title": "Contact Web Address.",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ],
+      "position": ""
+    }
+  ],
+  "providers": [
+    {
+      "roles": [
+        "distributor"
+      ],
+      "name": "iVEC",
+      "description": null,
+      "url": null
+    }
+  ],
+  "summaries": {
+    "score": 70,
+    "dataset_provider": null,
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              113,
+              -24.5
+            ],
+            [
+              117.5,
+              -24.5
+            ],
+            [
+              117.5,
+              -20
+            ],
+            [
+              113,
+              -20
+            ],
+            [
+              113,
+              -24.5
+            ]
+          ]
+        ]
+      ],
+      "type": "MultiPolygon"
+    },
+    "scope": null,
+    "update_frequency": null,
+    "temporal": [
+      {
+        "start": null,
+        "end": "2007-06-05T14:00:00Z"
+      }
+    ],
+    "status": ""
+  }
+}

@@ -1,3 +1,7 @@
 ogcapi:
   docker:
     elasticVersion: "8.11.1"
+
+elasticsearch:
+  index:
+    name: testing_index
