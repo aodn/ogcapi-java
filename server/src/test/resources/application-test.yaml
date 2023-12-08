@@ -1,0 +1,3 @@
+ogcapi:
+  docker:
+    elasticVersion: "8.11.1"

@@ -15,7 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * If user provide another search engine, this one will not bootup.
+ * If user provide another search engine, this one will not be created .
  */
 @Configuration
 @ConditionalOnMissingBean(Search.class)
@@ -28,6 +28,7 @@ public class ElasticSearchConfig {
     private String apiKey;
 
     @Bean
+    @ConditionalOnMissingBean(RestClientTransport.class)
     public RestClientTransport restClientTransport() {
         // Create the low-level client
         RestClient restClient = RestClient
