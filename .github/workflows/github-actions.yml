@@ -1,4 +1,3 @@
-#name: Connect to an AWS role from a GitHub repository
 name: Terraform + GitHub Actions ECS Integration
 
 on:
@@ -6,20 +5,10 @@ on:
 
 env:
   ENVIRONMENT: tfintegration
-# AWS_REGION: ap-southeast-4
-# ECR_REPOSITORY: 450356697252.dkr.ecr.ap-southeast-4.amazonaws.com/ogcapi
-  ECS_SERVICE: ogcapi-java-service
-  ECS_CLUSTER: shared-ecs
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json
   CONTAINER_NAME: ogcapi-java-container
-# ROLE_ARN: arn:aws:iam::450356697252:role/TempGithubActionsRole
-# ROLE_EXEC: arn:aws:iam::450356697252:role/nginx-fgate-ecs-agent-role
-# ROLE_TASK: arn:aws:iam::450356697252:role/nginx-fgate-ecs-container-role
   HOST: http://localhost
   PORT: 8082
-# ELASTIC_URL: https:/0.0.0.0/
-# ELASTIC_KEY: 1234567890
-# name: development
 
 permissions:
   id-token: write   # JWT
@@ -131,10 +120,10 @@ jobs:
             ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
-#     - name: Deploy Amazon ECS task definition
-#       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-#       with:
-#         task-definition: ${{ steps.task-def.outputs.task-definition }}
-#         service: ${{ env.ECS_SERVICE }}
-#         cluster: ${{ env.ECS_CLUSTER }}
-#         wait-for-service-stability: true
+     - name: Deploy Amazon ECS task definition
+       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+       with:
+         task-definition: ${{ steps.task-def.outputs.task-definition }}
+         service: ${{ vars.ECS_SERVICE }}
+         cluster: ${{ vars.ECS_CLUSTER }}
+         wait-for-service-stability: true
