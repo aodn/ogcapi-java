@@ -93,12 +93,12 @@ jobs:
           docker push $ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Print select github deployment parameters
-        run: |
-          echo "ENVIRONMENT:  ${{ env.ENVIRONMENT }}"
-          echo "ROLE_EXEC:    ${{ vars.ROLE_EXEC }}"
-          echo "ROLE_TASK:    ${{ vars.ROLE_TASK }}"
-
+#     - name: Print select github deployment parameters
+#       run: |
+#         echo "ENVIRONMENT:  ${{ env.ENVIRONMENT }}"
+#         echo "ROLE_EXEC:    ${{ vars.ROLE_EXEC }}"
+#         echo "ROLE_TASK:    ${{ vars.ROLE_TASK }}"
+#
       - name: Render ECS task definition
         id: task-def
         env:
@@ -117,10 +117,10 @@ jobs:
             ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
-#      - name: Deploy Amazon ECS task definition
-#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-#        with:
-#          task-definition: ${{ steps.task-def.outputs.task-definition }}
-#          service: ${{ vars.ECS_SERVICE }}
-#          cluster: ${{ vars.ECS_CLUSTER }}
-##         wait-for-service-stability: true
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+#         wait-for-service-stability: true
