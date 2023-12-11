@@ -79,11 +79,6 @@ jobs:
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
-          # Build a docker container and
-          # be deployed to ECS.
-          # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          # echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          # aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin $ACCOUNT_ID
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
@@ -95,13 +90,14 @@ jobs:
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
-          # Build a docker container and
-          # be deployed to ECS.
-          # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          # echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          # aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin $ACCOUNT_ID
           docker push $ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+      - name: Print select github deployment parameters
+        run: |
+          echo "ENVIRONMENT:  ${{ env.ENVIRONMENT }}"
+          echo "ROLE_EXEC:    ${{ vars.ROLE_EXEC }}"
+          echo "ROLE_TASK:    ${{ vars.ROLE_TASK }}"
 
       - name: Render ECS task definition
         id: task-def
@@ -120,10 +116,10 @@ jobs:
             ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ vars.ECS_SERVICE }}
-          cluster: ${{ vars.ECS_CLUSTER }}
-          wait-for-service-stability: true
+#      - name: Deploy Amazon ECS task definition
+#        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+#        with:
+#          task-definition: ${{ steps.task-def.outputs.task-definition }}
+#          service: ${{ vars.ECS_SERVICE }}
+#          cluster: ${{ vars.ECS_CLUSTER }}
+##         wait-for-service-stability: true
