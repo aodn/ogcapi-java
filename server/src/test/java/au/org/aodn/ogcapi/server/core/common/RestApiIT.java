@@ -10,7 +10,7 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
@@ -213,5 +213,24 @@ public class RestApiIT extends BaseTestClass {
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
         assertEquals(3, collections.getBody().getCollections().size(), "hit 3, this record have 2 start/end");
+    }
+    /**
+     * The properties param control what properties should be return to improve the speed of data transfer between component.
+     */
+    @Test
+    public void verifyPropertiesParameter() throws IOException {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json"
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2007-06-05T14:00:00Z&properties=id,title", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+
+        assertNotNull(collections.getBody().getCollections().get(0).getId());
+        assertNotNull(collections.getBody().getCollections().get(0).getTitle());
+        assertNull(collections.getBody().getCollections().get(0).getDescription());
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2007-06-05T14:00:00Z&properties=id,title,description", Collections.class);
+        assertNotNull(collections.getBody().getCollections().get(0).getDescription());
     }
 }
