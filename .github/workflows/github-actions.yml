@@ -11,7 +11,7 @@ on:
 env:
   ENVIRONMENT: development
   AWS_REGION: ap-southeast-2 #MY_AWS_REGION                   # set this to your preferred AWS region, e.g. us-west-1
-  #ECR_REPOSITORY: #########.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2           # set this to your Amazon ECR repository name
+  ECR_REPOSITORY: test #########.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2           # set this to your Amazon ECR repository name
   ECS_SERVICE: ogcapi-java-service #MY_ECS_SERVICE                 # set this to your Amazon ECS service name
   ECS_CLUSTER: aodn-imos-v2                 # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json     #MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
@@ -84,6 +84,13 @@ jobs:
               echo "CONTAINER_NAME=$value" >> "$GITHUB_ENV"
             fi
           done
+      
+      - name: Print new env var values - ssm parameter store
+        run: |
+          printf '%s\n' "$ECR_REPOSITORY"
+          printf '%s\n' "$ECS_CLUSTER"
+          printf '%s\n' "$ECS_SERVICE"
+          printf '%s\n' "$CONTAINER_NAME"
 
       - name: Prepare
         id: prep
