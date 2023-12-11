@@ -77,7 +77,7 @@ public class RestApiIT extends BaseTestClass {
                 "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
     }
     /**
-     * The datetime field after xxx/.. xxx/ etc
+     * The datetime field after xxx/.. xxx/ etc. It uses CQL internally so no need to test Before After During in CQL
      */
     @Test
     public void verifyDateTimeAfterBounds() throws IOException {
@@ -115,7 +115,7 @@ public class RestApiIT extends BaseTestClass {
                 "Correct UUID - 7709f541-fc0c-4318-b5b9-9053aa474e0e");
     }
     /**
-     * The datetime field before ../xxx or /xxx etc
+     * The datetime field before ../xxx or /xxx etc. It uses CQL internally so no need to test Before After During in CQL
      */
     @Test
     public void verifyDateTimeBeforeBounds() throws IOException {
@@ -141,7 +141,7 @@ public class RestApiIT extends BaseTestClass {
                 "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
     }
     /**
-     * The datetime field before xxx/yyy
+     * The datetime field before xxx/yyy. It uses CQL internally so no need to test Before After During in CQL
      */
     @Test
     public void verifyDateTimeBetweenBounds() throws IOException {
@@ -173,7 +173,8 @@ public class RestApiIT extends BaseTestClass {
                 "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
     }
     /**
-     * One of the record in the dataset contains two start/end date in the temporal field.
+     * One of the record in the dataset contains two start/end date in the temporal field. It uses CQL internally
+     * so no need to test Before After During in CQL
      * @throws IOException
      */
     @Test
@@ -234,7 +235,7 @@ public class RestApiIT extends BaseTestClass {
         assertNotNull(collections.getBody().getCollections().get(0).getDescription());
     }
     /**
-     * Check Common Query Language behavior
+     * Check Common Query Language behavior is null / is not null
      * @throws IOException
      */
     @Test
@@ -252,6 +253,24 @@ public class RestApiIT extends BaseTestClass {
                 "UUID matches");
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NOT NULL", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+    }
+    /**
+     * Test the equals with clause
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLPropertyEqualsOperation() throws IOException {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider='IMOS'", Collections.class);
         assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
         assertEquals(
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e",
