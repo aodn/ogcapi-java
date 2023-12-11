@@ -233,4 +233,29 @@ public class RestApiIT extends BaseTestClass {
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2007-06-05T14:00:00Z&properties=id,title,description", Collections.class);
         assertNotNull(collections.getBody().getCollections().get(0).getDescription());
     }
+    /**
+     * Check Common Query Language behavior
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLPropertyIsNullIsNotNull() throws IOException {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",    // Provider null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider not null
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NULL", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "516811d7-cd1e-207a-e0440003ba8c79dd",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NOT NULL", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+    }
 }
