@@ -17,7 +17,7 @@ permissions:
 jobs:
   AWS-ECR-ECS-Deploy:
     runs-on: ubuntu-latest
-    environment: tfintegration   # ${{ env.ENVIRONMENT }}
+    environment: tfintegration
     steps:
 
       - name: Git clone the repository
@@ -120,10 +120,10 @@ jobs:
             ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
-     - name: Deploy Amazon ECS task definition
-       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-       with:
-         task-definition: ${{ steps.task-def.outputs.task-definition }}
-         service: ${{ vars.ECS_SERVICE }}
-         cluster: ${{ vars.ECS_CLUSTER }}
-         wait-for-service-stability: true
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE }}
+          cluster: ${{ vars.ECS_CLUSTER }}
+          wait-for-service-stability: true
