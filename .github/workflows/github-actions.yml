@@ -101,6 +101,9 @@ jobs:
 
       - name: Render ECS task definition
         id: task-def
+        env:
+          ROLE_EXEC: ${{ vars.ROLE_EXEC }}
+          ROLE_TASK: ${{ vars.ROLE_TASK }}
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
@@ -108,8 +111,6 @@ jobs:
           image: ${{ steps.push-image.outputs.image }}
           environment-variables: |
             ENVIRONMENT=${{ env.ENVIRONMENT }}
-            ROLE_EXEC=${{ vars.ROLE_EXEC }}
-            ROLE_TASK=${{ vars.ROLE_TASK }}
             HOST=${{ env.HOST }}
             PORT=${{ env.PORT }}
             ELASTIC_URL=${{ vars.ELASTIC_URL }}
