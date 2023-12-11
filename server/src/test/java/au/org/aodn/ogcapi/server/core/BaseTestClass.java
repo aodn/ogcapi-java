@@ -62,14 +62,15 @@ public class BaseTestClass {
                     .index(INDEX_NAME)
                     .query(QueryBuilders.matchAll().build()._toQuery())
             );
+            // Must all, otherwise index is not rebuild immediately
+            client.indices().refresh();
         }
         catch(ElasticsearchException e) {
             // It is ok to ignore exception if the index is not found
         }
     }
 
-    protected void insertJsonToElasticIndex(String... filenames) throws IOException {
-
+    protected void createElasticIndex() throws IOException {
         // TODO: This file should come from indexer jar when CodeArtifact in place
         File f = ResourceUtils.getFile("classpath:portal_records_index_schema.json");
         try (Reader reader = new FileReader(f)) {
@@ -79,6 +80,9 @@ public class BaseTestClass {
             );
             client.indices().create(req);
         }
+    }
+
+    protected void insertJsonToElasticIndex(String... filenames) throws IOException {
 
         // Now insert json to index
         for(String filename : filenames) {

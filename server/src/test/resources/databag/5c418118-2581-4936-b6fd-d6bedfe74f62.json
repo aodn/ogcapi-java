@@ -1,0 +1,288 @@
+{
+  "extent": {
+    "bbox": [
+      [
+        149,
+        -42.2,
+        150.6,
+        -36.8
+      ],
+      [
+        149,
+        -42.2,
+        150.6,
+        -42.2,
+        150.6,
+        -36.8,
+        149,
+        -36.8,
+        149,
+        -42.2
+      ]
+    ],
+    "temporal": [
+      [
+        "1994-02-16T13:00:00Z",
+        "1994-02-21T13:00:00Z"
+      ],
+      [
+        "1994-02-16T13:00:00Z",
+        "1994-02-21T13:00:00Z"
+      ]
+    ]
+  },
+  "stac_version": "1.0.0",
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "description": "This dataset contains the processed Hydrology (HYD) data collected on Southern Surveyor voyage SS 02/94. The voyage took place in Tasmanian, Victorian and New South Wales coastal and offshore waters during 17-25 February 1994. This dataset has been processed and is archived within the CSIRO Marine and Atmospheric Research Data Centre in Hobart. Additional information regarding this dataset is contained in the cruise report for this voyage and/or the data processing report (as available). Southern Surveyor on-voyage hydrology data are typically obtained from water samples collected in Niskin bottles at various depths during each CTD cast. Parameters measured normally comprise temperature, salinity, dissolved oxygen, phosphate, nitrate, silicate, and nitrite.",
+  "title": "Southern Surveyor Voyage SS 02/94 Hydrology Data",
+  "type": "Collection",
+  "license": "Data is made available under a Creative Commons Attribution 4.0 International Licence, please see link. Data is supplied 'as is' without any warranty or guarantee except as required by law to be given to you. The data may not be free of error, comprehensive, current or appropriate for your particular purpose. You accept all risk and responsibility for its use. ATTRIBUTION STATEMENT: The dataset [Insert-dataset-name-here] downloaded on [Insert-DD-Mmm-YYYY-here] was provided by CSIRO.",
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Nitrate",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/4fde380a-38c5-4d46-bc80-4f2515a43983"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Nitrite",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/941410da-0b7f-4ec6-a718-212194ced13f"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Oxygen",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/90aa8838-79bd-4b28-b518-8217e863c385"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Phosphate",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/0b513d8c-bfd3-44ee-976e-42757b8375a2"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Silicate",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/c91c8879-1b29-48e3-b4cd-a238af66cdaf"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Temperature | Water Temperature",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/46206e8c-8def-406f-9e62-da4e74633a58"
+        },
+        {
+          "id": "Earth Science | Oceans | Salinity/Density | Salinity",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/7e95b5fc-1d58-431a-af36-948b29fa870d"
+        }
+      ],
+      "scheme": "theme",
+      "description": "Olsen, L.M., G. Major, K. Shein, J. Scialdone, S. Ritz, T. Stevens, M. Morahan, A. Aleman, R. Vogel, S. Leicester, H. Weir, M. Meaux, S. Grebas, C.Solomon, M. Holland, T. Northcutt, R. A. Restrepo, R. Bilodeau, 2013. NASA/Global Change Master Directory (GCMD) Earth Science Keywords. Version 8.0.0.0.0",
+      "title": "GCMD Keywords"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Niskin Bottles",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept"
+        },
+        {
+          "id": "Nutrient Analysers",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:18"
+        },
+        {
+          "id": "Thermometers",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:100"
+        }
+      ],
+      "scheme": "equipment",
+      "description": "",
+      "title": "CSIRO Equipment"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Coastal Waters (Australia) | New South Wales Coast, NSW",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:1002"
+        },
+        {
+          "id": "Coastal Waters (Australia) | Tasmania Coast, TAS",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:1010"
+        },
+        {
+          "id": "Coastal Waters (Australia) | Victoria Coast, VIC",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:1014"
+        },
+        {
+          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:66"
+        }
+      ],
+      "scheme": "place",
+      "description": "AODN GEN",
+      "title": "AODN Geographic Extent Names"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Research Voyage: SS 02/94",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.survey.urn:marlin.csiro.au:surveyregister&id=urn:marlin.csiro.au:surveyregister:concept:196"
+        }
+      ],
+      "scheme": "survey",
+      "description": "MarLIN Survey Register",
+      "title": "CSIRO Survey List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "An ichthyoplankton based analysis of the spawning distribution and stock structure of temperate Australian finfish species (FRDC project no. 92/019) 1992-1995",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.project.urn:marlin.csiro.au:projectregister&id=urn:marlin.csiro.au:projectregister:concept:562"
+        }
+      ],
+      "scheme": "project",
+      "description": "MarLIN Project Register",
+      "title": "CSIRO Project List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Vessel/Station Data: Hydrology",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3513"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "MarLIN Standard Datatypes Thesaurus",
+      "title": "CSIRO Standard Data Types"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Ship: Southern Surveyor",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.dataSource.urn:marlin.csiro.au:sourceregister&id=urn:marlin.csiro.au:sourceregister:concept:8"
+        }
+      ],
+      "scheme": "dataSource",
+      "description": "MarLIN Source Register",
+      "title": "CSIRO Source List"
+    }
+  ],
+  "links": [
+    {
+      "rel": "self",
+      "href": "https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27SS199402%27",
+      "type": "",
+      "title": "mnf:HYDROLOGY_HEADER_AODN_VIEW"
+    },
+    {
+      "rel": "self",
+      "href": "https://www.marine.csiro.au/data/trawler/dataset.cfm?survey=SS199402&data_type=hydro",
+      "type": "",
+      "title": "Data Link"
+    },
+    {
+      "rel": "self",
+      "href": "https://www.marine.csiro.au/data/trawler/download.cfm?file_id=1160",
+      "type": "text/html",
+      "title": "Data Link"
+    },
+    {
+      "rel": "self",
+      "href": "https://www.marine.csiro.au/data/trawler/survey_list.cfm?source_id=8",
+      "type": "text/html",
+      "title": "Data Link"
+    },
+    {
+      "rel": "self",
+      "href": "https://mnf.csiro.au/",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "rel": "self",
+      "href": "https://creativecommons.org/licenses/by/4.0/",
+      "type": "text/html",
+      "title": "Documentation Link"
+    }
+  ],
+  "id": "5c418118-2581-4936-b6fd-d6bedfe74f62",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "contacts": [
+    {
+      "emails": [
+        "data-requests-hf@csiro.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [],
+          "country": "",
+          "city": "",
+          "postalCode": "",
+          "administrativeArea": ""
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "CSIRO Oceans & Atmosphere - Hobart",
+      "name": "CSIRO O&A, Information & Data Centre",
+      "phones": [],
+      "links": [],
+      "position": "Data Requests"
+    }
+  ],
+  "providers": [
+    {
+      "roles": [
+        "pointOfContact"
+      ],
+      "name": "CSIRO Oceans & Atmosphere - Hobart",
+      "description": null,
+      "url": null
+    }
+  ],
+  "summaries": {
+    "score": 100,
+    "dataset_provider": null,
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              149,
+              -42.2
+            ],
+            [
+              150.6,
+              -42.2
+            ],
+            [
+              150.6,
+              -36.8
+            ],
+            [
+              149,
+              -36.8
+            ],
+            [
+              149,
+              -42.2
+            ]
+          ]
+        ]
+      ],
+      "type": "MultiPolygon"
+    },
+    "scope": null,
+    "update_frequency": null,
+    "temporal": [
+      {
+        "start": "1994-02-16T13:00:00Z",
+        "end": "1994-02-21T13:00:00Z"
+      }
+    ],
+    "status": "completed"
+  }
+}
