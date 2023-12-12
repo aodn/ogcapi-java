@@ -1,7 +1,7 @@
-package au.org.aodn.ogcapi.server.core.features;
+package au.org.aodn.ogcapi.server.core.tile;
 
-import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.server.core.BaseTestClass;
+import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
@@ -10,12 +10,11 @@ import org.springframework.test.context.ActiveProfiles;
 import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)         // We need to use @BeforeAll @AfterAll with not static method
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RestApiTest extends BaseTestClass {
 
     @BeforeAll
@@ -38,23 +37,22 @@ public class RestApiTest extends BaseTestClass {
     public void verifyClusterIsHealthy() throws IOException {
         super.assertClusterHealthResponse();
     }
-
+    /**
+     * Verify api call /tiles
+     */
     @Test
-    public void verifyGetSingleCollection() throws IOException {
+    public void verifyTiles() throws IOException {
         super.insertJsonToElasticIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
         );
 
-        // Call rest api directly and get query result
-        ResponseEntity<Collection> collection = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/516811d7-cd1e-207a-e0440003ba8c79dd",
-                Collection.class);
+        ResponseEntity<InlineResponse2002> tiles = testRestTemplate.getForEntity(
+                getBasePath() + "/tiles?f=json",
+                InlineResponse2002.class
+        );
 
-        assertNotNull(collection.getBody(), "Body not null");
-        assertEquals(
-                "516811d7-cd1e-207a-e0440003ba8c79dd",
-                collection.getBody().getId(),
-                "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
+        assertEquals(2, tiles.getBody().getTilesets().size(), "Count is correct");
+
     }
 }

@@ -51,10 +51,6 @@ public class BaseTestClass {
         return "http://localhost:" + port + "/api/v1/ogc";
     }
 
-    protected void shutdownElasticSearch() {
-        container.close();
-    }
-
     protected void clearElasticIndex() throws IOException {
         logger.debug("Clear elastic index");
         try {
@@ -79,6 +75,9 @@ public class BaseTestClass {
                     .withJson(reader)
             );
             client.indices().create(req);
+        }
+        catch(ElasticsearchException ese) {
+            // Ignore it, happens when index already created
         }
     }
 

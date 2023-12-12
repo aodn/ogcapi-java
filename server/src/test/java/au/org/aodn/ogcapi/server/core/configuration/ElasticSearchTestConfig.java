@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import jakarta.annotation.PreDestroy;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -29,6 +30,11 @@ public class ElasticSearchTestConfig {
     protected ElasticsearchContainer container;
 
     public static final String ES_USERNAME = "elastic";
+
+    @PreDestroy
+    public void shutDownElasticSearch() {
+        container.close();
+    }
 
     @Bean
     public ElasticsearchContainer createElasticDockerTestContainer(

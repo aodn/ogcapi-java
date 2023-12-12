@@ -76,6 +76,7 @@
                                 <interfaceOnly>true</interfaceOnly>
                                 <hideGenerationTimestamp>true</hideGenerationTimestamp>
                                 <dateLibrary>java11-localdatetime</dateLibrary>
+                                <jakarta>true</jakarta>
                             </configOptions>
                         </configuration>
                     </execution>
@@ -100,10 +101,6 @@
                                 <include>${project.build.directory}/generated-sources/src/main/**/*.java</include>
                             </includes>
                             <replacements>
-                                <replacement>
-                                    <token>javax</token>
-                                    <value>jakarta</value>
-                                </replacement>
                                 <replacement>
                                     <token>import au\.org\.aodn\.ogcapi\.records\.model\.TimeStamp;</token>
                                     <value></value>

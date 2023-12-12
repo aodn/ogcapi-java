@@ -150,7 +150,8 @@ public class ElasticSearch implements Search {
 
     protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry) throws IOException {
 
-        List<Query> queries = List.of(MatchQuery.of(m -> m
+        List<Query> queries = new ArrayList<>();
+        queries.add(MatchQuery.of(m -> m
                             .field(StacType.searchField)
                             .query(StacType.Collection.value))._toQuery());
 
