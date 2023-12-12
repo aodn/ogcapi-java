@@ -1,0 +1,116 @@
+name: Deploy Production
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build_push:
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      image_digest: ${{ steps.build_and_push.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+
+      - name: Login to ECR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.ECR_REGISTRY }}
+
+      - name: Set Image Tag
+        id: set_image_tag
+        run: |
+          tag=${{ github.ref_name }}
+          echo "image_tag=${tag//\v/}" >> $GITHUB_OUTPUT
+
+      - name: Build and Push Docker Image
+        id: build_and_push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+#          Only building for AMD64 for now
+#          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:${{ steps.set_image_tag.outputs.image_tag }}
+
+  production_deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      tf_version: '1.5.7'
+      tg_version: '0.54.0'
+      tg_dir: './deploy/tg'
+    needs: [build_push]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+
+      - name: Expose github environment as shell variables
+        env:
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          to_envs() { jq -r "to_entries[] | \"\(.key)<<$EOF\n\(.value)\n$EOF\n\""; }
+          echo "$VARS_CONTEXT" | to_envs >> $GITHUB_ENV
+          echo "$SECRETS_CONTEXT" | to_envs >> $GITHUB_ENV
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.tf_version }}
+
+      - name: Setup Terragrunt
+        id: setup_terragrunt
+        run: |
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${terragrunt_version}/terragrunt_linux_amd64 \
+            && mv terragrunt_linux_amd64 terragrunt \
+            && chmod +x terragrunt \
+            && mv terragrunt /usr/local/bin/terragrunt
+        env:
+          terragrunt_version: ${{ env.tg_version }}
+
+      - name: Terragrunt Plan
+        id: terragrunt_plan
+        run: terragrunt plan -out=tf.plan
+        working-directory: ${{ env.tg_dir }}
+        env:
+          TF_INPUT: 0
+          TF_IN_AUTOMATION: true
+          # get the image digest from the build job with optional override from vars context
+          TF_VAR_image: ${{ vars.IMAGE || needs.build_push.outputs.image_digest }}
+
+      - name: Terragrunt Apply
+        id: terragrunt_apply
+        run: terragrunt apply -auto-approve tf.plan
+        working-directory: ${{ env.tg_dir }}
+        env:
+          TF_INPUT: 0
+          TF_IN_AUTOMATION: true
+          # get the image digest from the build job with optional override from vars context
+          TF_VAR_image: ${{ vars.IMAGE || needs.build_push.outputs.image_digest }}
