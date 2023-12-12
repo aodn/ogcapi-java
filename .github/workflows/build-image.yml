@@ -2,6 +2,8 @@ name: Build Image cicd
 
 on:
   workflow_dispatch:
+    branches:
+      - devops-cicd
 
 permissions:
   id-token: write   # JWT
