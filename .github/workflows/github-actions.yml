@@ -183,8 +183,25 @@ jobs:
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        id: ecs-deploy
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
+
+      - name: Check if deployment was successful
+        id: check-deployment
+        run: |
+            CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
+            NEW_TASK_DEF_ARN=${{ steps.ecs-deploy.outputs.task-definition-arn }}
+            REVISION=${GITHUB_SHA::8}
+            echo "Current task arn: $CURRENT_TASK_DEF_ARN"
+            echo "New task arn: $NEW_TASK_DEF_ARN"
+            echo "Latest revision: $REVISION"
+            if [ "$CURRENT_TASK_DEF_ARN" != "$NEW_TASK_DEF_ARN" ]; then
+              echo "Deployment failed with latest code revision."
+              exit 1
+            else
+              echo "Deployment successfull."
+            fi
