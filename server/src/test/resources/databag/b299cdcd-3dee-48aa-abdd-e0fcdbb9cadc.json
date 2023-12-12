@@ -1,0 +1,1427 @@
+{
+  "extent": {
+    "bbox": [
+      [
+        114,
+        -43,
+        155,
+        -10
+      ],
+      [
+        114,
+        -31,
+        114,
+        -30,
+        115,
+        -30,
+        115,
+        -31,
+        114,
+        -31
+      ],
+      [
+        115,
+        -33,
+        115,
+        -31,
+        116,
+        -31,
+        116,
+        -33,
+        115,
+        -33
+      ],
+      [
+        129,
+        -11,
+        129,
+        -10,
+        130,
+        -10,
+        130,
+        -11,
+        129,
+        -11
+      ],
+      [
+        141,
+        -13,
+        141,
+        -11,
+        142,
+        -11,
+        142,
+        -13,
+        141,
+        -13
+      ],
+      [
+        145,
+        -17,
+        145,
+        -16,
+        146,
+        -16,
+        146,
+        -17,
+        145,
+        -17
+      ],
+      [
+        147,
+        -20,
+        147,
+        -19,
+        148,
+        -19,
+        148,
+        -20,
+        147,
+        -20
+      ],
+      [
+        151,
+        -24,
+        151,
+        -23,
+        152,
+        -23,
+        152,
+        -24,
+        151,
+        -24
+      ],
+      [
+        152,
+        -25,
+        152,
+        -24,
+        153,
+        -24,
+        153,
+        -25,
+        152,
+        -25
+      ],
+      [
+        149,
+        -22,
+        149,
+        -21,
+        150,
+        -21,
+        150,
+        -22,
+        149,
+        -22
+      ],
+      [
+        153,
+        -29,
+        153,
+        -25,
+        154,
+        -25,
+        154,
+        -27,
+        155,
+        -27,
+        155,
+        -28,
+        154,
+        -28,
+        154,
+        -29,
+        153,
+        -29
+      ],
+      [
+        153,
+        -31,
+        153,
+        -30,
+        154,
+        -30,
+        154,
+        -31,
+        153,
+        -31
+      ],
+      [
+        114,
+        -34,
+        114,
+        -33,
+        115,
+        -33,
+        115,
+        -34,
+        114,
+        -34
+      ],
+      [
+        151,
+        -35,
+        151,
+        -33,
+        152,
+        -33,
+        152,
+        -35,
+        151,
+        -35
+      ],
+      [
+        150,
+        -38,
+        150,
+        -37,
+        151,
+        -37,
+        151,
+        -38,
+        150,
+        -38
+      ],
+      [
+        147,
+        -38,
+        147,
+        -37,
+        148,
+        -37,
+        148,
+        -38,
+        147,
+        -38
+      ],
+      [
+        121,
+        -35,
+        121,
+        -33,
+        122,
+        -33,
+        122,
+        -35,
+        121,
+        -35
+      ],
+      [
+        136,
+        -37,
+        136,
+        -36,
+        137,
+        -36,
+        137,
+        -37,
+        136,
+        -37
+      ],
+      [
+        150,
+        -36,
+        150,
+        -35,
+        151,
+        -35,
+        151,
+        -36,
+        150,
+        -36
+      ],
+      [
+        117,
+        -36,
+        117,
+        -35,
+        118,
+        -35,
+        118,
+        -36,
+        117,
+        -36
+      ],
+      [
+        145,
+        -43,
+        145,
+        -42,
+        146,
+        -42,
+        146,
+        -43,
+        145,
+        -43
+      ],
+      [
+        148,
+        -43,
+        148,
+        -42,
+        149,
+        -42,
+        149,
+        -43,
+        148,
+        -43
+      ]
+    ],
+    "temporal": [
+      [
+        "2018-01-14T12:10:00Z",
+        null
+      ],
+      [
+        "2018-01-14T12:10:00Z",
+        null
+      ]
+    ]
+  },
+  "stac_version": "1.0.0",
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "description": "Buoys provide integral wave parameters. Buoy data from the following organisations contribute to the National Wave Archive: Manly Hydraulics Laboratory (part of the NSW Department of Planning and Environment (DPE), which has assumed function of the former NSW Office of Environment and Heritage (OEH)); Bureau of Meteorology; Western Australia Department of Transport (DOT); the Queensland Department of Environment and Science (DES); the Integrated Marine Observing System (IMOS); Gippsland Ports; the NSW Nearshore Wave Data Program from the NSW Department of Planning and Environment (DPE); the University of Western Australia (UWA); Deakin University, Pilbara Ports Authority and Flinders University and South Australian Research and Development Institute (SARDI). The data from MHL, BOM, DOT, DES, Gippsland Ports and Pilbara Ports Authority, is gathered by the Waverider system developed by the Dutch company, Datawell. Some older wave data were collected using non-directional Waverider buoys. As technology advanced and directional measuring capabilities were developed in wave buoys, wave buoy networks were gradually upgraded to directional Waverider buoys. Therefore, some older datasets do not have directional information whereas newer datasets have directional information. The data from IMOS, the NSW Nearshore Wave Data Program, DPE, UWA, Deakin, Flinders University and SARDI comes from Spotter Wave Buoys, developed by Sofar Ocean Technologies, which collect data similarly to the Waverider system. BOM, DES, DOT, MHL, IMOS (some) and Gippsland Ports - The wave buoy data is issued in GTS bulletins (which are only available for 24 hours) : IOWK01 (in BUFR format) and SWWE01 (CREX format). The data is collated by the Bureau into a CSV file (containing the last 24 hours of observations) which is updated every hour, at 5 minutes past the hour. This data is provided via WFS to the AODN. IMOS (some), DPE, UWA, Deakin, Flinders University + SARDI - The data is updated every hour, at 40 minutes past the hour. Pilbara Ports Authority - The data is uploaded every hour, at 30 minutes past the hour.",
+  "title": "Wave buoys Observations - Australia - near real-time",
+  "type": "Collection",
+  "license": "Creative Commons Attribution 4.0 International License",
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Oceans | Ocean Waves | Significant Wave Height"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Period"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Spectra"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Speed/direction"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "GCMD Science Keywords"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Global / Oceans | Indian Ocean"
+        },
+        {
+          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA"
+        },
+        {
+          "id": "Global / Oceans | Pacific Ocean"
+        },
+        {
+          "id": "Global / Oceans | South West Pacific Ocean"
+        },
+        {
+          "id": "Coastal Waters (Australia) | Tasmania Coast West, TAS"
+        },
+        {
+          "id": "Regional Seas | Coral Sea"
+        },
+        {
+          "id": "Coastal Waters (Australia) | West Australia Coast South, WA"
+        },
+        {
+          "id": "Coastal Waters (Australia) | South Australia Coast, SA"
+        },
+        {
+          "id": "Coastal Waters (Australia) | Queensland Coast South, QLD"
+        },
+        {
+          "id": "Marine Features (Australia) | Kangaroo Island, SA"
+        },
+        {
+          "id": "Coastal Waters (Australia) | New South Wales Coast, NSW"
+        },
+        {
+          "id": "Coastal Waters (Australia) | Victoria Coast, VIC"
+        },
+        {
+          "id": "Marine Features (Australia) | Albatross Bay, QLD"
+        },
+        {
+          "id": "Coastal Waters (Australia) | West Australia Coast West, WA"
+        },
+        {
+          "id": "Coastal Waters (Australia) | Northern Territory Coast, NT"
+        },
+        {
+          "id": "Marine Features (Australia) | Maria Island, TAS"
+        },
+        {
+          "id": "Marine Features (Australia) | Gippsland Lakes, VIC"
+        },
+        {
+          "id": "Marine Features (Australia) | Great Barrier Reef, QLD"
+        },
+        {
+          "id": "Coastal Waters (Australia) | Queensland Coast Northwest, QLD"
+        },
+        {
+          "id": "Marine Features (Australia) | Gulf St. Vincent, SA"
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "marinewms"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "moored surface buoy",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/41"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Platform Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Average zero crossing period of the highest 1/3rd of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/417"
+        },
+        {
+          "id": "Maximum height of waves on the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/GCMXZZ01"
+        },
+        {
+          "id": "Average zero crossing period of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/36"
+        },
+        {
+          "id": "Sea-floor depth below surface of the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/574"
+        },
+        {
+          "id": "Average height of the highest 1/3rd of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/35"
+        },
+        {
+          "id": "Period at second highest energy spectrum peak of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/40"
+        },
+        {
+          "id": "Directional spreading of waves on the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/GSPRZZ01"
+        },
+        {
+          "id": "Average zero crossing period of the highest 1/10th waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/37"
+        },
+        {
+          "id": "Direction of waves on the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/GWDRZZ01"
+        },
+        {
+          "id": "Period at the peak spectral energy of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/3"
+        },
+        {
+          "id": "Spectral significant height of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/2"
+        },
+        {
+          "id": "Direction at spectral maximum of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/4"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Discovery Parameter Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Wave Buoys Sub-Facility, Integrated Marine Observing System (IMOS)",
+          "url": "http://vocab.aodn.org.au/def/organisation/entity/590"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "",
+      "title": "AODN Organisation Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "wave recorders",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/110"
+        },
+        {
+          "id": "Sofar Ocean Spotter wave buoy",
+          "url": "http://vocab.nerc.ac.uk/collection/L22/current/TOOL1781"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Instrument Vocabulary"
+    }
+  ],
+  "links": [
+    {
+      "rel": "self",
+      "href": "http://www.bom.gov.au/products/IDS65030.shtml",
+      "type": "text/html",
+      "title": "DownloadableData: [graph] Cape du Couedic Wave Observations"
+    },
+    {
+      "rel": "self",
+      "href": "http://www.bom.gov.au/products/IDT65014.shtml",
+      "type": "text/html",
+      "title": "DownloadableData: [graph] Cape Sorell Waverider Buoy Observations"
+    },
+    {
+      "rel": "self",
+      "href": "http://wisupt.bom.gov.au/openwis-user-portal/srv/en/main.home",
+      "type": "text/html",
+      "title": "DownloadableData: [BUFR-IOWK01 or CREX-SWWE01] WMO WIS GTS wavebuoy bulletins"
+    },
+    {
+      "rel": "self",
+      "href": "http://www.transport.wa.gov.au/imarine/about-wave-data.asp",
+      "type": "text/html",
+      "title": "WA DOT Wave monitoring sites"
+    },
+    {
+      "rel": "self",
+      "href": "https://www.qld.gov.au/environment/coasts-waterways/beach/waves-sites",
+      "type": "text/html",
+      "title": "Queensland Department of Environment & Science wave monitoring sites"
+    },
+    {
+      "rel": "self",
+      "href": "https://vicwaves.com.au/",
+      "type": "text/html",
+      "title": "Victorian Coastal Monitoring Program sites"
+    },
+    {
+      "rel": "self",
+      "href": "https://sawaves.org/",
+      "type": "text/html",
+      "title": "South Australian Monitoring Program sites"
+    },
+    {
+      "rel": "self",
+      "href": "https://imos.aodn.org.au/imos123/home?uuid=b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc",
+      "type": "text/html",
+      "title": "View and download data though the AODN Portal"
+    },
+    {
+      "rel": "self",
+      "href": "http://geoserver-123.aodn.org.au/geoserver/wms",
+      "type": "",
+      "title": "aodn:aodn_wave_nrt_v2_timeseries_map"
+    },
+    {
+      "rel": "self",
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ows",
+      "type": "",
+      "title": "aodn:aodn_wave_nrt_v2_timeseries_data"
+    },
+    {
+      "rel": "self",
+      "href": "https://help.aodn.org.au/web-services/ogc-wfs/",
+      "type": "text/html",
+      "title": "OGC WFS help documentation"
+    },
+    {
+      "rel": "self",
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ows",
+      "type": "",
+      "title": "aodn_wave_nrt_v2_timeseries_map#url"
+    },
+    {
+      "rel": "self",
+      "href": "https://help.aodn.org.au/web-services/ncurllist-service/",
+      "type": "text/html",
+      "title": "ncUrlList help documentation"
+    },
+    {
+      "rel": "self",
+      "href": "http://www.bom.gov.au/products/IDT65091.shtml",
+      "type": "text/html",
+      "title": "DownloadableData: [graph] Maria Island Wave Observations"
+    },
+    {
+      "rel": "self",
+      "href": "http://www.bom.gov.au/products/IDD65028.shtml",
+      "type": "text/html",
+      "title": "DownloadableData: [graph] Goodrich Bank Wave Observations"
+    },
+    {
+      "rel": "self",
+      "href": "http://content.aodn.org.au/?prefix=Documents/AODN/Waves/Instruments_manuals/",
+      "type": "text/html",
+      "title": "Instrument manuals"
+    },
+    {
+      "rel": "self",
+      "href": "https://content.aodn.org.au/Documents/IMOS/Conventions/Wave_standards/AODN_wave_buoy_operations_and_data_management_guidelines_v1.0.pdf",
+      "type": "text/html",
+      "title": "Wave Buoy Operations and Data Management Guidelines Manual"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Bureau_of_Meteorology/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (BOM)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Department_of_Environment_and_Science-Queensland/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (DES)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Department_of_Planning_and_Environment-New_South_Wales/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (NSW-DPE)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Department_of_Planning_and_Environment-New_South_Wales/Manly_Hydraulics_Laboratory/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (MHL)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Department_of_Transport-Western_Australia/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (DoT)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Deakin_University/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (Deakin)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Pilbara_Ports_Authority/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (Pilbara Ports Authority)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Gippsland-Ports-Victoria/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (Gippsland Ports)"
+    },
+    {
+      "rel": "self",
+      "href": "https://thredds.aodn.org.au/thredds/catalog/Flinders_University/WAVE-BUOYS/REALTIME/WAVE-PARAMETERS/catalog.html",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog (Flinders University)"
+    }
+  ],
+  "id": "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "contacts": [
+    {
+      "emails": [
+        "tides@transport.wa.gov.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [],
+          "country": "",
+          "city": "",
+          "postalCode": "",
+          "administrativeArea": ""
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Department of Transport (DoT), Western Australian Government",
+      "name": "",
+      "phones": [],
+      "links": [],
+      "position": "Manager Oceanographic Services"
+    },
+    {
+      "emails": [
+        "coastal.sciences@dsiti.qld.gov.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Coastal Impacts Unit",
+            "GPO Box 2454"
+          ],
+          "country": "Australia",
+          "city": "Brisbane",
+          "postalCode": "4001",
+          "administrativeArea": "Queensland"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Department of Environment and Science (DES), Queensland Government",
+      "name": "",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "137468"
+        }
+      ],
+      "links": [],
+      "position": ""
+    },
+    {
+      "emails": [
+        "marine_obs@bom.gov.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "700 Collins Street"
+          ],
+          "country": "Australia",
+          "city": "Docklands",
+          "postalCode": "3008",
+          "administrativeArea": "Victoria"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Australian Bureau of Meteorology",
+      "name": "",
+      "phones": [],
+      "links": [],
+      "position": "Data Requirements and Quality"
+    },
+    {
+      "emails": [
+        "MHL.Reception@mhl.nsw.gov.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "110B King Street, Manly Vale"
+          ],
+          "country": "Australia",
+          "city": "Sydney",
+          "postalCode": "2093",
+          "administrativeArea": "NSW"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Manly Hydraulics Laboratory (MHL)",
+      "name": "",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "(02) 9949 0200"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://www.mhl.nsw.gov.au",
+          "title": "",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ],
+      "position": ""
+    },
+    {
+      "emails": [
+        "feedback@gippslandports.vic.gov.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Hydrographic Services Department",
+            "97 Main Street"
+          ],
+          "country": "Australia",
+          "city": "Bairnsdale",
+          "postalCode": "3875",
+          "administrativeArea": "Victoria"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Gippsland Ports",
+      "name": "",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "+61 3 5150 0500"
+        }
+      ],
+      "links": [
+        {
+          "href": "https://www.gippslandports.vic.gov.au/",
+          "title": "",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ],
+      "position": ""
+    },
+    {
+      "emails": [
+        "jeff.hansen@uwa.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "35 Stirling Highway, Crawley"
+          ],
+          "country": "Australia",
+          "city": "Perth",
+          "postalCode": "6009",
+          "administrativeArea": "Western Australia"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "The University of Western Australia (UWA)",
+      "name": "Hansen, Jeff",
+      "phones": [],
+      "links": [],
+      "position": ""
+    },
+    {
+      "emails": [
+        "daniel.ierodiaconou@deakin.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "School of Life and Environmental Sciences",
+            "221 Burwood Highway"
+          ],
+          "country": "Australia",
+          "city": "Burwood",
+          "postalCode": "3125",
+          "administrativeArea": "Victoria"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Deakin University",
+      "name": "Ierodiaconou, Daniel",
+      "phones": [],
+      "links": [],
+      "position": ""
+    },
+    {
+      "emails": [
+        "Richard.King@pilbaraports.com.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [],
+          "country": "",
+          "city": "",
+          "postalCode": "",
+          "administrativeArea": ""
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Pilbara Ports Authority",
+      "name": "King, Richard",
+      "phones": [],
+      "links": [],
+      "position": ""
+    },
+    {
+      "emails": [
+        "graziela.miotdasilva@flinders.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Earth Sciences (315)",
+            "GPO Box 2100"
+          ],
+          "country": "Australia",
+          "city": "Adelaide",
+          "postalCode": "5001",
+          "administrativeArea": "South Australia"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Flinders University",
+      "name": "Miot da Silva, Graziela",
+      "phones": [],
+      "links": [],
+      "position": ""
+    }
+  ],
+  "providers": [
+    {
+      "roles": [
+        "pointOfContact"
+      ],
+      "name": "Integrated Marine Observing System (IMOS)",
+      "description": null,
+      "url": "http://imos.org.au/aodn.html"
+    }
+  ],
+  "summaries": {
+    "score": 100,
+    "dataset_provider": "IMOS",
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              114,
+              -31
+            ],
+            [
+              114,
+              -30
+            ],
+            [
+              115,
+              -30
+            ],
+            [
+              115,
+              -31
+            ],
+            [
+              114,
+              -31
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              115,
+              -33
+            ],
+            [
+              115,
+              -31
+            ],
+            [
+              116,
+              -31
+            ],
+            [
+              116,
+              -33
+            ],
+            [
+              115,
+              -33
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              129,
+              -11
+            ],
+            [
+              129,
+              -10
+            ],
+            [
+              130,
+              -10
+            ],
+            [
+              130,
+              -11
+            ],
+            [
+              129,
+              -11
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              141,
+              -13
+            ],
+            [
+              141,
+              -11
+            ],
+            [
+              142,
+              -11
+            ],
+            [
+              142,
+              -13
+            ],
+            [
+              141,
+              -13
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              145,
+              -17
+            ],
+            [
+              145,
+              -16
+            ],
+            [
+              146,
+              -16
+            ],
+            [
+              146,
+              -17
+            ],
+            [
+              145,
+              -17
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              147,
+              -20
+            ],
+            [
+              147,
+              -19
+            ],
+            [
+              148,
+              -19
+            ],
+            [
+              148,
+              -20
+            ],
+            [
+              147,
+              -20
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              151,
+              -24
+            ],
+            [
+              151,
+              -23
+            ],
+            [
+              152,
+              -23
+            ],
+            [
+              152,
+              -24
+            ],
+            [
+              151,
+              -24
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              152,
+              -25
+            ],
+            [
+              152,
+              -24
+            ],
+            [
+              153,
+              -24
+            ],
+            [
+              153,
+              -25
+            ],
+            [
+              152,
+              -25
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              149,
+              -22
+            ],
+            [
+              149,
+              -21
+            ],
+            [
+              150,
+              -21
+            ],
+            [
+              150,
+              -22
+            ],
+            [
+              149,
+              -22
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              153,
+              -29
+            ],
+            [
+              153,
+              -25
+            ],
+            [
+              154,
+              -25
+            ],
+            [
+              154,
+              -27
+            ],
+            [
+              155,
+              -27
+            ],
+            [
+              155,
+              -28
+            ],
+            [
+              154,
+              -28
+            ],
+            [
+              154,
+              -29
+            ],
+            [
+              153,
+              -29
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              153,
+              -31
+            ],
+            [
+              153,
+              -30
+            ],
+            [
+              154,
+              -30
+            ],
+            [
+              154,
+              -31
+            ],
+            [
+              153,
+              -31
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              114,
+              -34
+            ],
+            [
+              114,
+              -33
+            ],
+            [
+              115,
+              -33
+            ],
+            [
+              115,
+              -34
+            ],
+            [
+              114,
+              -34
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              151,
+              -35
+            ],
+            [
+              151,
+              -33
+            ],
+            [
+              152,
+              -33
+            ],
+            [
+              152,
+              -35
+            ],
+            [
+              151,
+              -35
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              150,
+              -38
+            ],
+            [
+              150,
+              -37
+            ],
+            [
+              151,
+              -37
+            ],
+            [
+              151,
+              -38
+            ],
+            [
+              150,
+              -38
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              147,
+              -38
+            ],
+            [
+              147,
+              -37
+            ],
+            [
+              148,
+              -37
+            ],
+            [
+              148,
+              -38
+            ],
+            [
+              147,
+              -38
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              121,
+              -35
+            ],
+            [
+              121,
+              -33
+            ],
+            [
+              122,
+              -33
+            ],
+            [
+              122,
+              -35
+            ],
+            [
+              121,
+              -35
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              136,
+              -37
+            ],
+            [
+              136,
+              -36
+            ],
+            [
+              137,
+              -36
+            ],
+            [
+              137,
+              -37
+            ],
+            [
+              136,
+              -37
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              150,
+              -36
+            ],
+            [
+              150,
+              -35
+            ],
+            [
+              151,
+              -35
+            ],
+            [
+              151,
+              -36
+            ],
+            [
+              150,
+              -36
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              117,
+              -36
+            ],
+            [
+              117,
+              -35
+            ],
+            [
+              118,
+              -35
+            ],
+            [
+              118,
+              -36
+            ],
+            [
+              117,
+              -36
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              145,
+              -43
+            ],
+            [
+              145,
+              -42
+            ],
+            [
+              146,
+              -42
+            ],
+            [
+              146,
+              -43
+            ],
+            [
+              145,
+              -43
+            ]
+          ]
+        ],
+        [
+          [
+            [
+              148,
+              -43
+            ],
+            [
+              148,
+              -42
+            ],
+            [
+              149,
+              -42
+            ],
+            [
+              149,
+              -43
+            ],
+            [
+              148,
+              -43
+            ]
+          ]
+        ]
+      ],
+      "type": "MultiPolygon"
+    },
+    "scope": {
+      "code": "dataset",
+      "name": ""
+    },
+    "update_frequency": "real-time",
+    "temporal": [
+      {
+        "start": "2018-01-14T12:10:00Z",
+        "end": null
+      }
+    ],
+    "status": "onGoing"
+  }
+}

@@ -277,4 +277,89 @@ public class RestApiIT extends BaseTestClass {
                 collections.getBody().getCollections().get(0).getId(),
                 "UUID matches");
     }
+    /**
+     * Verify AND operation for CQL
+     *
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLPropertyAndOperation() throws IOException {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider='IMOS'", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NULL", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "516811d7-cd1e-207a-e0440003ba8c79dd",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NULL AND dataset_provider='IMOS'", Collections.class);
+        assertEquals(0, collections.getBody().getCollections().size(), "nothing will hit with and ");
+    }
+    /**
+     * Verify OR operation for CQL
+     *
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLPropertyOrOperation() throws IOException {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider='IMOS'", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NULL", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "516811d7-cd1e-207a-e0440003ba8c79dd",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NULL OR dataset_provider='IMOS'", Collections.class);
+        assertEquals(2, collections.getBody().getCollections().size(), "nothing will hit with and ");
+    }
+    /**
+     * Verify INTERSECT CQL operation
+     *
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLPropertyIntersectOperation() throws IOException {
+        super.insertJsonToElasticIndex(
+                "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc.json"
+        );
+        // Intersect with this polygon
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(
+                getBasePath() + "/collections?filter=INTERSECTS(geometry,POLYGON ((94.46973787472069 -21.134308721401936, 175.09692901649828 -21.134308721401936, 175.09692901649828 24.576866444501007, 94.46973787472069 24.576866444501007, 94.46973787472069 -21.134308721401936)))",
+                Collections.class);
+
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+        // out of bounds with this polygon
+        collections = testRestTemplate.getForEntity(
+                getBasePath() + "/collections?filter=INTERSECTS(geometry,POLYGON ((82.29211035373572 -2.2497973160605653, 162.9193014955133 -2.2497973160605653, 162.9193014955133 40.78887880499494, 82.29211035373572 40.78887880499494, 82.29211035373572 -2.2497973160605653)))",
+                Collections.class);
+
+        assertEquals(0, collections.getBody().getCollections().size(), "hit none");
+    }
 }
