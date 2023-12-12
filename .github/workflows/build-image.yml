@@ -1,6 +1,9 @@
 name: Build Image cicd
 
 on:
+  push:
+    branches:
+      - devops-cicd
   workflow_dispatch:
     branches:
       - devops-cicd
