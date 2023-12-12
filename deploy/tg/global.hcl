@@ -1,8 +1,8 @@
 locals {
   aws_account  = get_env("AWS_ACCOUNT_ID")
   aws_region   = get_env("AWS_REGION")
-  environment  = get_env("ENVIRONMENT")
-  project_name = "sample-django-app"
+  environment  = "tfintegration" #get_env("ENVIRONMENT")
+  project_name = "ogcapi-java"
   state_bucket = "tfstate-${local.aws_account}-${local.aws_region}"
   state_key    = "apps/${local.project_name}/${local.environment}/ecs.tfstate"
 }

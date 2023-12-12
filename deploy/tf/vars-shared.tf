@@ -1,18 +1,18 @@
 # ssm parameters
-variable "alb_parameter_name" {
-  description = "The parameter name to derive the ALB details from."
-  type        = string
-}
+# variable "alb_parameter_name" {
+#   description = "The parameter name to derive the ALB details from."
+#   type        = string
+# }
 
-variable "ecr_parameter_name" {
-  description = "The parameter name to derive the ALB details from."
-  type        = string
-}
+# variable "ecr_parameter_name" {
+#   description = "The parameter name to derive the ALB details from."
+#   type        = string
+# }
 
-variable "rds_parameter_name" {
-  description = "The parameter name to derive the database host from."
-  type        = string
-}
+# variable "rds_parameter_name" {
+#   description = "The parameter name to derive the database host from."
+#   type        = string
+# }
 
 # general variables
 variable "app_name" {
@@ -42,7 +42,7 @@ variable "environment" {
   type        = string
 }
 
-variable "image" {
-  description = "The digest/tag of the docker image to pull from ECR"
-  type        = string
-}
+# variable "image" {
+#   description = "The digest/tag of the docker image to pull from ECR"
+#   type        = string
+# }

@@ -1,9 +1,9 @@
 name: Build Image cicd
 
 on:
-  push:
-    branches:
-      - devops-cicd
+  # push:
+  #   branches:
+  #     - devops-cicd
   workflow_dispatch:
 
 permissions:
