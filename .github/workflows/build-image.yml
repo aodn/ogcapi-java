@@ -46,5 +46,5 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          load: true
+          push: true
           tags: ${{ vars.ECR_REPOSITORY }}
