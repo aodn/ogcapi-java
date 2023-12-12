@@ -95,14 +95,6 @@
 								<include>${project.build.directory}/generated-sources/src/main/**/*.java</include>
 							</includes>
 							<replacements>
-								<replacement>
-									<token>javax.xml.bind</token>
-									<value>jakarta.xml.bind</value>
-								</replacement>
-								<replacement>
-									<token>@javax.annotation</token>
-									<value>@jakarta.annotation</value>
-								</replacement>
 							</replacements>
 						</configuration>
 					</execution>
