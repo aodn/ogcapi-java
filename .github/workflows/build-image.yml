@@ -5,19 +5,17 @@ on:
     branches:
       - devops-cicd
   workflow_dispatch:
-    branches:
-      - devops-cicd
 
 permissions:
   id-token: write   # JWT
   contents: read    # actions/checkout
 
 jobs:
-  ogcapi_build:
+  ogcapi_app_build:
     runs-on: ubuntu-latest
     environment: tfintegration
     steps:
-      - name: Checkout ogcapi Repo
+      - name: Checkout Repo ogcapi
         uses: actions/checkout@v4
 
       - name: Set up QEMU Cross Platform Support
@@ -43,14 +41,14 @@ jobs:
           role-session-name: GitHub_to_AWS_OIDC
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: Login to Amazon ECR
+      - name: Login ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: Build and Push Image
+      - name: Build and Push Application Image to ECR
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ${{ vars.ECR_REPOSITORY }}
+          tags: ${{ vars.ECR_REPOSITORY }}:latest
