@@ -53,6 +53,7 @@ public class RestApiTest extends BaseTestClass {
         );
 
         assertEquals(2, tiles.getBody().getTilesets().size(), "Count is correct");
-
+        assertEquals("Ocean acidification historical reconstruction", tiles.getBody().getTilesets().get(0).getTitle(), "Title matched 1");
+        assertEquals("Impacts of stress on coral reproduction.", tiles.getBody().getTilesets().get(1).getTitle(), "Title matched 2");
     }
 }

@@ -91,7 +91,6 @@
 								<typeMapping>AllCollections=java.lang.String</typeMapping>
 								<typeMapping>AllOftileSetItemCrs=java.lang.String</typeMapping>
 								<typeMapping>CoverageCollections=java.lang.String</typeMapping>
-								<typeMapping>AllOftileSetItemDataType=java.lang.String</typeMapping>
 							</typeMappings>
 							<configOptions>
 								<interfaceOnly>true</interfaceOnly>
@@ -133,6 +132,31 @@
 									-->
 									<token>ResponseEntity&lt;String&gt; datasetVectorGetTile</token>
 									<value>ResponseEntity&lt;?&gt; datasetVectorGetTile</value>
+								</replacement>
+							</replacements>
+						</configuration>
+					</execution>
+					<execution>
+						<!--
+							Problem with the generated class with enum, replace it with string is much better type
+						-->
+						<id>replace-tile-set-itme</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>${project.build.directory}/generated-sources/src/main/**/TileSetItem.java</include>
+							</includes>
+							<replacements>
+								<replacement>
+									<token>AllOftileSetItemDataType</token>
+									<value>String</value>
+								</replacement>
+								<replacement>
+									<token>AllOftileSetItemCrs</token>
+									<value>String</value>
 								</replacement>
 							</replacements>
 						</configuration>
