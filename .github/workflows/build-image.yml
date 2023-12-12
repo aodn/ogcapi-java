@@ -17,9 +17,14 @@ jobs:
     runs-on: ubuntu-latest
     environment: tfintegration
     steps:
-      - name: Clone ogcapi Repo
+      - name: Checkout ogcapi Repo
         uses: actions/checkout@v4
 
+      - name: Set up QEMU Cross Platform Support
+        uses: docker/setup-qemu-action@v3
+
+      - name: Create Docker Buildx Worker
+        uses: docker/setup-buildx-action@v3
 
       - name: Install JDK 17
         uses: actions/setup-java@v3
@@ -41,10 +46,11 @@ jobs:
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
-  
+
       - name: Build and Push Image
         uses: docker/build-push-action@v5
         with:
           context: .
+          file: ./Dockerfile
           push: true
           tags: ${{ vars.ECR_REPOSITORY }}
