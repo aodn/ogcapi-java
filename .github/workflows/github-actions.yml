@@ -119,7 +119,13 @@ jobs:
           cache: 'maven'
           
       - name: Build with Maven
-        run: mvn -B package --file pom.xml
+        run: |
+          DOMAIN="testmvp-io"
+          DOMAIN_OWNER="704910415367"
+          CODE_ARTIFACT_REPO="java-maven-repo"
+          mvn -B package --file pom.xml
+          aws codeartifact login --tool maven --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
+          mvn deploy    
       
       - name: Login to Amazon ECR
         id: login-ecr
@@ -206,11 +212,14 @@ jobs:
       #         echo "Deployment successfull."
       #       fi
 
-      - name: Publish to AWS CodeArtifact
-        id: ca-deploy
-        run: |
-          DOMAIN="testmvp-io"
-          DOMAIN_OWNER="704910415367"
-          CODE_ARTIFACT_REPO="java-maven-repo"
-          PACKAGE="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar app.jar"
-          aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $PACKAGE
+      # - name: Publish to AWS CodeArtifact
+      #   id: ca-deploy
+      #   run: |
+      #     DOMAIN="testmvp-io"
+      #     DOMAIN_OWNER="704910415367"
+      #     CODE_ARTIFACT_REPO="java-maven-repo"
+      #     PACKAGE="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar app.jar"
+      #     #aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $PACKAGE
+          
+      #     aws codeartifact login --tool maven --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
+      #     aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --format maven --namespace test --package $PACKAGE --version 1 --source test
