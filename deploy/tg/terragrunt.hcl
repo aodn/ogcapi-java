@@ -10,6 +10,7 @@ inputs = {
   # fetch the ssm parameter names
   // alb_parameter_name = get_env("ALB_PARAMETER_NAME")
   // ecr_parameter_name = get_env("ECR_PARAMETER_NAME")
+  alb_url = "shared-alb-lb-instance-709272754.ap-southeast-4.elb.amazonaws.com"
 
   # DNS hostnames to associate with the container
   app_hostnames = ["api-${local.global.environment}"]

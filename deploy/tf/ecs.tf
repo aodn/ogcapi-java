@@ -74,9 +74,6 @@ module "ecs" {
               hostPort      = 80
             }
           ]
-          mount_points = [
-            {}
-          ]
         }
       }
 
@@ -88,7 +85,7 @@ module "ecs" {
       load_balancer = {
         service = {
           target_group_arn = aws_lb_target_group.app.arn
-          container_name   = "nginx"
+          container_name   = var.container_name
           container_port   = var.container_port
         }
       }

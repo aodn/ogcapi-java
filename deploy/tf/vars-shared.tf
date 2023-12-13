@@ -4,6 +4,10 @@
 #   type        = string
 # }
 
+variable "alb_url" {
+  type = string
+}
+
 # variable "ecr_parameter_name" {
 #   description = "The parameter name to derive the ALB details from."
 #   type        = string
