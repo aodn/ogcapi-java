@@ -207,6 +207,11 @@ jobs:
       #         echo "Deployment successfull."
       #       fi
 
+      - name: Install AWS CLI dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install awscli
+
       - name: Publish to AWS CodeArtifact
         id: ca-deploy
         run: |
@@ -220,7 +225,7 @@ jobs:
           aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format maven
           
           aws codeartifact login --tool maven --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
-          
+
           #aws codeartifact put-package-version --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $PACKAGE --version $CA_VERSION  --source $SOURCE_PATH
           
           #aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $PACKAGE
