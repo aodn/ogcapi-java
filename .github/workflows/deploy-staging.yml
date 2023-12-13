@@ -1,6 +1,9 @@
-name: Deploy Staging
+name: Deploy Dev cicd
 
 on:
+ push:
+   branches:
+     - devops-cicd
   workflow_dispatch:
 
 permissions:
