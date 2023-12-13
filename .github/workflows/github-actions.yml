@@ -228,7 +228,7 @@ jobs:
 
           aws codeartifact put-package-version --repository $CODE_ARTIFACT_REPO --format maven --package $PACKAGE --version $CA_VERSION  --source $SOURCE_PATH
           
-          aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $SOURCE_PATH
+          aws codeartifact publish-package-version --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format generic --package $PACKAGE --asset-content $SOURCE_PATH --output text
           
           #aws codeartifact login --tool maven --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
           #aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --format maven --namespace test --package $PACKAGE --version 1 --source test
