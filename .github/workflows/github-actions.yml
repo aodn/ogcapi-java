@@ -221,7 +221,7 @@ jobs:
           PACKAGE="ogcapi"
           SOURCE_PATH="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar"
           CA_VERSION="1.0.0"
-          export ASSET_SHA256=$(sha256sum asset.tar.gz | awk '{print $1;}')
+          export ASSET_SHA256=$(sha256sum ./server/target/server-java-1.0.0-SNAPSHOT-exec.jar | awk '{print $1;}')
 
           aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format maven
           
