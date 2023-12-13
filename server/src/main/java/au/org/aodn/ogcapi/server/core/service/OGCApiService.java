@@ -68,31 +68,50 @@ public abstract class OGCApiService {
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-
+    /**
+     * Rewrite the datetime parameter to CQL filter as this can be handled by CQL directly.
+     *
+     * @param datetime - In come datetime parameter of ogcapi
+     * @param filter - Any existing filter
+     * @return - A combined filter with datetime rewrite.
+     */
     public String processDatetimeParameter(String datetime, String filter) {
 
-        // TODO: the AND operator yet supported, when it is, append the datetime input to existing filter after with the AND prefix
-
-        // TODO. should support "anyinteracts"? otherwise need to have a proper method to find correct operator without hackaround with string processing,
-        //  e.g how to know if it is before or after if ?datetime=<timestamp instant>
+        // TODO: How to handle this? e.g how to know if it is before or after if ?datetime=<timestamp instant>
 
         // I will hack around with string processing for now
-        String operator;
+        String operator = null;
+        String d = null;
+        String f = null;
 
         // for now, assumption is that temporal is the only filter
-        if (filter == null) {
-            if (datetime.startsWith("../") || datetime.startsWith("/")) {
-                operator = "before";
-            } else if (datetime.endsWith("/..") || datetime.endsWith("/")) {
-                operator = "after";
-            } else if (datetime.contains("/") && !datetime.contains("..")) {
-                operator = "during";
-            } else {
-                operator = "tequals";
-            }
-            filter = String.format("temporal %s %s", operator, datetime);
+        if (datetime.startsWith("../") || datetime.startsWith("/")) {
+            operator = "before";
+            d = datetime.split("/")[1];
+        }
+        else if (datetime.endsWith("/..") || datetime.endsWith("/")) {
+            operator = "after";
+            d = datetime.split("/")[0];
+        }
+        else if (datetime.contains("/") && !datetime.contains("..")) {
+            operator = "during";
+            d = datetime;
         }
 
-        return filter;
+        if(d != null && operator != null) {
+            f = String.format("temporal %s %s", operator, d);
+        }
+
+        if((filter == null || filter.isEmpty())) {
+            return f;
+        }
+        else {
+            if(f == null) {
+                return filter;
+            }
+            else {
+                return String.join(" AND ", filter, f);
+            }
+        }
     }
 }

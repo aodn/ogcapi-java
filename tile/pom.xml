@@ -96,6 +96,7 @@
 								<interfaceOnly>true</interfaceOnly>
 								<hideGenerationTimestamp>true</hideGenerationTimestamp>
 								<dateLibrary>java11-localdatetime</dateLibrary>
+								<jakarta>true</jakarta>
 							</configOptions>
 						</configuration>
 					</execution>
@@ -121,10 +122,6 @@
 							</includes>
 							<replacements>
 								<replacement>
-									<token>import javax</token>
-									<value>import jakarta</value>
-								</replacement>
-								<replacement>
 									<token>import au\.org\.aodn\.ogcapi\.tile\.model\.TimeStamp;</token>
 									<value></value>
 								</replacement>
@@ -135,6 +132,31 @@
 									-->
 									<token>ResponseEntity&lt;String&gt; datasetVectorGetTile</token>
 									<value>ResponseEntity&lt;?&gt; datasetVectorGetTile</value>
+								</replacement>
+							</replacements>
+						</configuration>
+					</execution>
+					<execution>
+						<!--
+							Problem with the generated class with enum, replace it with string is much better type
+						-->
+						<id>replace-tile-set-itme</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>replace</goal>
+						</goals>
+						<configuration>
+							<includes>
+								<include>${project.build.directory}/generated-sources/src/main/**/TileSetItem.java</include>
+							</includes>
+							<replacements>
+								<replacement>
+									<token>AllOftileSetItemDataType</token>
+									<value>String</value>
+								</replacement>
+								<replacement>
+									<token>AllOftileSetItemCrs</token>
+									<value>String</value>
 								</replacement>
 							</replacements>
 						</configuration>

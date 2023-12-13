@@ -1,0 +1,390 @@
+{
+  "extent": {
+    "bbox": [
+      [
+        144.5,
+        -44,
+        148.5,
+        -39.5
+      ],
+      [
+        144.5,
+        -44,
+        148.5,
+        -44,
+        148.5,
+        -39.5,
+        144.5,
+        -39.5,
+        144.5,
+        -44
+      ]
+    ],
+    "temporal": [
+      [
+        "1991-12-31T13:00:00Z",
+        "2007-06-25T14:00:00Z"
+      ],
+      [
+        "1991-12-31T13:00:00Z",
+        "1995-01-30T13:00:00Z"
+      ],
+      [
+        "2006-02-28T13:00:00Z",
+        "2007-06-25T14:00:00Z"
+      ]
+    ]
+  },
+  "stac_version": "1.0.0",
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "description": "The data is the quantitative abundance of fish derived from underwater visual census methods involving transect counts at rocky reef sites around Tasmania. This data forms part of a larger dataset that also surveyed megafaunal invertebrate abundance and algal cover for the area. The aggregated dataset allows examination of changes in Tasmanian shallow reef floral and faunal communities over a decadal scale - initial surveys were conducted in 1992-1995, and again at the same sites in 2006-2007. There are plans for ongoing surveys.  An additional component was added in the latter study - a boat ramp study looking at the proximity of boat ramps and their effects of fishing. We analysed underwater visual census data on fishes and macroinvertebrates (abalone and rock lobsters) at 133 shallow rocky reef sites around Tasmania that ranged from 0.6 - 131 km from the nearest boat ramp. These sites were not all the same as those used for the comparison of 1994 and 2006 reef communities. The subset of 133 sites examined in this component consisted of only those sites that were characterized by the two major algal (kelp) types (laminarian or fucoid dominated). Sites with atypical algal assemblages were omitted from the 196 sites surveyed in 2006. This study aimed to examine reef community data for changes at the community level, changes in species richness and introduced species populations, and changes that may have resulted from ocean warming and fishing. The methods are described in detail in Edgar and Barrett (1997). Primarily the data are derived from transects at 5 m depth and/or 10 m depth at each site surveyed. The underwater visual census (UVC) methodology used to survey rocky reef communities was designed to maximise detection of (i) changes in population numbers and size-structure (ii) cascading ecosystem effects associated with disturbances such as fishing, (iii) long term change and variability in reef  assemblages.",
+  "title": "Condition of rocky reef communities around Tasmania: fish surveys",
+  "type": "Collection",
+  "license": "Creative Commons Attribution 4.0 International License",
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "EARTH SCIENCE | BIOSPHERE | ECOSYSTEMS | MARINE ECOSYSTEMS | BENTHIC",
+          "url": "http://gcmdservices.gsfc.nasa.gov/kms/concept/09a78997-581b-4d1b-ae71-b2b3f96ef719"
+        },
+        {
+          "id": "EARTH SCIENCE | BIOSPHERE | ECOSYSTEMS | MARINE ECOSYSTEMS | REEF",
+          "url": "http://gcmdservices.gsfc.nasa.gov/kms/concept/367718c8-cc3b-4c94-a270-0a278afabb43"
+        },
+        {
+          "id": "EARTH SCIENCE | BIOSPHERE | ECOLOGICAL DYNAMICS | COMMUNITY DYNAMICS | COMMUNITY STRUCTURE",
+          "url": "http://gcmdservices.gsfc.nasa.gov/kms/concept/f42c849c-7113-4c69-a01e-52ebc5e7b44d"
+        },
+        {
+          "id": "EARTH SCIENCE | BIOLOGICAL CLASSIFICATION | ANIMALS/VERTEBRATES | FISH",
+          "url": "http://gcmdservices.gsfc.nasa.gov/kms/concept/ea855d4c-f132-44f9-b31c-447e1101684d"
+        }
+      ],
+      "scheme": "theme",
+      "description": "Science Keywords",
+      "title": "NASA/GCMD Keywords, Version 8.5"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Temperate Reef"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "TASMANIA"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine and Estuarine Ecology (incl. Marine Ichthyology)",
+          "url": "http://purl.org/au-research/vocabulary/anzsrc-for/2008/060205"
+        },
+        {
+          "id": "Community Ecology",
+          "url": "http://purl.org/au-research/vocabulary/anzsrc-for/2008/060202"
+        },
+        {
+          "id": "Natural Resource Management",
+          "url": "http://purl.org/au-research/vocabulary/anzsrc-for/2008/050209"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "Australian and New Zealand Standard Research Classification (ANZSRC): Fields of Research"
+    },
+    {
+      "concepts": [
+        {
+          "id": "diver",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/72"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Platform Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Fish size class"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "Biotic taxonomic identification",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/489"
+        },
+        {
+          "id": "Abundance of biota",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/488"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Discovery Parameter Vocabulary"
+    }
+  ],
+  "links": [
+    {
+      "rel": "self",
+      "href": "https://geoserver.imas.utas.edu.au/geoserver/wfs?version=1.0.0&request=GetFeature&typeName=imas:MB_EXTRACT_SAMPLE_FISH_ALL_DATA&outputFormat=csv",
+      "type": "",
+      "title": "DATA ACCESS - all fish surveys [direct download]"
+    },
+    {
+      "rel": "self",
+      "href": "http://dx.doi.org/10.1016/S0022-0981(96)02769-4",
+      "type": "",
+      "title": "ASSOCIATED PUBLICATION - Short term monitoring of biotic change in Tasmanian marine reserves (DOI: 10.1016/S0022-0981(96)02769-4)"
+    },
+    {
+      "rel": "self",
+      "href": "http://dx.doi.org/10.1016/S0006-3207(96)00095-X",
+      "type": "",
+      "title": "ASSOCIATED PUBLICATION - The conservation-related benefits of a systematic marine biological sampling programme: The Tasmanian reef bioregionalisation as a case study (DOI: S0006-3207(96)00095-X)"
+    },
+    {
+      "rel": "self",
+      "href": "http://dx.doi.org/10.1016/j.jembe.2008.08.002",
+      "type": "",
+      "title": "ASSOCIATED PUBLICATION - Spatial patterns in impacts of fishing on temperate rocky reefs: Are fish abundance and mean size related to proximity to fisher access points? (DOI: 10.1016/j.jembe.2008.08.002)"
+    },
+    {
+      "rel": "self",
+      "href": "http://dx.doi.org/10.1111/j.1365-2486.2009.01955.x",
+      "type": "",
+      "title": "ASSOCIATED PUBLICATION - Stability in temperate reef communities over a decadal time scale despite concurrent ocean warming (DOI: 10.1111/j.1365-2486.2009.01955.x)"
+    },
+    {
+      "rel": "self",
+      "href": "https://geoserver.imas.utas.edu.au/geoserver/wms",
+      "type": "",
+      "title": "imas:MB_EXTRACT_SAMPLE_FISH_ALL_MAP"
+    },
+    {
+      "rel": "self",
+      "href": "https://geoserver.imas.utas.edu.au/geoserver/wfs",
+      "type": "",
+      "title": "imas:MB_EXTRACT_SAMPLE_FISH_ALL_DATA"
+    },
+    {
+      "rel": "self",
+      "href": "https://data.imas.utas.edu.au/portal/search?uuid=caf7220a-19e0-4a7f-9af6-eade6c79a47a",
+      "type": "",
+      "title": "View and download this data through the interactive IMAS Data Portal."
+    }
+  ],
+  "id": "caf7220a-19e0-4a7f-9af6-eade6c79a47a",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "contacts": [
+    {
+      "emails": [
+        "Neville.Barrett@utas.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+            "Private Bag 49"
+          ],
+          "country": "Australia",
+          "city": "Hobart",
+          "postalCode": "7001",
+          "administrativeArea": "TAS"
+        }
+      ],
+      "roles": "principalInvestigator",
+      "organization": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+      "name": "Barrett, Neville",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "61 3 6227 7210"
+        },
+        {
+          "roles": "facsimile",
+          "value": "61 3 6227 8035"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://orcid.org/0000-0002-6167-1356",
+          "title": "ORCID ID",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ],
+      "position": ""
+    },
+    {
+      "emails": [
+        "G.Edgar@utas.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+            "Private Bag 49"
+          ],
+          "country": "Australia",
+          "city": "Hobart",
+          "postalCode": "7001",
+          "administrativeArea": "TAS"
+        }
+      ],
+      "roles": "principalInvestigator",
+      "organization": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+      "name": "Edgar, Graham",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "61 3 6227 7238"
+        },
+        {
+          "roles": "facsimile",
+          "value": "61 3 6227 8035"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://orcid.org/0000-0003-0833-9001",
+          "title": "ORCID ID",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ],
+      "position": ""
+    },
+    {
+      "emails": [
+        "Rick.Stuartsmith@utas.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+            "Private Bag 49"
+          ],
+          "country": "Australia",
+          "city": "Hobart",
+          "postalCode": "7001",
+          "administrativeArea": "TAS"
+        }
+      ],
+      "roles": "collaborator",
+      "organization": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+      "name": "Stuart-Smith, Rick",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "61 3 6227 7214"
+        },
+        {
+          "roles": "facsimile",
+          "value": "61 3 6227 8035"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://orcid.org/0000-0002-8874-0083",
+          "title": "ORCID ID",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ],
+      "position": ""
+    }
+  ],
+  "providers": [
+    {
+      "roles": [
+        "author"
+      ],
+      "name": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+      "description": null,
+      "url": null
+    },
+    {
+      "roles": [
+        "publisher"
+      ],
+      "name": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
+      "description": null,
+      "url": null
+    }
+  ],
+  "summaries": {
+    "score": 100,
+    "dataset_provider": null,
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              144.5,
+              -44
+            ],
+            [
+              148.5,
+              -44
+            ],
+            [
+              148.5,
+              -39.5
+            ],
+            [
+              144.5,
+              -39.5
+            ],
+            [
+              144.5,
+              -44
+            ]
+          ]
+        ]
+      ],
+      "type": "MultiPolygon"
+    },
+    "scope": {
+      "code": "dataset",
+      "name": ""
+    },
+    "update_frequency": null,
+    "temporal": [
+      {
+        "start": "1991-12-31T13:00:00Z",
+        "end": "1995-01-30T13:00:00Z"
+      },
+      {
+        "start": "2006-02-28T13:00:00Z",
+        "end": "2007-06-25T14:00:00Z"
+      }
+    ],
+    "status": "onGoing"
+  }
+}

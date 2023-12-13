@@ -1,0 +1,71 @@
+{
+  "mappings": {
+    "dynamic": true,
+    "properties": {
+      "id": {
+        "type": "text",
+        "analyzer": "keyword"
+      },
+      "stac_version": { "type": "text" },
+      "type": { "type": "text" },
+      "title": { "type": "text" },
+      "keywords": {
+        "type": "nested",
+        "properties": {
+          "keyword": {
+            "type": "text"
+          }
+        }
+      },
+      "extent": {
+        "type": "nested",
+        "properties": {
+          "bbox": {
+            "type": "double"
+          },
+          "temporal": {
+            "type": "date"
+          }
+        }
+      },
+      "description": { "type": "text" },
+      "license": { "type": "text" },
+      "links": {
+        "type": "nested",
+        "properties": {
+          "link" : {
+            "type": "nested",
+            "properties": {
+              "href": { "type": "text" },
+              "rel": { "type": "text" },
+              "type": { "type": "text" },
+              "title": { "type": "text" },
+              "description": { "type": "text" }
+            }
+          }
+        }
+      },
+      "summaries": {
+        "properties" : {
+          "score": { "type": "long" },
+          "status": { "type": "text" },
+          "creation": { "type": "date" },
+          "proj:geometry": {
+            "type": "geo_shape"
+          },
+          "temporal" : {
+            "type": "nested",
+            "properties" : {
+              "start" : {
+                "type": "date"
+              },
+              "end" : {
+                "type": "date"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

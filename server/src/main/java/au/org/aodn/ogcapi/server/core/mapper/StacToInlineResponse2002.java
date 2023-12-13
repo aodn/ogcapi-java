@@ -20,25 +20,15 @@ public abstract class StacToInlineResponse2002 implements Converter<List<StacCol
     @Value("${api.host}")
     protected String hostname;
 
-    /**
-     * Two parameter generated incorrectly due to open api file use enum which restricted the value within the list
-     * it is better to use string in this case.
-     */
-    protected class TitleSetItemExt extends TileSetItem {
-
-        @JsonProperty("crs")
-        public String getCrs2() { return CQLCrsType.EPSG4326.url; }
-
-        @JsonProperty("dataType")
-        public String getDataType2() { return "vector"; }
-    }
-
     @Override
     public InlineResponse2002 convert(List<StacCollectionModel> model) {
         List<TileSetItem> items = model.stream()
                 .map(m -> {
-                    TitleSetItemExt item = new TitleSetItemExt();
+                    TileSetItem item = new TileSetItem();
                     item.setTitle(m.getTitle());
+                    item.setCrs(CQLCrsType.EPSG4326.url);
+                    item.setDataType("vector");
+
                     // From spec https://docs.ogc.org/is/20-057/20-057.html#toc33
                     // Links to related resources. A 'self' link to the tileset as well as a
                     // 'http://www.opengis.net/def/rel/ogc/1.0/tiling-scheme' link to a definition
