@@ -219,8 +219,9 @@ jobs:
           DOMAIN_OWNER="704910415367"
           CODE_ARTIFACT_REPO="java-maven-repo"
           PACKAGE="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar app.jar"
-          repourl=aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format maven
-          echo "artifact url: $repourl"
+          
+          aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format maven
+          
           #aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $PACKAGE
           #aws codeartifact login --tool maven --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
           #aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --format maven --namespace test --package $PACKAGE --version 1 --source test
