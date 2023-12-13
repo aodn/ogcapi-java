@@ -140,71 +140,71 @@ jobs:
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Run Trivy vulnerability scanner in docker mode
-        uses: aquasecurity/trivy-action@master
-        with:
-            image-ref: ${{ steps.build-image.outputs.image }}
-            format: 'table'
-            severity: 'HIGH,CRITICAL'
-            vuln-type: 'os,library'
-            exit-code: 1
-            ignore-unfixed: true
-        continue-on-error: true
+      # - name: Run Trivy vulnerability scanner in docker mode
+      #   uses: aquasecurity/trivy-action@master
+      #   with:
+      #       image-ref: ${{ steps.build-image.outputs.image }}
+      #       format: 'table'
+      #       severity: 'HIGH,CRITICAL'
+      #       vuln-type: 'os,library'
+      #       exit-code: 1
+      #       ignore-unfixed: true
+      #   continue-on-error: true
 
-      - name: Push image to Amazon ECR
-        id: push-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
-          LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
-        run: |
-          # Build a docker container and
-          # be deployed to ECS.
-          # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
-          # echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
-          # aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin $ACCOUNT_ID
-          docker push $ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      # - name: Push image to Amazon ECR
+      #   id: push-image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #     IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
+      #     LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
+      #   run: |
+      #     # Build a docker container and
+      #     # be deployed to ECS.
+      #     # docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+      #     # echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      #     # aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin $ACCOUNT_ID
+      #     docker push $ECR_REPOSITORY:$IMAGE_TAG
+      #     echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
-        id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
-        with:
-          task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.push-image.outputs.image }}
-          environment-variables: |
-            ENVIRONMENT=${{ env.ENVIRONMENT }}
-            HOST=${{ vars.HOST }} 
-            PORT=${{ vars.PORT }} 
-            ELASTIC_URL=${{ vars.ELASTIC_URL }} 
-            ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
-            IMAGE=${{ steps.push-image.outputs.image }}
+      # - name: Fill in the new image ID in the Amazon ECS task definition
+      #   id: task-def
+      #   uses: aws-actions/amazon-ecs-render-task-definition@v1
+      #   with:
+      #     task-definition: ${{ env.ECS_TASK_DEFINITION }}
+      #     container-name: ${{ env.CONTAINER_NAME }}
+      #     image: ${{ steps.push-image.outputs.image }}
+      #     environment-variables: |
+      #       ENVIRONMENT=${{ env.ENVIRONMENT }}
+      #       HOST=${{ vars.HOST }} 
+      #       PORT=${{ vars.PORT }} 
+      #       ELASTIC_URL=${{ vars.ELASTIC_URL }} 
+      #       ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
+      #       IMAGE=${{ steps.push-image.outputs.image }}
 
-      - name: Deploy Amazon ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-        id: ecs-deploy
-        with:
-          task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
-          wait-for-service-stability: true
+      # - name: Deploy Amazon ECS task definition
+      #   uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      #   id: ecs-deploy
+      #   with:
+      #     task-definition: ${{ steps.task-def.outputs.task-definition }}
+      #     service: ${{ env.ECS_SERVICE }}
+      #     cluster: ${{ env.ECS_CLUSTER }}
+      #     wait-for-service-stability: true
 
-      - name: Check if deployment was successful
-        id: check-deployment
-        run: |
-            CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
-            NEW_TASK_DEF_ARN=${{ steps.ecs-deploy.outputs.task-definition-arn }}
-            REVISION=${GITHUB_SHA::8}
-            echo "Current task arn: $CURRENT_TASK_DEF_ARN"
-            echo "New task arn: $NEW_TASK_DEF_ARN"
-            echo "Latest revision: $REVISION"
-            if [ "$CURRENT_TASK_DEF_ARN" != "$NEW_TASK_DEF_ARN" ]; then
-              echo "Deployment failed with latest code revision."
-              exit 1
-            else
-              echo "Deployment successfull."
-            fi
+      # - name: Check if deployment was successful
+      #   id: check-deployment
+      #   run: |
+      #       CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
+      #       NEW_TASK_DEF_ARN=${{ steps.ecs-deploy.outputs.task-definition-arn }}
+      #       REVISION=${GITHUB_SHA::8}
+      #       echo "Current task arn: $CURRENT_TASK_DEF_ARN"
+      #       echo "New task arn: $NEW_TASK_DEF_ARN"
+      #       echo "Latest revision: $REVISION"
+      #       if [ "$CURRENT_TASK_DEF_ARN" != "$NEW_TASK_DEF_ARN" ]; then
+      #         echo "Deployment failed with latest code revision."
+      #         exit 1
+      #       else
+      #         echo "Deployment successfull."
+      #       fi
 
       - name: Publish to AWS CodeArtifact
         id: ca-deploy
@@ -213,5 +213,4 @@ jobs:
           DOMAIN_OWNER="704910415367"
           CODE_ARTIFACT_REPO="java-maven-repo"
           PACKAGE="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar app.jar"
-          aws codeartifact login --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --domain-owner $DOMAIN_OWNER
           aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $PACKAGE
