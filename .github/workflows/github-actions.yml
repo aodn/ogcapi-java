@@ -205,3 +205,13 @@ jobs:
             else
               echo "Deployment successfull."
             fi
+
+      - name: Publish to AWS CodeArtifact
+        id: ca-deploy
+        run: |
+          DOMAIN="testmvp-io"
+          DOMAIN_OWNER="704910415367"
+          CODE_ARTIFACT_REPO="java-maven-repo"
+          PACKAGE="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar app.jar"
+          aws codeartifact login --tool gradle --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --domain-owner $DOMAIN_OWNER
+          aws codeartifact publish --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format maven --package $PACKAGE
