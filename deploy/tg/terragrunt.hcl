@@ -4,7 +4,7 @@ include "global" {
 }
 
 inputs = {
-  app_name    = get_env("APP_NAME")
+  app_name    = "ogcapi-java"  # get_env("APP_NAME")
   environment = local.global.environment
 
   # fetch the ssm parameter names
