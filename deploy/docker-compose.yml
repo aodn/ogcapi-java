@@ -1,0 +1,12 @@
+version: '3.7'
+
+services:
+  terraform:
+    image: hashicorp/terraform:1.5.7
+    volumes:
+      - .:/infra
+      - ${HOME}/.aws:/root/.aws
+    working_dir: /infra
+    environment:
+      - AWS_PROFILE=${AWS_PROFILE}
+    command: []
