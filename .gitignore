@@ -1,4 +1,15 @@
-.env
-**/target/**/*
+# IDE
 .idea
-*.iml
+
+# Local directories
+**/.terraform/*
+**/.terragrunt-cache/
+
+# Local files
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+
+# Crash log files
+crash.log
+crash.*.log

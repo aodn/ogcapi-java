@@ -1,0 +1,76 @@
+name: Deploy Dev cicd
+
+on:
+  push:
+    branches:
+      - devops-cicd
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy_application:
+    runs-on: ubuntu-latest
+    environment: tfintegration
+    env:
+      tf_version: '1.5.7'
+      tg_version: '0.54.0'
+      tg_dir: './deploy/tg'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.ROLE_ARN }}
+          role-session-name: GitHub_OIDC
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Expose github environment as shell variables
+        env:
+          SECRETS_CONTEXT: ${{ toJson(secrets) }}
+          VARS_CONTEXT: ${{ toJson(vars) }}
+        run: |
+          EOF=$(dd if=/dev/urandom bs=15 count=1 status=none | base64)
+          to_envs() { jq -r "to_entries[] | \"\(.key)<<$EOF\n\(.value)\n$EOF\n\""; }
+          echo "$VARS_CONTEXT" | to_envs >> $GITHUB_ENV
+          echo "$SECRETS_CONTEXT" | to_envs >> $GITHUB_ENV
+
+      - name: Install Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.tf_version }}
+
+      - name: Install Terragrunt
+        id: setup_terragrunt
+        run: |
+          wget https://github.com/gruntwork-io/terragrunt/releases/download/v${terragrunt_version}/terragrunt_linux_amd64 \
+            && mv terragrunt_linux_amd64 terragrunt \
+            && chmod +x terragrunt \
+            && mv terragrunt /usr/local/bin/terragrunt
+        env:
+          terragrunt_version: ${{ env.tg_version }}
+
+      - name: Terragrunt Plan
+        id: terragrunt_plan
+        run: terragrunt plan -out=tf.plan
+        working-directory: ${{ env.tg_dir }}
+        env:
+          TF_INPUT: 0
+          TF_IN_AUTOMATION: true
+          # get the image digest from the build job with optional override from vars context
+          TF_VAR_image: ${{ vars.IMAGE || needs.build_push.outputs.image_digest }}
+
+      - name: Terragrunt Apply
+        id: terragrunt_apply
+        run: terragrunt apply -auto-approve tf.plan
+        working-directory: ${{ env.tg_dir }}
+        env:
+          TF_INPUT: 0
+          TF_IN_AUTOMATION: true
+          # get the image digest from the build job with optional override from vars context
+          TF_VAR_image: ${{ vars.IMAGE || needs.build_push.outputs.image_digest }}

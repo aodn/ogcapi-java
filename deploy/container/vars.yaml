@@ -1,0 +1,2 @@
+allowed_hosts: "*"
+allowed_cidr_nets: "0.0.0.0/0"
