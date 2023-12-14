@@ -377,7 +377,7 @@ jobs:
           ELASTIC_KEY: ${{ vars.ELASTIC_KEY }}
         run: |
           docker-compose -f docker-compose.yml build
-          docker tag ogcapi:latest ${{ env.IMAGE_TAG }}
+          docker tag aodn-v2:latest $ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REPOSITORY:$IMAGE_TAG
 
       - name: Deploy to ECS Fargate
