@@ -336,9 +336,9 @@ jobs:
             BUILD_ID=${GITHUB_REF/refs\/tags\//}
             LATEST_ID=latest
           fi
-          echo name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
-          echo name=BUILD_ID::${BUILD_ID}
-          echo name=LATEST_ID::${LATEST_ID} >> $GITHUB_OUTPUT
+          echo ::set-output name=BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          echo ::set-output name=BUILD_ID::${BUILD_ID}
+          echo ::set-output name=LATEST_ID::${LATEST_ID} >> $GITHUB_OUTPUT
 
       - name: Checkout
         uses: actions/checkout@v3
