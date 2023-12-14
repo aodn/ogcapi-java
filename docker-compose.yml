@@ -12,11 +12,9 @@ version: '3.1'
 
 services:
   ogcapi:
-    container_name: ogcapi-java
+    container_name: ${CONTAINER_NAME:-ogcapi-java} 
     build: .
-    image: 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/raymond/ogcapi-java
-    env_file:
-      - .env
+    image: ${IMAGE_ID:-615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/my-repository/test}
     environment:
       HOST: ${API_HOST:-http://localhost}
       PORT: ${API_CONTAINER_PORT:-8081}
