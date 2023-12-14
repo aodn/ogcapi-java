@@ -366,8 +366,11 @@ jobs:
           IMAGE_ID=${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
           echo "image=$IMAGE_ID" >> $GITHUB_OUTPUT
           
-          
       - name: Build Docker images
+        run: |
+          docker-compose -f docker-compose.yml build
+
+      - name: Push Docker images to ECR
         env:
           IMAGE_TAG: ${{ steps.create-image-id.outputs.image }}
           CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
@@ -375,15 +378,8 @@ jobs:
           HOST: ${{ vars.HOST }} 
           PORT: ${{ vars.PORT }} 
           ELASTIC_URL: ${{ vars.ELASTIC_URL }} 
-          ELASTIC_KEY: ${{ vars.ELASTIC_KEY }}  
+          ELASTIC_KEY: ${{ vars.ELASTIC_KEY }}
         run: |
-          docker-compose -f docker-compose.yml build
-
-      - name: Push Docker images to ECR
-        env:
-          ACCOUNT_ID: "704910415367.dkr.ecr.ap-southeast-2.amazonaws.com"
-        run: |
-          #aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}
           docker-compose -f docker-compose.yml push
 
       - name: Deploy to ECS Fargate
