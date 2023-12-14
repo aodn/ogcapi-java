@@ -377,10 +377,14 @@ jobs:
           sed -i 's|${ELASTIC_URL}|'${{ vars.ELASTIC_URL }}'|g' docker-compose.yml
           
       - name: Build Docker images
-        run: docker-compose -f docker-compose.yml build
+        run: |
+          docker-compose -f docker-compose.yml build
 
       - name: Push Docker images to ECR
+        env:
+          ACCOUNT_ID: "704910415367"
         run: |
+          aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}
           docker-compose -f docker-compose.yml push
 
       - name: Deploy to ECS Fargate
