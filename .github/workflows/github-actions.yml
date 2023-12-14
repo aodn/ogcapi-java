@@ -366,12 +366,10 @@ jobs:
           PORT: ${{ vars.PORT }} 
           ELASTIC_URL: ${{ vars.ELASTIC_URL }} 
           ELASTIC_KEY: ${{ vars.ELASTIC_KEY }}
-          IMAGE: ${{ steps.push-image.outputs.image }}
         run: |
-          IMAGE_ID=${{ env.ECR_REPOSITORY }}:${{ steps.push-image.outputs.image }}
+          IMAGE_ID=${{ env.ECR_REPOSITORY }}:$IMAGE_TAG
           echo $IMAGE_ID
           sed -i 's|${CONTAINER_NAME}|'${{ env.CONTAINER_NAME }}'|g' docker-compose.yml
-          sed -i 's/${GITHUB_ENV_IMAGE_TAG}/'"${GITHUB_ENV_IMAGE_TAG}"'/g' docker-compose.yml
           sed -i 's|${IMAGE_ID}|'$IMAGE_ID'|g' docker-compose.yml
           sed -i 's|${API_HOST}|'${{ vars.HOST }}'|g' docker-compose.yml
           sed -i 's|${API_CONTAINER_PORT}|'${{ vars.PORT }}'|g' docker-compose.yml
