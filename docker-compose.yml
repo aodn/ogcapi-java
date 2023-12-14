@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: myapp:latest
+    image: ogcapi:latest
     environment:
       HOST: ${API_HOST:-http://localhost}
       PORT: ${API_CONTAINER_PORT:-8081}
