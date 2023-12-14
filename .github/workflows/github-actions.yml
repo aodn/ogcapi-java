@@ -359,24 +359,23 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Replace Image Name
+        id: create-image-id
         env:
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
+        run: |
+          IMAGE_ID=${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
+          echo "image=$IMAGE_ID" >> $GITHUB_OUTPUT
+          
+          
+      - name: Build Docker images
+        env:
+          IMAGE_TAG: ${{ steps.create-image-id.outputs.image }}
+          CONTAINER_NAME: ${{ env.CONTAINER_NAME }}
           LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
           HOST: ${{ vars.HOST }} 
           PORT: ${{ vars.PORT }} 
           ELASTIC_URL: ${{ vars.ELASTIC_URL }} 
-          ELASTIC_KEY: ${{ vars.ELASTIC_KEY }}
-        run: |
-          IMAGE_ID=${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
-          echo "image: $IMAGE_ID"
-          sed -i 's|${CONTAINER_NAME}|'${{ env.CONTAINER_NAME }}'|g' docker-compose.yml
-          sed -i 's|${IMAGE_ID}|'${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}'|g' docker-compose.yml
-          sed -i 's|${API_HOST}|'${{ vars.HOST }}'|g' docker-compose.yml
-          sed -i 's|${API_CONTAINER_PORT}|'${{ vars.PORT }}'|g' docker-compose.yml
-          sed -i 's|${ELASTIC_KEY}|'${{ vars.ELASTIC_KEY }}'|g' docker-compose.yml
-          sed -i 's|${ELASTIC_URL}|'${{ vars.ELASTIC_URL }}'|g' docker-compose.yml
-          
-      - name: Build Docker images
+          ELASTIC_KEY: ${{ vars.ELASTIC_KEY }}  
         run: |
           docker-compose -f docker-compose.yml build
 
@@ -384,7 +383,7 @@ jobs:
         env:
           ACCOUNT_ID: "704910415367.dkr.ecr.ap-southeast-2.amazonaws.com"
         run: |
-          aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}
+          #aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}
           docker-compose -f docker-compose.yml push
 
       - name: Deploy to ECS Fargate
