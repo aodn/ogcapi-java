@@ -16,7 +16,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: ${IMAGE_ID:-615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/my-repository/test}
+    image: ${IMAGE_ID:-704910415367.dkr.ecr.ap-southeast-2.amazonaws.com/aodn-v2:5165-cicd-cfe415be-1702529706}
     environment:
       HOST: ${API_HOST:-http://localhost}
       PORT: ${API_CONTAINER_PORT:-8081}
