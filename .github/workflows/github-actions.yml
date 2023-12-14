@@ -370,7 +370,7 @@ jobs:
           IMAGE_ID=${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}
           echo "image: $IMAGE_ID"
           sed -i 's|${CONTAINER_NAME}|'${{ env.CONTAINER_NAME }}'|g' docker-compose.yml
-          sed -i 's|${IMAGE_ID}|'$IMAGE_ID'|g' docker-compose.yml
+          sed -i 's|${IMAGE_ID}|'${{ env.ECR_REPOSITORY }}:${{ env.IMAGE_TAG }}'|g' docker-compose.yml
           sed -i 's|${API_HOST}|'${{ vars.HOST }}'|g' docker-compose.yml
           sed -i 's|${API_CONTAINER_PORT}|'${{ vars.PORT }}'|g' docker-compose.yml
           sed -i 's|${ELASTIC_KEY}|'${{ vars.ELASTIC_KEY }}'|g' docker-compose.yml
