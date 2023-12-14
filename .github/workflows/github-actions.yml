@@ -382,7 +382,7 @@ jobs:
 
       - name: Push Docker images to ECR
         env:
-          ACCOUNT_ID: "704910415367"
+          ACCOUNT_ID: "704910415367.dkr.ecr.ap-southeast-2.amazonaws.com"
         run: |
           aws ecr get-login-password --region ap-southeast-2 | docker login --username AWS --password-stdin ${{ env.ACCOUNT_ID }}
           docker-compose -f docker-compose.yml push
