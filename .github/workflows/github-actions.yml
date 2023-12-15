@@ -211,6 +211,9 @@ jobs:
           #aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format maven
           #aws codeartifact login --tool pip --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
           
-          aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --output text
-
           aws codeartifact publish-package-version --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format generic --package $PACKAGE --asset-content $SOURCE_PATH --package-version $CA_VERSION --asset-name $PACKAGE --asset-sha256 $ASSET_SHA256 --namespace $CA_NAMESPACE  --output text
+
+          aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --output text
+
+          CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
+          echo $CURRENT_VERSION
