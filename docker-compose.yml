@@ -11,12 +11,12 @@ version: '3.1'
 # When running in dev env, you should uncomment build . instead of image from ECR
 
 services:
-  aodn-v2:
-    container_name: ${CONTAINER_NAME:-ogcapi-java} 
-    build:
-      context: .
-      dockerfile: Dockerfile
-    image: aodn-v2:latest
+  ogcapi:
+    container_name: ogcapi-java
+    build: .
+    image: 615645230945.dkr.ecr.ap-southeast-2.amazonaws.com/raymond/ogcapi-java
+    env_file:
+      - .env
     environment:
       HOST: ${API_HOST:-http://localhost}
       PORT: ${API_CONTAINER_PORT:-8081}
