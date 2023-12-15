@@ -232,11 +232,10 @@ jobs:
           
           CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $DOMAIN --domain-owner $DOMAIN_OWNER --query authorizationToken --output text --duration-seconds 900)
 
-          curl -X PUT \ 
-            -H "Content-Type: application/octet-stream" \
-            -H "Authorization: Bearer $CODEARTIFACT_AUTH_TOKEN" \
-            --upload-file $SOURCE_PATH \
-            $CA_URL
+          echo $CODEARTIFACT_AUTH_TOKEN
+          echo $SOURCE_PATH
+          echo $CA_URL
+          curl -X PUT -H "Content-Type: application/octet-stream" -H "Authorization: Bearer $CODEARTIFACT_AUTH_TOKEN" --upload-file $SOURCE_PATH $CA_URL
 
 
           
