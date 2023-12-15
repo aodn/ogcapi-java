@@ -220,6 +220,8 @@ jobs:
 
       - name: Publish JAR file to AWS CodeArtifact - maven
         id: ca-deploy-maven
+        env:
+          CODEARTIFACT_AUTH_TOKEN: ${{ steps.login-ecr.outputs.registry }}
         run: |
           DOMAIN="testmvp-io"
           CODE_ARTIFACT_REPO="java-maven-repo"
@@ -235,7 +237,7 @@ jobs:
           echo $CODEARTIFACT_AUTH_TOKEN
           echo $SOURCE_PATH
           echo $CA_URL
-          curl -X PUT -H "Content-Type: application/octet-stream" -H "Authorization: Bearer $CODEARTIFACT_AUTH_TOKEN" --upload-file $SOURCE_PATH $CA_URL
+          curl -X PUT -H "Content-Type: application/octet-stream" -H "Authorization: Bearer $AWS_SESSION_TOKEN" --upload-file $SOURCE_PATH $CA_URL
 
 
           
