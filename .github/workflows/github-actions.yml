@@ -222,6 +222,7 @@ jobs:
         id: ca-deploy-maven
         env:
           CODEARTIFACT_AUTH_TOKEN: ${{ steps.login-ecr.outputs.registry }}
+          AWS_SESSION_TOKEN: ${{ secrets.AWS_SESSION_TOKEN }}
         run: |
           DOMAIN="testmvp-io"
           CODE_ARTIFACT_REPO="java-maven-repo"
@@ -232,9 +233,8 @@ jobs:
           CA_NAMESPACE="ogcapi-maven"
           CA_URL="https://testmvp-io-704910415367.d.codeartifact.ap-southeast-2.amazonaws.com/java-maven-repo/ogcapi-maven/1.0-SNAPSHOT/server-java-1.0.0-SNAPSHOT-exec.jar"
           
-          CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $DOMAIN --domain-owner $DOMAIN_OWNER --query authorizationToken --output text --duration-seconds 900)
+          #CODEARTIFACT_AUTH_TOKEN=$(aws codeartifact get-authorization-token --domain $DOMAIN --domain-owner $DOMAIN_OWNER --query authorizationToken --output text --duration-seconds 900)
 
-          echo $CODEARTIFACT_AUTH_TOKEN
           echo $SOURCE_PATH
           echo $CA_URL
           curl -X PUT -H "Content-Type: application/octet-stream" -H "Authorization: Bearer $AWS_SESSION_TOKEN" --upload-file $SOURCE_PATH $CA_URL
