@@ -220,7 +220,7 @@ jobs:
           MINOR=${version_parts[1]}
           NEW_MINOR=$((MINOR + 1))
           if [ "$FLAG_INITIAL" == "true" ]; then
-            NEW_MINOR = "0"
+            NEW_MINOR="0"
           fi
           echo "latest_version=$MAJOR.$NEW_MINOR.${{ env.BUILD_ID }}" >> $GITHUB_OUTPUT
 
