@@ -6,7 +6,6 @@ variable "alb_parameter_name" {
 variable "app_container_name" {
   description = "The name of the primary application container"
   type        = string
-  default     = "ogcapi-java-container"
 }
 
 variable "app_name" {
@@ -17,7 +16,6 @@ variable "app_name" {
 variable "app_port" {
   description = "The port to the application container."
   type        = number
-  default     = 3456
 }
 
 variable "app_hostnames" {
