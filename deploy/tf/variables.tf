@@ -46,15 +46,15 @@ variable "ecr_repository" {
   type        = string
 }
 
+variable "ecr_tag" {
+  description = "The repo tag"
+  type        = string
+  default     = "latest"
+}
+
 variable "environment" {
   description = "Environment name to prepend/append to resource names"
   type        = string
-}
-
-variable "image" {
-  description = "The digest/tag of the docker image to pull from ECR"
-  type        = string
-  default     = "ogcapi:latest"
 }
 
 variable "memory" {

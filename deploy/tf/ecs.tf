@@ -5,11 +5,7 @@ locals {
   app_container_definition = {
     app = {
       name = var.app_container_name
-      image = (
-        startswith(var.image, "sha256") ?
-        "${var.ecr_registry}/${var.ecr_repository}@${var.image}" :
-        "${var.ecr_registry}/${var.ecr_repository}:${var.image}"
-      )
+      image = "${var.ecr_registry}/${var.ecr_repository}:${var.ecr_tag}"
       health_check = {
         command = ["CMD-SHELL", "uwsgi-is-ready --stats-socket /tmp/statsock > /dev/null 2>&1 || exit 1"]
       }
@@ -81,8 +77,8 @@ module "ecs" {
       # do not force a new deployment unless the image digest has changed
       force_new_deployment = false
 
-      # wait for service to reach steady state
-      wait_for_steady_state = true
+      # # wait for service to reach steady state
+      # wait_for_steady_state = true
 
       # Container definition(s)
       container_definitions = local.container_definitions
