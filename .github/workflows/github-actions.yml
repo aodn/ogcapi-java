@@ -205,19 +205,21 @@ jobs:
           CODE_ARTIFACT_REPO="java-maven-repo"
           PACKAGE="ogcapi"
           CA_NAMESPACE="ogcapi"
+          FLAG_INITIAL=false
           
           CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
           echo "current version: $CURRENT_VERSION"
           
           if [ "$CURRENT_VERSION" == "" ]; then
-            $CURRENT_VERSION = "1.0"
+            CURRENT_VERSION = "1.0"
+            FLAG_INITIAL=true
           fi
           IFS='.' read -ra version_parts <<< "$CURRENT_VERSION"
           MAJOR=${version_parts[0]}
           MINOR=${version_parts[1]}
           NEW_MINOR=$((MINOR + 1))
-          if [ "$CURRENT_VERSION" == "" ]; then
-            $NEW_MINOR = "0"
+          if [ "$FLAG_INITIAL" == "true" ]; then
+            NEW_MINOR = "0"
           fi
           echo "latest_version=$MAJOR.$NEW_MINOR.${{ env.BUILD_ID }}" >> $GITHUB_OUTPUT
 
