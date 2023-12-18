@@ -212,13 +212,14 @@ jobs:
           if [ "$CURRENT_VERSION" == "" ]; then
             $CURRENT_VERSION = "1.0"
           fi
-
           IFS='.' read -ra version_parts <<< "$CURRENT_VERSION"
           MAJOR=${version_parts[0]}
           MINOR=${version_parts[1]}
           NEW_MINOR=$((MINOR + 1))
+          if [ "$CURRENT_VERSION" == "" ]; then
+            $NEW_MINOR = "0"
+          fi
           echo "latest_version=$MAJOR.$NEW_MINOR.${{ env.BUILD_ID }}" >> $GITHUB_OUTPUT
-
 
       - name: Publish JAR file - AWS CodeArtifact
         id: ca-deploy
