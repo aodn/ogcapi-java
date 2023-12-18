@@ -1,2 +1,4 @@
-allowed_hosts: "*"
-allowed_cidr_nets: "0.0.0.0/0"
+HOST: http://localhost
+PORT: 8081
+ELASTIC_KEY: U3lLRDlZc0J1S0QtWFFCaXd1SnI6ektlOU5fNTNRcHVBZlpJMHVRWTlmUQ==
+ELASTIC_URL: https://dev-discovery-index.es.ap-southeast-2.aws.found.io
