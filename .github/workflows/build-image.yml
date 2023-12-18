@@ -1,4 +1,4 @@
-name: Build Image cicd
+name: Build Image MVP cicd
 
 on:
   push:
