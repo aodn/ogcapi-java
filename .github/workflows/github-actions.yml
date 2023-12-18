@@ -196,76 +196,48 @@ jobs:
       #         echo "Deployment successfull."
       #       fi
 
-      - name: Publish JAR file to AWS CodeArtifact
+      - name: Get and calculate latest package version - AWS CodeArtifact
+        id: ca-getversion
+        env:
+          BUILD_ID: ${{ steps.prep.outputs.BUILD_ID }}
+        run: |
+          DOMAIN="testmvp-io"
+          CODE_ARTIFACT_REPO="java-maven-repo"
+          PACKAGE="ogcapi"
+          CA_NAMESPACE="ogcapi"
+          
+          CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
+          echo "current version: $CURRENT_VERSION"
+          
+          if [ "$CURRENT_VERSION" == "" ]; then
+            $CURRENT_VERSION = "1.0"
+          fi
+
+          IFS='.' read -ra version_parts <<< "$CURRENT_VERSION"
+          MAJOR=${version_parts[0]}
+          MINOR=${version_parts[1]}
+          NEW_MINOR=$((MINOR + 1))
+          echo "latest_version=$MAJOR.$NEW_MINOR.${{ env.BUILD_ID }}" >> $GITHUB_OUTPUT
+
+
+      - name: Publish JAR file - AWS CodeArtifact
         id: ca-deploy
+        env:
+          CA_VERSION: ${{ steps.ca-getversion.outputs.latest_version }}
         run: |
           DOMAIN="testmvp-io"
           DOMAIN_OWNER="704910415367"
           CODE_ARTIFACT_REPO="java-maven-repo"
           PACKAGE="ogcapi"
           SOURCE_PATH="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar"
-          CA_VERSION="1.0.7"
           CA_NAMESPACE="ogcapi"
           export ASSET_SHA256=$(sha256sum ./server/target/server-java-1.0.0-SNAPSHOT-exec.jar | awk '{print $1;}')
 
-          #aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format maven
-          #aws codeartifact login --tool pip --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
-          
-          aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --output text
-
-          CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
-          echo "current version: $CURRENT_VERSION" 
-
-          aws codeartifact publish-package-version --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format generic --package $PACKAGE --asset-content $SOURCE_PATH --package-version $CA_VERSION --asset-name $PACKAGE --asset-sha256 $ASSET_SHA256 --namespace $CA_NAMESPACE  --output text
+          aws codeartifact publish-package-version --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format generic --package $PACKAGE --asset-content $SOURCE_PATH --package-version ${{ env.CA_VERSION }} --asset-name $PACKAGE --asset-sha256 $ASSET_SHA256 --namespace $CA_NAMESPACE  --output text
 
           
 
-      - name: Retrive JAR file from AWS CodeArtifact
-        id: ca-retrive
-        run: |
-          DOMAIN="testmvp-io"
-          CODE_ARTIFACT_REPO="java-maven-repo"
-          PACKAGE="ogcapi"
-          SOURCE_PATH="./server/target/server-java-1.0.0-SNAPSHOT-exec.jar"
-          CA_NAMESPACE="ogcapi"
-          DOWNLOAD_PATH="./server/target/DOWNLOADED-FILE-1.0.0-SNAPSHOT-exec.jar"
-          
-          aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --output text
-
-          CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
-          echo "current version: $CURRENT_VERSION" 
-
-          aws codeartifact get-package-version-asset \
-          --domain $DOMAIN \
-          --repository $CODE_ARTIFACT_REPO \
-          --format generic \
-          --package $PACKAGE \
-          --namespace $CA_NAMESPACE \
-          --package-version $CURRENT_VERSION \
-          --asset $PACKAGE \
-          $DOWNLOAD_PATH
-
-      - name: Re-Publish JAR file to AWS CodeArtifact
-        id: ca-redeploy
-        run: |
-          DOMAIN="testmvp-io"
-          DOMAIN_OWNER="704910415367"
-          CODE_ARTIFACT_REPO="java-maven-repo"
-          PACKAGE="ogcapi"
-          SOURCE_PATH="./server/target/DOWNLOADED-FILE-1.0.0-SNAPSHOT-exec.jar"
-          CA_VERSION="1.0.8"
-          CA_NAMESPACE="ogcapi"
-          export ASSET_SHA256=$(sha256sum ./server/target/server-java-1.0.0-SNAPSHOT-exec.jar | awk '{print $1;}')
-
-          #aws codeartifact get-repository-endpoint --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format maven
-          #aws codeartifact login --tool pip --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --region ${{ env.AWS_REGION }}
-          
-          aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --output text
-
-          CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
-          echo "current version: $CURRENT_VERSION" 
-
-          aws codeartifact publish-package-version --repository $CODE_ARTIFACT_REPO --domain $DOMAIN --domain-owner $DOMAIN_OWNER --format generic --package $PACKAGE --asset-content $SOURCE_PATH --package-version $CA_VERSION --asset-name $PACKAGE --asset-sha256 $ASSET_SHA256 --namespace $CA_NAMESPACE  --output text
+      
 
       
 
