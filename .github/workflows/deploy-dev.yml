@@ -6,6 +6,9 @@ on:
   #     - mvp-cicd
   workflow_dispatch:
 
+env:
+  TURNIP: Edible tuba
+
 permissions:
   id-token: write
   contents: read
@@ -63,7 +66,7 @@ jobs:
           TF_INPUT: 0
           TF_IN_AUTOMATION: true
           # get the image digest from the build job with optional override from vars context
-          TF_VAR_image: ${{ vars.IMAGE || needs.build_push.outputs.image_digest }}
+          TF_VAR_image: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:latest
 
       - name: Terragrunt Apply
         id: terragrunt_apply
@@ -73,4 +76,4 @@ jobs:
           TF_INPUT: 0
           TF_IN_AUTOMATION: true
           # get the image digest from the build job with optional override from vars context
-          TF_VAR_image: ${{ vars.IMAGE || needs.build_push.outputs.image_digest }}
+          TF_VAR_image: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:latest
