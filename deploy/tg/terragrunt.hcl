@@ -18,6 +18,9 @@ inputs = {
 
   ecr_registry   = get_env("ECR_REGISTRY")
   ecr_repository = get_env("ECR_REPOSITORY")
+
+  app_container_name = get_env("APP_CONTAINER_NAME")
+  app_port  = get_env("APP_PORT")
 }
 
 locals {
