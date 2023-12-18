@@ -210,7 +210,7 @@ jobs:
           CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $DOMAIN --repository $CODE_ARTIFACT_REPO --format generic --package $PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
           echo "current version: $CURRENT_VERSION"
           
-          if [ -z "$CURRENT_VERSION" ]; then
+          if [ "$CURRENT_VERSION" == "null"]; then
             echo CURRENT_VERSION = "1.0"
             echo FLAG_INITIAL=true
           fi
