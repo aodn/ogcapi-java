@@ -1,9 +1,9 @@
 name: Build Image MVP cicd
 
 on:
-  push:
-    branches:
-      - mvp-cicd
+  # push:
+  #   branches:
+  #     - mvp-cicd
   workflow_dispatch:
 
 permissions:
