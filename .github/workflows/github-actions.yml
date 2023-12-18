@@ -212,7 +212,7 @@ jobs:
           
           if [ "$CURRENT_VERSION" == "null" ]; then
             echo "inside if condition null check"
-            CURRENT_VERSION = "1.0.0"
+            CURRENT_VERSION= "1.0.0"
             FLAG_INITIAL=true
           fi
           IFS='.' read -ra version_parts <<< "$CURRENT_VERSION"
