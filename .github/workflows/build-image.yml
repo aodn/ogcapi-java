@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Checkout Repo ogcapi
         uses: actions/checkout@v4
+        with:
+          ref: mvp-cicd
 
       - name: Set up QEMU Cross Platform Support
         uses: docker/setup-qemu-action@v3
