@@ -54,7 +54,7 @@ jobs:
           # Replace '--path' with your specific path from Parameter Store
           parameters=$(aws ssm get-parameters-by-path --path "/core/ogcapi/dev_ecr_ecs_config/" --recursive --query 'Parameters[*].[Name,Value]' --output json)
           echo "$parameters" > parameters.json
-          echo "parameters_json=$parameters"  >> $GITHUB_OUTPUT
+          echo "parameters_json=$(parameters.json)"  >> $GITHUB_OUTPUT
       
       - name: Process Parameters - ssm parameter store
         run: |
