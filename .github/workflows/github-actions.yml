@@ -4,9 +4,9 @@ name: Connect to an AWS role from a GitHub repository
 # Controls when the action will run. Invokes the workflow on push events but only for the main branch
 on:
   push:
-    branches: [main, 5165-cicd]
+    branches: [5165-cicd]
   pull_request:
-    branches: [main, 5165-cicd]
+    branches: [5165-cicd]
 
 env:
   ENVIRONMENT: development
@@ -215,7 +215,7 @@ jobs:
           CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $CA_DOMAIN --repository $CA_REPO --format generic --package $CA_PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
           echo "current version: $CURRENT_VERSION"
           
-          if [ "$CURRENT_VERSION" == "null" ]; then
+          if [ -z "$CURRENT_VERSION" ]; then
             CURRENT_VERSION="1.0.0"
             FLAG_INITIAL=true
           fi
