@@ -54,7 +54,7 @@ jobs:
           # Replace '--path' with your specific path from Parameter Store
           parameters=$(aws ssm get-parameters-by-path --path "/core/ogcapi/dev_ecr_ecs_config/" --recursive --query 'Parameters[*].[Name,Value]' --output json)
           echo "$parameters" > parameters.json
-          echo "parameters_json::$parameters" >> $GITHUB_OUTPUT
+          echo "parameters_json=$parameters"  >> $GITHUB_OUTPUT
       
       - name: Process Parameters - ssm parameter store
         run: |
@@ -112,9 +112,9 @@ jobs:
             BUILD_ID=${GITHUB_REF/refs\/tags\//}
             LATEST_ID=latest
           fi
-          echo BUILD_DATE::$(date -u +'%Y-%m-%dT%H:%M:%SZ') >> $GITHUB_OUTPUT 
-          echo BUILD_ID::${BUILD_ID} >> $GITHUB_OUTPUT
-          echo LATEST_ID::${LATEST_ID} >> $GITHUB_OUTPUT
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "BUILD_ID=${BUILD_ID}"
+          echo "LATEST_ID=${LATEST_ID}" >> $GITHUB_OUTPUT
 
       - name: Checkout
         uses: actions/checkout@v3
