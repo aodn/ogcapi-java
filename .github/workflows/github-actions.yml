@@ -53,8 +53,7 @@ jobs:
         run: |
           # Replace '--path' with your specific path from Parameter Store
           parameters=$(aws ssm get-parameters-by-path --path "/core/ogcapi/dev_ecr_ecs_config/" --recursive --query 'Parameters[*].[Name,Value]' --output json)
-          echo "$parameters" > parameters.json
-          echo "parameters_json=$(parameters.json)"  >> $GITHUB_OUTPUT
+          echo "$parameters" > parameters.json >> $GITHUB_OUTPUT
       
       - name: Process Parameters - ssm parameter store
         run: |
@@ -113,8 +112,8 @@ jobs:
             LATEST_ID=latest
           fi
           echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-          echo "BUILD_ID=${BUILD_ID}"
-          echo "LATEST_ID=${LATEST_ID}" >> $GITHUB_OUTPUT
+          echo "LATEST_ID=${LATEST_ID}"
+          echo "BUILD_ID=${BUILD_ID}" >> $GITHUB_OUTPUT
 
       - name: Checkout
         uses: actions/checkout@v3
@@ -138,8 +137,7 @@ jobs:
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
-          LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
+          IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}}
         run: |
           # build a docker container to be deployed to ecr-ecs.
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
@@ -161,7 +159,6 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
-          LATEST_ID: ${{ steps.prep.outputs.LATEST_ID }}
         run: |
           # push image to aws ecr
           docker push $ECR_REPOSITORY:$IMAGE_TAG
