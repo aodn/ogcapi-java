@@ -47,6 +47,7 @@ if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecr_repo" ]; then
               echo "ECR_REPOSITORY=$value" >> "$GITHUB_ENV"
 fi 
 ```
+
 #### Prepare Build Id
 - This step in github pipeline will generate build id for any changes to the repo.
 - Build Id format: `${BRANCH}-${REVISION}-${TS} - Branch-Revision-Timestamp`
@@ -100,6 +101,9 @@ fi
 ```
 
 #### Perform security scans
+- This step will run vulnerability scanning for docker image, `severity` can be configured to `LOW,HIGH,CRITICAL`
+- `continue-on-error` set to `true` will continue the workflow if any erros are found in the scan results
+
 ```yml
 - name: Run Trivy vulnerability scanner in docker mode
         uses: aquasecurity/trivy-action@master
@@ -125,6 +129,7 @@ fi
           docker push $ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 ```
+
 #### Fill new image id in ECS task def
 
 ```yml
@@ -155,6 +160,7 @@ fi
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
 ```
+
 #### Check if deployment was successful
 ```yml
 - name: Check if deployment was successful
@@ -173,6 +179,7 @@ fi
               echo "Deployment successfull."
             fi
 ```
+
 #### AWS CodeArtifact package versioning
 - Before deploying to aws codeartifact get the latest version of the package if package already exists.
 
@@ -229,3 +236,6 @@ fi
           --namespace $CA_NAMESPACE  \
           --output text
 ```
+
+#### Cancel the workflow
+- To cancel/stop the current running workflow. Got Github `Actions`, select your `workflow` and click `Cancel workflow`  
