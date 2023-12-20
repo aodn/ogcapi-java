@@ -238,4 +238,4 @@ fi
 ```
 
 #### Cancel the workflow
-- To cancel/stop the current running workflow. Got Github `Actions`, select your `workflow` and click `Cancel workflow`  
+- To cancel/stop the current running workflow. Go to Github `Actions`, select your `workflow` and click `Cancel workflow`  
