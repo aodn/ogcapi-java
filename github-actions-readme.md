@@ -1,106 +1,58 @@
-# This is a basic workflow to help you get started with Actions
-name: Connect to an AWS role from a GitHub repository
+### AWS ECR-ECS Deploy 
+Github actions workflow to build and deploy an application to AWS ECR-ECS and then publish artifact to AWS CodeArtifact.
 
-# Controls when the action will run. Invokes the workflow on push events but only for the main branch
+#### Setup github branch
+- Configure github branch for push or pull_request.
+
+```yml
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+```
 
+#### Set up environment variables 
+- Defining platform specific env vars, as the actual values for the below vars will be fetched from parameter store.
+
+```yml
 env:
-  ENVIRONMENT: development
-  ECR_REPOSITORY: test # set this to your Amazon ECR repository name
+  ECR_REPOSITORY: testrepo # set this to your Amazon ECR repository name
   ECS_SERVICE: ogcapi-java-service # set this to your Amazon ECS service name
   ECS_CLUSTER: aodn-imos-v2 # set this to your Amazon ECS cluster name
-  ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json #MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
-  CONTAINER_NAME: aodn-dev-container # set this to the name of the container in the
-  CA_DOMAIN: test
-  CA_DOMAIN_OWNER: test
-  CA_REPO: test
-  CA_PACKAGE: test
-  CA_NAMESPACE: test
-  
-             
-# Permission can be added at job level or workflow level
-permissions:
-  id-token: write   # This is required for requesting the JWT
-  contents: read    # This is required for actions/checkout
+  ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json # set this to the path to your Amazon ECS task definition
+  CONTAINER_NAME: aodn-dev-container # set this to the name of the container in the task definition
+  CA_DOMAIN: testdomainname # set this with aws code artifact domain name
+  CA_DOMAIN_OWNER: testdomainowner # set this with aws code artifact domain owner
+  CA_REPO: testcarepo # set this with aws code artifact repo name
+  CA_PACKAGE: testpackage # set this with aws code artifact package name
+  CA_NAMESPACE: testnamespace # set this with aws code artifact namespace
+```
 
-jobs:
-  AWS-ECR-ECS-Deploy:
-    runs-on: ubuntu-latest
-    environment: development
-    steps:
-      - name: Git clone the repository
-        uses: actions/checkout@v3
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: ${{ vars.ROLE_ARN }}
-          role-session-name: GitHub_to_AWS_via_FederatedOIDC
-          aws-region: ${{ vars.AWS_REGION }}
-      # Hello from AWS: WhoAmI
-      - name: Sts GetCallerIdentity
-        run: |
-          aws sts get-caller-identity
+#### AWS ssm parameter store 
+- Fetch environment parameters(key & vaule pairs) from aws ssm parameter store 
 
-      - name: Install jq
-        run: sudo apt-get update && sudo apt-get install -y jq
-  
-      - name: Retrieve Parameters - ssm parameter store
+```yml
+- name: Retrieve Parameters - ssm parameter store
         id: getParameters
         run: |
-          # Replace '--path' with your specific path from Parameter Store
-          parameters=$(aws ssm get-parameters-by-path --path "/core/ogcapi/dev_ecr_ecs_config/" --recursive --query 'Parameters[*].[Name,Value]' --output json)
+          # Replace '<path to parameter store>' with your specific path from Parameter Store
+          parameters=$(aws ssm get-parameters-by-path --path <path to parameter store> --recursive --query 'Parameters[*].[Name,Value]' --output json)
           echo "$parameters" > parameters.json
           echo "::set-output name=parameters_json::$parameters"
-      
-      - name: Process Parameters - ssm parameter store
-        run: |
-          parameters=$(cat parameters.json)
-          # Loop through the JSON array of parameters using jq
-          for row in $(echo "${parameters}" | jq -r '.[] | @base64'); do
-            _jq() {
-              echo "${row}" | base64 --decode | jq -r "${1}"
-            }
-            name=$(_jq '.[0]')
-            value=$(_jq '.[1]')
-
-            echo "Name: $name, Value: $value"
-
-            # Perform actions using parameter values here
-            # For example, set environment variables
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecr_repo" ]; then
+```
+- Once all the parameters are pulled, perform and process through jquery as key/value pairs overriding env vars.
+```yml
+if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecr_repo" ]; then
               echo "ECR_REPOSITORY=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_cluster" ]; then
-              echo "ECS_CLUSTER=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_service" ]; then
-              echo "ECS_SERVICE=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/container_name" ]; then
-              echo "CONTAINER_NAME=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain" ]; then
-              echo "CA_DOMAIN=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain_owner" ]; then
-              echo "CA_DOMAIN_OWNER=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_repo" ]; then
-              echo "CA_REPO=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_package" ]; then
-              echo "CA_PACKAGE=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_namespace" ]; then
-              echo "CA_NAMESPACE=$value" >> "$GITHUB_ENV"
-            fi
-          done
+fi 
+```
+#### Prepare Build Id
+- This step in github pipeline will generate build id for any changes to the repo.
+- Build Id format: `${BRANCH}-${REVISION}-${TS} - Branch-Revision-Timestamp`
 
-      - name: Prepare Build-ID  
+```yml
+- name: Prepare Build-ID  
         id: prep
         run: |
           BRANCH=${GITHUB_REF##*/}
@@ -115,26 +67,28 @@ jobs:
           echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
           echo "LATEST_ID=$LATEST_ID"
           echo "BUILD_ID=$BUILD_ID" >> $GITHUB_OUTPUT
+```
 
-      - name: Checkout
-        uses: actions/checkout@v3
-      
-      - name: Set up JDK 17
+#### Set up JDK 17
+```yml
+- name: Set up JDK 17
         uses: actions/setup-java@v3
         with:
           distribution: 'temurin'
           java-version: '17'
           cache: 'maven'
-          
-      - name: Build with Maven
+```
+
+#### Build with maven
+```yml
+- name: Build with Maven
         run: |
           mvn -B package --file pom.xml
-             
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+```
 
-      - name: Build and tag image
+#### Build docker image 
+```yml
+- name: Build and tag image
         id: build-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -143,8 +97,11 @@ jobs:
           # build a docker container to be deployed to ecr-ecs.
           docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+```
 
-      - name: Run Trivy vulnerability scanner in docker mode
+#### Perform security scans
+```yml
+- name: Run Trivy vulnerability scanner in docker mode
         uses: aquasecurity/trivy-action@master
         with:
             image-ref: ${{ steps.build-image.outputs.image }}
@@ -154,8 +111,11 @@ jobs:
             exit-code: 1
             ignore-unfixed: true
         continue-on-error: true
+```
 
-      - name: Push image to Amazon ECR
+#### Push image to ECR 
+```yml
+- name: Push image to Amazon ECR
         id: push-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
@@ -164,8 +124,11 @@ jobs:
           # push image to aws ecr
           docker push $ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+```
+#### Fill new image id in ECS task def
 
-      - name: Fill in the new image ID in the Amazon ECS task definition
+```yml
+- name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
@@ -179,8 +142,11 @@ jobs:
             ELASTIC_URL=${{ vars.ELASTIC_URL }} 
             ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
+```
 
-      - name: Deploy Amazon ECS task definition
+#### Deploy ECS task definitions
+```yml
+- name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         id: ecs-deploy
         with:
@@ -188,8 +154,10 @@ jobs:
           service: ${{ env.ECS_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
-
-      - name: Check if deployment was successful
+```
+#### Check if deployment was successful
+```yml
+- name: Check if deployment was successful
         id: check-deployment
         run: |
             CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
@@ -204,8 +172,12 @@ jobs:
             else
               echo "Deployment successfull."
             fi
+```
+#### AWS CodeArtifact package versioning
+- Before deploying to aws codeartifact get the latest version of the package if package already exists.
 
-      - name: Get and calculate latest package version - AWS CodeArtifact
+```yml
+- name: Get and calculate latest package version - AWS CodeArtifact
         id: ca-getversion
         env:
           BUILD_ID: ${{ steps.prep.outputs.BUILD_ID }}
@@ -230,8 +202,13 @@ jobs:
           #version format[major.minor.build_number] 
           #build_number format{BRANCH}-${REVISION}-${TS}
           echo "latest_version=$MAJOR.$NEW_MINOR.${{ env.BUILD_ID }}" >> $GITHUB_OUTPUT
+```
 
-      - name: Publish JAR file - AWS CodeArtifact
+#### AWS CodeArtifact publishing
+- Publish JAR file to aws codeartifact
+
+```yml
+- name: Publish JAR file - AWS CodeArtifact
         id: ca-deploy
         env:
           CA_VERSION: ${{ steps.ca-getversion.outputs.latest_version }}
@@ -251,3 +228,4 @@ jobs:
           --asset-sha256 $ASSET_SHA256 \
           --namespace $CA_NAMESPACE  \
           --output text
+```
