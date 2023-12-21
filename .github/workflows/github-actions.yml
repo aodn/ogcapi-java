@@ -141,10 +141,9 @@ jobs:
           ecr_repo="aodn-v2"
           test=$(aws ecr describe-images --repository-name $ecr_repo)
           echo $test 
-          image_tag=$(aws ecr describe-images \
-            --repository-name $ecr_repo \
-            --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]')
-          echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
+          latest_image=$(aws ecr describe-images --repository-name $ecr_repo --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' --output text)
+          echo "Latest Image Tag: $latest_image"
+          echo "latest_image=$latest_image" >> $GITHUB_OUTPUT
 
       # - name: Build and tag image
       #   id: build-image
