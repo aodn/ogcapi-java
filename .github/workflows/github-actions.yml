@@ -143,7 +143,7 @@ jobs:
           echo $test 
           image_tag=$(aws ecr describe-images \
             --repository-name $ecr_repo \
-            --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' --output text)
+            --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]')
           echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
 
       # - name: Build and tag image
