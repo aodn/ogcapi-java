@@ -139,7 +139,8 @@ jobs:
         id: get_tagged_image
         run: |
           ecr_repo="aodn-v2"
-          echo aws ecr describe-images --repository-name $ecr_repo 
+          test=(aws ecr describe-images --repository-name $ecr_repo)
+          echo $test 
           image_tag=$(aws ecr describe-images \
             --repository-name $ecr_repo \
             --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' --output text)
