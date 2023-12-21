@@ -100,66 +100,32 @@ jobs:
             fi
           done
 
-      # - name: Prepare Build-ID  
-      #   id: prep
-      #   run: |
-      #     BRANCH=${GITHUB_REF##*/}
-      #     TS=$(date +%s)
-      #     REVISION=${GITHUB_SHA::8}
-      #     BUILD_ID="${BRANCH}-${REVISION}-${TS}"
-      #     LATEST_ID=canary
-      #     if [[ $GITHUB_REF == refs/tags/* ]]; then
-      #       BUILD_ID=${GITHUB_REF/refs\/tags\//}
-      #       LATEST_ID=latest
-      #     fi
-      #     echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
-      #     echo "LATEST_ID=$LATEST_ID"
-      #     echo "BUILD_ID=$BUILD_ID" >> $GITHUB_OUTPUT
-
-      - name: Prepare Build-ID
+      - name: Prepare Build-ID  
         id: prep
         run: |
-          tag=${{ github.ref_name }}
-          echo "BUILD_ID=${tag//\v/}" >> $GITHUB_OUTPUT
-
-      - name: Display tag
-        run: |
-          echo "Tag: ${{ github.ref }}"
-
-           # Add build steps or commands specific to your project
-
-      - name: Use GITHUB_TOKEN
-        run: |
-          echo "Using GITHUB_TOKEN: $GITHUB_TOKEN"
-
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "v1.0.0"
-          release_name: "Release v1.0.0"
-          body: |
-            Changes in this Release
-            - First Change
-          draft: false
-          prerelease: false
-
-      - name: Build and Tag Release
-        id: tag_release
-        run: |
+          BRANCH=${GITHUB_REF##*/}
+          TS=$(date +%s)
+          REVISION=${GITHUB_SHA::8}
+          BUILD_ID="${BRANCH}-${REVISION}-${TS}"
+          LATEST_ID=canary
           if [[ $GITHUB_REF == refs/tags/* ]]; then
-            # Extract the tag name
-            TAG_NAME=${GITHUB_REF#refs/tags/}
-            echo "Tag name: $TAG_NAME"
-
-            # Use the tag name for further processing (e.g., set version numbers, create artifacts, etc.)
-            # For example, setting environment variables or updating configuration files.
-            echo "VERSION=$TAG_NAME" >> $GITHUB_OUTPUT
-          else
-            echo "Not a tag push. Skipping..."
+            BUILD_ID=${GITHUB_REF/refs\/tags\//}
+            LATEST_ID=latest
           fi
+          echo "BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+          echo "LATEST_ID=$LATEST_ID"
+          echo "BUILD_ID=$BUILD_ID" >> $GITHUB_OUTPUT
+
+      # For manually triggered runs, grab the image digest from the already built image
+      - name: Get latest tag for ECR Image
+        id: get_tagged_image
+        run: |
+          tagtest="5195-cicd-aa5003d0-1703122950"
+          image_tag=$(aws ecr describe-images \
+            --repository-name ${{ vars.ECR_REPOSITORY }} \
+            --image-ids imageTag=$tagtest \
+            | jq -r '.imageDetails[].imageDigest')
+          echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
 
       # - name: Checkout
       #   uses: actions/checkout@v3
