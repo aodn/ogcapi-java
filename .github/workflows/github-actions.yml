@@ -122,9 +122,26 @@ jobs:
           tag=${{ github.ref_name }}
           echo "BUILD_ID=${tag//\v/}" >> $GITHUB_OUTPUT
 
-      - name: Get current version
-        id: get_version
-        run: echo ::set-output name=version::$(git describe --abbrev=0 --tags)
+      - name: Display tag
+        run: |
+          echo "Tag: ${{ github.ref }}"
+
+           # Add build steps or commands specific to your project
+
+      - name: Build and Tag Release
+        id: tag_release
+        run: |
+          if [[ $GITHUB_REF == refs/tags/* ]]; then
+            # Extract the tag name
+            TAG_NAME=${GITHUB_REF#refs/tags/}
+            echo "Tag name: $TAG_NAME"
+
+            # Use the tag name for further processing (e.g., set version numbers, create artifacts, etc.)
+            # For example, setting environment variables or updating configuration files.
+            echo "VERSION=$TAG_NAME" >> $GITHUB_OUTPUT
+          else
+            echo "Not a tag push. Skipping..."
+          fi
 
       # - name: Checkout
       #   uses: actions/checkout@v3
