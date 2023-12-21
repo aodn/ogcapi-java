@@ -128,9 +128,15 @@ jobs:
 
            # Add build steps or commands specific to your project
 
+      - name: Use GITHUB_TOKEN
+        run: |
+          echo "Using GITHUB_TOKEN: $GITHUB_TOKEN"
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           tag_name: "v1.0.0"
           release_name: "Release v1.0.0"
