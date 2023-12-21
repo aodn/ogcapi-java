@@ -120,11 +120,9 @@ jobs:
       - name: Get latest tag for ECR Image
         id: get_tagged_image
         run: |
-          tagtest="5195-cicd-aa5003d0-1703122950"
           image_tag=$(aws ecr describe-images \
-            --repository-name ${{ vars.ECR_REPOSITORY }} \
-            --image-ids imageTag=$tagtest \
-            | jq -r '.imageDetails[].imageDigest')
+            --repository-name ${{ env.ECR_REPOSITORY }} \
+            --query 'sort_by(imageDetails,& imagePushedAt)[-1].imageTags[0]' --output text)
           echo "image_tag=$image_tag" >> $GITHUB_OUTPUT
 
       # - name: Checkout
