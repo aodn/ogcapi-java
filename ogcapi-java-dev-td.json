@@ -13,28 +13,7 @@
                 }
             ],
             "essential": true,
-            "environment": [
-                {
-                    "name": "ELASTIC_URL",
-                    "value": "<ELASTIC_URL>"
-                },
-                {
-                    "name": "ELASTIC_KEY",
-                    "value": "<ELASTIC_KEY>"
-                },
-                {
-                    "name": "HOST",
-                    "value": "<HOST>"
-                },
-                {
-                    "name": "ENVIRONMENT",
-                    "value": "<ENVIRONMENT>"
-                },
-                {
-                    "name": "PORT",
-                    "value": "<PORT>"
-                }
-            ],
+            "environment": [],
             "environmentFiles": [],
             "mountPoints": [],
             "volumesFrom": [],
