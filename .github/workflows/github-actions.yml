@@ -167,6 +167,12 @@ jobs:
           docker push $ECR_REPOSITORY:$IMAGE_TAG
           echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
+      - name: Add secrets to Task Definition
+        run: |
+          sed -i "s/<ELASTIC_KEY>/$SEC_ARN/g" ./ogcapi-java-dev-td.json
+        env:
+          SEC_ARN: ${{secrets.ELASTIC_KEY}}
+
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
@@ -179,7 +185,6 @@ jobs:
             HOST=${{ vars.HOST }} 
             PORT=${{ vars.PORT }} 
             ELASTIC_URL=${{ vars.ELASTIC_URL }} 
-            ELASTIC_KEY=${{ secrets.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
