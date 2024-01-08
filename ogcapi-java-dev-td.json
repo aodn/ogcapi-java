@@ -13,14 +13,14 @@
                 }
             ],
             "essential": true,
-            "secrets": [{
-                "name": "ELASTIC_KEY",
-                "valueFrom": "<ELASTIC_KEY>"
-              }],
             "environment": [
                 {
                     "name": "ELASTIC_URL",
                     "value": "<ELASTIC_URL>"
+                },
+                {
+                    "name": "ELASTIC_KEY",
+                    "valueFrom": "<ELASTIC_KEY>"
                 },
                 {
                     "name": "HOST",
