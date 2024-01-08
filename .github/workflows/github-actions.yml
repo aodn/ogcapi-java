@@ -37,7 +37,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.ROLE_ARN }}
+          role-to-assume: ${{ secrets.ROLE_ARN }}
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ vars.AWS_REGION }}
       # Hello from AWS: WhoAmI
@@ -134,6 +134,8 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+        
+
       - name: Build and tag image
         id: build-image
         env:
@@ -177,7 +179,7 @@ jobs:
             HOST=${{ vars.HOST }} 
             PORT=${{ vars.PORT }} 
             ELASTIC_URL=${{ vars.ELASTIC_URL }} 
-            ELASTIC_KEY=${{ vars.ELASTIC_KEY }}
+            ELASTIC_KEY=${{ secrets.ELASTIC_KEY }}
             IMAGE=${{ steps.push-image.outputs.image }}
 
       - name: Deploy Amazon ECS task definition
