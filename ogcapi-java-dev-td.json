@@ -20,7 +20,7 @@
                 },
                 {
                     "name": "ELASTIC_KEY",
-                    "valueFrom": "<ELASTIC_KEY>"
+                    "value": "<ELASTIC_KEY>"
                 },
                 {
                     "name": "HOST",
