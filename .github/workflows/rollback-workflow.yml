@@ -1,10 +1,10 @@
-name: Rollback to Stable Version
+name: Rollback to particular version - Manual Trigger
 
 on:
   workflow_dispatch:  # Manual trigger for rollback
     inputs:
       target_commit:
-        description: 'Git commit to rollback to'
+        description: 'Stable Version Image Id'
         required: true
 
 jobs:
@@ -15,11 +15,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Reset to specific commit
-        run: git reset --hard ${{ github.event.inputs.target_commit }}
-        # Replace 'target_commit' with the commit hash you want to rollback to
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ env.CONTAINER_NAME }}
+          image: ${{ steps.push-image.outputs.image }}
+          environment-variables: |
+            ENVIRONMENT=${{ env.ENVIRONMENT }}
+            HOST=${{ vars.HOST }} 
+            PORT=${{ vars.PORT }} 
+            ELASTIC_URL=${{ vars.ELASTIC_URL }}
+            ELASTIC_KEY=${{ secrets.ELASTIC_KEY }} 
+            IMAGE=${{ steps.push-image.outputs.image }}
 
-      - name: Push changes
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        id: ecs-deploy
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ env.ECS_SERVICE }}
+          cluster: ${{ env.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Check if deployment was successful
+        id: check-deployment
         run: |
-          git push --force origin 5195-cicd  # Replace 'main' with your branch
-          # Warning: Use --force with caution, as it rewrites history
+            CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
+            NEW_TASK_DEF_ARN=${{ steps.ecs-deploy.outputs.task-definition-arn }}
+            REVISION=${GITHUB_SHA::8}
+            echo "Current task arn: $CURRENT_TASK_DEF_ARN"
+            echo "New task arn: $NEW_TASK_DEF_ARN"
+            echo "Latest revision: $REVISION"
+            if [ "$CURRENT_TASK_DEF_ARN" != "$NEW_TASK_DEF_ARN" ]; then
+              echo "Deployment failed with latest code revision."
+              exit 1
+            else
+              echo "Deployment successfull."
+            fi
