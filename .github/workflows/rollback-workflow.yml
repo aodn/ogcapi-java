@@ -1,0 +1,25 @@
+name: Rollback to Stable Version
+
+on:
+  workflow_dispatch:  # Manual trigger for rollback
+    inputs:
+      target_commit:
+        description: 'Git commit to rollback to'
+        required: true
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Reset to specific commit
+        run: git reset --hard ${{ github.event.inputs.target_commit }}
+        # Replace 'target_commit' with the commit hash you want to rollback to
+
+      - name: Push changes
+        run: |
+          git push --force origin 5195-cicd  # Replace 'main' with your branch
+          # Warning: Use --force with caution, as it rewrites history
