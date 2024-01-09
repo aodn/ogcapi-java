@@ -257,8 +257,7 @@ jobs:
       - name: Push image to Amazon ECR
         id: push-image
         env:
-          IMAGE_TAG: ${{ needs.build.outputs.BUILD_ID }}
+          IMAGE_TAG: ${{ needs.build.outputs.image }}
         run: |
           # push image to aws ecr
-          docker push $ECR_REPOSITORY:$IMAGE_TAG
-          echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+          docker push $IMAGE_TAG
