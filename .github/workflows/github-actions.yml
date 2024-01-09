@@ -31,6 +31,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment: development
+    outputs:
+      IMAGE_TAG: ${{ steps.build-image.outputs.image }}
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v3
@@ -258,5 +260,5 @@ jobs:
         id: push-image
         run: |
           # push image to aws ecr
-          echo image [${{needs.build.outputs.image}}]
-          docker push ${{ needs.build.outputs.image }}
+          echo image [${{needs.build.outputs.IMAGE_TAG}}]
+          docker push ${{ needs.build.outputs.IMAGE_TAG }}
