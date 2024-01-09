@@ -256,8 +256,7 @@ jobs:
     steps:
       - name: Push image to Amazon ECR
         id: push-image
-        env:
-          IMAGE_TAG: ${{ needs.build.outputs.image }}
         run: |
           # push image to aws ecr
-          docker push $IMAGE_TAG
+          echo image [${{needs.build.outputs.image}}]
+          docker push ${{ needs.build.outputs.image }}
