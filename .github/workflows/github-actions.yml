@@ -11,10 +11,10 @@ on:
 env:
   ENVIRONMENT: development
   ECR_REPOSITORY: test # set this to your Amazon ECR repository name
-  ECS_SERVICE: ogcapi-java-service # set this to your Amazon ECS service name
-  ECS_CLUSTER: aodn-imos-v2 # set this to your Amazon ECS cluster name
+  ECS_SERVICE: test # set this to your Amazon ECS service name
+  ECS_CLUSTER: test # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json #MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
-  CONTAINER_NAME: aodn-dev-container # set this to the name of the container in the
+  CONTAINER_NAME: test # set this to the name of the container in the
   CA_DOMAIN: test
   CA_DOMAIN_OWNER: test
   CA_REPO: test
