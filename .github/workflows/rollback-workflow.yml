@@ -1,48 +1,123 @@
-name: Rollback to particular version - Manual Trigger
+name: Rollback to particular version
 
 on:
-  workflow_dispatch:  # Manual trigger for rollback
-    inputs:
-      target_commit:
-        description: 'Stable Version Image Id'
-        required: true
+  push:
+    branches: [5195-cicd]
+# on:
+#   workflow_dispatch:  # Manual trigger for rollback
+#     inputs:
+#       deploy_version:
+#         description: 'Stable Version Image Id'
+#         required: true
 
 jobs:
   rollback:
     runs-on: ubuntu-latest
-
+    environment: development
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - name: Git clone the repository
+        uses: actions/checkout@v3
+        
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.ROLE_ARN }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ vars.AWS_REGION }}
+      
+          # Hello from AWS: WhoAmI
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity 
+
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+  
+      - name: Retrieve Parameters - ssm parameter store
+        id: getParameters
+        run: |
+          # Replace '--path' with your specific path from Parameter Store
+          parameters=$(aws ssm get-parameters-by-path --path "/core/ogcapi/dev_ecr_ecs_config/" --recursive --query 'Parameters[*].[Name,Value]' --output json)
+          echo "$parameters" > parameters.json
+          echo "::set-output name=parameters_json::$parameters"
+      
+      - name: Process Parameters - ssm parameter store
+        id: process-parameters
+        run: |
+          parameters=$(cat parameters.json)
+          # Loop through the JSON array of parameters using jq
+          for row in $(echo "${parameters}" | jq -r '.[] | @base64'); do
+            _jq() {
+              echo "${row}" | base64 --decode | jq -r "${1}"
+            }
+            name=$(_jq '.[0]')
+            value=$(_jq '.[1]')
+
+            echo "Name: $name, Value: $value"
+
+            # Perform actions using parameter values here
+            # For example, set environment variables
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecr_repo" ]; then
+              echo "ECR_REPOSITORY=$value" >> "$GITHUB_ENV"
+              echo "ECR_REPOSITORY=$value" >> $GITHUB_OUTPUT
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_cluster" ]; then
+              echo "ECS_CLUSTER=$value" >> "$GITHUB_ENV"
+              echo "ECS_CLUSTER=$value" >> $GITHUB_OUTPUT
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_service" ]; then
+              echo "ECS_SERVICE=$value" >> "$GITHUB_ENV"
+              echo "ECS_SERVICE=$value" >> $GITHUB_OUTPUT
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/container_name" ]; then
+              echo "CONTAINER_NAME=$value" >> "$GITHUB_ENV"
+              echo "CONTAINER_NAME=$value" >> $GITHUB_OUTPUT
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain" ]; then
+              echo "CA_DOMAIN=$value" >> "$GITHUB_ENV"
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain_owner" ]; then
+              echo "CA_DOMAIN_OWNER=$value" >> "$GITHUB_ENV"
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_repo" ]; then
+              echo "CA_REPO=$value" >> "$GITHUB_ENV"
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_package" ]; then
+              echo "CA_PACKAGE=$value" >> "$GITHUB_ENV"
+            fi
+            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_namespace" ]; then
+              echo "CA_NAMESPACE=$value" >> "$GITHUB_ENV"
+            fi
+          done
 
       - name: Fill in the new image ID in the Amazon ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
-          container-name: ${{ env.CONTAINER_NAME }}
-          image: ${{ steps.push-image.outputs.image }}
+          container-name: ${{ steps.process-parameters.outputs.CONTAINER_NAME }}
+          #image: ${{ inputs.deploy_version }}
+          image: ${{ vars.ROLLBACK_IMAGE }}
           environment-variables: |
-            ENVIRONMENT=${{ env.ENVIRONMENT }}
             HOST=${{ vars.HOST }} 
             PORT=${{ vars.PORT }} 
             ELASTIC_URL=${{ vars.ELASTIC_URL }}
             ELASTIC_KEY=${{ secrets.ELASTIC_KEY }} 
-            IMAGE=${{ steps.push-image.outputs.image }}
+            IMAGE=${{ inputs.deploy_version }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         id: ecs-deploy
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
-          service: ${{ env.ECS_SERVICE }}
-          cluster: ${{ env.ECS_CLUSTER }}
+          service: ${{ steps.process-parameters.outputs.ECS_SERVICE }}
+          cluster: ${{ steps.process-parameters.outputs.ECS_CLUSTER }}
           wait-for-service-stability: true
 
       - name: Check if deployment was successful
         id: check-deployment
         run: |
-            CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ env.ECS_CLUSTER }} --services ${{ env.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
+            CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ steps.process-parameters.outputs.ECS_CLUSTER }} --services ${{ steps.process-parameters.outputs.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
             NEW_TASK_DEF_ARN=${{ steps.ecs-deploy.outputs.task-definition-arn }}
             REVISION=${GITHUB_SHA::8}
             echo "Current task arn: $CURRENT_TASK_DEF_ARN"
