@@ -9,10 +9,16 @@ on:
 #       deploy_version:
 #         description: 'Stable Version Image Id'
 #         required: true
-permissions:
+env:
+  ECR_REPOSITORY: test # set this to your Amazon ECR repository name
+  ECS_SERVICE: test # set this to your Amazon ECS service name
+  ECS_CLUSTER: test # set this to your Amazon ECS cluster name
+  ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json #MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
+
+  permissions:
   id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout
-  
+
 jobs:
   rollback:
     runs-on: ubuntu-latest
@@ -60,10 +66,6 @@ jobs:
 
             # Perform actions using parameter values here
             # For example, set environment variables
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecr_repo" ]; then
-              echo "ECR_REPOSITORY=$value" >> "$GITHUB_ENV"
-              echo "ECR_REPOSITORY=$value" >> $GITHUB_OUTPUT
-            fi
             if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_cluster" ]; then
               echo "ECS_CLUSTER=$value" >> "$GITHUB_ENV"
               echo "ECS_CLUSTER=$value" >> $GITHUB_OUTPUT
@@ -78,18 +80,6 @@ jobs:
             fi
             if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain" ]; then
               echo "CA_DOMAIN=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain_owner" ]; then
-              echo "CA_DOMAIN_OWNER=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_repo" ]; then
-              echo "CA_REPO=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_package" ]; then
-              echo "CA_PACKAGE=$value" >> "$GITHUB_ENV"
-            fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_namespace" ]; then
-              echo "CA_NAMESPACE=$value" >> "$GITHUB_ENV"
             fi
           done
 
@@ -106,7 +96,7 @@ jobs:
             PORT=${{ vars.PORT }} 
             ELASTIC_URL=${{ vars.ELASTIC_URL }}
             ELASTIC_KEY=${{ secrets.ELASTIC_KEY }} 
-            IMAGE=${{ inputs.deploy_version }}
+            IMAGE=${{ vars.ROLLBACK_IMAGE }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
