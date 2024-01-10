@@ -4,7 +4,7 @@ name: Build & Deploy - Dev
 # Controls when the action will run. Invokes the workflow on push events but only for the main branch
 on:
   push:
-    branches: [5195-cicd-test]
+    branches: [5195-cicd]
   pull_request:
     branches: [main]
 

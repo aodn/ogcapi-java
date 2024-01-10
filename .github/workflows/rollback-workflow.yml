@@ -2,7 +2,7 @@ name: Rollback to particular version
 
 on:
   push:
-    branches: [5195-cicd]
+    branches: [5195-cicd-test]
 # on:
 #   workflow_dispatch:  # Manual trigger for rollback
 #     inputs:
