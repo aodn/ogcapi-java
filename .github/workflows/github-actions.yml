@@ -28,11 +28,15 @@ permissions:
   contents: read    # This is required for actions/checkout
   
 jobs:
-  build:
+  build-publish:
     runs-on: ubuntu-latest
     environment: development
     outputs:
       IMAGE_TAG: ${{ steps.build-image.outputs.image }}
+      ECR_REPOSITORY: ${{ steps.process-parameters.outputs.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ steps.process-parameters.outputs.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ steps.process-parameters.outputs.ECS_SERVICE }}
+      CONTAINER_NAME: ${{ steps.process-parameters.outputs.CONTAINER_NAME }}
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v3
@@ -59,6 +63,7 @@ jobs:
           echo "::set-output name=parameters_json::$parameters"
       
       - name: Process Parameters - ssm parameter store
+        id: process-parameters
         run: |
           parameters=$(cat parameters.json)
           # Loop through the JSON array of parameters using jq
@@ -75,15 +80,19 @@ jobs:
             # For example, set environment variables
             if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecr_repo" ]; then
               echo "ECR_REPOSITORY=$value" >> "$GITHUB_ENV"
+              echo "ECR_REPOSITORY=$value" >> $GITHUB_OUTPUT
             fi
             if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_cluster" ]; then
               echo "ECS_CLUSTER=$value" >> "$GITHUB_ENV"
+              echo "ECS_CLUSTER=$value" >> $GITHUB_OUTPUT
             fi
             if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ecs_service" ]; then
               echo "ECS_SERVICE=$value" >> "$GITHUB_ENV"
+              echo "ECS_SERVICE=$value" >> $GITHUB_OUTPUT
             fi
             if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/container_name" ]; then
               echo "CONTAINER_NAME=$value" >> "$GITHUB_ENV"
+              echo "CONTAINER_NAME=$value" >> $GITHUB_OUTPUT
             fi
             if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain" ]; then
               echo "CA_DOMAIN=$value" >> "$GITHUB_ENV"
@@ -154,15 +163,14 @@ jobs:
             ignore-unfixed: true
         continue-on-error: true
 
-      # - name: Push image to Amazon ECR
-      #   id: push-image
-      #   env:
-      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      #     IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
-      #   run: |
-      #     # push image to aws ecr
-      #     docker push $ECR_REPOSITORY:$IMAGE_TAG
-      #     echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+      - name: Push image to Amazon ECR
+        id: push-image
+        env:
+          IMAGE_TAG: ${{ steps.prep.outputs.BUILD_ID }}
+        run: |
+          # push image to aws ecr
+          docker push $ECR_REPOSITORY:$IMAGE_TAG
+          echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
       # - name: Fill in the new image ID in the Amazon ECS task definition
       #   id: task-def
@@ -251,14 +259,46 @@ jobs:
       #     --namespace $CA_NAMESPACE  \
       #     --output text
 
-  publish:
-    needs: build
+  deploy:
+    needs: build-publish
     runs-on: ubuntu-latest
     environment: development
     steps:
-      - name: Push image to Amazon ECR
-        id: push-image
+      - name: Fill in the new image ID in the Amazon ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ env.ECS_TASK_DEFINITION }}
+          container-name: ${{ needs.build-publish.outputs.CONTAINER_NAME }}
+          image: ${{ needs.build-publish.outputs.IMAGE_TAG }}
+          environment-variables: |
+            HOST=${{ vars.HOST }} 
+            PORT=${{ vars.PORT }} 
+            ELASTIC_URL=${{ vars.ELASTIC_URL }}
+            ELASTIC_KEY=${{ secrets.ELASTIC_KEY }} 
+            IMAGE=${{ needs.build-publish.outputs.IMAGE_TAG }}
+
+      - name: Deploy Amazon ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        id: ecs-deploy
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ needs.build-publish.outputs.ECS_SERVICE }}
+          cluster: ${{ needs.build-publish.outputs.ECS_CLUSTER }}
+          wait-for-service-stability: true
+
+      - name: Check if deployment was successful
+        id: check-deployment
         run: |
-          # push image to aws ecr
-          echo image [${{needs.build.outputs.IMAGE_TAG}}]
-          docker push ${{ needs.build.outputs.IMAGE_TAG }}
+            CURRENT_TASK_DEF_ARN=$(aws ecs describe-services --cluster ${{ needs.build-publish.outputs.ECS_CLUSTER }} --services ${{ needs.build-publish.outputs.ECS_SERVICE }} --query services[0].deployments[0].taskDefinition | jq -r ".")
+            NEW_TASK_DEF_ARN=${{ steps.ecs-deploy.outputs.task-definition-arn }}
+            REVISION=${GITHUB_SHA::8}
+            echo "Current task arn: $CURRENT_TASK_DEF_ARN"
+            echo "New task arn: $NEW_TASK_DEF_ARN"
+            echo "Latest revision: $REVISION"
+            if [ "$CURRENT_TASK_DEF_ARN" != "$NEW_TASK_DEF_ARN" ]; then
+              echo "Deployment failed with latest code revision."
+              exit 1
+            else
+              echo "Deployment successfull."
+            fi
