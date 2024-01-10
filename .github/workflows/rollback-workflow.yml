@@ -15,7 +15,7 @@ env:
   ECS_CLUSTER: test # set this to your Amazon ECS cluster name
   ECS_TASK_DEFINITION: ./ogcapi-java-dev-td.json #MY_ECS_TASK_DEFINITION # set this to the path to your Amazon ECS task definition
 
-  permissions:
+permissions:
   id-token: write   # This is required for requesting the JWT
   contents: read    # This is required for actions/checkout
 
