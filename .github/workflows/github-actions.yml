@@ -117,8 +117,8 @@ jobs:
         id: prep
         run: |
           BRANCH=${GITHUB_REF##*/}
-          TS=$(date +%F%H%M%S)
-          echo $TS | sed 's/-//g'
+          TS=$(date +%F%H%M%S | sed 's/-//g')
+          echo "TimeStamp=$TS"
           REVISION=${GITHUB_SHA::8}
           BUILD_ID="${BRANCH}-${REVISION}-${TS}"
           LATEST_ID=canary
@@ -140,7 +140,7 @@ jobs:
           CURRENT_VERSION=$(aws codeartifact list-package-versions --domain $CA_DOMAIN --repository $CA_REPO --format generic --package $CA_PACKAGE --namespace $CA_NAMESPACE --query defaultDisplayVersion | jq -r ".")
           echo "current version: $CURRENT_VERSION"
           
-          if [ -z "$CURRENT_VERSION" ]; then
+          if [ -z "$CURRENT_VERSION" ] || [ "$CURRENT_VERSION" == "null" ]; then
             CURRENT_VERSION="1.0.0"
             FLAG_INITIAL=true
           fi
