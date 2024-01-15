@@ -6,7 +6,7 @@ on:
 # on:
 #   workflow_dispatch:  # Manual trigger for rollback
 #     inputs:
-#       deploy_version:
+#       DEPLOY_VERSION:
 #         description: 'Stable Version Image Id'
 #         required: true
 env:
@@ -89,14 +89,13 @@ jobs:
         with:
           task-definition: ${{ env.ECS_TASK_DEFINITION }}
           container-name: ${{ steps.process-parameters.outputs.CONTAINER_NAME }}
-          #image: ${{ inputs.deploy_version }}
-          image: ${{ vars.ROLLBACK_IMAGE }}
+          image: ${{ vars.DEPLOY_VERSION }} # TODO: this var will be replaced by manaul input from user ${{ inputs.DEPLOY_VERSION }}
           environment-variables: |
             HOST=${{ vars.HOST }} 
             PORT=${{ vars.PORT }} 
             ELASTIC_URL=${{ vars.ELASTIC_URL }}
             ELASTIC_KEY=${{ secrets.ELASTIC_KEY }} 
-            IMAGE=${{ vars.ROLLBACK_IMAGE }}
+            IMAGE=${{ vars.DEPLOY_VERSION }}
 
       - name: Deploy Amazon ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
