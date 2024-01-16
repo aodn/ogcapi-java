@@ -78,9 +78,6 @@ jobs:
               echo "CONTAINER_NAME=$value" >> "$GITHUB_ENV"
               echo "CONTAINER_NAME=$value" >> $GITHUB_OUTPUT
             fi
-            if [ "$name" = "/core/ogcapi/dev_ecr_ecs_config/ca_domain" ]; then
-              echo "CA_DOMAIN=$value" >> "$GITHUB_ENV"
-            fi
           done
 
       - name: Fill in the new image ID in the Amazon ECS task definition
