@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>au.org.aodn.ogcapi</groupId>
 	<artifactId>ogcapi-java</artifactId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>0.0.0</version>
 	<name>ogcapi-java</name>
 	<packaging>pom</packaging>
 
@@ -24,6 +24,8 @@
 		<org.projectlombok.binding>0.2.0</org.projectlombok.binding>
 		<swagger.codegen.version>3.0.50</swagger.codegen.version>
 		<org.geotools.version>29.2</org.geotools.version>
+		<maven.deploy.skip>true</maven.deploy.skip>
+		<versioning.updatePom>true</versioning.updatePom>
 	</properties>
 	<repositories>
 		<repository>
@@ -120,4 +122,16 @@
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
+	<distributionManagement>
+        <repository>
+            <id>codeartifact</id>
+            <name>codeartifact</name>
+            <url>${env.CODEARTIFACT_REPO_URL}</url>
+        </repository>
+        <snapshotRepository>
+            <id>codeartifact</id>
+            <name>codeartifact</name>
+            <url>${env.CODEARTIFACT_REPO_URL}</url>
+        </snapshotRepository>
+    </distributionManagement>
 </project>

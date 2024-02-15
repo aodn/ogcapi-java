@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>au.org.aodn.ogcapi</groupId>
 		<artifactId>ogcapi-java</artifactId>
-		<version>1.0.0-SNAPSHOT</version>
+		<version>0.0.0</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<modelVersion>4.0.0</modelVersion>
@@ -13,6 +13,9 @@
 	<name>ogcapi-features-java</name>
 
 	<description>REST API that implements OGC Features API</description>
+	<properties>
+        <maven.deploy.skip>true</maven.deploy.skip>
+    </properties>
 	<dependencies>
 		<dependency>
 			<groupId>org.springdoc</groupId>

@@ -1,0 +1,132 @@
+name: Build Production
+
+on:
+  push:
+    branches: [main]
+      
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  app_name: ogcapi-java
+  environment_name: production
+
+jobs:
+  build_push:
+    runs-on: ubuntu-latest
+    environment: production
+    outputs:
+      image_digest: ${{ steps.build_and_push.outputs.digest }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+          server-id: 'codeartifact'
+          server-password: 'CODEARTIFACT_AUTH_TOKEN'
+
+      - name: Configure AWS Credentials
+        id: aws_auth
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          audience: sts.amazonaws.com
+          aws-region: ${{ vars.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+
+      - name: Get CodeArtifact Repository Authentication Token
+        run: |
+          TOKEN=$(aws codeartifact get-authorization-token \
+            --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+            --domain-owner ${{ steps.aws_auth.outputs.aws-account-id }} \
+            --region ${{ vars.AWS_REGION }} \
+            --query authorizationToken \
+            --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: Get CodeArtifact Repository URL
+        run: |
+          REPO_URL=$(aws codeartifact get-repository-endpoint \
+            --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+            --repository ${{ vars.CODEARTIFACT_REPO }} \
+            --format maven \
+            --region ${{ vars.AWS_REGION }} \
+            --output text)
+          echo "CODEARTIFACT_REPO_URL=$REPO_URL" >> "$GITHUB_ENV"
+          
+      - name: Build with Maven
+        run: mvn -B package --file pom.xml
+
+      - name: Publish Artifacts to CodeArtifact Repository
+        run: mvn -B deploy
+        env:
+          CODEARTIFACT_AUTH_TOKEN: ${{ env.CODEARTIFACT_AUTH_TOKEN }}
+          CODEARTIFACT_REPO_URL: ${{ env.CODEARTIFACT_REPO_URL }}
+
+      - name: Login to ECR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ vars.ECR_REGISTRY }}
+
+      - name: Build and Push Docker Image
+        id: build_and_push
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          #          Only building for AMD64 for now
+          #          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ vars.ECR_REGISTRY }}/${{ vars.ECR_REPOSITORY }}:${{ github.ref_name }}
+
+      - name: Push Image Digest to SSM
+        run: |
+          aws ssm put-parameter \
+            --name "/apps/ogcapi-java/${{ env.environment_name }}/image_digest" \
+            --type "String" \
+            --value "$digest" \
+            --overwrite
+        env:
+          digest: ${{ steps.build_and_push.outputs.digest }}
+
+  # trigger_deploy:
+  #   runs-on: ubuntu-latest
+  #   needs: [build_push]
+  #   steps:
+  #     - name: Generate App Token
+  #       uses: actions/create-github-app-token@v1
+  #       id: app-token
+  #       with:
+  #         app-id: ${{ vars.DEPLOY_APP_ID }}
+  #         private-key: ${{ secrets.DEPLOY_APP_PRIVATE_KEY }}
+  #         owner: ${{ github.repository_owner }}
+  #         repositories: "appdeploy"
+
+  #     - name: Trigger Deploy Workflow
+  #       uses: actions/github-script@v7
+  #       with:
+  #         github-token: ${{ steps.app-token.outputs.token }}
+  #         retries: 3
+  #         retry-exempt-status-codes: 204
+  #         script: |
+  #           github.rest.actions.createWorkflowDispatch({
+  #             owner: 'aodn',
+  #             repo: 'appdeploy',
+  #             workflow_id: 'deploy.yml',
+  #             ref: 'main',
+  #             inputs: {
+  #               app_name: '${{ env.app_name }}',
+  #               environment: '${{ env.environment_name }}'
+  #             }
+  #           })
+  
