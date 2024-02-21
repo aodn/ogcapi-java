@@ -1,7 +1,7 @@
 FROM amazoncorretto:17
 VOLUME /tmp
 
-COPY ./server/target/ogcapi-java-server-*.jar app.jar
+COPY ./server/target/ogcapi-java-server-*-exec.jar app.jar
 ENTRYPOINT [\
     "java",\
     "-Delasticsearch.index.name=${INDEX_NAME}",\
