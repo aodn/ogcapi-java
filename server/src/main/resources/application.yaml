@@ -17,6 +17,11 @@ springdoc:
   api-docs:
     path: /api/v1/ogc/api-docs/v3
 
+management:
+  health:
+    elasticsearch:
+      enabled: false
+
 logging:
   level:
     au.org.aodn.ogcapi.server: debug
