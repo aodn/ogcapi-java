@@ -28,17 +28,17 @@ are some problems with the generated interface and can be handled in the followi
 
 ## Conflict RESTful api
 
-For example /collections is defined in common, feature, tile, if you implement these interface then the spring cannot 
+For example /collections is defined in common, feature, tile, if you implement these interface then the spring cannot
 started due to conflict endpoints.
 
-A custom configuration is created CustomMvcRegistrations.java to intercept the endpoint creations so that if the 
-method is marked with @Hidden, it will be ignored in both swagger document and endpoint creation. Hence mark 
+A custom configuration is created CustomMvcRegistrations.java to intercept the endpoint creations so that if the
+method is marked with @Hidden, it will be ignored in both swagger document and endpoint creation. Hence mark
 the @Hidden if you see conflict and leave 1 method that needed, or mark all as @Hidden and manually craft on
 if required.
 
 ## Unmapped Enum in @PathValue and @ParamValue
 
-By default, Spring used the converter which will not convert Enum correctly if the Enum is not name exactly the same 
+By default, Spring used the converter which will not convert Enum correctly if the Enum is not name exactly the same
 as the enum definition, for example ABC("abc") will not convert correctly if your string is abc, instead of ABC.
 
 A CustomWebMvcConfigurer.java is created so that additional formatter is added to handle Enum convert.
@@ -52,6 +52,6 @@ found another Search, the default ElasticSearch will not be provisioned.
 
 We use the geotools' CQl parser and extend it so that it generated the needed Elastic Search Query, please read
 CQLToElasticFilterFactory.java. Please get some understanding of
-[ElasticSearch](https://www.elastic.co/blog/find-strings-within-strings-faster-with-the-new-elasticsearch-wildcard-field) 
-before you begin your coding, in short Elastic search have the following fields, text, keywords and wildcard. Each 
+[ElasticSearch](https://www.elastic.co/blog/find-strings-within-strings-faster-with-the-new-elasticsearch-wildcard-field)
+before you begin your coding, in short Elastic search have the following fields, text, keywords and wildcard. Each
 have its own behavior and will impact your search result.
