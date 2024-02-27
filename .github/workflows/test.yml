@@ -1,0 +1,56 @@
+name: Test
+
+on:
+  pull_request:
+    paths-ignore:
+      - '**/*.md'
+      - '.github/environment/**'
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build_test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Setup Docker Structure Test
+        run: >
+          curl -LO
+          https://storage.googleapis.com/container-structure-test/latest/container-structure-test-linux-amd64
+          && chmod +x container-structure-test-linux-amd64 && sudo mv container-structure-test-linux-amd64
+          /usr/local/bin/container-structure-test
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'maven'
+
+      - name: Build with Maven
+        run: mvn -B verify --file pom.xml
+
+      - name: Build Docker Image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          load: true
+          tags: image:${{ github.sha }}
+
+      - name: Test Docker Image
+        run: |
+          container-structure-test test --image image:${{ github.sha }} --config tests/config.yaml
