@@ -1,5 +1,5 @@
 # Read Me First
-The following was discovered as part of building this project:
+The following was discovered as part of building this ogcapi project:
 
 * The original package name 'au.org.aodn.ocgapi.ogcapi-java' is invalid and this project uses 'au.org.aodn.ocgapi.ogcapijava' instead.
 
