@@ -14,6 +14,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 
+import au.org.aodn.ogcapi.server.core.service.Search;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -35,6 +36,7 @@ import java.math.BigDecimal;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController("CommonRestApi")
 @RequestMapping(value = "/api/v1/ogc")
@@ -54,6 +56,9 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
     @Autowired
     protected StacToCollections stacToCollection;
+
+    @Autowired
+    protected Search searchService;
 
     @Override
     public ResponseEntity<Void> apiGet(String f) {
@@ -178,5 +183,10 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
 
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(msg);
         }
+    }
+
+    @GetMapping(path="/autocomplete", produces = "application/json")
+    public ResponseEntity<List<String>>  getAutocompleteSuggestions(@RequestParam String input) throws java.lang.Exception {
+        return searchService.getAutocompleteSuggestions(input);
     }
 }
