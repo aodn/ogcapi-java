@@ -185,7 +185,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
         }
     }
 
-    @GetMapping(path="/autocomplete", produces = "application/json")
+    @GetMapping(path="/autocomplete")
     public ResponseEntity<List<String>>  getAutocompleteSuggestions(@RequestParam String input) throws java.lang.Exception {
         return searchService.getAutocompleteSuggestions(input);
     }
