@@ -1,0 +1,229 @@
+{
+  "title": "50m Multibeam Dataset of Australia - Tile number: SD57",
+  "description": "This tile contains all multibeam data held by Geoscience Australia on August 2012 within the specified area. The data has been gridded to 50m resolution.  \n\nSome deeper data has also been interpolated within the mapped area.\n\nThe image provided can be viewed on the free software CARIS Easyview, available from the CARIS website: www.caris.com under Free Downloads.",
+  "extent": {
+    "bbox": [
+      [
+        156.0,
+        -16.0,
+        162.0,
+        -12.0
+      ],
+      [
+        156.0,
+        -16.0,
+        162.0,
+        -16.0,
+        162.0,
+        -12.0,
+        156.0,
+        -12.0,
+        156.0,
+        -16.0
+      ]
+    ],
+    "temporal": [
+      [
+        null,
+        null
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 80,
+    "status": "",
+    "scope": {
+      "code": "nonGeographicDataset",
+      "name": "nonGeographicDataset"
+    },
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              156,
+              -16
+            ],
+            [
+              162,
+              -16
+            ],
+            [
+              162,
+              -12
+            ],
+            [
+              156,
+              -12
+            ],
+            [
+              156,
+              -16
+            ]
+          ]
+        ]
+      ],
+      "type": "MultiPolygon"
+    },
+    "temporal": []
+  },
+  "contacts": [
+    {
+      "emails": [],
+      "addresses": [],
+      "roles": "custodian",
+      "organization": "ED",
+      "name": "AMARSHAL",
+      "phones": [],
+      "links": [],
+      "position": ""
+    },
+    {
+      "emails": [],
+      "addresses": [],
+      "roles": "owner",
+      "organization": "Commonwealth of Australia (Geoscience Australia)",
+      "name": "",
+      "phones": [],
+      "links": [],
+      "position": ""
+    },
+    {
+      "emails": [
+        "clientservices@ga.gov.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Cnr Jerrabomberra Ave and Hindmarsh Dr GPO Box 378"
+          ],
+          "country": "Australia",
+          "city": "Canberra",
+          "postalCode": "2601",
+          "administrativeArea": "ACT"
+        }
+      ],
+      "roles": "custodian",
+      "organization": "Commonwealth of Australia (Geoscience Australia)",
+      "name": "",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "1800 800 173"
+        }
+      ],
+      "links": [],
+      "position": ""
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [],
+  "license": "Creative Commons Attribution 4.0 International Licence",
+  "providers": [
+    {
+      "name": "Commonwealth of Australia (Geoscience Australia)",
+      "roles": [
+        "pointOfContact"
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Marine Map"
+        },
+        {
+          "id": "DEM pixel"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "bathymetry"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "geoscience"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "multibeam"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "marine"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine Geoscience"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": "Australian and New Zealand Standard Research Classification (ANZSRC)"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Published_External"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    }
+  ],
+  "id": "bc55eff4-7596-3565-e044-00144fdd4fa6",
+  "title_suggest": [
+    "50m",
+    "multibeam",
+    "dataset",
+    "australia",
+    "tile",
+    "number",
+    "sd57"
+  ],
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "type": "Collection"
+}
