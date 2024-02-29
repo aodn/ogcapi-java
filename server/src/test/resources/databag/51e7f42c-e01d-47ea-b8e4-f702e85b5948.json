@@ -1,0 +1,211 @@
+{
+  "title": "GMRT AusSeabed PL019 Workshop-1: Attribute Values and Definitions",
+  "description": "The GMRT-AusSeabed project aims to address the cost associated with processing, merging and reformatting of bathymetric data in marine modelling and management by enabling users to more easily create bathymetric maps. The project leverages two major existing initiatives, the AusSeabed Data Hub operated by AusSeabed and the Global Multi-Resolution Topography Synthesis (GMRT) operated by Lamont Doherty Earth Observatory (LDEO) and funded by the US National Science Foundation. \n\nGMRT-AusSeabed is seeking to deliver two core services that are relevant to this particular document:\n   1.  Definition of an attributed point cloud for bathymetric data that is common across a wide range of bathymetric sensor platforms (multibeam echosounder, LiDAR, satellite, etc)\n   2.\tDevelop additional user controls, primarily relating to data selection, that leverage the attributed point cloud for the creation of bathymetric maps.\n\nWithin the bounds of the GMRT-AusSeabed project, this document provides:\n   1.\tA summary of the key points discussed within the first workshop, ?Point Cloud Attribution?, \n   2.\tA detailed list of the attributes that are to be carried forward through the work program. \n   3.\tA list of influences external to the workshop that have contributed to the list. \n\nWorkshop participants included representatives from Geoscience Australia, Deakin University, CSIRO, Guardian Geomatics and Land and Information New Zealand. \n\nSee <a href=\"https://www.ausseabed.gov.au/gmrt\">https://www.ausseabed.gov.au/gmrt</a> for more information.",
+  "extent": {
+    "bbox": [
+      [
+        112.0,
+        -44.0,
+        154.0,
+        -9.0
+      ],
+      [
+        112.0,
+        -44.0,
+        154.0,
+        -44.0,
+        154.0,
+        -9.0,
+        112.0,
+        -9.0,
+        112.0,
+        -44.0
+      ]
+    ],
+    "temporal": [
+      [
+        null,
+        null
+      ],
+      [
+        null,
+        null
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 80,
+    "status": "",
+    "scope": {
+      "code": "document",
+      "name": "GA publication: workshop"
+    },
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              112,
+              -44
+            ],
+            [
+              154,
+              -44
+            ],
+            [
+              154,
+              -9
+            ],
+            [
+              112,
+              -9
+            ],
+            [
+              112,
+              -44
+            ]
+          ]
+        ]
+      ],
+      "type": "MultiPolygon"
+    },
+    "temporal": [
+      {}
+    ]
+  },
+  "contacts": [
+    {
+      "emails": [
+        "clientservices@ga.gov.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "Cnr Jerrabomberra Ave and Hindmarsh Dr GPO Box 378"
+          ],
+          "country": "Australia",
+          "city": "Canberra",
+          "postalCode": "2601",
+          "administrativeArea": "ACT"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Commonwealth of Australia (Geoscience Australia)",
+      "name": "",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "1800 800 173"
+        }
+      ],
+      "links": [],
+      "position": ""
+    },
+    {
+      "roles": "pointOfContact",
+      "organization": "Sixsmith, J."
+    },
+    {
+      "roles": "resourceProvider",
+      "organization": "Place, Space and Communities Division"
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [],
+  "license": "Creative Commons Attribution 4.0 International Licence",
+  "providers": [
+    {
+      "name": "Commonwealth of Australia (Geoscience Australia)",
+      "roles": [
+        "pointOfContact"
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "EARTH SCIENCES"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "theme.ANZRC Fields of Research.rdf"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "Bathymetry"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "Multibeam"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "AusSeabed"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "Published_External"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    }
+  ],
+  "id": "51e7f42c-e01d-47ea-b8e4-f702e85b5948",
+  "title_suggest": [
+    "gmrt",
+    "ausseabed",
+    "pl019",
+    "workshop",
+    "1",
+    "attribute",
+    "values",
+    "definitions"
+  ],
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "type": "Collection"
+}

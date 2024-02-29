@@ -13,7 +13,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
-import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.*;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -27,10 +27,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ElasticSearch implements Search {
@@ -43,6 +43,15 @@ public class ElasticSearch implements Search {
 
     @Autowired
     protected ObjectMapper mapper;
+
+    @Value("${elasticsearch.suggester.name}")
+    protected String suggestName;
+
+    @Value("${elasticsearch.suggester.suggestField}")
+    protected String suggestField;
+
+    @Value("${elasticsearch.suggester.fields}")
+    protected String[] suggestRecordFields;
 
     public ElasticSearch(ElasticsearchClient client) {
         this.esClient = client;
@@ -72,6 +81,38 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
+    public ResponseEntity<List<String>> getAutocompleteSuggestions(String input) throws IOException {
+        Map<String, FieldSuggester> map = new HashMap<>();
+        map.put(suggestName, FieldSuggester.of(fs -> fs
+                .completion(cs -> cs.skipDuplicates(true)
+                        .size(10)
+                        .fuzzy(SuggestFuzziness.of(sf -> sf.fuzziness("1").minLength(2)))
+                        .field(suggestField))
+        ));
+        Suggester suggester = Suggester.of(s -> s
+                .suggesters(map)
+                .text(input)
+        );
+        SearchRequest searchRequest = SearchRequest.of(s -> {
+            s.index(indexName)
+                    // can add more fields to be returned
+                    .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of(suggestRecordFields)))))
+                    .suggest(suggester);
+            return s;
+        });
+        SearchResponse<RecordSuggestDTO> response = esClient.search(searchRequest, RecordSuggestDTO.class);
+        logger.info("Elastic search response {}", response);
+
+        var suggestions = new HashSet<String>();
+        for (var item : response.suggest().get(suggestName)) {
+            suggestions.addAll(item.completion().options().stream().map(o -> {
+                assert o.source() != null;
+                return o.source().getTitle();
+            }).collect(Collectors.toSet()));
+        }
+        return ResponseEntity.ok(new ArrayList<>(suggestions));
+    }
+
     protected List<StacCollectionModel> searchCollectionBy(List<Query> queries,
                                                            List<Query> should,
                                                            List<Query> filters,
@@ -79,11 +120,13 @@ public class ElasticSearch implements Search {
                                                            Integer from,
                                                            Integer size) throws IOException {
 
+
         SearchRequest.Builder builder = new SearchRequest.Builder();
         builder.index(indexName)
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
                 .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
+                .size(2000)
                 .sort(so -> so
                     .field(FieldSort.of(f -> f
                         .field(StacSummeries.Score.searchField)

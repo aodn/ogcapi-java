@@ -51,6 +51,10 @@ public class BaseTestClass {
         return "http://localhost:" + port + "/api/v1/ogc";
     }
 
+    protected String getExternalBasePath() {
+        return "http://localhost:" + port + "/api/v1/ogcapi/ext";
+    }
+
     protected void clearElasticIndex() throws IOException {
         logger.debug("Clear elastic index");
         try {
