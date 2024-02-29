@@ -71,7 +71,7 @@ public class CommonRestExtApiTest extends BaseTestClass {
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json"
         );
 
-        // incomplete input
+        // complete input
         ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=australia", String.class);
 
         assertTrue(response.getStatusCode().is2xxSuccessful());
@@ -91,7 +91,7 @@ public class CommonRestExtApiTest extends BaseTestClass {
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json"
         );
 
-        // incomplete input
+        // typo input
         ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=austalia", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertTrue(Objects.requireNonNull(response.getBody()).contains("50m Multibeam Dataset of Australia - Tile number: SD57"));
