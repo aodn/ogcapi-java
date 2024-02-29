@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.common.APIConstants;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
@@ -45,6 +44,15 @@ public class ElasticSearch implements Search {
     @Autowired
     protected ObjectMapper mapper;
 
+    @Value("${elasticsearch.suggester.name}")
+    protected String suggestName;
+
+    @Value("${elasticsearch.suggester.suggestField}")
+    protected String suggestField;
+
+    @Value("${elasticsearch.suggester.fields}")
+    protected String[] suggestRecordFields;
+
     public ElasticSearch(ElasticsearchClient client) {
         this.esClient = client;
     }
@@ -75,11 +83,11 @@ public class ElasticSearch implements Search {
 
     public ResponseEntity<List<String>> getAutocompleteSuggestions(String input) throws IOException {
         Map<String, FieldSuggester> map = new HashMap<>();
-        map.put(APIConstants.TITLE_SUGGEST_NAME, FieldSuggester.of(fs -> fs
+        map.put(suggestName, FieldSuggester.of(fs -> fs
                 .completion(cs -> cs.skipDuplicates(true)
                         .size(10)
                         .fuzzy(SuggestFuzziness.of(sf -> sf.fuzziness("1").minLength(2)))
-                        .field(APIConstants.TITLE_SUGGEST))
+                        .field(suggestField))
         ));
         Suggester suggester = Suggester.of(s -> s
                 .suggesters(map)
@@ -88,7 +96,7 @@ public class ElasticSearch implements Search {
         SearchRequest searchRequest = SearchRequest.of(s -> {
             s.index(indexName)
                     // can add more fields to be returned
-                    .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of(APIConstants.TITLE_FIELD)))))
+                    .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of(suggestRecordFields)))))
                     .suggest(suggester);
             return s;
         });
@@ -96,7 +104,7 @@ public class ElasticSearch implements Search {
         logger.info("Elastic search response {}", response);
 
         var suggestions = new HashSet<String>();
-        for (var item : response.suggest().get(APIConstants.TITLE_SUGGEST_NAME)) {
+        for (var item : response.suggest().get(suggestName)) {
             suggestions.addAll(item.completion().options().stream().map(o -> {
                 assert o.source() != null;
                 return o.source().getTitle();
