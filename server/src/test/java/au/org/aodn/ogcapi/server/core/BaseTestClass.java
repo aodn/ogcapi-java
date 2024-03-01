@@ -52,7 +52,7 @@ public class BaseTestClass {
     }
 
     protected String getExternalBasePath() {
-        return "http://localhost:" + port + "/api/v1/ogcapi/ext";
+        return "http://localhost:" + port + "/api/v1/ogc/ext";
     }
 
     protected void clearElasticIndex() throws IOException {
