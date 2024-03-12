@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.server.common.RestApi;
 import au.org.aodn.ogcapi.server.core.BaseTestClass;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.service.OGCApiServiceTest;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -322,6 +323,25 @@ public class RestApiTest extends BaseTestClass {
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_provider IS NULL AND dataset_provider='IMOS'", Collections.class);
         assertEquals(0, collections.getBody().getCollections().size(), "nothing will hit with and ");
+    }
+    /**
+     * Verify text search match with phase, that is the order of the text should appear in the title
+     */
+    @Test
+    public void verifyParameterTextSearchMatch() throws IOException  {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=title='Impacts of stress on coral reproduction.'", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=title='stress on coral reproduction.'", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, still partial match");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=title='on stress coral reproduction.'", Collections.class);
+        assertEquals(0, collections.getBody().getCollections().size(), "hit 0, order of words diff");
     }
     /**
      * Verify OR operation for CQL
