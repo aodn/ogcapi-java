@@ -1,13 +1,5 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
-import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
-import co.elastic.clients.elasticsearch._types.query_dsl.*;
-import co.elastic.clients.json.JsonData;
-import org.geotools.filter.AttributeExpressionImpl;
-import org.geotools.filter.LiteralExpressionImpl;
-import org.geotools.filter.text.cql2.CQLException;
-import org.geotools.temporal.object.DefaultPeriod;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.temporal.TEquals;
