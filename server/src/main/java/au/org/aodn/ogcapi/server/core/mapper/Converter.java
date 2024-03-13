@@ -2,12 +2,17 @@ package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
 import java.util.stream.Collectors;
 
 @FunctionalInterface
 public interface Converter<F, T> {
+
+    Logger logger = LoggerFactory.getLogger(Converter.class);
+
     T convert(F from);
 
     default au.org.aodn.ogcapi.features.model.Link getSelfCollectionLink(String hostname, String id) {
@@ -43,7 +48,7 @@ public interface Converter<F, T> {
      * @param m
      * @return
      */
-    default Collection getCollection(StacCollectionModel m, String host) {
+    default <F extends StacCollectionModel> Collection getCollection(F m, String host) {
 
         Collection collection = new Collection();
         collection.setId(m.getUuid());
@@ -56,11 +61,14 @@ public interface Converter<F, T> {
         if(m.getExtent() != null) {
             extent.setSpatial(new ExtentSpatial());
 
-            if(m.getExtent().getBbox() != null) {
+            if(m.getExtent().getBbox() != null && !m.getExtent().getBbox().isEmpty()) {
                 // The first item is the overall bbox, this is STAC spec requirement but not for
                 // OGC collection, hence we remove the first item.
                 extent.getSpatial().bbox(m.getExtent().getBbox().subList(1, m.getExtent().getBbox().size()));
                 collection.setExtent(extent);
+            }
+            else {
+                logger.warn("BBOX is missing for this UUID {}", m.getUuid());
             }
 
             extent.setTemporal(new ExtentTemporal());
