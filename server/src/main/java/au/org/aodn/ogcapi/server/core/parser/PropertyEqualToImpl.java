@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
@@ -22,7 +24,7 @@ public class PropertyEqualToImpl<T extends Enum<T>> extends ElasticFilter implem
         this.matchAction = matchAction;
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-            this.query = MatchQuery.of(builder -> builder
+            this.query = MatchPhraseQuery.of(builder -> builder
                     .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
                     .query(literal.toString())
             )._toQuery();
