@@ -64,3 +64,7 @@ Below table shows how to call the OGC API, assume the ${prefix} is /api/v1/ogc/
 | ---- |------------ | ------- |----| ----- |
 | 1 | Find record based on field | ${prefix}/collections?filter=FILED_NAME='VALUE' | ${prefix}/collections?filter=title='This is a test' | It use elastic match_phase query internally, so the text will be match according to phase order, so lets say you want a title 'This is a test', then 'is a test' will be a hit while 'is the a test' is not. Upper or lower case makes no different. |
 | 2 | Swagger API page | ${prefix}/api or api?f=html | With f=html, it shows the swagger api page, else it shows the open api json file | |
+
+## Support fields
+
+Please refer to class [CQLCollectionsFields.java](./src/main/java/au/org/aodn/ogcapi/server/core/model/enumeration/CQLCollectionsField.java), the enum name there are the supported field name in CQL filter
