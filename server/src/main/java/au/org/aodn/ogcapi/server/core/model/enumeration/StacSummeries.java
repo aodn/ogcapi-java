@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public enum StacSummeries {
@@ -10,7 +9,8 @@ public enum StacSummeries {
     TemporalEnd("summaries.temporal.end", ""),
     Temporal("summaries.temporal", "extent.temporal", List.of(TemporalStart, TemporalEnd)),
     UpdateFrequency("summaries.update_frequency", "summaries.update_frequency"),
-    Provider("summaries.dataset_provider", "summaries.dataset_provider");
+    DatasetProvider("summaries.dataset_provider", "summaries.dataset_provider"),
+    DatasetGroup("summaries.dataset_group", "summaries.dataset_group");
 
     public final String searchField;
     public final String displayField;

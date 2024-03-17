@@ -5,7 +5,6 @@ import au.org.aodn.ogcapi.server.common.RestApi;
 import au.org.aodn.ogcapi.server.core.BaseTestClass;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.service.OGCApiServiceTest;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -13,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -43,12 +43,12 @@ public class RestApiTest extends BaseTestClass {
         ResponseEntity<Void> response = api.apiGet(OGCMediaTypeMapper.json.toString());
 
         assertEquals(response.getStatusCode(), HttpStatus.TEMPORARY_REDIRECT, "Incorrect redirect");
-        assertEquals(response.getHeaders().getLocation().getPath(), "/api/v1/ogc/api-docs/v3", "Incorrect path");
+        assertEquals(Objects.requireNonNull(response.getHeaders().getLocation()).getPath() , "/api/v1/ogc/api-docs/v3", "Incorrect path");
 
         response = api.apiGet(OGCMediaTypeMapper.html.toString());
 
         assertEquals(response.getStatusCode(), HttpStatus.TEMPORARY_REDIRECT, "Incorrect redirect");
-        assertEquals(response.getHeaders().getLocation().getPath(), "/api/v1/ogc/swagger-ui/index.html", "Incorrect path");
+        assertEquals(Objects.requireNonNull(response.getHeaders().getLocation()).getPath(), "/api/v1/ogc/swagger-ui/index.html", "Incorrect path");
     }
 
     @Test
@@ -58,7 +58,7 @@ public class RestApiTest extends BaseTestClass {
     }
     /**
      * The search is a fuzzy search based on title and description. So you expect 1 hit only
-     * @throws IOException
+     * @throws IOException - IO Exception
      */
     @Test
     public void verifyApiCollectionsQueryOnText() throws IOException {
@@ -69,7 +69,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Call rest api directly and get query result
         ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=reproduction", Collections.class);
-        assertEquals(1, collections.getBody().getCollections().size(), "Only 1 hit");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Only 1 hit");
         assertEquals(
                 "516811d7-cd1e-207a-e0440003ba8c79dd",
                 collections.getBody().getCollections().get(0).getId(),
@@ -77,14 +77,14 @@ public class RestApiTest extends BaseTestClass {
 
         // This time we make a typo but we should still get the result back as Fuzzy search
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=temperatura", Collections.class);
-        assertEquals(1, collections.getBody().getCollections().size(), "Only 1 hit");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Only 1 hit");
         assertEquals(
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e",
                 collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - 7709f541-fc0c-4318-b5b9-9053aa474e0e");
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=temperatura,reproduction", Collections.class);
-        assertEquals(2, collections.getBody().getCollections().size(), "hit 2");
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2");
         assertEquals(
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e",
                 collections.getBody().getCollections().get(0).getId(),
@@ -106,7 +106,7 @@ public class RestApiTest extends BaseTestClass {
         );
 
         ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1994-02-16T13:00:00Z/..", Collections.class);
-        assertEquals(1, collections.getBody().getCollections().size(), "hit 1 because 1 document do not have start date");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1 because 1 document do not have start date");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -114,7 +114,7 @@ public class RestApiTest extends BaseTestClass {
 
         // The syntax slightly diff but they are the same / = /.. the time is slightly off with one of the record so still get 1
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T15:10:44Z/", Collections.class);
-        assertEquals(1, collections.getBody().getCollections().size(), "hit 1 because 1 document do not have start date");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1 because 1 document do not have start date");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -122,7 +122,7 @@ public class RestApiTest extends BaseTestClass {
 
         // The syntax slightly diff but they are the same / = /.. the time is slightly off with one of the record so still get 1
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T14:10:44Z/", Collections.class);
-        assertEquals(2, collections.getBody().getCollections().size(), "hit 2");
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -145,10 +145,10 @@ public class RestApiTest extends BaseTestClass {
 
         ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
-        assertEquals(3, collections.getBody().getCollections().size(), "hit all");
+        assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit all");
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/2007-06-05T14:00:00Z", Collections.class);
-        assertEquals(2, collections.getBody().getCollections().size(), "hit 2 only given this time");
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2 only given this time");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -171,7 +171,7 @@ public class RestApiTest extends BaseTestClass {
 
         ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T14:10:44Z/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
-        assertEquals(2, collections.getBody().getCollections().size(), "hit 2, one record no start date");
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2, one record no start date");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -184,7 +184,7 @@ public class RestApiTest extends BaseTestClass {
         // The time is slight off by 1 sec so only 1 document returned
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T14:10:45Z/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
-        assertEquals(1, collections.getBody().getCollections().size(), "hit 1");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -398,5 +398,25 @@ public class RestApiTest extends BaseTestClass {
                 Collections.class);
 
         assertEquals(0, collections.getBody().getCollections().size(), "hit none");
+    }
+
+    /**
+     * Verify filter on attribute dataset_group works
+     *
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLPropertyDatasetGroup() throws IOException {
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",   // Provider null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='aodn'", Collections.class);
+        assertEquals(1, collections.getBody().getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
     }
 }
