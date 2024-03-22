@@ -127,6 +127,7 @@ public class ElasticSearch implements Search {
                 .from(from)         // Skip how many record
                 .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
                 .size(2000)
+                .sort(so -> so.score(v -> v.order(SortOrder.Desc)))
                 .sort(so -> so
                     .field(FieldSort.of(f -> f
                         .field(StacSummeries.Score.searchField)
