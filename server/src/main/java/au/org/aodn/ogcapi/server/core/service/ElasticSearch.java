@@ -121,7 +121,11 @@ public class ElasticSearch implements Search {
                                                            Integer size) throws IOException {
 
 
+
         SearchRequest.Builder builder = new SearchRequest.Builder();
+
+//        List<String> categories = Arrays.asList(cql.split("=")[1].split(","));
+
         builder.index(indexName)
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
@@ -163,8 +167,8 @@ public class ElasticSearch implements Search {
                     .hits()
                     .hits()
                     .stream()
-                    .map(m -> formatResult(m))
-                    .filter(f -> f != null)
+                    .map(this::formatResult)
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
         }
         catch(ElasticsearchException ee) {
@@ -263,13 +267,23 @@ public class ElasticSearch implements Search {
                 }
             }
 
-            List<Query> filters = null;
+            List<Query> filters = new ArrayList<>();
             if(cql != null) {
                 CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
                 Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-
-                if(filter instanceof ElasticFilter elasticFilter) {
-                    filters = List.of(elasticFilter.getQuery());
+                // to enable search by multiple categories e.g ?filter=categories='cat1,cat2,cat3'
+                if (cql.startsWith("categories")) {
+                    String[] categories = cql.replace("'", "").split("=")[1].split("\\s*,\\s*");
+                    for (String category : categories) {
+                        filter = CompilerUtil.parseFilter(Language.CQL, "categories='" + category + "'", factory);
+                        if (filter instanceof ElasticFilter elasticFilterCategory) {
+                            filters.add(elasticFilterCategory.getQuery());
+                        }
+                    }
+                } else {
+                    if(filter instanceof ElasticFilter elasticFilter) {
+                        filters = List.of(elasticFilter.getQuery());
+                    }
                 }
             }
 
