@@ -7,6 +7,10 @@ public enum StacBasicField {
     Providers(
             "providers",    // This result in the whole provider section return
             "providers.name"
+    ),
+    Category(
+            "category",  // This result in the whole themes section return
+            "themes.concepts.id"
     );
 
     public final String searchField;    // Field in STAC object

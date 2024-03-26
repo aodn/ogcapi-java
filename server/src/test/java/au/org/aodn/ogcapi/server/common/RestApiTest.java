@@ -342,6 +342,26 @@ public class RestApiTest extends BaseTestClass {
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=title='on stress coral reproduction.'", Collections.class);
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, order of words diff");
     }
+
+    @Test
+    public void verifyParameterCategoriesSearchMatch() throws IOException  {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Saturation state of calcite in the water body'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Total alkalinity per unit mass of the water body' AND category='Saturation state of calcite in the water body'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, still partial match");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Total alkalinity per unit mass of the water body' OR category='this category does not exist'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, still partial match");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='this category does not exist'", Collections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, order of words diff");
+    }
     /**
      * Verify OR operation for CQL
      *
