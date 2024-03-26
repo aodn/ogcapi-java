@@ -8,8 +8,8 @@ public enum StacBasicField {
             "providers",    // This result in the whole provider section return
             "providers.name"
     ),
-    Categories(
-            "categories",  // This result in the whole themes section return
+    Category(
+            "category",  // This result in the whole themes section return
             "themes.concepts.id"
     );
 

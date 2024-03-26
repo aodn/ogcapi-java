@@ -351,13 +351,16 @@ public class RestApiTest extends BaseTestClass {
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
         );
 
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=categories='Saturation state of calcite in the water body'", Collections.class);
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Saturation state of calcite in the water body'", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=categories='Total alkalinity per unit mass of the water body, Practical salinity of the water body'", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Total alkalinity per unit mass of the water body' AND category='Saturation state of calcite in the water body'", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, still partial match");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=categories='this category does not exist'", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Total alkalinity per unit mass of the water body' OR category='this category does not exist'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, still partial match");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='this category does not exist'", Collections.class);
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, order of words diff");
     }
     /**

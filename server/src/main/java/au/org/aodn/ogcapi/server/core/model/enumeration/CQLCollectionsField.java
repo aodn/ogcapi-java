@@ -12,7 +12,7 @@ public enum CQLCollectionsField {
     temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField),
     title(StacBasicField.Title.searchField, StacBasicField.Title.displayField),
     description(StacBasicField.Description.searchField, StacBasicField.Description.displayField),
-    categories(StacBasicField.Categories.searchField, StacBasicField.Categories.displayField),
+    category(StacBasicField.Category.searchField, StacBasicField.Category.displayField),
     providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField),
     id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField);
 

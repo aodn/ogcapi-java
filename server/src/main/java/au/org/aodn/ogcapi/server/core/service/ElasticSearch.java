@@ -271,22 +271,10 @@ public class ElasticSearch implements Search {
             if(cql != null) {
                 CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
                 Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-                // to enable search by multiple categories e.g ?filter=categories='cat1,cat2,cat3'
-                if (cql.startsWith("categories")) {
-                    String[] categories = cql.replace("'", "").split("=")[1].split("\\s*,\\s*");
-                    for (String category : categories) {
-                        filter = CompilerUtil.parseFilter(Language.CQL, "categories='" + category + "'", factory);
-                        if (filter instanceof ElasticFilter elasticFilterCategory) {
-                            filters.add(elasticFilterCategory.getQuery());
-                        }
-                    }
-                } else {
-                    if(filter instanceof ElasticFilter elasticFilter) {
-                        filters = List.of(elasticFilter.getQuery());
-                    }
+                if(filter instanceof ElasticFilter elasticFilter) {
+                    filters = List.of(elasticFilter.getQuery());
                 }
             }
-
             return searchCollectionBy(null, queries, filters,  properties, null, null);
         }
     }
