@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.parser;
+package au.org.aodn.ogcapi.server.core.parser;
 
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;

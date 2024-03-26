@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.parser;
+package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import co.elastic.clients.elasticsearch._types.GeoShapeRelation;

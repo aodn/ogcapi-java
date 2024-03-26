@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.parser;
+package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;

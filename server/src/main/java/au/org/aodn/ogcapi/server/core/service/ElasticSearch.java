@@ -2,8 +2,8 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
-import au.org.aodn.ogcapi.server.parser.CQLToElasticFilterFactory;
-import au.org.aodn.ogcapi.server.parser.ElasticFilter;
+import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
+import au.org.aodn.ogcapi.server.core.parser.ElasticFilter;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldSort;

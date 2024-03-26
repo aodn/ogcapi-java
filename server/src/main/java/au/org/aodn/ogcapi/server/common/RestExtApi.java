@@ -34,7 +34,7 @@ public class RestExtApi {
     /**
      * Evict cache to allow reload
      */
-    @CacheEvict(value="parameter_category", allEntries = true)
+    @CacheEvict(value="parameter_categories", allEntries = true)
     @Scheduled(fixedRateString = "${caching.parameter_category.ttl:43200000}")
     public void emptyCachedParameterCategory() {
         log.info("Evict parameter_category cache as TTL pass");
@@ -43,8 +43,8 @@ public class RestExtApi {
      * Value cached to avoid excessive load
      * @return
      */
-    @Cacheable("parameter_category")
-    @GetMapping(path="/parameter/category")
+    @Cacheable("parameter_categories")
+    @GetMapping(path="/parameter/categories")
     public ResponseEntity<List<CategoryVocabModel>> getParameterCategory() {
         return ResponseEntity.ok(restExtService.getParameterCategory(vocabApi));
     }
