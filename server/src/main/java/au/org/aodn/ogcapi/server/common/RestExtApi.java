@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.server.core.model.CategoryVocabModel;
-import au.org.aodn.ogcapi.server.service.Search;
+import au.org.aodn.ogcapi.server.core.service.Search;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

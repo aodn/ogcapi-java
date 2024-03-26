@@ -1,9 +1,9 @@
 package au.org.aodn.ogcapi.server.features;
 
-import au.org.aodn.ogcapi.server.mapper.StacToCollection;
+import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.service.OGCApiService;
+import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
