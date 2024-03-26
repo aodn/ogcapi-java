@@ -1,6 +1,6 @@
-package au.org.aodn.ogcapi.server.core.common;
+package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.BaseTestClass;
+import au.org.aodn.ogcapi.server.BaseTestClass;
 
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)         // We need to use @BeforeAll @AfterAll with not static method
-public class CommonRestExtApiTest extends BaseTestClass {
+public class RestExtApiTest extends BaseTestClass {
 
     @BeforeAll
     public void beforeClass() throws IOException {

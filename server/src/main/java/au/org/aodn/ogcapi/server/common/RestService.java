@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.service.OGCApiService;
+import au.org.aodn.ogcapi.server.service.OGCApiService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

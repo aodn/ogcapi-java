@@ -1,9 +1,9 @@
 package au.org.aodn.ogcapi.server.tile;
 
-import au.org.aodn.ogcapi.server.core.mapper.BinaryResponseToBytes;
-import au.org.aodn.ogcapi.server.core.mapper.StacToTileSetWmWGS84Q;
+import au.org.aodn.ogcapi.server.mapper.BinaryResponseToBytes;
+import au.org.aodn.ogcapi.server.mapper.StacToTileSetWmWGS84Q;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
+import au.org.aodn.ogcapi.server.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
 import io.swagger.v3.oas.annotations.Hidden;

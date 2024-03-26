@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core;
+package au.org.aodn.ogcapi.server;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;

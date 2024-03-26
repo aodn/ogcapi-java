@@ -1,6 +1,6 @@
-package au.org.aodn.ogcapi.server.core.tile;
+package au.org.aodn.ogcapi.server.tile;
 
-import au.org.aodn.ogcapi.server.core.BaseTestClass;
+import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;

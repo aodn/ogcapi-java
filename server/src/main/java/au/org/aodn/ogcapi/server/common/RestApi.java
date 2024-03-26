@@ -7,12 +7,12 @@ import au.org.aodn.ogcapi.common.model.ConfClasses;
 import au.org.aodn.ogcapi.common.model.LandingPage;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.Exception;
-import au.org.aodn.ogcapi.server.core.mapper.StacToCollections;
+import au.org.aodn.ogcapi.server.mapper.StacToCollections;
 import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.service.OGCApiService;
+import au.org.aodn.ogcapi.server.service.OGCApiService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

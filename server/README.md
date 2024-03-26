@@ -67,4 +67,4 @@ Below table shows how to call the OGC API, assume the ${prefix} is /api/v1/ogc/
 
 ## Support fields
 
-Please refer to class [CQLCollectionsFields.java](./src/main/java/au/org/aodn/ogcapi/server/core/model/enumeration/CQLCollectionsField.java), the enum name there are the supported field name in CQL filter
+Please refer to class [CQLCollectionsFields.java](src/main/java/au/org/aodn/ogcapi/server/core/model/enumeration/CQLCollectionsField.java), the enum name there are the supported field name in CQL filter

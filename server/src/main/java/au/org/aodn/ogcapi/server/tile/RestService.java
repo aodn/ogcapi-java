@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.tile;
 import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.service.OGCApiService;
+import au.org.aodn.ogcapi.server.service.OGCApiService;
 import au.org.aodn.ogcapi.tile.model.TileMatrixSets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;

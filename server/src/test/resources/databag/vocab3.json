@@ -1,0 +1,80 @@
+{
+  "format": "linked-data-api",
+  "version": "0.2",
+  "result": {
+    "_about": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=3",
+    "definition": "http://vocabs.ardc.edu.au/repository/api/lda/meta/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+    "extendedMetadataVersion": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=3&_metadata=all",
+    "first": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=0",
+    "isPartOf": {
+      "_about": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+      "definition": "http://vocabs.ardc.edu.au/repository/api/lda/meta/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+      "hasPart": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=3",
+      "type": "http://purl.org/linked-data/api/vocab#ListEndpoint"
+    },
+    "items": [
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/8",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/53",
+            "prefLabel": {
+              "_value": "Physical-Atmosphere",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:26Z",
+        "definition": "This category contains vocabulary terms describing atmospheric humidity parameters",
+        "prefLabel": {
+          "_value": "Humidity",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/9",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/53",
+            "prefLabel": {
+              "_value": "Physical-Atmosphere",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:27Z",
+        "definition": "This category contains vocabulary terms describing precipitation and evaporation parameters",
+        "prefLabel": {
+          "_value": "Precipitation and evaporation",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/1",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2018-10-31T23:07:48Z",
+        "dctermsModified": "2018-12-11T04:39:23Z",
+        "definition": "This category contains vocabulary terms describing bathymetry parameters",
+        "prefLabel": {
+          "_value": "Bathymetry",
+          "_lang": "en"
+        }
+      }
+    ],
+    "itemsPerPage": 10,
+    "page": 3,
+    "prev": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=2",
+    "startIndex": 31,
+    "type": "http://purl.org/linked-data/api/vocab#Page"
+  }
+}
