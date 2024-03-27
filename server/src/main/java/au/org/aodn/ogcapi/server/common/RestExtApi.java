@@ -20,7 +20,7 @@ import java.util.*;
 @RestController("CommonRestExtApi")
 @RequestMapping(value = "/api/v1/ogc/ext")
 public class RestExtApi {
-    @Value("${api.vocabs:https://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary}")
+    @Value("${api.vocabs:https://vocabs.ardc.edu.au/repository/api/lda/aodn}")
     protected String vocabApi;
 
     @Autowired

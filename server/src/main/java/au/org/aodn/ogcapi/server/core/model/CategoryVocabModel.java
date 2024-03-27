@@ -2,7 +2,9 @@ package au.org.aodn.ogcapi.server.core.model;
 
 import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -10,10 +12,12 @@ import java.util.Map;
  */
 @Builder
 @Getter
+@Setter
 public class CategoryVocabModel {
 
     protected String label;
     protected String definition;
-    protected Map<String, String> broader;
-    protected Map<String, String> narrower;
+    protected String about;
+    protected List<CategoryVocabModel> broader;
+    protected List<CategoryVocabModel> narrower;
 }
