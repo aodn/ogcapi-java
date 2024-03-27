@@ -62,6 +62,7 @@ public class RestExtService {
                         // Now we need to construct link to detail resources
                         String dl = String.format(vocabApiBase + details, about.apply(j));
                         try {
+                            log.debug("Query api -> {}", dl);
                             ObjectNode d = template.getForObject(dl, ObjectNode.class);
 
                             if(isNodeValid.apply(d, "result") && isNodeValid.apply(d.get("result"), "primaryTopic")) {
