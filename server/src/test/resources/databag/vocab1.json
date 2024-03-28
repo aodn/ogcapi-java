@@ -1,0 +1,228 @@
+{
+  "format": "linked-data-api",
+  "version": "0.2",
+  "result": {
+    "_about": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=1",
+    "definition": "http://vocabs.ardc.edu.au/repository/api/lda/meta/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+    "extendedMetadataVersion": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=1&_metadata=all",
+    "first": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=0",
+    "isPartOf": {
+      "_about": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+      "definition": "http://vocabs.ardc.edu.au/repository/api/lda/meta/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+      "hasPart": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=1",
+      "type": "http://purl.org/linked-data/api/vocab#ListEndpoint"
+    },
+    "items": [
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/3",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:28Z",
+        "definition": "This category contains vocabulary terms describing currents parameters",
+        "prefLabel": {
+          "_value": "Current",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/30",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/53",
+            "prefLabel": {
+              "_value": "Physical-Atmosphere",
+              "_lang": "en"
+            }
+          },
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2020-09-08T04:25:53Z",
+        "definition": "This category contains vocabulary terms describing Air-Sea Fluxes parameters",
+        "prefLabel": {
+          "_value": "Air-Sea Fluxes",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/4",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/55",
+            "prefLabel": {
+              "_value": "Biological",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:27Z",
+        "definition": "This category contains vocabulary terms describing ocean biota parameters",
+        "prefLabel": {
+          "_value": "Ocean Biota",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/45",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2021-07-20T05:59:26Z",
+        "definition": "This category contains vocabulary terms describing optical properties parameters",
+        "prefLabel": {
+          "_value": "Optical properties",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/46",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/54",
+            "prefLabel": {
+              "_value": "Chemical",
+              "_lang": "en"
+            }
+          },
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/55",
+            "prefLabel": {
+              "_value": "Biological",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2022-10-19T22:22:24Z",
+        "definition": "This category contains vocabulary terms describing suspended particulate material parameters",
+        "prefLabel": {
+          "_value": "Suspended particulate material",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/47",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2020-12-08T05:22:35Z",
+        "definition": "This category contains vocabulary terms describing backscattering parameters",
+        "prefLabel": {
+          "_value": "Backscattering",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/48",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/53",
+            "prefLabel": {
+              "_value": "Physical-Atmosphere",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:26Z",
+        "definition": "This category contains vocabulary terms describing UV radiation parameters",
+        "prefLabel": {
+          "_value": "UV radiation",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/49",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:28Z",
+        "definition": "This category contains vocabulary terms describing temperature parameters",
+        "prefLabel": {
+          "_value": "Temperature",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/5",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2020-12-08T05:22:23Z",
+        "definition": "This category contains vocabulary terms describing acoustics parameters",
+        "prefLabel": {
+          "_value": "Acoustics",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/50",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:28Z",
+        "definition": "This category contains vocabulary terms describing salinity parameters",
+        "prefLabel": {
+          "_value": "Salinity",
+          "_lang": "en"
+        }
+      }
+    ],
+    "itemsPerPage": 10,
+    "next": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=2",
+    "page": 1,
+    "prev": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=0",
+    "startIndex": 11,
+    "type": "http://purl.org/linked-data/api/vocab#Page"
+  }
+}

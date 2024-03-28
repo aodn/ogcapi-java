@@ -2,8 +2,6 @@ package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Collections;
-import au.org.aodn.ogcapi.features.model.Extent;
-import au.org.aodn.ogcapi.features.model.ExtentSpatial;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Value;

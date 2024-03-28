@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
-import co.elastic.clients.transport.endpoints.BinaryDataResponse;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import org.mapstruct.Mapper;
 import org.slf4j.Logger;

@@ -1,0 +1,212 @@
+{
+  "format": "linked-data-api",
+  "version": "0.2",
+  "result": {
+    "_about": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+    "definition": "http://vocabs.ardc.edu.au/repository/api/lda/meta/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+    "extendedMetadataVersion": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_metadata=all",
+    "first": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=0",
+    "hasPart": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+    "isPartOf": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json",
+    "items": [
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/10",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/53",
+            "prefLabel": {
+              "_value": "Physical-Atmosphere",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:26Z",
+        "definition": "This category contains vocabulary terms describing air pressure parameters",
+        "prefLabel": {
+          "_value": "Air pressure",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/11",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/54",
+            "prefLabel": {
+              "_value": "Chemical",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:27Z",
+        "definition": "This category contains vocabulary terms describing dissolved oxygen parameters",
+        "prefLabel": {
+          "_value": "Oxygen",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/19",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/55",
+            "prefLabel": {
+              "_value": "Biological",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2020-10-13T06:00:26Z",
+        "definition": "This category contains vocabulary terms describing chlorophyll concentration parameters",
+        "prefLabel": {
+          "_value": "Chlorophyll",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/2",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2023-07-27T06:19:42Z",
+        "definition": "This category contains vocabulary terms describing waves parameters",
+        "prefLabel": {
+          "_value": "Wave",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/22",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/53",
+            "prefLabel": {
+              "_value": "Physical-Atmosphere",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:26Z",
+        "definition": "This category contains vocabulary terms describing atmospheric visibility parameters",
+        "prefLabel": {
+          "_value": "Visibility",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/23",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:28Z",
+        "definition": "This category contains vocabulary terms describing density parameters",
+        "prefLabel": {
+          "_value": "Density",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/25",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:28Z",
+        "definition": "This category contains vocabulary terms describing water pressure parameters",
+        "prefLabel": {
+          "_value": "Water pressure",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/26",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/55",
+            "prefLabel": {
+              "_value": "Biological",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2020-10-13T05:50:01Z",
+        "definition": "This category contains vocabulary terms describing pigments concentration parameters",
+        "prefLabel": {
+          "_value": "Other Pigment",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/27",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/54",
+            "prefLabel": {
+              "_value": "Chemical",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2021-07-20T04:40:55Z",
+        "definition": "This category contains vocabulary terms describing alkalinity parameters",
+        "prefLabel": {
+          "_value": "Alkalinity",
+          "_lang": "en"
+        }
+      },
+      {
+        "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/28",
+        "broader": [
+          {
+            "_about": "http://vocab.aodn.org.au/def/parameter_classes/category/56",
+            "prefLabel": {
+              "_value": "Physical-Water",
+              "_lang": "en"
+            }
+          }
+        ],
+        "dctermsCreated": "2014-06-01T00:00:00Z",
+        "dctermsModified": "2018-03-14T22:42:28Z",
+        "definition": "This category contains vocabulary terms describing turbidity parameters",
+        "prefLabel": {
+          "_value": "Turbidity",
+          "_lang": "en"
+        }
+      }
+    ],
+    "itemsPerPage": 10,
+    "next": "http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=1",
+    "page": 0,
+    "startIndex": 1,
+    "type": [
+      "http://purl.org/linked-data/api/vocab#ListEndpoint",
+      "http://purl.org/linked-data/api/vocab#Page"
+    ]
+  }
+}

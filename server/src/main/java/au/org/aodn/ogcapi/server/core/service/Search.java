@@ -7,7 +7,6 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 
 public interface Search {
     List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws Exception;

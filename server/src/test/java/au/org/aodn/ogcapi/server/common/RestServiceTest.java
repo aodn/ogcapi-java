@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.common;
+package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.server.common.RestService;
 import org.junit.jupiter.api.Test;

@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.tile.model.AllOftileSetDataType;
 import au.org.aodn.ogcapi.tile.model.TileSet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mapstruct.Mapper;

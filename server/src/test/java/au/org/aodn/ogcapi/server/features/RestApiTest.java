@@ -1,7 +1,7 @@
-package au.org.aodn.ogcapi.server.core.features;
+package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.core.BaseTestClass;
+import au.org.aodn.ogcapi.server.BaseTestClass;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;

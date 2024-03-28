@@ -1,8 +1,7 @@
-package au.org.aodn.ogcapi.server.core.common;
+package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.features.model.Collections;
-import au.org.aodn.ogcapi.server.common.RestApi;
-import au.org.aodn.ogcapi.server.core.BaseTestClass;
+import au.org.aodn.ogcapi.server.BaseTestClass;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import org.junit.jupiter.api.*;
