@@ -81,7 +81,9 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
-    public ResponseEntity<List<String>> getAutocompleteSuggestions(String input) throws IOException {
+    public ResponseEntity<List<String>> getContextSuggestions(String input, List<String> categoryFilters) throws IOException {
+        // TODO: Implement the context suggester with category context
+
         Map<String, FieldSuggester> map = new HashMap<>();
         map.put(suggestName, FieldSuggester.of(fs -> fs
                 .completion(cs -> cs.skipDuplicates(true)

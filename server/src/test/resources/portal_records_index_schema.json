@@ -11,6 +11,13 @@
       "title": { "type": "text" },
       "title_suggest": {
         "type": "completion",
+        "contexts": [
+          {
+            "name": "vocab_category",
+            "type": "category",
+            "path": "cat"
+          }
+        ],
         "analyzer": "simple",
         "preserve_separators": true,
         "preserve_position_increments": true,

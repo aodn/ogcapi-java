@@ -27,10 +27,15 @@ public class RestExtApi {
     protected RestExtService restExtService;
     @Autowired
     protected Search searchService;
+
     @GetMapping(path="/autocomplete")
-    public ResponseEntity<List<String>> getAutocompleteSuggestions(@RequestParam String input) throws java.lang.Exception {
-        return searchService.getAutocompleteSuggestions(input);
+    public ResponseEntity<List<String>> getAutocompleteSuggestions(
+            @RequestParam String input,
+            @RequestParam List<String> categoryFilters
+    ) throws java.lang.Exception {
+        return searchService.getContextSuggestions(input, categoryFilters);
     }
+
     /**
      * Evict cache to allow reload
      */
@@ -39,6 +44,7 @@ public class RestExtApi {
     public void emptyCachedParameterCategory() {
         log.info("Evict parameter_category cache as TTL pass");
     }
+
     /**
      * Value cached to avoid excessive load
      * @return
