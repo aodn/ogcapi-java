@@ -22,9 +22,25 @@ springdoc:
     path: /api/v1/ogc/api-docs/v3
 
 management:
+  info:
+    env:
+      enabled: true
   health:
     elasticsearch:
       enabled: false
+  endpoints:
+    web:
+      base-path: /manage
+  endpoint:
+    logfile:
+      external-file: /tmp/logs/ogcapi.log
+
+# Actuator info point
+info:
+  application:
+    name: '@project.name@'
+    description: '@project.description@'
+    version: '@project.version@'
 
 logging:
   level:
