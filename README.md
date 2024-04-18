@@ -38,3 +38,13 @@ Another change will be on the file replacer, this is due to the following reason
 
 The server module contains the implementation of those interfaces, for details please read the
 [README](./server/README.md)
+
+### Endpoints:
+
+| Description         | Endpoints                              | Environment |
+|---------------------|----------------------------------------|-------------|
+| Logfile             | `/manage/logfile`                      | Edge        |
+| Beans info          | `/manage/beans`                        | Edge        |
+| Env info            | `/manage/env`                          | Edge        |
+| Info (Show version) | `/manage/info`                         | Edge        |
+| Health check        | `/manage/health`                       | Edge        |

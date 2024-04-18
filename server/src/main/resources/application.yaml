@@ -31,10 +31,11 @@ management:
   endpoints:
     web:
       base-path: /manage
+      exposure:
+        include: "health,info"
   endpoint:
     logfile:
       external-file: /tmp/logs/ogcapi.log
-
 # Actuator info point
 info:
   application:
