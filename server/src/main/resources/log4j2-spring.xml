@@ -8,7 +8,7 @@
         <Console name="LogToConsole" target="SYSTEM_OUT">
             <PatternLayout pattern="${LOG_PATTERN}"/>
         </Console>
-        <RollingFile name="LogToRollingFile" fileName="/tmp/logs/ogcapi.log" filePattern="/tmp/logs/indexer-%i.%d{yyyy-MM-dd}.log">
+        <RollingFile name="LogToRollingFile" fileName="/tmp/logs/ogcapi.log" filePattern="/tmp/logs/ogcapi-%i.%d{yyyy-MM-dd}.log">
             <PatternLayout>
                 <Pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p %c - %m%n</Pattern>
             </PatternLayout>
@@ -21,7 +21,7 @@
     </Appenders>
     <Loggers>
         <!-- avoid duplicated logs with additivity=false -->
-        <Logger name="au.org.aodn.esindexer" level="debug" additivity="false">
+        <Logger name="au.org.aodn.ogcapi" level="debug" additivity="false">
             <AppenderRef ref="LogToRollingFile"/>
             <AppenderRef ref="LogToConsole"/>
         </Logger>
