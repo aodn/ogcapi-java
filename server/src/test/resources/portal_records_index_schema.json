@@ -1,4 +1,24 @@
 {
+  "settings":{
+    "analysis":{
+      "analyzer":{
+        "my_stop_analyzer":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "filter":[
+            "lowercase",
+            "english_stop"
+          ]
+        }
+      },
+      "filter":{
+        "english_stop":{
+          "type":"stop",
+          "stopwords":"_english_"
+        }
+      }
+    }
+  },
   "mappings": {
     "dynamic": true,
     "properties": {
@@ -10,18 +30,8 @@
       "type": { "type": "text" },
       "title": { "type": "text" },
       "title_suggest": {
-        "type": "completion",
-        "contexts": [
-          {
-            "name": "vocab_category",
-            "type": "category",
-            "path": "cat"
-          }
-        ],
-        "analyzer": "simple",
-        "preserve_separators": true,
-        "preserve_position_increments": true,
-        "max_input_length": 50
+        "type": "search_as_you_type",
+        "analyzer": "my_stop_analyzer"
       },
       "keywords": {
         "type": "nested",
@@ -63,6 +73,19 @@
         "properties" : {
           "score": { "type": "long" },
           "status": { "type": "text" },
+          "scope" : {
+            "type": "nested",
+            "properties" : {
+              "code" : {
+                "type": "text"
+              },
+              "name" : {
+                "type": "text"
+              }
+            }
+          },
+          "dataset_provider": { "type": "text" },
+          "dataset_group": { "type": "text" },
           "creation": { "type": "date" },
           "proj:geometry": {
             "type": "geo_shape"
