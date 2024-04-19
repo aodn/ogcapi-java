@@ -6,10 +6,8 @@ elasticsearch:
     name: dev_portal_records
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
-  suggester:
-    name: title-suggest
-    suggestField: title_suggest
-    fields: "title"
+  searchAsYouType:
+    fieldName: title_suggest
 
 api:
   host: http://localhost:${server.port}

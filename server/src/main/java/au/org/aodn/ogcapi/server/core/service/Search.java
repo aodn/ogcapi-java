@@ -19,5 +19,5 @@ public interface Search {
 
     BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException;
 
-    ResponseEntity<List<String>> getContextSuggestions(String input, List<String> q) throws Exception;
+    ResponseEntity<List<String>> getAutocompleSuggestions(String input, List<String> q) throws Exception;
 }

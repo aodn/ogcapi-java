@@ -9,10 +9,11 @@ import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
-import co.elastic.clients.elasticsearch._types.query_dsl.*;
-import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.SourceConfig;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search.*;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
@@ -44,14 +45,8 @@ public class ElasticSearch implements Search {
     @Autowired
     protected ObjectMapper mapper;
 
-    @Value("${elasticsearch.suggester.name}")
-    protected String suggestName;
-
-    @Value("${elasticsearch.suggester.suggestField}")
-    protected String suggestField;
-
-    @Value("${elasticsearch.suggester.fields}")
-    protected String[] suggestRecordFields;
+    @Value("${elasticsearch.searchAsYouType.fieldName}")
+    protected String searchAsYouTypeEnabledField;
 
     public ElasticSearch(ElasticsearchClient client) {
         this.esClient = client;
@@ -81,36 +76,40 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
-    public ResponseEntity<List<String>> getContextSuggestions(String input, List<String> categoryFilters) throws IOException {
-        // TODO: Implement the context suggester with category context
-
-        Map<String, FieldSuggester> map = new HashMap<>();
-        map.put(suggestName, FieldSuggester.of(fs -> fs
-                .completion(cs -> cs.skipDuplicates(true)
-                        .size(10)
-                        .fuzzy(SuggestFuzziness.of(sf -> sf.fuzziness("1").minLength(2)))
-                        .field(suggestField))
+    public ResponseEntity<List<String>> getAutocompleSuggestions(String input, List<String> categoryFilters) throws IOException {
+        Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
+            // user input to the search input field
+            .query(input)
+            // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
+            .fields(Arrays.asList(searchAsYouTypeEnabledField, searchAsYouTypeEnabledField+"._2gram", searchAsYouTypeEnabledField+"._3gram"))
         ));
-        Suggester suggester = Suggester.of(s -> s
-                .suggesters(map)
-                .text(input)
-        );
-        SearchRequest searchRequest = SearchRequest.of(s -> {
-            s.index(indexName)
-                    // can add more fields to be returned
-                    .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of(suggestRecordFields)))))
-                    .suggest(suggester);
-            return s;
-        });
+        // this is where the discovery categories filter is applied
+        List<Query> filters = new ArrayList<>();
+        if (categoryFilters != null && !categoryFilters.isEmpty()) {
+            for (String category : categoryFilters) {
+                Query aFilter = BoolQuery.of(b -> b.filter(f -> f.matchPhrase(mp -> mp
+                    .field(StacBasicField.DiscoveryCategories.searchField)
+                    .query(category)
+                )))._toQuery();
+                filters.add(aFilter);
+            }
+        }
+
+        SearchRequest searchRequest =  new SearchRequest.Builder()
+            .index(indexName)
+            .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of("title")))))
+            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, filters)))
+            .build();
+
+        logger.info("Elastic search payload {}", searchRequest.toString());
         SearchResponse<RecordSuggestDTO> response = esClient.search(searchRequest, RecordSuggestDTO.class);
         logger.info("Elastic search response {}", response);
 
         var suggestions = new HashSet<String>();
-        for (var item : response.suggest().get(suggestName)) {
-            suggestions.addAll(item.completion().options().stream().map(o -> {
-                assert o.source() != null;
-                return o.source().getTitle();
-            }).collect(Collectors.toSet()));
+        for (Hit<RecordSuggestDTO> item : response.hits().hits()) {
+            if (item.source() != null) {
+                suggestions.add(item.source().getTitle());
+            }
         }
         return ResponseEntity.ok(new ArrayList<>(suggestions));
     }

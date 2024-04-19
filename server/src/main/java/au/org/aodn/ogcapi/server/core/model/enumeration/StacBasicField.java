@@ -11,6 +11,10 @@ public enum StacBasicField {
     Category(
             "category",  // This result in the whole themes section return
             "themes.concepts.id"
+    ),
+    DiscoveryCategories(
+            "discovery_categories", // This result in the whole themes section return
+            "summaries.discovery_categories"
     );
 
     public final String searchField;    // Field in STAC object
