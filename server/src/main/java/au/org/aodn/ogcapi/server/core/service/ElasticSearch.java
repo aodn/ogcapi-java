@@ -80,6 +80,7 @@ public class ElasticSearch implements Search {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)
+            .type(TextQueryType.BoolPrefix)
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
             .fields(Arrays.asList(searchAsYouTypeEnabledField, searchAsYouTypeEnabledField+"._2gram", searchAsYouTypeEnabledField+"._3gram"))
         ));
@@ -87,11 +88,10 @@ public class ElasticSearch implements Search {
         List<Query> filters = new ArrayList<>();
         if (categories != null && !categories.isEmpty()) {
             for (String category : categories) {
-                Query aFilter = BoolQuery.of(b -> b.filter(f -> f.matchPhrase(mp -> mp
+                Query filter = MatchPhraseQuery.of(mp -> mp
                     .field(StacBasicField.DiscoveryCategories.searchField)
-                    .query(category)
-                )))._toQuery();
-                filters.add(aFilter);
+                    .query(category))._toQuery();
+                filters.add(filter);
             }
         }
 
