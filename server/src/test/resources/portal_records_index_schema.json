@@ -1,24 +1,4 @@
 {
-  "settings":{
-    "analysis":{
-      "analyzer":{
-        "my_stop_analyzer":{
-          "type":"custom",
-          "tokenizer":"standard",
-          "filter":[
-            "lowercase",
-            "english_stop"
-          ]
-        }
-      },
-      "filter":{
-        "english_stop":{
-          "type":"stop",
-          "stopwords":"_english_"
-        }
-      }
-    }
-  },
   "mappings": {
     "dynamic": true,
     "properties": {
@@ -31,7 +11,7 @@
       "title": { "type": "text" },
       "title_suggest": {
         "type": "search_as_you_type",
-        "analyzer": "my_stop_analyzer"
+        "analyzer": "standard"
       },
       "keywords": {
         "type": "nested",
