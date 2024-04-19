@@ -31,10 +31,10 @@ public class RestExtApi {
     @GetMapping(path="/autocomplete")
     public ResponseEntity<List<String>> getAutocompleteSuggestions(
             @RequestParam String input,
-            //categoryFilters is an optional parameter, if not provided, the method will return suggestions from all categories
-            @RequestParam(required = false) List<String> categoryFilters
+            //categories is an optional parameter, if not provided, the method will return suggestions from all categories
+            @RequestParam(required = false) List<String> categories
     ) throws java.lang.Exception {
-        return searchService.getAutocompleSuggestions(input, categoryFilters);
+        return searchService.getAutocompleSuggestions(input, categories);
     }
 
     /**

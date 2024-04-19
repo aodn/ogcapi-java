@@ -76,7 +76,7 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
-    public ResponseEntity<List<String>> getAutocompleSuggestions(String input, List<String> categoryFilters) throws IOException {
+    public ResponseEntity<List<String>> getAutocompleSuggestions(String input, List<String> categories) throws IOException {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)
@@ -85,8 +85,8 @@ public class ElasticSearch implements Search {
         ));
         // this is where the discovery categories filter is applied
         List<Query> filters = new ArrayList<>();
-        if (categoryFilters != null && !categoryFilters.isEmpty()) {
-            for (String category : categoryFilters) {
+        if (categories != null && !categories.isEmpty()) {
+            for (String category : categories) {
                 Query aFilter = BoolQuery.of(b -> b.filter(f -> f.matchPhrase(mp -> mp
                     .field(StacBasicField.DiscoveryCategories.searchField)
                     .query(category)
