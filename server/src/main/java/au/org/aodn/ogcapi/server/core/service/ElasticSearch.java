@@ -89,23 +89,36 @@ public class ElasticSearch implements Search {
         ));
 
         /* this is where the discovery categories filter is applied
-        use terms query for exact match of the categories
+        use term query for exact match of the categories
         (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
         see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
+        this query uses AND operator for the categories (e.g "wave" AND "temperature")
         */
-        Query filters;
+        List<Query> filters = new ArrayList<>();
         if (categories != null && !categories.isEmpty()) {
-            filters = TermsQuery.of(q -> q
-                    .field(StacBasicField.DiscoveryCategories.searchField)
-                    .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery();
-        } else {
-            filters = MatchAllQuery.of(q -> q)._toQuery();
+            for (String category : categories) {
+                Query filter = TermQuery.of(mp -> mp
+                        .field(StacBasicField.DiscoveryCategories.searchField)
+                        .value(category))._toQuery();
+                filters.add(filter);
+            }
         }
+
+        /*
+        if want to use OR operator for the categories (e.g "wave" OR "temperature", use the following code
+        if (categories != null && !categories.isEmpty()) {
+            filters = List.of(TermsQuery.of(q -> q
+                    .field(StacBasicField.DiscoveryCategories.searchField)
+                    .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery());
+        } else {
+            filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
+        }
+         */
 
         SearchRequest searchRequest =  new SearchRequest.Builder()
             .index(indexName)
             .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of("title")))))
-            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, List.of(filters))))
+            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, filters)))
             .build();
 
         logger.info("Elastic search payload {}", searchRequest.toString());
