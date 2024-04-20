@@ -1,4 +1,24 @@
 {
+  "settings":{
+    "analysis":{
+      "analyzer":{
+        "custom_analyser":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "filter":[
+            "lowercase",
+            "english_stop"
+          ]
+        }
+      },
+      "filter":{
+        "english_stop":{
+          "type":"stop",
+          "stopwords":"_english_"
+        }
+      }
+    }
+  },
   "mappings": {
     "dynamic": true,
     "properties": {
@@ -11,8 +31,9 @@
       "title": { "type": "text" },
       "title_suggest": {
         "type": "search_as_you_type",
-        "analyzer": "standard"
+        "analyzer": "custom_analyser"
       },
+      "discovery_categories" : { "type":  "keyword" },
       "keywords": {
         "type": "nested",
         "properties": {

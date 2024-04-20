@@ -80,7 +80,9 @@ public class ElasticSearch implements Search {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)
-            .type(TextQueryType.PhrasePrefix) // https://flowygo.com/en/blog/elasticsearch-use-of-match-queries/
+            //TODO: need to observe the behaviour of different types and pick the best one for our needs
+                // https://flowygo.com/en/blog/elasticsearch-use-of-match-queries/
+            .type(TextQueryType.PhrasePrefix)
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
             .fields(Arrays.asList(searchAsYouTypeEnabledField, searchAsYouTypeEnabledField+"._2gram", searchAsYouTypeEnabledField+"._3gram"))
         ));
@@ -97,8 +99,7 @@ public class ElasticSearch implements Search {
         SearchRequest searchRequest =  new SearchRequest.Builder()
             .index(indexName)
             .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of("title")))))
-            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, List.of(filters)))
-            )
+            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, List.of(filters))))
             .build();
 
         logger.info("Elastic search payload {}", searchRequest.toString());
