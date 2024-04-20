@@ -80,25 +80,25 @@ public class ElasticSearch implements Search {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)
-            .type(TextQueryType.BoolPrefix)
+            .type(TextQueryType.PhrasePrefix) // https://flowygo.com/en/blog/elasticsearch-use-of-match-queries/
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
             .fields(Arrays.asList(searchAsYouTypeEnabledField, searchAsYouTypeEnabledField+"._2gram", searchAsYouTypeEnabledField+"._3gram"))
         ));
-        // this is where the discovery categories filter is applied
-        List<Query> filters = new ArrayList<>();
-        if (categories != null && !categories.isEmpty()) {
-            for (String category : categories) {
-                Query filter = MatchPhraseQuery.of(mp -> mp
-                    .field(StacBasicField.DiscoveryCategories.searchField)
-                    .query(category))._toQuery();
-                filters.add(filter);
-            }
-        }
+
+        /* this is where the discovery categories filter is applied
+        use terms query for exact match of the categories
+        (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
+        see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
+        */
+        Query filters = TermsQuery.of(q -> q
+                .field(StacBasicField.DiscoveryCategories.searchField)
+                .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery();
 
         SearchRequest searchRequest =  new SearchRequest.Builder()
             .index(indexName)
             .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of("title")))))
-            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, filters)))
+            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, List.of(filters)))
+            )
             .build();
 
         logger.info("Elastic search payload {}", searchRequest.toString());
