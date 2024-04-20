@@ -80,7 +80,8 @@ public class ElasticSearch implements Search {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)
-            //TODO: need to observe the behaviour of different types and pick the best one for our needs
+            //TODO: need to observe the behaviour of different types and pick the best one for our needs,
+                // for now using phrase_prefix type produces the most similar effect to the completion suggester
                 // https://flowygo.com/en/blog/elasticsearch-use-of-match-queries/
             .type(TextQueryType.PhrasePrefix)
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
@@ -92,9 +93,14 @@ public class ElasticSearch implements Search {
         (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
         see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
         */
-        Query filters = TermsQuery.of(q -> q
-                .field(StacBasicField.DiscoveryCategories.searchField)
-                .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery();
+        Query filters;
+        if (categories != null && !categories.isEmpty()) {
+            filters = TermsQuery.of(q -> q
+                    .field(StacBasicField.DiscoveryCategories.searchField)
+                    .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery();
+        } else {
+            filters = MatchAllQuery.of(q -> q)._toQuery();
+        }
 
         SearchRequest searchRequest =  new SearchRequest.Builder()
             .index(indexName)
