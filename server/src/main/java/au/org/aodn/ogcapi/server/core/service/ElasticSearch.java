@@ -94,8 +94,9 @@ public class ElasticSearch implements Search {
         see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
         this query uses AND operator for the categories (e.g "wave" AND "temperature")
         */
-        List<Query> filters = new ArrayList<>();
+        List<Query> filters;
         if (categories != null && !categories.isEmpty()) {
+            filters = new ArrayList<>();
             for (String category : categories) {
                 Query filter = TermQuery.of(mp -> mp
                         .field(StacBasicField.DiscoveryCategories.searchField)
