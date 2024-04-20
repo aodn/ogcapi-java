@@ -102,6 +102,8 @@ public class ElasticSearch implements Search {
                         .value(category))._toQuery();
                 filters.add(filter);
             }
+        } else {
+            filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
         }
 
         /*
