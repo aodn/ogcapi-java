@@ -1,4 +1,24 @@
 {
+  "settings":{
+    "analysis":{
+      "analyzer":{
+        "custom_analyser":{
+          "type":"custom",
+          "tokenizer":"standard",
+          "filter":[
+            "lowercase",
+            "english_stop"
+          ]
+        }
+      },
+      "filter":{
+        "english_stop":{
+          "type":"stop",
+          "stopwords":"_english_"
+        }
+      }
+    }
+  },
   "mappings": {
     "dynamic": true,
     "properties": {
@@ -10,12 +30,10 @@
       "type": { "type": "text" },
       "title": { "type": "text" },
       "title_suggest": {
-        "type": "completion",
-        "analyzer": "simple",
-        "preserve_separators": true,
-        "preserve_position_increments": true,
-        "max_input_length": 50
+        "type": "search_as_you_type",
+        "analyzer": "custom_analyser"
       },
+      "discovery_categories" : { "type":  "keyword" },
       "keywords": {
         "type": "nested",
         "properties": {
@@ -56,6 +74,19 @@
         "properties" : {
           "score": { "type": "long" },
           "status": { "type": "text" },
+          "scope" : {
+            "type": "nested",
+            "properties" : {
+              "code" : {
+                "type": "text"
+              },
+              "name" : {
+                "type": "text"
+              }
+            }
+          },
+          "dataset_provider": { "type": "text" },
+          "dataset_group": { "type": "text" },
           "creation": { "type": "date" },
           "proj:geometry": {
             "type": "geo_shape"

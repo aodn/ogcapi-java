@@ -85,16 +85,64 @@ public class RestExtApiTest extends BaseTestClass {
      * @throws IOException
      */
     @Test
-    public void verifyApiResponseOnTypoInput() throws IOException {
+    public void verifyApiResponseOnTypoInputNoCategoriesFilter() throws IOException {
         super.insertJsonToElasticIndex(
-                "51e7f42c-e01d-47ea-b8e4-f702e85b5948.json",
-                "bc55eff4-7596-3565-e044-00144fdd4fa6.json"
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        // typo input
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=austalia", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertTrue(Objects.requireNonNull(response.getBody()).contains("50m Multibeam Dataset of Australia - Tile number: SD57"));
+        assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)"));
         assertFalse(Objects.requireNonNull(response.getBody()).contains("MRT AusSeabed PL019 Workshop-1: Attribute Values and Definitions"));
+    }
+
+    @Test
+    public void verifyApiResponseOnTypoInputSingleCategoriesFilter() throws IOException {
+        super.insertJsonToElasticIndex(
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
+        );
+
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&categories=wave", String.class);
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("Ocean acidification historical reconstruction"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)"));
+    }
+
+    @Test
+    public void verifyApiResponseOnTypoInputMultipleCategoriesFilter() throws IOException {
+        super.insertJsonToElasticIndex(
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
+        );
+
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&categories=temperature,chlorophyll", String.class);
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)")); //
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("Ocean acidification historical reconstruction"));
+    }
+
+    @Test
+    public void verifyApiResponseOnTypoInputMultipleCategoriesFilterNoResults() throws IOException {
+        super.insertJsonToElasticIndex(
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
+        );
+
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&categories=cat1,cat2", String.class);
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)")); //
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("Ocean acidification historical reconstruction"));
     }
 }
