@@ -107,7 +107,7 @@ public class RestExtApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&categories=wave", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='wave')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
         assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
@@ -123,7 +123,7 @@ public class RestExtApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&categories=temperature,chlorophyll", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='temperature' AND discovery_categories='chlorophyll')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
         assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)")); //
@@ -139,7 +139,7 @@ public class RestExtApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&categories=cat1,cat2", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='cat1' AND discovery_categories='cat2')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)")); //
         assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));

@@ -14,6 +14,7 @@ public enum CQLCollectionsField {
     description(StacBasicField.Description.searchField, StacBasicField.Description.displayField),
     category(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField),
     providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField),
+    discovery_categories(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField),
     id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField);
 
     private final String searchField;

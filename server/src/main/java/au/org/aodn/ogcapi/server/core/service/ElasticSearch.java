@@ -76,7 +76,7 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
-    public ResponseEntity<List<String>> getAutocompleteSuggestions(String input, List<String> categories) throws IOException {
+    public ResponseEntity<List<String>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)
@@ -103,15 +103,17 @@ public class ElasticSearch implements Search {
         this query uses AND operator for the categories (e.g "wave" AND "temperature")
         */
         List<Query> filters;
-        if (categories != null && !categories.isEmpty()) {
-            filters = new ArrayList<>();
-            for (String category : categories) {
-                Query filter = TermQuery.of(mp -> mp
-                        .field(StacBasicField.DiscoveryCategories.searchField)
-                        .value(category))._toQuery();
-                filters.add(filter);
+        if(cql != null) {
+            CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
+            Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
+            if(filter instanceof ElasticFilter elasticFilter) {
+                filters = List.of(elasticFilter.getQuery());
             }
-        } else {
+            else {
+                filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
+            }
+        }
+        else {
             filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
         }
 

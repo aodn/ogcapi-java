@@ -1,7 +1,10 @@
 package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.server.core.model.CategoryVocabModel;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,14 +30,23 @@ public class RestExtApi {
     protected RestExtService restExtService;
     @Autowired
     protected Search searchService;
-
+    /**
+     * This call is cql aware, so if you provided the filter string, then the return value will be filtered by
+     * the cql clause.
+     *
+     * @param input
+     * @param cql
+     * @return
+     * @throws java.lang.Exception
+     */
     @GetMapping(path="/autocomplete")
     public ResponseEntity<List<String>> getAutocompleteSuggestions(
             @RequestParam String input,
             //categories is an optional parameter, if not provided, the method will return suggestions from all categories
-            @RequestParam(required = false) List<String> categories
+            @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
+            @RequestParam(value = "filter", required = false) String cql
     ) throws java.lang.Exception {
-        return searchService.getAutocompleteSuggestions(input, categories);
+        return searchService.getAutocompleteSuggestions(input, cql, CQLCrsType.convertFromUrl("https://epsg.io/4326"));
     }
 
     /**
