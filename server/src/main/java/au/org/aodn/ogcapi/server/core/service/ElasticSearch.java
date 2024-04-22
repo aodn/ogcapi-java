@@ -80,10 +80,18 @@ public class ElasticSearch implements Search {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)
+            .fuzziness("AUTO")
             //TODO: need to observe the behaviour of different types and pick the best one for our needs,
-                // for now using phrase_prefix type produces the most similar effect to the completion suggester
-                // https://flowygo.com/en/blog/elasticsearch-use-of-match-queries/
-            .type(TextQueryType.PhrasePrefix)
+                /* phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
+                *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
+                *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
+                * ElasticSearch recommends using bool_prefix type: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html
+                *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
+                *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
+                * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
+                *   > Fuzziness not allowed for type [phrase_prefix]
+                */
+            .type(TextQueryType.BoolPrefix)
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
             .fields(Arrays.asList(searchAsYouTypeEnabledField, searchAsYouTypeEnabledField+"._2gram", searchAsYouTypeEnabledField+"._3gram"))
         ));

@@ -1,4 +1,6 @@
 {
+  "title": "Ocean acidification historical reconstruction",
+  "description": "This dataset contains the reconstructed time series of monthly mean aragonite, calcite and pH together with distribution of dissolved inorganic carbon (DIC), total alkalinity (ALK), sea surface temperature and salinity in the Australian region at a 1 degree resolution over the period 1870-2013.",
   "extent": {
     "bbox": [
       [
@@ -31,257 +33,57 @@
       ]
     ]
   },
-  "stac_version": "1.0.0",
-  "languages": [
-    {
-      "code": "eng",
-      "name": "English"
-    }
-  ],
-  "description": "This dataset contains the reconstructed time series of monthly mean aragonite, calcite and pH together with distribution of dissolved inorganic carbon (DIC), total alkalinity (ALK), sea surface temperature and salinity in the Australian region at a 1 degree resolution over the period 1870-2013.",
-  "title": "Ocean acidification historical reconstruction",
-  "type": "Collection",
-  "license": "Creative Commons Attribution 4.0 International License",
-  "themes": [
-    {
-      "concepts": [
-        {
-          "id": "Oceans | Ocean Temperature | Sea Surface Temperature"
-        },
-        {
-          "id": "Oceans | Salinity/density | Salinity"
-        },
-        {
-          "id": "Oceans | Ocean Chemistry | Carbon Dioxide"
-        },
-        {
-          "id": "Oceans | Ocean Chemistry | Carbonate"
-        },
-        {
-          "id": "Oceans | Ocean Chemistry | pH"
-        }
+  "summaries": {
+    "score": 95,
+    "status": "completed",
+    "scope": {
+      "code": "dataset",
+      "name": ""
+    },
+    "dataset_group": "imos",
+    "dataset_provider": "IMOS",
+    "update_frequency": null,
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              95.5,
+              -44.5
+            ],
+            [
+              169.5,
+              -44.5
+            ],
+            [
+              169.5,
+              -0.5
+            ],
+            [
+              95.5,
+              -0.5
+            ],
+            [
+              95.5,
+              -44.5
+            ]
+          ]
+        ]
       ],
-      "scheme": "theme",
-      "description": "GCMD",
-      "title": "NASA/Global Change Master Directory Earth Science Keywords Version 5.3.8"
+      "type": "MultiPolygon"
     },
-    {
-      "concepts": [
-        {
-          "id": "Ocean Biogeochemistry"
-        },
-        {
-          "id": "pCO2"
-        }
-      ],
-      "scheme": "theme",
-      "description": "IMOS",
-      "title": "IMOS Keywords Thesaurus"
-    },
-    {
-      "concepts": [
-        {
-          "id": "Global / Oceans | Pacific Ocean"
-        },
-        {
-          "id": "Global / Oceans | Southern Ocean"
-        },
-        {
-          "id": "Global / Oceans | Indian Ocean"
-        },
-        {
-          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA"
-        },
-        {
-          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC"
-        },
-        {
-          "id": "Regional Seas | Coral Sea"
-        },
-        {
-          "id": "Regional Seas | Tasman Sea"
-        },
-        {
-          "id": "Regional Seas | Timor Sea"
-        },
-        {
-          "id": "Regional Seas | Arafura Sea"
-        },
-        {
-          "id": "Regional Seas | Banda Sea"
-        },
-        {
-          "id": "Regional Seas | Java Sea"
-        },
-        {
-          "id": "Regional Seas | Solomon Sea"
-        }
-      ],
-      "scheme": "place",
-      "description": "",
-      "title": "AODN Geographic Extents Vocabulary"
-    },
-    {
-      "concepts": [
-        {
-          "id": "Countries | Australia"
-        },
-        {
-          "id": "Countries | Papua New Guinea"
-        },
-        {
-          "id": "Countries | Indonesia"
-        },
-        {
-          "id": "Countries | Timor-Leste"
-        },
-        {
-          "id": "Countries | New Zealand"
-        },
-        {
-          "id": "States, Territories (Australia) | Western Australia"
-        },
-        {
-          "id": "States, Territories (Australia) | Queensland"
-        },
-        {
-          "id": "States, Territories (Australia) | South Australia"
-        },
-        {
-          "id": "States, Territories (Australia) | Tasmania"
-        },
-        {
-          "id": "States, Territories (Australia) | Victoria"
-        },
-        {
-          "id": "States, Territories (Australia) | New South Wales"
-        },
-        {
-          "id": "States, Territories (Australia) | Northern Territory"
-        }
-      ],
-      "scheme": "place",
-      "description": "",
-      "title": "AODN Geographic Extents Vocabulary"
-    },
-    {
-      "concepts": [
-        {
-          "id": "Temperature of the water body",
-          "url": "http://vocab.nerc.ac.uk/collection/P01/current/TEMPPR01"
-        },
-        {
-          "id": "Practical salinity of the water body",
-          "url": "http://vocab.nerc.ac.uk/collection/P01/current/PSLTZZ01"
-        },
-        {
-          "id": "Concentration of carbon (total inorganic) per unit mass of the water body",
-          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/1"
-        },
-        {
-          "id": "Total alkalinity per unit mass of the water body",
-          "url": "http://vocab.nerc.ac.uk/collection/P01/current/MDMAP014"
-        },
-        {
-          "id": "Saturation state of aragonite in the water body",
-          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/24"
-        },
-        {
-          "id": "Saturation state of calcite in the water body",
-          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/25"
-        },
-        {
-          "id": "pH (total scale) of the water body",
-          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/27"
-        }
-      ],
-      "scheme": "theme",
-      "description": "",
-      "title": "AODN Discovery Parameter Vocabulary"
-    }
-  ],
-  "links": [
-    {
-      "rel": "self",
-      "href": "http://www.biogeosciences.net/13/1753/2016",
-      "type": "text/html",
-      "title": "Biogeosciences Journal article"
-    },
-    {
-      "rel": "self",
-      "href": "https://portal.aodn.org.au/search?uuid=7709f541-fc0c-4318-b5b9-9053aa474e0e",
-      "type": "text/html",
-      "title": "View and download data though the AODN Portal"
-    },
-    {
-      "rel": "self",
-      "href": "http://thredds.aodn.org.au/thredds/dodsC/CSIRO/Climatology/Ocean_Acidification/OA_Reconstruction.nc.html",
-      "type": "text/html",
-      "title": "NetCDF files via THREDDS catalog"
-    },
-    {
-      "rel": "self",
-      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url/SST"
-    },
-    {
-      "rel": "self",
-      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url/SSS"
-    },
-    {
-      "rel": "self",
-      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url/ALK"
-    },
-    {
-      "rel": "self",
-      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url/DIC"
-    },
-    {
-      "rel": "self",
-      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url/OMEGA_A"
-    },
-    {
-      "rel": "self",
-      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url/OMEGA_C"
-    },
-    {
-      "rel": "self",
-      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url/pH_T"
-    },
-    {
-      "rel": "self",
-      "href": "https://processes.aodn.org.au/wps",
-      "type": "",
-      "title": "csiro_oa_reconstruction_url"
-    },
-    {
-      "rel": "self",
-      "href": "https://help.aodn.org.au/web-services/gogoduck-aggregator/",
-      "type": "text/html",
-      "title": "GoGoDuck help documentation"
-    }
-  ],
-  "id": "7709f541-fc0c-4318-b5b9-9053aa474e0e",
-  "stac_extensions": [
-    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
-    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
-    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
-    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
-    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
-  ],
+    "temporal": [
+      {
+        "start": "1870-07-16T14:10:44Z",
+        "end": "2013-06-16T14:00:00Z"
+      }
+    ],
+    "discovery_categories": [
+      "alkalinity",
+      "temperature",
+      "salinity"
+    ]
+  },
   "contacts": [
     {
       "emails": [
@@ -344,59 +146,295 @@
       "position": "Data Officer"
     }
   ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "http://www.biogeosciences.net/13/1753/2016",
+      "rel": "self",
+      "type": "text/html",
+      "title": "Biogeosciences Journal article"
+    },
+    {
+      "href": "https://portal.aodn.org.au/search?uuid=7709f541-fc0c-4318-b5b9-9053aa474e0e",
+      "rel": "self",
+      "type": "text/html",
+      "title": "View and download data though the AODN Portal"
+    },
+    {
+      "href": "http://thredds.aodn.org.au/thredds/dodsC/CSIRO/Climatology/Ocean_Acidification/OA_Reconstruction.nc.html",
+      "rel": "self",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url/SST"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url/SSS"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url/ALK"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url/DIC"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url/OMEGA_A"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url/OMEGA_C"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url/pH_T"
+    },
+    {
+      "href": "https://processes.aodn.org.au/wps",
+      "rel": "self",
+      "type": "",
+      "title": "csiro_oa_reconstruction_url"
+    },
+    {
+      "href": "https://help.aodn.org.au/web-services/gogoduck-aggregator/",
+      "rel": "self",
+      "type": "text/html",
+      "title": "GoGoDuck help documentation"
+    }
+  ],
+  "license": "Creative Commons Attribution 4.0 International License",
   "providers": [
     {
+      "name": "Integrated Marine Observing System (IMOS)",
+      "description": null,
       "roles": [
         "distributor"
       ],
-      "name": "Integrated Marine Observing System (IMOS)",
-      "description": null,
       "url": "http://imos.org.au/aodn.html"
     }
   ],
-  "summaries": {
-    "score": 95,
-    "dataset_provider": "IMOS",
-    "proj:geometry": {
-      "coordinates": [
-        [
-          [
-            [
-              95.5,
-              -44.5
-            ],
-            [
-              169.5,
-              -44.5
-            ],
-            [
-              169.5,
-              -0.5
-            ],
-            [
-              95.5,
-              -0.5
-            ],
-            [
-              95.5,
-              -44.5
-            ]
-          ]
-        ]
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Oceans | Ocean Temperature | Sea Surface Temperature",
+          "url": null
+        },
+        {
+          "id": "Oceans | Salinity/density | Salinity",
+          "url": null
+        },
+        {
+          "id": "Oceans | Ocean Chemistry | Carbon Dioxide",
+          "url": null
+        },
+        {
+          "id": "Oceans | Ocean Chemistry | Carbonate",
+          "url": null
+        },
+        {
+          "id": "Oceans | Ocean Chemistry | pH",
+          "url": null
+        }
       ],
-      "type": "MultiPolygon"
+      "scheme": "theme",
+      "description": "GCMD",
+      "title": "NASA/Global Change Master Directory Earth Science Keywords Version 5.3.8"
     },
-    "scope": {
-      "code": "dataset",
-      "name": ""
+    {
+      "concepts": [
+        {
+          "id": "Ocean Biogeochemistry",
+          "url": null
+        },
+        {
+          "id": "pCO2",
+          "url": null
+        }
+      ],
+      "scheme": "theme",
+      "description": "IMOS",
+      "title": "IMOS Keywords Thesaurus"
     },
-    "update_frequency": null,
-    "temporal": [
-      {
-        "start": "1870-07-16T14:10:44Z",
-        "end": "2013-06-16T14:00:00Z"
-      }
-    ],
-    "status": "completed"
-  }
+    {
+      "concepts": [
+        {
+          "id": "Global / Oceans | Pacific Ocean",
+          "url": null
+        },
+        {
+          "id": "Global / Oceans | Southern Ocean",
+          "url": null
+        },
+        {
+          "id": "Global / Oceans | Indian Ocean",
+          "url": null
+        },
+        {
+          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA",
+          "url": null
+        },
+        {
+          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Coral Sea",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Tasman Sea",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Timor Sea",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Arafura Sea",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Banda Sea",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Java Sea",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Solomon Sea",
+          "url": null
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Countries | Australia",
+          "url": null
+        },
+        {
+          "id": "Countries | Papua New Guinea",
+          "url": null
+        },
+        {
+          "id": "Countries | Indonesia",
+          "url": null
+        },
+        {
+          "id": "Countries | Timor-Leste",
+          "url": null
+        },
+        {
+          "id": "Countries | New Zealand",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Western Australia",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Queensland",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | South Australia",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Tasmania",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Victoria",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | New South Wales",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Northern Territory",
+          "url": null
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Temperature of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/TEMPPR01"
+        },
+        {
+          "id": "Practical salinity of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/PSLTZZ01"
+        },
+        {
+          "id": "Concentration of carbon (total inorganic) per unit mass of the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/1"
+        },
+        {
+          "id": "Total alkalinity per unit mass of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/MDMAP014"
+        },
+        {
+          "id": "Saturation state of aragonite in the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/24"
+        },
+        {
+          "id": "Saturation state of calcite in the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/25"
+        },
+        {
+          "id": "pH (total scale) of the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/27"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Discovery Parameter Vocabulary"
+    }
+  ],
+  "id": "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+  "title_suggest": "Ocean acidification historical reconstruction",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "type": "Collection"
 }

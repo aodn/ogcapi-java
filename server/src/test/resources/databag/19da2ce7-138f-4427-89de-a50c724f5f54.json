@@ -1,0 +1,421 @@
+{
+  "title": "IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave",
+  "description": "The South Australia Gulfs (SAG) HF ocean radar system covers the area of about 40,000 square kilometres bounded by Kangaroo Island to the east and the Eyre Peninsula to the north.  This is a dynamic region where warm water from the remnants of the Leeuwin current is moving from the west, and water with varying density is exchanging with Spencer Gulf and the Gulf of St Vincent.  Upwelling events occur from the deep ocean on the south side of the observation area.  This is a key ocean area for aquaculture and fishing, and is a major shipping thoroughfare.  The data from this HF ocean radar system link the dynamics of the Great Australian Bight to the Bonney Coast and on to Tasmania. \n\nSpecific research questions identified by the SA Node of IMOS are: What is the detailed connection between shelf currents and the Flinders Current to non-regional influences (e.g. Southern Ocean, WA)?  What is the nature of oceanic currents and processes (e.g. wave drift, mixing, eddies) that drive both winter and summer cross and along shelf exchange including the summertime upwelling systems and flushing of the gulfs?  How does the ocean circulation, wave drift, eddies and environmental variability affect the distribution of sediments, nutrients, the production of lower trophic levels\n(phytoplankton and zooplankton), the dispersal of larvae that underpin productive fisheries in the region and the effects of environment on aquaculture\n\nThe SAG HF ocean radar is a WERA phased array system with 16-element receive arrays located at Cape Wiles (34.943 S, 135.681 E) and Cape Spencer (35.294 S, 136.879 E).  These radars operate at a frequency of 8.512 MHz, with a bandwidth of 33 KHz and a maximum range of 200 Km.  Within the HF radar coverage area surface currents are measured.  Data are also collected from which wind directions and significant wave height can be calculated.  \n\nMost of the capital was contributed by the South Australia Research and Development Institute.",
+  "extent": {
+    "bbox": [
+      [
+        133.0,
+        -37.4,
+        137.4,
+        -34.8
+      ],
+      [
+        133.0,
+        -37.4,
+        137.4,
+        -37.4,
+        137.4,
+        -34.8,
+        133.0,
+        -34.8,
+        133.0,
+        -37.4
+      ]
+    ],
+    "temporal": [
+      [
+        "2009-09-23T14:00:00Z",
+        "2020-12-02T13:00:00Z"
+      ],
+      [
+        "2009-09-23T14:00:00Z",
+        "2020-12-02T13:00:00Z"
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 100,
+    "status": "completed",
+    "scope": {
+      "code": "dataset",
+      "name": "IMOS Dataset level record"
+    },
+    "dataset_group": "imos",
+    "dataset_provider": "IMOS",
+    "proj:geometry": {
+      "coordinates": [
+        [
+          [
+            [
+              133,
+              -37.4
+            ],
+            [
+              137.4,
+              -37.4
+            ],
+            [
+              137.4,
+              -34.8
+            ],
+            [
+              133,
+              -34.8
+            ],
+            [
+              133,
+              -37.4
+            ]
+          ]
+        ]
+      ],
+      "type": "MultiPolygon"
+    },
+    "temporal": [
+      {
+        "start": "2009-09-23T14:00:00Z",
+        "end": "2020-12-02T13:00:00Z"
+      }
+    ],
+    "discovery_categories": [
+      "wave"
+    ]
+  },
+  "contacts": [
+    {
+      "emails": [
+        "simone.cosoli@uwa.edu.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "MO51, 35 Stirling Highway"
+          ],
+          "country": "Australia",
+          "city": "Crawley",
+          "postalCode": "6009",
+          "administrativeArea": "Western Australia"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Oceans Graduate School (OGS), The University of Western Australia (UWA)",
+      "name": "Cosoli, Simone",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "+61 8 6488 7314"
+        }
+      ],
+      "links": [],
+      "position": "Facility leader"
+    },
+    {
+      "emails": [
+        "info@aodn.org.au"
+      ],
+      "addresses": [
+        {
+          "deliveryPoint": [
+            "University of Tasmania",
+            "Private Bag 110"
+          ],
+          "country": "Australia",
+          "city": "Hobart",
+          "postalCode": "7001",
+          "administrativeArea": "Tasmania"
+        }
+      ],
+      "roles": "pointOfContact",
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": "",
+      "phones": [
+        {
+          "roles": "voice",
+          "value": "61 3 6226 7488"
+        },
+        {
+          "roles": "facsimile",
+          "value": "61 3 6226 2107"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://imos.org.au/aodn.html",
+          "title": "Website of the Australian Ocean Data Network (AODN)",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ],
+      "position": "Data Officer"
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "http://imos.org.au/facilities/oceanradar",
+      "rel": "self",
+      "type": "text/html",
+      "title": "Ocean Radar page on IMOS website"
+    },
+    {
+      "href": "http://thredds.aodn.org.au/thredds/catalog/IMOS/ACORN/gridded_1h-avg-wind-site-map_QC/SAG/catalog.html",
+      "rel": "self",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog"
+    },
+    {
+      "href": "http://content.aodn.org.au/Documents/IMOS/Facilities/ocean_radar/QC_procedures_for_IMOS_Ocean_Radar_manual_LATEST.pdf",
+      "rel": "self",
+      "type": "text/html",
+      "title": "Quality Control procedures for IMOS Ocean Radar Manual"
+    },
+    {
+      "href": "https://portal.aodn.org.au/search?uuid=19da2ce7-138f-4427-89de-a50c724f5f54",
+      "rel": "self",
+      "type": "text/html",
+      "title": "View and download data though the AODN Portal"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "acorn_wave_site_qc_sag_url/VAVH"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ncwms",
+      "rel": "self",
+      "type": "",
+      "title": "acorn_wave_site_qc_sag_url/VDIRT"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ows",
+      "rel": "self",
+      "type": "",
+      "title": "acorn_wave_site_qc_sag_url#file_url"
+    },
+    {
+      "href": "https://help.aodn.org.au/web-services/ncurllist-service/",
+      "rel": "self",
+      "type": "text/html",
+      "title": "ncUrlList help documentation"
+    },
+    {
+      "href": "https://processes.aodn.org.au/wps",
+      "rel": "self",
+      "type": "",
+      "title": "acorn_wave_site_qc_sag_url"
+    },
+    {
+      "href": "https://help.aodn.org.au/web-services/gogoduck-aggregator/",
+      "rel": "self",
+      "type": "text/html",
+      "title": "GoGoDuck help documentation"
+    }
+  ],
+  "license": "Creative Commons Attribution 4.0 International License",
+  "providers": [
+    {
+      "name": "Integrated Marine Observing System (IMOS)",
+      "roles": [
+        "distributor"
+      ],
+      "url": "http://imos.org.au/aodn.html"
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Oceans | Ocean Circulation | Eddies"
+        },
+        {
+          "id": "Oceans | Ocean Circulation | Ocean Currents"
+        },
+        {
+          "id": "Oceans | Ocean Circulation | Upwelling"
+        },
+        {
+          "id": "Oceans | Ocean Circulation | Wind-driven Circulation"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Significant Wave Height"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Frequency"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Length"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Period"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Speed/direction"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wave Spectra"
+        },
+        {
+          "id": "Oceans | Ocean Winds | Surface Winds"
+        },
+        {
+          "id": "Oceans | Coastal Processes | Coral Reefs"
+        },
+        {
+          "id": "Radiance Or Imagery | Radio Wave | Radio Wave"
+        },
+        {
+          "id": "Atmosphere | Atmospheric Winds | Surface Winds"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Sea State"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Swells"
+        },
+        {
+          "id": "Oceans | Ocean Waves | Wind Waves"
+        }
+      ],
+      "scheme": "theme",
+      "description": "GCMD",
+      "title": "NASA/Global Change Master Directory Earth Science Keywords Version 5.3.8"
+    },
+    {
+      "concepts": [
+        {
+          "id": "IMOS Site | SAG | South Australia Gulfs HF ocean radar site"
+        },
+        {
+          "id": "Marine Features (Australia) | Leeuwin Current"
+        },
+        {
+          "id": "WERA HF Radar | Phased Array"
+        },
+        {
+          "id": "Doppler Frequency"
+        },
+        {
+          "id": "Physical Oceanography"
+        }
+      ],
+      "scheme": "theme",
+      "description": "IMOS",
+      "title": "IMOS Keywords Thesaurus"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine Features (Australia) | Gulf St. Vincent, SA"
+        },
+        {
+          "id": "Marine Features (Australia) | Spencer Gulf, SA"
+        },
+        {
+          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA"
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine Features (Australia) | Kangaroo Island, SA"
+        },
+        {
+          "id": "States, Territories (Australia) | South Australia"
+        },
+        {
+          "id": "Countries | Australia"
+        },
+        {
+          "id": "Marine Features (Australia) | Eyre Peninsula, SA"
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "WERA beam forming HF radar",
+          "url": "http://vocab.aodn.org.au/def/platform/entity/726"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Platform Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Significant height of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/411"
+        },
+        {
+          "id": "Direction of waves on the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/GWDRZZ01"
+        },
+        {
+          "id": "Mean period at spectral first frequency moment of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/63"
+        },
+        {
+          "id": "Direction at spectral maximum of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/4"
+        },
+        {
+          "id": "Period at the peak spectral energy of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/3"
+        },
+        {
+          "id": "Mean period at spectral second frequency moment of waves on the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/62"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Discovery Parameter Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "surface current radars",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/303"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Instrument Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Ocean Radar Facility, Integrated Marine Observing System (IMOS)",
+          "url": "http://vocab.aodn.org.au/def/organisation/entity/469"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "",
+      "title": "AODN Organisation Vocabulary"
+    }
+  ],
+  "id": "19da2ce7-138f-4427-89de-a50c724f5f54",
+  "title_suggest": "IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ],
+  "type": "Collection"
+}
