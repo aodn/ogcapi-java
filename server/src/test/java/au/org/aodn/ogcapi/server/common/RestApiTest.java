@@ -346,21 +346,25 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyParameterCategoriesSearchMatch() throws IOException  {
         super.insertJsonToElasticIndex(
-                "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
-                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Saturation state of calcite in the water body'", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='wave'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record in wave");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Total alkalinity per unit mass of the water body' AND category='Saturation state of calcite in the water body'", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, still partial match");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='alkalinity' AND category='temperature'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, 1 record belong to both categories");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='Total alkalinity per unit mass of the water body' OR category='this category does not exist'", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, still partial match");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='wave' AND category='temperature'", Collections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, no records belong to both categories");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='wave' OR category='temperature'", Collections.class);
+        assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 3, 1 in wave and 2 in temperature");
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='this category does not exist'", Collections.class);
-        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, order of words diff");
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, category none exist");
     }
     /**
      * Verify OR operation for CQL
