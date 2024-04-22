@@ -76,7 +76,7 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
-    public ResponseEntity<List<String>> getAutocompleSuggestions(String input, List<String> categories) throws IOException {
+    public ResponseEntity<List<String>> getAutocompleteSuggestions(String input, List<String> categories) throws IOException {
         Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
             // user input to the search input field
             .query(input)

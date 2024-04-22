@@ -34,7 +34,7 @@ public class RestExtApi {
             //categories is an optional parameter, if not provided, the method will return suggestions from all categories
             @RequestParam(required = false) List<String> categories
     ) throws java.lang.Exception {
-        return searchService.getAutocompleSuggestions(input, categories);
+        return searchService.getAutocompleteSuggestions(input, categories);
     }
 
     /**
