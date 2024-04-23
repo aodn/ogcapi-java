@@ -195,7 +195,7 @@ public class ElasticSearch implements Search {
 
     public ResponseEntity getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         // extract category suggestions
-        List<String> categorySuggestions = new ArrayList<>();
+        Set<String> categorySuggestions = new HashSet<>();
         for (Hit<CategorySuggestDTO> item : this.getCategorySuggestions(input)) {
             if (item.source() != null) {
                 categorySuggestions.add(item.source().getLabel());
@@ -211,7 +211,7 @@ public class ElasticSearch implements Search {
         }
 
         Map<String, Object> allSuggestions = new HashMap<>();
-        allSuggestions.put("category_suggestions", categorySuggestions);
+        allSuggestions.put("category_suggestions", new ArrayList<>(categorySuggestions));
 
         Map<String, List<String>> recordSuggestions = new HashMap<>();
         recordSuggestions.put("titles", recordTitleSuggestions);
