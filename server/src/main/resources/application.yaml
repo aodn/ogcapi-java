@@ -7,8 +7,12 @@ elasticsearch:
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
   searchAsYouType:
-    path: record_suggest
-    fields: title  # if you have multiple search_as_you_type fields, separate them with commas e.g title, description
+    record_suggest:
+      path: record_suggest
+      fields: title  # if you have multiple search_as_you_type fields, separate them with commas e.g title, description
+    category_suggest:
+      index_name: discovery_category
+      field: label
 
 api:
   host: http://localhost:${server.port}
