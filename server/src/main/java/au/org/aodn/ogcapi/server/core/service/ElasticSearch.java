@@ -210,9 +210,13 @@ public class ElasticSearch implements Search {
             }
         }
 
-        Map<String, List<String>> allSuggestions = new HashMap<>();
+        Map<String, Object> allSuggestions = new HashMap<>();
         allSuggestions.put("category_suggestions", categorySuggestions);
-        allSuggestions.put("record_title_suggestions", recordTitleSuggestions);
+
+        Map<String, List<String>> recordSuggestions = new HashMap<>();
+        recordSuggestions.put("titles", recordTitleSuggestions);
+
+        allSuggestions.put("record_suggestions", recordSuggestions);
 
         return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
     }
