@@ -33,6 +33,7 @@ import org.springframework.http.ResponseEntity;
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ElasticSearch implements Search {
     protected Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
@@ -45,8 +46,11 @@ public class ElasticSearch implements Search {
     @Autowired
     protected ObjectMapper mapper;
 
-    @Value("${elasticsearch.searchAsYouType.fieldName}")
-    protected String searchAsYouTypeEnabledField;
+    @Value("${elasticsearch.searchAsYouType.path}")
+    protected String searchAsYouTypeFieldsPath;
+
+    @Value("${elasticsearch.searchAsYouType.fields}")
+    protected String[] searchAsYouTypeEnabledFields;
 
     public ElasticSearch(ElasticsearchClient client) {
         this.esClient = client;
@@ -77,23 +81,31 @@ public class ElasticSearch implements Search {
     }
 
     public ResponseEntity<List<String>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
-            // user input to the search input field
-            .query(input)
-            .fuzziness("AUTO")
-            //TODO: need to observe the behaviour of different types and pick the best one for our needs,
-                /* phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
-                *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
-                *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
-                * ElasticSearch recommends using bool_prefix type: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html
-                *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
-                *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
-                * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
-                *   > Fuzziness not allowed for type [phrase_prefix]
-                */
-            .type(TextQueryType.BoolPrefix)
-            // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
-            .fields(Arrays.asList(searchAsYouTypeEnabledField, searchAsYouTypeEnabledField+"._2gram", searchAsYouTypeEnabledField+"._3gram"))
+        List<Query> suggestFieldQueries = new ArrayList<>();
+        Stream.of(searchAsYouTypeEnabledFields).forEach(field -> {
+            String suggestField = searchAsYouTypeFieldsPath + "." + field;
+            suggestFieldQueries.add(Query.of(q -> q.multiMatch(mm -> mm
+                .query(input)
+                .fuzziness("AUTO")
+                /*
+                 * TODO: need to observe the behaviour of different types and pick the best one for our needs,
+                 * phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
+                 *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
+                 *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
+                 * ElasticSearch recommends using bool_prefix type: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html
+                 *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
+                 *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
+                 * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
+                 *   > Fuzziness not allowed for type [phrase_prefix]
+                 */
+                .type(TextQueryType.BoolPrefix)
+                // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
+                .fields(Arrays.asList(suggestField, suggestField+"._2gram", suggestField+"._3gram"))
+            )));
+        });
+        Query searchAsYouTypeQuery = Query.of(q -> q.nested(n -> n
+            .path(searchAsYouTypeFieldsPath)
+            .query(bQ -> bQ.bool(b -> b.should(suggestFieldQueries)))
         ));
 
         /* this is where the discovery categories filter is applied
