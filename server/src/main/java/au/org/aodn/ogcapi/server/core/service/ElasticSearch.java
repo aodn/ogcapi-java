@@ -28,11 +28,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ElasticSearch implements Search {
     protected Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
@@ -45,8 +47,27 @@ public class ElasticSearch implements Search {
     @Autowired
     protected ObjectMapper mapper;
 
-    @Value("${elasticsearch.searchAsYouType.fieldName}")
-    protected String searchAsYouTypeEnabledField;
+    @Value("${elasticsearch.search_as_you_type.record_suggest.path}")
+    protected String searchAsYouTypeFieldsPath;
+
+    @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
+    protected String[] searchAsYouTypeEnabledFields;
+
+
+    /*
+     * this secondLevelCategorySuggestFilters for accessing the search_as_you_type "label" field
+     * of the second level categories (discovery_category index) will never be changed unless the schema is changed,
+     * or the discovery_category index is no longer be used
+     */
+    protected Query secondLevelCategorySuggestFilters = Query.of(q -> q.bool(b -> b.filter(f -> f.nested(n -> n.path("broader")
+            .query(qq -> qq.exists(e -> e.field("broader")))))));
+
+
+    @Value("${elasticsearch.search_as_you_type.category_suggest.field}")
+    protected String secondLevelCategorySuggestField;
+
+    @Value("${elasticsearch.search_as_you_type.category_suggest.index_name}")
+    protected String categorySuggestIndex;
 
     public ElasticSearch(ElasticsearchClient client) {
         this.esClient = client;
@@ -76,75 +97,132 @@ public class ElasticSearch implements Search {
         return builder.build();
     }
 
-    public ResponseEntity<List<String>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        Query searchAsYouTypeQuery = Query.of(q -> q.multiMatch(mm -> mm
-            // user input to the search input field
+    protected SearchRequest buildSearchAsYouTypeRequest(List<String> destinationFields, String indexName, List<Query> searchAsYouTypeQueries, List<Query> filters) {
+        return new SearchRequest.Builder()
+                .index(indexName)
+                .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(destinationFields))))
+                .query(b -> b.bool(createBoolQueryForProperties(searchAsYouTypeQueries, null, filters)))
+                .build();
+    }
+
+    protected Query generateSearchAsYouTypeQuery(String input, String suggestField) {
+        return Query.of(q -> q.multiMatch(mm -> mm
             .query(input)
             .fuzziness("AUTO")
-            //TODO: need to observe the behaviour of different types and pick the best one for our needs,
-                /* phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
-                *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
-                *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
-                * ElasticSearch recommends using bool_prefix type: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html
-                *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
-                *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
-                * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
-                *   > Fuzziness not allowed for type [phrase_prefix]
-                */
+            /*
+             * TODO: need to observe the behaviour of different types and pick the best one for our needs,
+             * phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
+             *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
+             *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
+             * ElasticSearch recommends using bool_prefix type: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html
+             *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
+             *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
+             * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
+             *   > Fuzziness not allowed for type [phrase_prefix]
+             */
             .type(TextQueryType.BoolPrefix)
             // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
-            .fields(Arrays.asList(searchAsYouTypeEnabledField, searchAsYouTypeEnabledField+"._2gram", searchAsYouTypeEnabledField+"._3gram"))
+            .fields(Arrays.asList(suggestField, suggestField+"._2gram", suggestField+"._3gram"))
+        ));
+    }
+
+    protected List<Hit<RecordSuggestDTO>> getRecordSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
+        // create query
+        List<Query> recordSuggestFieldsQueries = new ArrayList<>();
+        Stream.of(searchAsYouTypeEnabledFields).forEach(field -> {
+            String suggestField = searchAsYouTypeFieldsPath + "." + field;
+            recordSuggestFieldsQueries.add(this.generateSearchAsYouTypeQuery(input, suggestField));
+        });
+        Query searchAsYouTypeQuery = Query.of(q -> q.nested(n -> n
+                .path(searchAsYouTypeFieldsPath)
+                .query(bQ -> bQ.bool(b -> b.should(recordSuggestFieldsQueries)))
         ));
 
-        /* this is where the discovery categories filter is applied
-        use term query for exact match of the categories
-        (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
-        see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
-        this query uses AND operator for the categories (e.g "wave" AND "temperature")
+        /*
+            this is where the discovery categories filter is applied
+            use term query for exact match of the categories
+            (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
+            see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
+            this query uses AND operator for the categories (e.g "wave" AND "temperature")
         */
         List<Query> filters;
-        if(cql != null) {
+        if (cql != null) {
             CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
             Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-            if(filter instanceof ElasticFilter elasticFilter) {
+            if (filter instanceof ElasticFilter elasticFilter) {
                 filters = List.of(elasticFilter.getQuery());
-            }
-            else {
+            } else {
                 filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
             }
-        }
-        else {
+        } else {
             filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
         }
 
         /*
-        if want to use OR operator for the categories (e.g "wave" OR "temperature", use the following code
-        if (categories != null && !categories.isEmpty()) {
-            filters = List.of(TermsQuery.of(q -> q
-                    .field(StacBasicField.DiscoveryCategories.searchField)
-                    .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery());
-        } else {
-            filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
-        }
-         */
+            if want to use OR operator for the categories (e.g "wave" OR "temperature", use the following code
+            if (categories != null && !categories.isEmpty()) {
+                filters = List.of(TermsQuery.of(q -> q
+                        .field(StacBasicField.DiscoveryCategories.searchField)
+                        .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery());
+            } else {
+                filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
+            }
+        */;
 
-        SearchRequest searchRequest =  new SearchRequest.Builder()
-            .index(indexName)
-            .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(List.of("title")))))
-            .query(b -> b.bool(createBoolQueryForProperties(List.of(searchAsYouTypeQuery), null, filters)))
-            .build();
+        // create request
+        SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(List.of("title"), indexName, List.of(searchAsYouTypeQuery), filters);
 
-        logger.info("Elastic search payload {}", searchRequest.toString());
+        // execute
+        logger.info("getRecordSuggestions | Elastic search payload {}", searchRequest.toString());
         SearchResponse<RecordSuggestDTO> response = esClient.search(searchRequest, RecordSuggestDTO.class);
-        logger.info("Elastic search response {}", response);
+        logger.info("getRecordSuggestions | Elastic search response {}", response);
 
-        var suggestions = new HashSet<String>();
-        for (Hit<RecordSuggestDTO> item : response.hits().hits()) {
+        // return
+        return response.hits().hits();
+    }
+
+    protected List<Hit<CategorySuggestDTO>> getCategorySuggestions(String input) throws IOException {
+        // create query
+        Query secondLevelCategorySuggestQuery = this.generateSearchAsYouTypeQuery(input, secondLevelCategorySuggestField);
+
+        // create request
+        SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(List.of("label"), categorySuggestIndex, List.of(secondLevelCategorySuggestQuery), List.of(secondLevelCategorySuggestFilters));
+
+        // execute
+        logger.info("getCategorySuggestions | Elastic search payload {}", searchRequest.toString());
+        SearchResponse<CategorySuggestDTO> response = esClient.search(searchRequest, CategorySuggestDTO.class);
+        logger.info("getCategorySuggestions | Elastic search response {}", response);
+
+        // return
+        return response.hits().hits();
+    }
+
+    public ResponseEntity getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
+        // extract category suggestions
+        Set<String> categorySuggestions = new HashSet<>();
+        for (Hit<CategorySuggestDTO> item : this.getCategorySuggestions(input)) {
             if (item.source() != null) {
-                suggestions.add(item.source().getTitle());
+                categorySuggestions.add(item.source().getLabel());
             }
         }
-        return ResponseEntity.ok(new ArrayList<>(suggestions));
+
+        // extract title suggestions
+        List<String> recordTitleSuggestions = new ArrayList<>();
+        for (Hit<RecordSuggestDTO> item : this.getRecordSuggestions(input, cql, coor)) {
+            if (item.source() != null) {
+                recordTitleSuggestions.add(item.source().getTitle());
+            }
+        }
+
+        Map<String, Object> allSuggestions = new HashMap<>();
+        allSuggestions.put("category_suggestions", new ArrayList<>(categorySuggestions));
+
+        Map<String, List<String>> recordSuggestions = new HashMap<>();
+        recordSuggestions.put("titles", recordTitleSuggestions);
+
+        allSuggestions.put("record_suggestions", recordSuggestions);
+
+        return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
     }
 
     protected List<StacCollectionModel> searchCollectionBy(List<Query> queries,

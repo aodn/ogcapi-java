@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.configuration;
+package au.org.aodn.ogcapi.server.core.configuration;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;

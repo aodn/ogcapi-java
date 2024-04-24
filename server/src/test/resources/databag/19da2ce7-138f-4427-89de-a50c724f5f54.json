@@ -408,7 +408,9 @@
     }
   ],
   "id": "19da2ce7-138f-4427-89de-a50c724f5f54",
-  "title_suggest": "IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave",
+  "record_suggest": {
+    "title": "IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"
+  },
   "stac_version": "1.0.0",
   "stac_extensions": [
     "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",

@@ -5,3 +5,10 @@ ogcapi:
 elasticsearch:
   index:
     name: testing_index
+  search_as_you_type:
+    record_suggest:
+      path: record_suggest
+      fields: title  # if you have multiple search_as_you_type fields, separate them with commas e.g title, description
+    category_suggest:
+      index_name: test_discovery_category
+      field: label
