@@ -47,10 +47,10 @@ public class ElasticSearch implements Search {
     @Autowired
     protected ObjectMapper mapper;
 
-    @Value("${elasticsearch.searchAsYouType.record_suggest.path}")
+    @Value("${elasticsearch.search_as_you_type.record_suggest.path}")
     protected String searchAsYouTypeFieldsPath;
 
-    @Value("${elasticsearch.searchAsYouType.record_suggest.fields}")
+    @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
     protected String[] searchAsYouTypeEnabledFields;
 
 
@@ -63,10 +63,10 @@ public class ElasticSearch implements Search {
             .query(qq -> qq.exists(e -> e.field("broader")))))));
 
 
-    @Value("${elasticsearch.searchAsYouType.category_suggest.field}")
+    @Value("${elasticsearch.search_as_you_type.category_suggest.field}")
     protected String secondLevelCategorySuggestField;
 
-    @Value("${elasticsearch.searchAsYouType.category_suggest.index_name}")
+    @Value("${elasticsearch.search_as_you_type.category_suggest.index_name}")
     protected String categorySuggestIndex;
 
     public ElasticSearch(ElasticsearchClient client) {

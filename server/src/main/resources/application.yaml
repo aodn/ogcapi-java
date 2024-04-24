@@ -6,7 +6,7 @@ elasticsearch:
     name: dev_portal_records
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
-  searchAsYouType:
+  search_as_you_type:
     record_suggest:
       path: record_suggest
       fields: title  # if you have multiple search_as_you_type fields, separate them with commas e.g title, description

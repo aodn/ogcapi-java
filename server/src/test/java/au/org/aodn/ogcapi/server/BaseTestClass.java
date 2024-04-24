@@ -3,17 +3,15 @@ package au.org.aodn.ogcapi.server;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
-import co.elastic.clients.elasticsearch.core.IndexResponse;
-import co.elastic.clients.elasticsearch.core.SearchRequest;
-import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,12 +23,10 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import org.apache.commons.io.IOUtils;
 
 public class BaseTestClass {
 
@@ -52,12 +48,8 @@ public class BaseTestClass {
     @Value("${elasticsearch.index.name}")
     protected String record_index_name;
 
-    @Value("${elasticsearch.searchAsYouType.category_suggest.index_name}")
+    @Value("${elasticsearch.search_as_you_type.category_suggest.index_name}")
     protected String ardc_categories_index_name;
-
-
-    @Autowired
-    protected ObjectMapper indexerObjectMapper;
 
     protected Logger logger = LoggerFactory.getLogger(BaseTestClass.class);
 
@@ -103,8 +95,8 @@ public class BaseTestClass {
     protected void createElasticIndex() {
 
         List<Map<String, String>> schemas = List.of(
-                Map.of("name", record_index_name, "mapping", "aodn_discovery_parameter_vocabularies_index.json"),
-                Map.of("name", ardc_categories_index_name, "mapping", "portal_records_index_schema.json")
+                Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json"),
+                Map.of("name", ardc_categories_index_name, "mapping", "aodn_discovery_parameter_vocabularies_index.json")
         );
 
         schemas.forEach(schema -> {
@@ -127,8 +119,39 @@ public class BaseTestClass {
         });
     }
 
-    protected void insertJsonToElasticIndex(String... filenames) throws IOException {
+    protected void insertTestAodnDiscoveryCategories() {
+        BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
+        try {
+            // Read the JSON file
+            File file = ResourceUtils.getFile("classpath:databag/aodn_categories.json");
+            // Parse the JSON content
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode jsonNode = objectMapper.readTree(file);
+            // Get the array from the JSON content
+            JsonNode categories = jsonNode.get("categories");
+            // Iterate over the JSON array
+            for (JsonNode category : categories) {
+                // convert categoryVocabModel values to binary data
+                logger.debug("Ingested json is {}", category);
+                // send bulk request to Elasticsearch
+                bulkRequest.operations(op -> op
+                    .index(idx -> idx
+                        .index(ardc_categories_index_name)
+                        .document(category)
+                    )
+                );
+            }
+            BulkResponse result = client.bulk(bulkRequest.build());
+            assertEquals(categories.size(), result.items().size(), "Number of docs stored is correct");
+        } catch (JsonProcessingException e) {
+            logger.error("Failed to ingest test ARDC categories to {}", ardc_categories_index_name);
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
+    protected void insertJsonToElasticIndex(String... filenames) throws IOException {
         // Now insert json to index
         for(String filename : filenames) {
             File j = ResourceUtils.getFile("classpath:databag/" + filename);

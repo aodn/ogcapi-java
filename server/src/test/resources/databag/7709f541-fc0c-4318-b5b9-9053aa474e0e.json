@@ -42,7 +42,6 @@
     },
     "dataset_group": "imos",
     "dataset_provider": "IMOS",
-    "update_frequency": null,
     "proj:geometry": {
       "coordinates": [
         [
@@ -230,7 +229,6 @@
   "providers": [
     {
       "name": "Integrated Marine Observing System (IMOS)",
-      "description": null,
       "roles": [
         "distributor"
       ],
@@ -241,24 +239,19 @@
     {
       "concepts": [
         {
-          "id": "Oceans | Ocean Temperature | Sea Surface Temperature",
-          "url": null
+          "id": "Oceans | Ocean Temperature | Sea Surface Temperature"
         },
         {
-          "id": "Oceans | Salinity/density | Salinity",
-          "url": null
+          "id": "Oceans | Salinity/density | Salinity"
         },
         {
-          "id": "Oceans | Ocean Chemistry | Carbon Dioxide",
-          "url": null
+          "id": "Oceans | Ocean Chemistry | Carbon Dioxide"
         },
         {
-          "id": "Oceans | Ocean Chemistry | Carbonate",
-          "url": null
+          "id": "Oceans | Ocean Chemistry | Carbonate"
         },
         {
-          "id": "Oceans | Ocean Chemistry | pH",
-          "url": null
+          "id": "Oceans | Ocean Chemistry | pH"
         }
       ],
       "scheme": "theme",
@@ -268,12 +261,10 @@
     {
       "concepts": [
         {
-          "id": "Ocean Biogeochemistry",
-          "url": null
+          "id": "Ocean Biogeochemistry"
         },
         {
-          "id": "pCO2",
-          "url": null
+          "id": "pCO2"
         }
       ],
       "scheme": "theme",
@@ -283,52 +274,40 @@
     {
       "concepts": [
         {
-          "id": "Global / Oceans | Pacific Ocean",
-          "url": null
+          "id": "Global / Oceans | Pacific Ocean"
         },
         {
-          "id": "Global / Oceans | Southern Ocean",
-          "url": null
+          "id": "Global / Oceans | Southern Ocean"
         },
         {
-          "id": "Global / Oceans | Indian Ocean",
-          "url": null
+          "id": "Global / Oceans | Indian Ocean"
         },
         {
-          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA",
-          "url": null
+          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA"
         },
         {
-          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC",
-          "url": null
+          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC"
         },
         {
-          "id": "Regional Seas | Coral Sea",
-          "url": null
+          "id": "Regional Seas | Coral Sea"
         },
         {
-          "id": "Regional Seas | Tasman Sea",
-          "url": null
+          "id": "Regional Seas | Tasman Sea"
         },
         {
-          "id": "Regional Seas | Timor Sea",
-          "url": null
+          "id": "Regional Seas | Timor Sea"
         },
         {
-          "id": "Regional Seas | Arafura Sea",
-          "url": null
+          "id": "Regional Seas | Arafura Sea"
         },
         {
-          "id": "Regional Seas | Banda Sea",
-          "url": null
+          "id": "Regional Seas | Banda Sea"
         },
         {
-          "id": "Regional Seas | Java Sea",
-          "url": null
+          "id": "Regional Seas | Java Sea"
         },
         {
-          "id": "Regional Seas | Solomon Sea",
-          "url": null
+          "id": "Regional Seas | Solomon Sea"
         }
       ],
       "scheme": "place",
@@ -338,52 +317,40 @@
     {
       "concepts": [
         {
-          "id": "Countries | Australia",
-          "url": null
+          "id": "Countries | Australia"
         },
         {
-          "id": "Countries | Papua New Guinea",
-          "url": null
+          "id": "Countries | Papua New Guinea"
         },
         {
-          "id": "Countries | Indonesia",
-          "url": null
+          "id": "Countries | Indonesia"
         },
         {
-          "id": "Countries | Timor-Leste",
-          "url": null
+          "id": "Countries | Timor-Leste"
         },
         {
-          "id": "Countries | New Zealand",
-          "url": null
+          "id": "Countries | New Zealand"
         },
         {
-          "id": "States, Territories (Australia) | Western Australia",
-          "url": null
+          "id": "States, Territories (Australia) | Western Australia"
         },
         {
-          "id": "States, Territories (Australia) | Queensland",
-          "url": null
+          "id": "States, Territories (Australia) | Queensland"
         },
         {
-          "id": "States, Territories (Australia) | South Australia",
-          "url": null
+          "id": "States, Territories (Australia) | South Australia"
         },
         {
-          "id": "States, Territories (Australia) | Tasmania",
-          "url": null
+          "id": "States, Territories (Australia) | Tasmania"
         },
         {
-          "id": "States, Territories (Australia) | Victoria",
-          "url": null
+          "id": "States, Territories (Australia) | Victoria"
         },
         {
-          "id": "States, Territories (Australia) | New South Wales",
-          "url": null
+          "id": "States, Territories (Australia) | New South Wales"
         },
         {
-          "id": "States, Territories (Australia) | Northern Territory",
-          "url": null
+          "id": "States, Territories (Australia) | Northern Territory"
         }
       ],
       "scheme": "place",
@@ -427,7 +394,9 @@
     }
   ],
   "id": "7709f541-fc0c-4318-b5b9-9053aa474e0e",
-  "title_suggest": "Ocean acidification historical reconstruction",
+  "record_suggest": {
+    "title": "Ocean acidification historical reconstruction"
+  },
   "stac_version": "1.0.0",
   "stac_extensions": [
     "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
