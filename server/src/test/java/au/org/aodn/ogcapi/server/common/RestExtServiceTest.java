@@ -86,7 +86,7 @@ public class RestExtServiceTest {
                 .stream()
                 .filter(p -> p.getLabel().equals("Air temperature"))
                 .findFirst();
-        assertTrue("Find target Visibility", airTemperature.isPresent());
+        assertTrue("Find target Air temperature", airTemperature.isPresent());
 
         Optional<CategoryVocabModel> visibility = pa.get().getNarrower()
                 .stream()
