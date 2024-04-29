@@ -29,9 +29,12 @@
       "stac_version": { "type": "text" },
       "type": { "type": "text" },
       "title": { "type": "text" },
-      "title_suggest": {
-        "type": "search_as_you_type",
-        "analyzer": "custom_analyser"
+      "record_suggest": {
+        "type": "nested",
+        "properties": {
+          "title": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
+          "description": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
+        }
       },
       "discovery_categories" : { "type":  "keyword" },
       "keywords": {

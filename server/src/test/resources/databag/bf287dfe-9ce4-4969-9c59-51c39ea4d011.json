@@ -936,6 +936,7 @@
     },
     "dataset_group": "imos",
     "dataset_provider": "IMOS",
+    "update_frequency": null,
     "proj:geometry": {
       "coordinates": [
         [
@@ -2894,6 +2895,7 @@
   "providers": [
     {
       "name": "Integrated Marine Observing System (IMOS)",
+      "description": null,
       "roles": [
         "distributor"
       ],
@@ -2904,28 +2906,36 @@
     {
       "concepts": [
         {
-          "id": "Biosphere | Aquatic Habitat | Coastal Habitat"
+          "id": "Biosphere | Aquatic Habitat | Coastal Habitat",
+          "url": null
         },
         {
-          "id": "Biosphere | Aquatic Habitat | Pelagic Habitat"
+          "id": "Biosphere | Aquatic Habitat | Pelagic Habitat",
+          "url": null
         },
         {
-          "id": "Oceans | Marine Biology | Marine Microbiota"
+          "id": "Oceans | Marine Biology | Marine Microbiota",
+          "url": null
         },
         {
-          "id": "Oceans | Ocean Optics | Fluorescence"
+          "id": "Oceans | Ocean Optics | Fluorescence",
+          "url": null
         },
         {
-          "id": "Oceans | Ocean Temperature | Water Temperature"
+          "id": "Oceans | Ocean Temperature | Water Temperature",
+          "url": null
         },
         {
-          "id": "Biological Classification | Animals/Invertebrates | Arthropods | Crustaceans | Copepods"
+          "id": "Biological Classification | Animals/Invertebrates | Arthropods | Crustaceans | Copepods",
+          "url": null
         },
         {
-          "id": "Biosphere | Microbiota | Zooplankton"
+          "id": "Biosphere | Microbiota | Zooplankton",
+          "url": null
         },
         {
-          "id": "Oceans | Ocean Chemistry | Chlorophyll"
+          "id": "Oceans | Ocean Chemistry | Chlorophyll",
+          "url": null
         }
       ],
       "scheme": "theme",
@@ -2935,28 +2945,36 @@
     {
       "concepts": [
         {
-          "id": "Global / Oceans | Indian Ocean"
+          "id": "Global / Oceans | Indian Ocean",
+          "url": null
         },
         {
-          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA"
+          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA",
+          "url": null
         },
         {
-          "id": "Global / Oceans | Pacific Ocean"
+          "id": "Global / Oceans | Pacific Ocean",
+          "url": null
         },
         {
-          "id": "Regional Seas | Tasman Sea"
+          "id": "Regional Seas | Tasman Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Coral Sea"
+          "id": "Regional Seas | Coral Sea",
+          "url": null
         },
         {
-          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC"
+          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC",
+          "url": null
         },
         {
-          "id": "Regional Seas | Timor Sea"
+          "id": "Regional Seas | Timor Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Arafura Sea"
+          "id": "Regional Seas | Arafura Sea",
+          "url": null
         }
       ],
       "scheme": "place",
@@ -2966,34 +2984,44 @@
     {
       "concepts": [
         {
-          "id": "Countries | Australia"
+          "id": "Countries | Australia",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Western Australia"
+          "id": "States, Territories (Australia) | Western Australia",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | South Australia"
+          "id": "States, Territories (Australia) | South Australia",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Tasmania"
+          "id": "States, Territories (Australia) | Tasmania",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Victoria"
+          "id": "States, Territories (Australia) | Victoria",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Northern Territory"
+          "id": "States, Territories (Australia) | Northern Territory",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | New South Wales"
+          "id": "States, Territories (Australia) | New South Wales",
+          "url": null
         },
         {
-          "id": "Countries | New Zealand"
+          "id": "Countries | New Zealand",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Queensland"
+          "id": "States, Territories (Australia) | Queensland",
+          "url": null
         },
         {
-          "id": "Continents | Antarctica"
+          "id": "Continents | Antarctica",
+          "url": null
         }
       ],
       "scheme": "place",
@@ -3078,7 +3106,10 @@
     }
   ],
   "id": "bf287dfe-9ce4-4969-9c59-51c39ea4d011",
-  "title_suggest": "IMOS - Zooplankton Abundance and Biomass Index (CPR)",
+  "record_suggest": {
+    "title": "IMOS - Zooplankton Abundance and Biomass Index (CPR)",
+    "description": null
+  },
   "stac_version": "1.0.0",
   "stac_extensions": [
     "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
