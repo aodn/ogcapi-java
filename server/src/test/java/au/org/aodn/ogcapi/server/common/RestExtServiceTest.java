@@ -95,12 +95,12 @@ public class RestExtServiceTest {
 
         assertTrue("Find target Visibility", visibility.isPresent());
 
-        Optional<CategoryVocabModel> airSeaLevel = visibility.get().getNarrower()
+        Optional<CategoryVocabModel> horizontalVisibilityInTheAtmosphere = visibility.get().getNarrower()
                 .stream()
                 .filter(p -> p.getLabel().equals("Horizontal visibility in the atmosphere"))
                 .findFirst();
 
-        assertTrue("Horizontal visibility in the atmosphere found", airSeaLevel.isPresent());
+        assertTrue("Horizontal visibility in the atmosphere found", horizontalVisibilityInTheAtmosphere.isPresent());
 
         Optional<CategoryVocabModel> pw = categoryVocabModelList
                 .stream()
