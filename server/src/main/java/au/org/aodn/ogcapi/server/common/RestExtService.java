@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.server.core.model.CategoryVocabModel;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
@@ -108,6 +107,34 @@ public class RestExtService {
         return result;
     }
 
+    protected CategoryVocabModel buildCategoryVocabModel(JsonNode currentNode, JsonNode outerNode) {
+        if (currentNode instanceof ObjectNode objectNode) {
+            if (objectNode.has("prefLabel") && objectNode.has("_about")) {
+                return CategoryVocabModel.builder()
+                        .about(about.apply(currentNode))
+                        .label(label.apply(currentNode))
+                        .build();
+            }
+        } else if (currentNode instanceof TextNode textNode) {
+            if (textNode.asText().contains("parameter_classes")) {
+                return CategoryVocabModel.builder()
+                        .about(textNode.asText())
+                        .label(this.findLabelByAbout(outerNode, textNode.asText()))
+                        .build();
+            }
+        }
+        return null;
+    }
+
+    protected String findLabelByAbout(JsonNode node, String c) {
+        for (JsonNode jj : node.get("items")) {
+            if (about.apply(jj).contains(c)) {
+                return label.apply(jj);
+            }
+        }
+        return null;
+    }
+
     public List<CategoryVocabModel> getParameterCategory(String vocabApiBase) {
         Map<String, List<CategoryVocabModel>> leaves = getLeafNodeOfParameterCategory(vocabApiBase);
         List<CategoryVocabModel> result = new ArrayList<>();
@@ -128,45 +155,26 @@ public class RestExtService {
                             List<CategoryVocabModel> broader = new ArrayList<>();
                             List<CategoryVocabModel> narrower = new ArrayList<>();
 
+
                             log.debug("Processing label {}", label.apply(j));
+
                             if (j.has("broader")) {
                                 for (JsonNode b : j.get("broader")) {
-                                    CategoryVocabModel c = null;
-                                    if (b instanceof ObjectNode objectNode) {
-                                        if (objectNode.has("prefLabel") && objectNode.has("_about")) {
-                                            c = CategoryVocabModel
-                                                    .builder()
-                                                    .about(about.apply(b))
-                                                    .label(label.apply(b))
-                                                    .build();
-                                        }
-                                    }
-                                    if (b instanceof TextNode textNode && textNode.asText().contains("parameter_classes")) {
-                                        c = CategoryVocabModel.builder()
-                                                .about(textNode.asText())
-                                                .build();
-                                    }
-                                    broader.add(c);
+                                    broader.add(this.buildCategoryVocabModel(b, node));
                                 }
                             }
 
+
                             if (j.has("narrower")) {
                                 for (JsonNode b : j.get("narrower")) {
-                                    if (b.has("prefLabel") && b.has("_about")) {
-                                        CategoryVocabModel c = CategoryVocabModel
-                                                .builder()
-                                                .about(about.apply(b))
-                                                .label(label.apply(b))
-                                                .build();
+                                    CategoryVocabModel c = this.buildCategoryVocabModel(b, node);
+                                    narrower.add(c);
 
-                                        narrower.add(c);
-
-                                        // The record comes from ardc have two levels only, so the second level for sure
-                                        // is empty, but the third level info comes form another link (aka the leaves)
-                                        // and therefore we can attach it to the second level to for the third.
-                                        if(leaves.containsKey(about.apply(b))) {
-                                            c.setNarrower(leaves.get(about.apply(b)));
-                                        }
+                                    // The record comes from ardc have two levels only, so the second level for sure
+                                    // is empty, but the third level info comes form another link (aka the leaves)
+                                    // and therefore we can attach it to the second level to for the third.
+                                    if(leaves.containsKey(about.apply(b))) {
+                                        c.setNarrower(leaves.get(about.apply(b)));
                                     }
                                 }
                             }
