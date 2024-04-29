@@ -127,9 +127,9 @@ public class RestExtService {
     }
 
     protected String findLabelByAbout(JsonNode node, String c) {
-        for (JsonNode jj : node.get("items")) {
-            if (about.apply(jj).contains(c)) {
-                return label.apply(jj);
+        for (JsonNode item : node.get("items")) {
+            if (about.apply(item).contains(c)) {
+                return label.apply(item);
             }
         }
         return null;
@@ -164,18 +164,16 @@ public class RestExtService {
                                 }
                             }
 
-
                             if (j.has("narrower")) {
                                 for (JsonNode b : j.get("narrower")) {
                                     CategoryVocabModel c = this.buildCategoryVocabModel(b, node);
-                                    narrower.add(c);
-
                                     // The record comes from ardc have two levels only, so the second level for sure
                                     // is empty, but the third level info comes form another link (aka the leaves)
                                     // and therefore we can attach it to the second level to for the third.
-                                    if(leaves.containsKey(about.apply(b))) {
-                                        c.setNarrower(leaves.get(about.apply(b)));
+                                    if(leaves.containsKey(c.getAbout())) {
+                                        c.setNarrower(leaves.get(c.getAbout()));
                                     }
+                                    narrower.add(c);
                                 }
                             }
 
