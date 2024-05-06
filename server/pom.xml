@@ -59,17 +59,17 @@
         <dependency>
             <groupId>au.org.aodn.ogcapi</groupId>
             <artifactId>ogcapi-common-java</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>au.org.aodn.ogcapi</groupId>
             <artifactId>ogcapi-tile-java</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>au.org.aodn.ogcapi</groupId>
             <artifactId>ogcapi-features-java</artifactId>
-            <version>${parent.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>co.elastic.clients</groupId>

@@ -1,6 +1,6 @@
 ogcapi:
   docker:
-    elasticVersion: "8.11.1"
+    elasticVersion: "8.13.3"
 
 elasticsearch:
   index:
