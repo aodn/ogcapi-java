@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
+import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +51,7 @@ public interface Converter<F, T> {
      */
     default <F extends StacCollectionModel> Collection getCollection(F m, String host) {
 
-        Collection collection = new Collection();
+        ExtendedCollection collection = new ExtendedCollection();
         collection.setId(m.getUuid());
         collection.setTitle(m.getTitle());
         collection.setDescription(m.getDescription());
@@ -88,6 +89,10 @@ public interface Converter<F, T> {
                                 .title(l.getTitle())
                             )
                     .collect(Collectors.toList()));
+        }
+
+        if (m.getSummaries() != null) {
+            collection.setSummaries(m.getSummaries());
         }
 
         return collection;
