@@ -90,6 +90,14 @@ public interface Converter<F, T> {
                     .collect(Collectors.toList()));
         }
 
+        if (m.getSummaries() != null) {
+            var summariesModel= m.getSummaries();
+            Summaries summaries = new Summaries();
+            summaries.setScore(String.valueOf(summariesModel.getScore()));
+            summaries.setStatus(summariesModel.getStatus());
+            collection.setSummaries(summaries);
+        }
+
         return collection;
     }
 }
