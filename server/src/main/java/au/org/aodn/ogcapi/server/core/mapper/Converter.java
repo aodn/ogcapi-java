@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -92,7 +93,7 @@ public interface Converter<F, T> {
         }
 
         if (m.getSummaries() != null && m.getSummaries().getStatus() != null) {
-            collection.setStatus(m.getSummaries().getStatus());
+            collection.getProperties().put(CollectionProperty.STATUS, m.getSummaries().getStatus());
         }
 
         return collection;
