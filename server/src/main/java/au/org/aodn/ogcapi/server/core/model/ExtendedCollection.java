@@ -12,6 +12,6 @@ import lombok.Setter;
 @Getter
 public class ExtendedCollection extends Collection {
 
-    private SummariesModel summaries;
+    private String status;
 
 }

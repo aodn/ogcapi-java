@@ -91,8 +91,8 @@ public interface Converter<F, T> {
                     .collect(Collectors.toList()));
         }
 
-        if (m.getSummaries() != null) {
-            collection.setSummaries(m.getSummaries());
+        if (m.getSummaries() != null && m.getSummaries().getStatus() != null) {
+            collection.setStatus(m.getSummaries().getStatus());
         }
 
         return collection;
