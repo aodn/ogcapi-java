@@ -10,9 +10,8 @@ public enum StacSummeries {
     Temporal("summaries.temporal", "extent.temporal", List.of(TemporalStart, TemporalEnd)),
     UpdateFrequency("summaries.update_frequency", "summaries.update_frequency"),
     DatasetProvider("summaries.dataset_provider", "summaries.dataset_provider"),
-    DatasetGroup("summaries.dataset_group", "summaries.dataset_group"),
-    Status("summaries.status", "summaries.status")
-    ;
+    DatasetGroup("summaries.dataset_group", "summaries.dataset_group");
+
     public final String searchField;
     public final String displayField;
     public final List<StacSummeries> subfields;

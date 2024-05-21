@@ -11,9 +11,7 @@ public enum StacBasicField {
     DiscoveryCategories(
             "discovery_categories", // This result in the whole themes section return
             "summaries.discovery_categories"
-    ),
-    Links("links", "links")
-    ;
+    );
 
     public final String searchField;    // Field in STAC object
     public final String displayField;   // Field that is named externally
