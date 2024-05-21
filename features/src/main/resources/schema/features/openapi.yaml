@@ -592,8 +592,6 @@ components:
           type: string
           description: a description of the features in the collection
           example: An address.
-        summaries:
-          $ref: '#/components/schemas/summaries'
         links:
           type: array
           example:
@@ -903,17 +901,6 @@ components:
               type: array
               items:
                 type: number
-    summaries:
-      type: object
-      properties:
-        score:
-          type: string
-          description: score of the data
-          example: 0.8
-        status:
-          type: string
-          description: status of the data
-          example: onGoing
     timeStamp:
       type: string
       description: This property indicates the time and date when the response was generated.
