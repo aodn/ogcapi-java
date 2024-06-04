@@ -47,10 +47,10 @@ public interface Converter<F, T> {
     }
     /**
      * Create a collection given stac model
-     * @param m
-     * @return
+     * @param m - Income object to be transformed
+     * @return A mapped JSON which match the St
      */
-    default <F extends StacCollectionModel> Collection getCollection(F m, String host) {
+    default <D extends StacCollectionModel> Collection getCollection(D m, String host) {
 
         ExtendedCollection collection = new ExtendedCollection();
         collection.setId(m.getUuid());
@@ -63,7 +63,9 @@ public interface Converter<F, T> {
         if(m.getExtent() != null) {
             extent.setSpatial(new ExtentSpatial());
 
-            if(m.getExtent().getBbox() != null && !m.getExtent().getBbox().isEmpty()) {
+            if(m.getExtent().getBbox() != null
+                    && !m.getExtent().getBbox().isEmpty()
+                    && m.getExtent().getBbox().size() > 1) {
                 // The first item is the overall bbox, this is STAC spec requirement but not for
                 // OGC collection, hence we remove the first item.
                 extent.getSpatial().bbox(m.getExtent().getBbox().subList(1, m.getExtent().getBbox().size()));

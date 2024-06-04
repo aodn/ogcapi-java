@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 public interface Search {
     List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws Exception;
@@ -19,5 +20,5 @@ public interface Search {
 
     BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException;
 
-    ResponseEntity<List<String>> getAutocompleteSuggestions(String input, String cql,  CQLCrsType coor) throws Exception;
+    ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws Exception;
 }

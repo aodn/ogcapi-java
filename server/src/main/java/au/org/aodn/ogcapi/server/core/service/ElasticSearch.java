@@ -1,5 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.model.CategorySuggestDTO;
+import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
@@ -158,17 +160,6 @@ public class ElasticSearch implements Search {
             filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
         }
 
-        /*
-            if want to use OR operator for the categories (e.g "wave" OR "temperature", use the following code
-            if (categories != null && !categories.isEmpty()) {
-                filters = List.of(TermsQuery.of(q -> q
-                        .field(StacBasicField.DiscoveryCategories.searchField)
-                        .terms(t -> t.value(categories.stream().map(category -> FieldValue.of(category.toLowerCase())).collect(Collectors.toList()))))._toQuery());
-            } else {
-                filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
-            }
-        */;
-
         // create request
         SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(List.of("title"), indexName, List.of(searchAsYouTypeQuery), filters);
 
@@ -197,7 +188,7 @@ public class ElasticSearch implements Search {
         return response.hits().hits();
     }
 
-    public ResponseEntity getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
+    public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         // extract category suggestions
         Set<String> categorySuggestions = new HashSet<>();
         for (Hit<CategorySuggestDTO> item : this.getCategorySuggestions(input)) {
@@ -236,8 +227,6 @@ public class ElasticSearch implements Search {
 
         SearchRequest.Builder builder = new SearchRequest.Builder();
 
-//        List<String> categories = Arrays.asList(cql.split("=")[1].split(","));
-
         builder.index(indexName)
                 .size(size)         // Max hit to return
                 .from(from)         // Skip how many record
@@ -255,6 +244,7 @@ public class ElasticSearch implements Search {
             List<String> fs = properties
                     .stream()
                     .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
+                    .filter(Objects::nonNull)
                     .collect(Collectors.toList());
 
             // Set fetch to false so that it do not return the original document but just the field
@@ -323,7 +313,7 @@ public class ElasticSearch implements Search {
         List<Query> filters = null;
         if(ids != null && !ids.isEmpty()) {
             List<FieldValue> values = ids.stream()
-                    .map(id -> FieldValue.of(id))
+                    .map(FieldValue::of)
                     .collect(Collectors.toList());
 
             filters = List.of(
@@ -398,8 +388,8 @@ public class ElasticSearch implements Search {
         builder.index(indexName)
                 .field(StacSummeries.Geometry.searchField)
                 .zoom(tileMatrix)
-                .x(tileRow.intValue())
-                .y(tileCol.intValue())
+                .x(tileRow)
+                .y(tileCol)
                 // If true, the meta layer’s feature is a bounding box resulting from a geo_bounds aggregation.
                 // The aggregation runs on <field> values that intersect the <zoom>/<x>/<y> tile with wrap_longitude
                 // set to false. The resulting bounding box may be larger than the vector tile.
@@ -408,7 +398,7 @@ public class ElasticSearch implements Search {
 
         if(ids != null && !ids.isEmpty()) {
             List<FieldValue> values = ids.stream()
-                    .map(id -> FieldValue.of(id))
+                    .map(FieldValue::of)
                     .collect(Collectors.toList());
 
             List<Query> filters = List.of(
@@ -419,10 +409,8 @@ public class ElasticSearch implements Search {
             builder.query(q -> q.bool(b -> b.filter(filters)));
         }
 
-        logger.debug("Final elastic search mvt payload {}", builder.toString());
+        logger.debug("Final elastic search mvt payload {}", builder);
 
-        BinaryResponse er = esClient.searchMvt(builder.build());
-
-        return er;
+        return esClient.searchMvt(builder.build());
     }
 }

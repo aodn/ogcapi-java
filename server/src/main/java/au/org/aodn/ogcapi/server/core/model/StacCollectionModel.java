@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
 import java.util.List;
 
@@ -13,12 +14,14 @@ import java.util.List;
 @Builder
 public class StacCollectionModel {
 
-    protected String title;
     protected String description;
     protected String type;
     protected ExtentModel extent;
     protected SummariesModel summaries;
     protected List<LinkModel> links;
+
+    @Getter
+    protected String title;
 
     @JsonProperty("id")
     protected String uuid;
@@ -28,9 +31,5 @@ public class StacCollectionModel {
 
     @JsonProperty("stac_extensions")
     protected List<String> stacExtensions;
-
-    public String getTitle() {
-        return title;
-    }
 
 }
