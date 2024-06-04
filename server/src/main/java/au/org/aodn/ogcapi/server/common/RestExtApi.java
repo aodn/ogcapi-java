@@ -40,7 +40,7 @@ public class RestExtApi {
      * @throws java.lang.Exception
      */
     @GetMapping(path="/autocomplete")
-    public ResponseEntity<List<String>> getAutocompleteSuggestions(
+    public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(
             @RequestParam String input,
             //categories is an optional parameter, if not provided, the method will return suggestions from all categories
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
