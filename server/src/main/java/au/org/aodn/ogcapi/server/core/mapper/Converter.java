@@ -98,6 +98,10 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.STATUS, m.getSummaries().getStatus());
         }
 
+        if (m.getSummaries() != null && m.getSummaries().getCredits() != null) {
+            collection.getProperties().put(CollectionProperty.CREDITS, m.getSummaries().getCredits());
+        }
+
         return collection;
     }
 }
