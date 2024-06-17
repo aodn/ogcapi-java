@@ -9,6 +9,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 
 public class StacToCollectionTest {
@@ -38,13 +40,16 @@ public class StacToCollectionTest {
     public void verifyAddingPropertyWorks() {
         StacToCollection stacToCollection = new StacToCollectionImpl();
 
+        List<String> credits = Arrays.asList("credit1", "credit2");
+
         StacCollectionModel model = StacCollectionModel
                 .builder()
-                .summaries(new SummariesModel(0, "Completed"))
+                .summaries(new SummariesModel(0, "Completed", credits))
                 .build();
 
         // Should not throw null pointer
         ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model);
         Assertions.assertEquals("Completed", collection.getProperties().get(CollectionProperty.STATUS));
+        Assertions.assertEquals(credits, collection.getProperties().get(CollectionProperty.CREDITS));
     }
 }

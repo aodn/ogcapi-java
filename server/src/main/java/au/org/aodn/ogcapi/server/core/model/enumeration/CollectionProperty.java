@@ -4,7 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum CollectionProperty {
-    STATUS("status");
+    STATUS("status"),
+    CREDITS("credits");
 
 
 
