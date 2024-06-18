@@ -19,6 +19,7 @@ public class StacCollectionModel {
     protected ExtentModel extent;
     protected SummariesModel summaries;
     protected List<LinkModel> links;
+    protected List<ContactModel> contacts;
 
     @Getter
     protected String title;
