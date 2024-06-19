@@ -20,6 +20,7 @@ public class StacCollectionModel {
     protected SummariesModel summaries;
     protected List<LinkModel> links;
     protected List<ContactModel> contacts;
+    protected List<ThemeModel> themes;
 
     @Getter
     protected String title;

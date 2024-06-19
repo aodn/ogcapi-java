@@ -106,6 +106,10 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.CONTACTS, m.getContacts());
         }
 
+        if (m.getThemes() != null) {
+            collection.getProperties().put(CollectionProperty.THEMES, m.getThemes());
+        }
+
         return collection;
     }
 }

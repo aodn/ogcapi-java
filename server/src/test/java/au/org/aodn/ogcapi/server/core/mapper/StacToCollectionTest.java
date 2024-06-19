@@ -56,11 +56,18 @@ public class StacToCollectionTest {
                 .links(Collections.singletonList(link))
                 .phones(Collections.singletonList(InfoModel.builder().value("value").build())
                 ).build();
+        var theme = ThemeModel.builder()
+                .scheme("scheme")
+                .description("description")
+                .title("title")
+                .concepts(Collections.singletonList(ConceptModel.builder().id("id").url("url").build()))
+                .build();
 
         StacCollectionModel model = StacCollectionModel
                 .builder()
                 .summaries(new SummariesModel(0, "Completed", credits))
                 .contacts(Collections.singletonList(contact))
+                .themes(Collections.singletonList(theme))
                 .build();
 
         // Should not throw null pointer
@@ -68,5 +75,6 @@ public class StacToCollectionTest {
         Assertions.assertEquals("Completed", collection.getProperties().get(CollectionProperty.STATUS));
         Assertions.assertEquals(credits, collection.getProperties().get(CollectionProperty.CREDITS));
         Assertions.assertEquals(Collections.singletonList(contact), collection.getProperties().get(CollectionProperty.CONTACTS));
+        Assertions.assertEquals(Collections.singletonList(theme), collection.getProperties().get(CollectionProperty.THEMES));
     }
 }
