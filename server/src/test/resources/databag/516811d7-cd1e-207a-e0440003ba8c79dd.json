@@ -101,16 +101,16 @@
           "administrativeArea": "WA"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "School of Veterinary and Life Sciences (VLS), Murdoch University",
       "name": "Webb, J.",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "+61 8 9360 6000"
         },
         {
-          "roles": "facsimile",
+          "roles": ["facsimile"],
           "value": "+61 8 9310 5090"
         }
       ],

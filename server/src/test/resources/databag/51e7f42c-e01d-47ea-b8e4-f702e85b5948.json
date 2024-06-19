@@ -89,12 +89,12 @@
           "administrativeArea": "ACT"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Commonwealth of Australia (Geoscience Australia)",
       "name": "",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "1800 800 173"
         }
       ],
@@ -102,11 +102,11 @@
       "position": ""
     },
     {
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Sixsmith, J."
     },
     {
-      "roles": "resourceProvider",
+      "roles": ["resourceProvider"],
       "organization": "Place, Space and Communities Division"
     }
   ],

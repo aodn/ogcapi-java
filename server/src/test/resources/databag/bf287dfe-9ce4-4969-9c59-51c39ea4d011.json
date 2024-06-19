@@ -2782,16 +2782,16 @@
           "administrativeArea": "TAS"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "CSIRO Oceans and Atmosphere - Hobart",
       "name": "Davies, Claire",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "+61 7 3833 5921"
         },
         {
-          "roles": "facsimile",
+          "roles": ["facsimile"],
           "value": "+61 3 6232 5000"
         }
       ],
