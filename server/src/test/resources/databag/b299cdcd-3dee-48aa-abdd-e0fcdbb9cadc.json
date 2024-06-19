@@ -660,7 +660,7 @@
           "administrativeArea": ""
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Department of Transport (DoT), Western Australian Government",
       "name": "",
       "phones": [],
@@ -683,12 +683,12 @@
           "administrativeArea": "Queensland"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Department of Environment and Science (DES), Queensland Government",
       "name": "",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "137468"
         }
       ],
@@ -710,7 +710,7 @@
           "administrativeArea": "Victoria"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Australian Bureau of Meteorology",
       "name": "",
       "phones": [],
@@ -732,12 +732,12 @@
           "administrativeArea": "NSW"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Manly Hydraulics Laboratory (MHL)",
       "name": "",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "(02) 9949 0200"
         }
       ],
@@ -766,12 +766,12 @@
           "administrativeArea": "Victoria"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Gippsland Ports",
       "name": "",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "+61 3 5150 0500"
         }
       ],
@@ -799,7 +799,7 @@
           "administrativeArea": "Western Australia"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "The University of Western Australia (UWA)",
       "name": "Hansen, Jeff",
       "phones": [],
@@ -822,7 +822,7 @@
           "administrativeArea": "Victoria"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Deakin University",
       "name": "Ierodiaconou, Daniel",
       "phones": [],
@@ -842,7 +842,7 @@
           "administrativeArea": ""
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Pilbara Ports Authority",
       "name": "King, Richard",
       "phones": [],
@@ -865,7 +865,7 @@
           "administrativeArea": "South Australia"
         }
       ],
-      "roles": "pointOfContact",
+      "roles": ["pointOfContact"],
       "organization": "Flinders University",
       "name": "Miot da Silva, Graziela",
       "phones": [],

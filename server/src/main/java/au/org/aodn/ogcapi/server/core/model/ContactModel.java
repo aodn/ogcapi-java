@@ -20,7 +20,21 @@ public class ContactModel {
     protected List<String> emails;
     protected List<AddressModel> addresses;
     protected List<LinkModel> links;
-    protected String roles;
+    protected List<String> roles;
     protected List<InfoModel> phones;
+
+    // for testing usage
+    public ContactModel(String name, String organization, String identifier, String position, List<String> emails, List<AddressModel> addresses, List<LinkModel> links, List<String> roles, List<InfoModel> phones) {
+        this.name = name;
+        this.organization = organization;
+        this.identifier = identifier;
+        this.position = position;
+        this.emails = emails;
+        this.addresses = addresses;
+        this.links = links;
+        this.roles = roles;
+        this.phones = phones;
+    }
+
 
 }

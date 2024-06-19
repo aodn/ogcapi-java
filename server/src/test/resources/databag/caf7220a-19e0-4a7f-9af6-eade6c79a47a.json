@@ -221,16 +221,16 @@
           "administrativeArea": "TAS"
         }
       ],
-      "roles": "principalInvestigator",
+      "roles": ["principalInvestigator"],
       "organization": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
       "name": "Barrett, Neville",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "61 3 6227 7210"
         },
         {
-          "roles": "facsimile",
+          "roles": ["facsimile"],
           "value": "61 3 6227 8035"
         }
       ],
@@ -259,16 +259,16 @@
           "administrativeArea": "TAS"
         }
       ],
-      "roles": "principalInvestigator",
+      "roles": ["principalInvestigator"],
       "organization": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
       "name": "Edgar, Graham",
       "phones": [
         {
-          "roles": "voice",
+          "roles": ["voice"],
           "value": "61 3 6227 7238"
         },
         {
-          "roles": "facsimile",
+          "roles": ["facsimile"],
           "value": "61 3 6227 8035"
         }
       ],
@@ -297,16 +297,16 @@
           "administrativeArea": "TAS"
         }
       ],
-      "roles": "collaborator",
+      "roles": ["collaborator"],
       "organization": "Institute for Marine and Antarctic Studies (IMAS), University of Tasmania (UTAS)",
       "name": "Stuart-Smith, Rick",
       "phones": [
         {
-          "roles": "voice",
+          "roles":[ "voice"],
           "value": "61 3 6227 7214"
         },
         {
-          "roles": "facsimile",
+          "roles": ["facsimile"],
           "value": "61 3 6227 8035"
         }
       ],

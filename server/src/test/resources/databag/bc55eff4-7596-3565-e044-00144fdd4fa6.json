@@ -71,7 +71,7 @@
     {
       "emails": [],
       "addresses": [],
-      "roles": "custodian",
+      "roles": ["custodian"],
       "organization": "ED",
       "name": "AMARSHAL",
       "phones": [],
@@ -81,7 +81,7 @@
     {
       "emails": [],
       "addresses": [],
-      "roles": "owner",
+      "roles": ["owner"],
       "organization": "Commonwealth of Australia (Geoscience Australia)",
       "name": "",
       "phones": [],
@@ -103,12 +103,12 @@
           "administrativeArea": "ACT"
         }
       ],
-      "roles": "custodian",
+      "roles": ["custodian"],
       "organization": "Commonwealth of Australia (Geoscience Australia)",
       "name": "",
       "phones": [
         {
-          "roles": "voice",
+          "roles":[ "voice"],
           "value": "1800 800 173"
         }
       ],

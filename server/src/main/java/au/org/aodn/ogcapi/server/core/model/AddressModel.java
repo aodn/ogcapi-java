@@ -21,4 +21,14 @@ public class AddressModel {
     @JsonProperty("postal_code")
     protected String postalCode;
     protected String country;
+
+
+    // for testing usage
+    public AddressModel(List<String> deliveryPoint, String city, String administrativeArea, String postalCode, String country) {
+        this.deliveryPoint = deliveryPoint;
+        this.city = city;
+        this.administrativeArea = administrativeArea;
+        this.postalCode = postalCode;
+        this.country = country;
+    }
 }
