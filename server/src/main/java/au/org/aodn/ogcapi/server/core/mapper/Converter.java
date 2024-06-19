@@ -106,7 +106,6 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.CONTACTS, m.getContacts());
         }
 
-
         return collection;
     }
 }
