@@ -7,6 +7,7 @@ public enum CollectionProperty {
     STATUS("status"),
     CREDITS("credits"),
     CONTACTS("contacts"),
+    THEMES("themes"),
     ;
 
 
