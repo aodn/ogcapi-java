@@ -1,0 +1,392 @@
+{
+  "title" : "IMOS - Australian National Mooring Network (ANMN) Facility - Current velocity time-series",
+  "description" : "The Australian National Mooring Network (ANMN) Facility is a series of national reference stations and regional moorings designed to monitor particular oceanographic phenomena in Australian coastal ocean waters. This collection contains time-series observations of current velocity from moorings deployed by the ANMN. The primary parameters are the zonal, meridional and vertical components of the current speed within different bins in the water column, the height above the instrument of each bin, the pressure (when available) and depth at the instrument. Temperature at the instrument is also usually measured. The observations were made using a range of Acoustic Doppler Current Profiler (ADCP) and Acoustic Doppler Current Meter (single point measurement) instruments. We are also producing a gridded product of sea water velocity time-series based on these data. These will be available in a separate collection.",
+  "extent" : {
+    "bbox" : [ [ 113.0, -43.0, 154.0, -9.0 ], [ 115.0, -21.0, 117.0, -19.0 ], [ 114.0, -21.0, 115.0, -20.0 ], [ 152.0, -22.0, 153.0, -21.0 ], [ 113.0, -22.0, 114.0, -21.0 ], [ 151.0, -24.0, 153.0, -22.0 ], [ 130.0, -10.0, 131.0, -9.0 ], [ 121.0, -17.0, 122.0, -15.0 ], [ 130.0, -13.0, 131.0, -12.0 ], [ 127.0, -14.0, 129.0, -9.0 ], [ 145.0, -15.0, 146.0, -14.0 ], [ 123.0, -15.0, 124.0, -14.0 ], [ 119.0, -18.0, 120.0, -17.0 ], [ 147.0, -20.0, 148.0, -18.0 ], [ 153.0, -28.0, 154.0, -27.0 ], [ 153.0, -31.0, 154.0, -30.0 ], [ 137.0, -34.0, 138.0, -33.0 ], [ 114.0, -33.0, 116.0, -31.0 ], [ 121.0, -34.0, 122.0, -33.0 ], [ 151.0, -35.0, 152.0, -33.0 ], [ 150.0, -37.0, 151.0, -36.0 ], [ 134.0, -37.0, 137.0, -34.0 ], [ 141.0, -39.0, 142.0, -38.0 ], [ 148.0, -43.0, 149.0, -42.0 ] ],
+    "temporal" : [ [ "2007-09-08T14:00:00Z", null ], [ "2007-09-08T14:00:00Z", null ] ]
+  },
+  "summaries" : {
+    "score" : 1,
+    "status" : "onGoing",
+    "credits" : [ "Australia's Integrated Marine Observing System (IMOS) is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS). It is operated by a consortium of institutions as an unincorporated joint venture, with the University of Tasmania as Lead Agent.", "Sydney Institute of Marine Science (SIMS)", "Australian Institute of Marine Science (AIMS)", "South Australian Research and Development Institute (SARDI)", "CSIRO Oceans and Atmosphere", "Darwin Port", "The University of New South Wales (UNSW)", "Office of Environment and Heritage (OEH), New South Wales Government", "Sydney Water Corporation", "Oceanographic Field Services Pty Ltd", "University of Technology, Sydney (UTS)", "SA Water", "Environment Protection Authority (EPA), South Australian Government", "Deakin University", "Department of Jobs, Tourism, Science and Innovation (DJTSI), Western Australian Government" ],
+    "scope" : {
+      "code" : "dataset",
+      "name" : "IMOS dataset level record"
+    },
+    "dataset_group" : null,
+    "dataset_provider" : "IMOS",
+    "update_frequency" : null,
+    "proj:geometry" : {
+      "geometries" : [ {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 116, -21 ], [ 117, -21 ], [ 117, -19 ], [ 115, -19 ], [ 115, -20 ], [ 116, -20 ], [ 116, -21 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 114, -21 ], [ 115, -21 ], [ 115, -20 ], [ 114, -20 ], [ 114, -21 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 152, -22 ], [ 153, -22 ], [ 153, -21 ], [ 152, -21 ], [ 152, -22 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 113, -22 ], [ 114, -22 ], [ 114, -21 ], [ 113, -21 ], [ 113, -22 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 151, -24 ], [ 153, -24 ], [ 153, -23 ], [ 152, -23 ], [ 152, -22 ], [ 151, -22 ], [ 151, -24 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 130, -10 ], [ 131, -10 ], [ 131, -9 ], [ 130, -9 ], [ 130, -10 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 121, -17 ], [ 122, -17 ], [ 122, -15 ], [ 121, -15 ], [ 121, -17 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 130, -13 ], [ 131, -13 ], [ 131, -12 ], [ 130, -12 ], [ 130, -13 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 128, -14 ], [ 129, -14 ], [ 129, -10 ], [ 128, -10 ], [ 128, -9 ], [ 127, -9 ], [ 127, -12 ], [ 128, -12 ], [ 128, -14 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 145, -15 ], [ 146, -15 ], [ 146, -14 ], [ 145, -14 ], [ 145, -15 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 123, -15 ], [ 124, -15 ], [ 124, -14 ], [ 123, -14 ], [ 123, -15 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 119, -18 ], [ 120, -18 ], [ 120, -17 ], [ 119, -17 ], [ 119, -18 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 147, -20 ], [ 148, -20 ], [ 148, -18 ], [ 147, -18 ], [ 147, -20 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 153, -28 ], [ 154, -28 ], [ 154, -27 ], [ 153, -27 ], [ 153, -28 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 153, -31 ], [ 154, -31 ], [ 154, -30 ], [ 153, -30 ], [ 153, -31 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 137, -34 ], [ 138, -34 ], [ 138, -33 ], [ 137, -33 ], [ 137, -34 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 115, -33 ], [ 116, -33 ], [ 116, -31 ], [ 114, -31 ], [ 114, -32 ], [ 115, -32 ], [ 115, -33 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 121, -34 ], [ 122, -34 ], [ 122, -33 ], [ 121, -33 ], [ 121, -34 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 151, -35 ], [ 152, -35 ], [ 152, -33 ], [ 151, -33 ], [ 151, -35 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 150, -37 ], [ 151, -37 ], [ 151, -36 ], [ 150, -36 ], [ 150, -37 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 137, -36 ], [ 137, -35 ], [ 136, -35 ], [ 136, -34 ], [ 134, -34 ], [ 134, -35 ], [ 135, -35 ], [ 135, -37 ], [ 137, -37 ], [ 137, -36 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 141, -39 ], [ 142, -39 ], [ 142, -38 ], [ 141, -38 ], [ 141, -39 ] ] ]
+      }, {
+        "type" : "Polygon",
+        "coordinates" : [ [ [ 148, -43 ], [ 149, -43 ], [ 149, -42 ], [ 148, -42 ], [ 148, -43 ] ] ]
+      } ],
+      "type" : "GeometryCollection"
+    },
+    "temporal" : [ {
+      "start" : "2007-09-08T14:00:00Z",
+      "end" : null
+    } ],
+    "discovery_categories" : null
+  },
+  "contacts" : [ {
+    "roles" : [ "pointOfContact" ],
+    "organization" : "Integrated Marine Observing System (IMOS)",
+    "name" : "",
+    "position" : "Data Officer",
+    "emails" : [ "info@aodn.org.au" ],
+    "addresses" : [ {
+      "deliveryPoint" : [ "University of Tasmania", "Private Bag 110" ],
+      "city" : "Hobart",
+      "country" : "Australia",
+      "postalCode" : "7001",
+      "administrativeArea" : "Tasmania"
+    } ],
+    "phones" : [ {
+      "roles" : [ "voice" ],
+      "value" : "61 3 6226 7488"
+    }, {
+      "roles" : [ "facsimile" ],
+      "value" : "61 3 6226 2107"
+    } ],
+    "links" : [ {
+      "href" : "http://imos.org.au/aodn.html",
+      "rel" : null,
+      "type" : "WWW:LINK-1.0-http--link",
+      "title" : "Website of the Australian Ocean Data Network (AODN)"
+    } ]
+  }, {
+    "roles" : [ "principalInvestigator" ],
+    "organization" : "Australian Institute of Marine Science (AIMS)",
+    "name" : "Cahill, Madeleine",
+    "position" : "",
+    "emails" : [ "m.cahill@aims.gov.au" ],
+    "addresses" : [ {
+      "deliveryPoint" : [ "PMB No. 3, Townsville Mail Centre" ],
+      "city" : "Townsville",
+      "country" : "Australia",
+      "postalCode" : "4810",
+      "administrativeArea" : "Queensland"
+    } ],
+    "phones" : [ ],
+    "links" : [ {
+      "href" : "http://imos.org.au/nationalmooringnetwork.html",
+      "rel" : null,
+      "type" : "WWW:LINK-1.0-http--link",
+      "title" : "Website of the IMOS Australian National Mooring Network"
+    } ]
+  } ],
+  "languages" : [ {
+    "code" : "eng",
+    "name" : "English"
+  } ],
+  "links" : [ {
+    "href" : "http://imos.org.au/nationalmooringnetwork.html",
+    "rel" : "self",
+    "type" : "text/html",
+    "title" : "ANMN page on IMOS website"
+  }, {
+    "href" : "http://thredds.aodn.org.au/thredds/catalog/IMOS/ANMN/catalog.html",
+    "rel" : "self",
+    "type" : "text/html",
+    "title" : "NetCDF files via THREDDS catalog"
+  }, {
+    "href" : "https://portal.aodn.org.au/search?uuid=ae86e2f5-eaaf-459e-a405-e654d85adb9c",
+    "rel" : "self",
+    "type" : "text/html",
+    "title" : "View and download data though the AODN Portal"
+  }, {
+    "href" : "http://geoserver-123.aodn.org.au/geoserver/wms",
+    "rel" : "self",
+    "type" : "",
+    "title" : "imos:anmn_velocity_timeseries_map"
+  }, {
+    "href" : "http://geoserver-123.aodn.org.au/geoserver/ows",
+    "rel" : "self",
+    "type" : "",
+    "title" : "anmn_velocity_timeseries_map#file_url"
+  }, {
+    "href" : "https://help.aodn.org.au/web-services/ncurllist-service/",
+    "rel" : "self",
+    "type" : "text/html",
+    "title" : "ncUrlList help documentation"
+  } ],
+  "license" : "Creative Commons Attribution 4.0 International License",
+  "providers" : [ {
+    "name" : "Integrated Marine Observing System (IMOS)",
+    "description" : null,
+    "roles" : [ "distributor" ],
+    "url" : "http://imos.org.au/aodn.html"
+  } ],
+  "themes" : [ {
+    "concepts" : [ {
+      "id" : "Oceans | Ocean Temperature | Water Temperature",
+      "url" : null
+    }, {
+      "id" : "Oceans | Bathymetry | Water Depth",
+      "url" : null
+    }, {
+      "id" : "Oceans | Ocean Circulation | Ocean Currents",
+      "url" : null
+    }, {
+      "id" : "Oceans | Salinity/density | Conductivity",
+      "url" : null
+    } ],
+    "scheme" : "theme",
+    "description" : "GCMD",
+    "title" : "NASA/Global Change Master Directory Earth Science Keywords Version 5.3.8"
+  }, {
+    "concepts" : [ {
+      "id" : "Buoys | Moored Buoys",
+      "url" : null
+    }, {
+      "id" : "Current Meters/Profilers | Acoustic Doppler Current Profiler (ADCP)",
+      "url" : null
+    } ],
+    "scheme" : "",
+    "description" : "MCP",
+    "title" : "Marine Community Profile of ISO19115 v1.4 Collection Methods Vocabulary (Annex C.1.3)"
+  }, {
+    "concepts" : [ {
+      "id" : "Slope Mooring",
+      "url" : null
+    }, {
+      "id" : "Shelf Mooring",
+      "url" : null
+    }, {
+      "id" : "Deepwater Mooring",
+      "url" : null
+    } ],
+    "scheme" : "",
+    "description" : "IMOS",
+    "title" : "IMOS Keywords Thesaurus"
+  }, {
+    "concepts" : [ {
+      "id" : "Global / Oceans | Indian Ocean",
+      "url" : null
+    }, {
+      "id" : "Global / Oceans | Pacific Ocean",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Great Australian Bight, SA/WA",
+      "url" : null
+    }, {
+      "id" : "Regional Seas | Tasman Sea",
+      "url" : null
+    }, {
+      "id" : "Regional Seas | Coral Sea",
+      "url" : null
+    }, {
+      "id" : "Regional Seas | Timor Sea",
+      "url" : null
+    } ],
+    "scheme" : "place",
+    "description" : "",
+    "title" : "AODN Geographic Extents Vocabulary"
+  }, {
+    "concepts" : [ {
+      "id" : "States, Territories (Australia) | Western Australia",
+      "url" : null
+    }, {
+      "id" : "States, Territories (Australia) | Victoria",
+      "url" : null
+    }, {
+      "id" : "States, Territories (Australia) | Tasmania",
+      "url" : null
+    }, {
+      "id" : "States, Territories (Australia) | South Australia",
+      "url" : null
+    }, {
+      "id" : "States, Territories (Australia) | South Australia",
+      "url" : null
+    }, {
+      "id" : "States, Territories (Australia) | Queensland",
+      "url" : null
+    }, {
+      "id" : "States, Territories (Australia) | Northern Territory",
+      "url" : null
+    }, {
+      "id" : "States, Territories (Australia) | New South Wales",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Maria Island, TAS",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Kangaroo Island, SA",
+      "url" : null
+    }, {
+      "id" : "Coastal Cities / Towns (Australia) | Darwin, NT",
+      "url" : null
+    }, {
+      "id" : "Coastal Cities / Towns (Australia) | Sydney, NSW",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Kimberley Coast, WA",
+      "url" : null
+    }, {
+      "id" : "Coastal Cities / Towns (Australia) | Coffs Harbour, NSW",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Kimberley Islands, WA",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Ningaloo Marine Park, WA",
+      "url" : null
+    }, {
+      "id" : "Coastal Cities / Towns (Australia) | Perth, WA",
+      "url" : null
+    }, {
+      "id" : "Countries | Indonesia",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Rottnest Island, WA",
+      "url" : null
+    }, {
+      "id" : "Countries | Australia",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Pilbara Coast, WA",
+      "url" : null
+    }, {
+      "id" : "Coastal Cities / Towns (Australia) | Esperance, WA",
+      "url" : null
+    }, {
+      "id" : "Marine Features (Australia) | Great Barrier Reef, QLD",
+      "url" : null
+    } ],
+    "scheme" : "place",
+    "description" : "",
+    "title" : "AODN Geographic Extents Vocabulary"
+  }, {
+    "concepts" : [ {
+      "id" : "mooring",
+      "url" : "http://vocab.nerc.ac.uk/collection/L06/current/48"
+    } ],
+    "scheme" : "theme",
+    "description" : "",
+    "title" : "AODN Platform Vocabulary"
+  }, {
+    "concepts" : [ {
+      "id" : "Eastward current velocity in the water body",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/LCEWZZ01"
+    }, {
+      "id" : "Current speed in the water body",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/383"
+    }, {
+      "id" : "Current direction in the water body",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/LCDAZZ01"
+    }, {
+      "id" : "Upward current velocity in the water body",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/LRZAZZZZ"
+    }, {
+      "id" : "Pressure (measured variable) in the water body exerted by overlying sea water only",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/566"
+    }, {
+      "id" : "Northward current velocity in the water body",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/LCNSZZ01"
+    }, {
+      "id" : "Acoustic signal return amplitude from the water body",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/399"
+    } ],
+    "scheme" : "theme",
+    "description" : "",
+    "title" : "AODN Discovery Parameter Vocabulary"
+  }, {
+    "concepts" : [ {
+      "id" : "National Reference Stations Sub-Facility, Integrated Marine Observing System (IMOS)",
+      "url" : "http://vocab.aodn.org.au/def/organisation/entity/501"
+    }, {
+      "id" : "Queensland and Northern Australia Moorings Sub-Facility, Integrated Marine Observing System (IMOS)",
+      "url" : "http://vocab.aodn.org.au/def/organisation/entity/503"
+    }, {
+      "id" : "Southern Australia Moorings Sub-Facility, Integrated Marine Observing System (IMOS)",
+      "url" : "http://vocab.aodn.org.au/def/organisation/entity/504"
+    }, {
+      "id" : "Western Australia Moorings Sub-Facility, Integrated Marine Observing System (IMOS)",
+      "url" : "http://vocab.aodn.org.au/def/organisation/entity/505"
+    }, {
+      "id" : "Victoria Moorings Sub-Facility, Integrated Marine Observing System (IMOS)",
+      "url" : "http://vocab.aodn.org.au/def/organisation/entity/592"
+    }, {
+      "id" : "New South Wales Moorings Sub-Facility, Integrated Marine Observing System (IMOS)",
+      "url" : "http://vocab.aodn.org.au/def/organisation/entity/502"
+    } ],
+    "scheme" : "discipline",
+    "description" : "",
+    "title" : "AODN Organisation Vocabulary"
+  } ],
+  "id" : "ae86e2f5-eaaf-459e-a405-e654d85adb9c",
+  "record_suggest" : {
+    "title" : "IMOS - Australian National Mooring Network (ANMN) Facility - Current velocity time-series",
+    "description" : null
+  },
+  "type" : "Collection",
+  "stac_version" : "1.0.0",
+  "stac_extensions" : [ "https://stac-extensions.github.io/scientific/v1.0.0/schema.json", "https://stac-extensions.github.io/contacts/v0.1.1/schema.json", "https://stac-extensions.github.io/projection/v1.1.0/schema.json", "https://stac-extensions.github.io/language/v1.0.0/schema.json", "https://stac-extensions.github.io/themes/v1.0.0/schema.json" ]
+}
