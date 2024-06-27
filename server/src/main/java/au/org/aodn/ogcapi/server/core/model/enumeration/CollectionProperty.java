@@ -8,9 +8,8 @@ public enum CollectionProperty {
     CREDITS("credits"),
     CONTACTS("contacts"),
     THEMES("themes"),
+    GEOMETRY("geometry")
     ;
-
-
 
     private final String value;
 

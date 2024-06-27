@@ -12,8 +12,5 @@ import java.util.Map;
  */
 @Getter
 public class ExtendedCollection extends Collection {
-
-
     private final Map<CollectionProperty, Object> properties = new HashMap<>();
-
 }

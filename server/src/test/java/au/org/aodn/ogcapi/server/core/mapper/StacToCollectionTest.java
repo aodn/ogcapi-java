@@ -65,7 +65,14 @@ public class StacToCollectionTest {
 
         StacCollectionModel model = StacCollectionModel
                 .builder()
-                .summaries(new SummariesModel(0, "Completed", credits))
+                .summaries(
+                        SummariesModel
+                                .builder()
+                                .score(0)
+                                .status("Completed")
+                                .credits(credits)
+                                .build()
+                )
                 .contacts(Collections.singletonList(contact))
                 .themes(Collections.singletonList(theme))
                 .build();

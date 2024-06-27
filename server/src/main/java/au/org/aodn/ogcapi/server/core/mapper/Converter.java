@@ -100,6 +100,10 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.CREDITS, m.getSummaries().getCredits());
         }
 
+        if (m.getSummaries() != null && m.getSummaries().getGeometry() != null) {
+            collection.getProperties().put(CollectionProperty.GEOMETRY, m.getSummaries().getGeometry());
+        }
+
         if (m.getContacts() != null) {
             collection.getProperties().put(CollectionProperty.CONTACTS, m.getContacts());
         }
