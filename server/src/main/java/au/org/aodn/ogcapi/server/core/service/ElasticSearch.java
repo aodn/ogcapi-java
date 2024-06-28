@@ -283,12 +283,12 @@ public class ElasticSearch implements Search {
         try {
             if(nodes.source() != null) {
                 String json = nodes.source().toPrettyString();
-                logger.debug("Converted json to StacCollectionModel {}", json);
+                logger.debug("Serialize STAC json to StacCollectionModel {}", json);
 
                 return mapper.readValue(json, StacCollectionModel.class);
             }
             else {
-                logger.error("Failed to convert text to StacCollectionModel");
+                logger.error("Failed to serialize text to StacCollectionModel");
                 return null;
             }
         }
