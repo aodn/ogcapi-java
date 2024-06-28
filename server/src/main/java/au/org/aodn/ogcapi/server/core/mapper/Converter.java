@@ -93,23 +93,23 @@ public interface Converter<F, T> {
         }
 
         if (m.getSummaries() != null && m.getSummaries().getStatus() != null) {
-            collection.getProperties().put(CollectionProperty.STATUS, m.getSummaries().getStatus());
+            collection.getProperties().put(CollectionProperty.status, m.getSummaries().getStatus());
         }
 
         if (m.getSummaries() != null && m.getSummaries().getCredits() != null) {
-            collection.getProperties().put(CollectionProperty.CREDITS, m.getSummaries().getCredits());
+            collection.getProperties().put(CollectionProperty.credits, m.getSummaries().getCredits());
         }
 
         if (m.getSummaries() != null && m.getSummaries().getGeometry() != null) {
-            collection.getProperties().put(CollectionProperty.GEOMETRY, m.getSummaries().getGeometry());
+            collection.getProperties().put(CollectionProperty.geometry, m.getSummaries().getGeometry());
         }
 
         if (m.getContacts() != null) {
-            collection.getProperties().put(CollectionProperty.CONTACTS, m.getContacts());
+            collection.getProperties().put(CollectionProperty.contacts, m.getContacts());
         }
 
         if (m.getThemes() != null) {
-            collection.getProperties().put(CollectionProperty.THEMES, m.getThemes());
+            collection.getProperties().put(CollectionProperty.themes, m.getThemes());
         }
 
         return collection;

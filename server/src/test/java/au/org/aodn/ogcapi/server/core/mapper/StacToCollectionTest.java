@@ -79,9 +79,9 @@ public class StacToCollectionTest {
 
         // Should not throw null pointer
         ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model);
-        Assertions.assertEquals("Completed", collection.getProperties().get(CollectionProperty.STATUS));
-        Assertions.assertEquals(credits, collection.getProperties().get(CollectionProperty.CREDITS));
-        Assertions.assertEquals(Collections.singletonList(contact), collection.getProperties().get(CollectionProperty.CONTACTS));
-        Assertions.assertEquals(Collections.singletonList(theme), collection.getProperties().get(CollectionProperty.THEMES));
+        Assertions.assertEquals("Completed", collection.getProperties().get(CollectionProperty.status));
+        Assertions.assertEquals(credits, collection.getProperties().get(CollectionProperty.credits));
+        Assertions.assertEquals(Collections.singletonList(contact), collection.getProperties().get(CollectionProperty.contacts));
+        Assertions.assertEquals(Collections.singletonList(theme), collection.getProperties().get(CollectionProperty.themes));
     }
 }
