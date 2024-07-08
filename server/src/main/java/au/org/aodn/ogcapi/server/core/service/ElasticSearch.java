@@ -13,10 +13,10 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
-import co.elastic.clients.elasticsearch.core.search.*;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -35,6 +35,9 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,6 +46,9 @@ public class ElasticSearch implements Search {
 
     @Value("${elasticsearch.index.name}")
     protected String indexName;
+
+    @Value("${elasticsearch.index.pageSize:2000}")
+    protected Integer pageSize;
 
     protected ElasticsearchClient esClient;
 
@@ -215,74 +221,153 @@ public class ElasticSearch implements Search {
 
         return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
     }
+    /**
+     * Core function to do the search, it used pageableSearch to make sure all records are return.
+     *
+     * @param queries
+     * @param should
+     * @param filters
+     * @param properties
+     * @param maxSize: Max number of records to be return
+     * @return
+     * @throws IOException
+     */
+    protected List<StacCollectionModel> searchCollectionBy(final List<Query> queries,
+                                                           final List<Query> should,
+                                                           final List<Query> filters,
+                                                           final List<String> properties,
+                                                           final Long maxSize) {
 
-    protected List<StacCollectionModel> searchCollectionBy(List<Query> queries,
-                                                           List<Query> should,
-                                                           List<Query> filters,
-                                                           List<String> properties,
-                                                           Integer from,
-                                                           Integer size) throws IOException {
+        Supplier<SearchRequest.Builder> builderSupplier = () -> {
+            SearchRequest.Builder builder = new SearchRequest.Builder();
+            builder.index(indexName)
+                    .size(pageSize)
+                    .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
+                    .sort(so -> so.score(v -> v.order(SortOrder.Desc)))
+                    .sort(so -> so
+                            .field(FieldSort.of(f -> f
+                                    .field(StacSummeries.Score.searchField)
+                                    .order(SortOrder.Desc))))
+                    .sort(so -> so
+                            // We need a unique key for the search, so _id is the best
+                            .field(FieldSort.of(f -> f
+                                    .field("id.keyword")
+                                    .order(SortOrder.Asc))));
 
+            if(properties != null && !properties.isEmpty()) {
+                // Convert the income field name to the real field name in STAC
+                List<String> fs = properties
+                        .stream()
+                        .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
 
-
-        SearchRequest.Builder builder = new SearchRequest.Builder();
-
-        builder.index(indexName)
-                .size(size)         // Max hit to return
-                .from(from)         // Skip how many record
-                .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
-                .size(2000)
-                .sort(so -> so.score(v -> v.order(SortOrder.Desc)))
-                .sort(so -> so
-                    .field(FieldSort.of(f -> f
-                        .field(StacSummeries.Score.searchField)
-                        .order(SortOrder.Desc))
-                    ));
-
-        if(properties != null && !properties.isEmpty()) {
-            // Convert the income field name to the real field name in STAC
-            List<String> fs = properties
-                    .stream()
-                    .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
-
-            // Set fetch to false so that it do not return the original document but just the field
-            // we set
-            builder.source(f -> f
-                    .filter(sf -> sf
-                            .includes(fs)
-                    )
-            );
-        }
-        else {
-            builder.source(f -> f.fetch(true));
-        }
-
-        SearchRequest request = builder.build();
-        logger.debug("Final elastic search payload {}", request.toString());
+                // Set fetch to false so that it do not return the original document but just the field
+                // we set
+                builder.source(f -> f
+                        .filter(sf -> sf
+                                .includes(fs)
+                        )
+                );
+            }
+            else {
+                builder.source(f -> f.fetch(true));
+            }
+            return builder;
+        };
 
         try {
-            SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);
+            Iterable<ObjectNode> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
+            List<StacCollectionModel> result = new ArrayList<>();
 
-            return response
-                    .hits()
-                    .hits()
-                    .stream()
-                    .map(this::formatResult)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+            response.forEach(
+                    i -> {
+                        if(i != null) {
+                            result.add(this.formatResult(i));
+                        }
+                    });
+
+            return result;
         }
         catch(ElasticsearchException ee) {
             logger.warn("Elastic exception on query, reason is {}", ee.error().rootCause());
             throw ee;
         }
     }
-
-    protected StacCollectionModel formatResult(Hit<ObjectNode> nodes) {
+    /**
+     * There is a limit of how many record a query can return, this mean the record return may not be full set, you
+     * need to keep loading until you reach the end of records
+     *
+     * @param requestBuilder, assume it is sorted with order, what order isn't important, as long as it is sorted
+     * @param clazz
+     * @return
+     * @param <T>
+     */
+    protected <T> Iterable<T> pagableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
         try {
-            if(nodes.source() != null) {
-                String json = nodes.source().toPrettyString();
+            SearchRequest sr = requestBuilder.get().build();
+            logger.debug("Final elastic search payload {}", sr.toString());
+
+            final AtomicLong count = new AtomicLong(0);
+            final AtomicReference<SearchResponse<T>> response = new AtomicReference<>(
+                    esClient.search(sr, clazz)
+            );
+
+            return () -> new Iterator<>() {
+                private int index = 0;
+
+                @Override
+                public boolean hasNext() {
+                    // If we hit the end, that means we have iterated to end of page.
+                    if (index < response.get().hits().hits().size()) {
+                        if(maxSize != null) {
+                            return count.get() < maxSize;
+                        }
+                        else {
+                            return true;
+                        }
+                    }
+                    else {
+                        // If last index is zero that mean nothing found already, so no need to look more
+                        if (index == 0) return false;
+
+                        // Load next batch
+                        try {
+                            // Get the last sorted value from the last batch
+                            List<FieldValue> sortedValues = response.get().hits().hits().get(index - 1).sort();
+
+                            // Use the last builder and append the searchAfter values
+                            SearchRequest request = requestBuilder.get().searchAfter(sortedValues).build();
+                            logger.debug("Final elastic search payload {}", request.toString());
+
+                            response.set(esClient.search(request, clazz));
+                            // Reset counter from start
+                            index = 0;
+                            return index < response.get().hits().hits().size();
+                        }
+                        catch(IOException ieo) {
+                            throw new RuntimeException(ieo);
+                        }
+                    }
+                }
+
+                @Override
+                public T next() {
+                    count.incrementAndGet();
+                    return response.get().hits().hits().get(index++).source();
+                }
+            };
+        }
+        catch(IOException e) {
+            logger.error("Fail to fetch record", e);
+        }
+        return Collections.emptySet();
+    }
+
+    protected StacCollectionModel formatResult(ObjectNode nodes) {
+        try {
+            if(nodes != null) {
+                String json = nodes.toPrettyString();
                 logger.debug("Serialize STAC json to StacCollectionModel {}", json);
 
                 return mapper.readValue(json, StacCollectionModel.class);
@@ -323,7 +408,7 @@ public class ElasticSearch implements Search {
             );
         }
 
-        return searchCollectionBy(queries, null, filters, null, null, null);
+        return searchCollectionBy(queries, null, filters, null, null);
     }
 
     @Override
@@ -377,7 +462,7 @@ public class ElasticSearch implements Search {
                     filters = List.of(elasticFilter.getQuery());
                 }
             }
-            return searchCollectionBy(null, queries, filters,  properties, null, null);
+            return searchCollectionBy(null, queries, filters,  properties,  null);
         }
     }
 
