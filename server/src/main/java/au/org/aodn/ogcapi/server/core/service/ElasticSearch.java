@@ -249,9 +249,10 @@ public class ElasticSearch implements Search {
                                     .field(StacSummeries.Score.searchField)
                                     .order(SortOrder.Desc))))
                     .sort(so -> so
-                            // We need a unique key for the search, so _id is the best
+                            // We need a unique key for the search, cannot use _id in v8 anymore, so we need
+                            // to sort using the keyword, this field is not for search and therefore not in enum
                             .field(FieldSort.of(f -> f
-                                    .field("id.keyword")
+                                    .field(StacBasicField.UUID.sortField)
                                     .order(SortOrder.Asc))));
 
             if(properties != null && !properties.isEmpty()) {
