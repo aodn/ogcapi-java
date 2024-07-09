@@ -1,16 +1,22 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
+import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
+import io.swagger.models.Method;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -19,6 +25,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)         // We need to use @BeforeAll @AfterAll with not static method
 public class RestApiTest extends BaseTestClass {
+
+    @Value("${elasticsearch.index.pageSize:2000}")
+    protected Integer pageSize;
 
     @BeforeAll
     public void beforeClass() throws IOException {
@@ -39,6 +48,48 @@ public class RestApiTest extends BaseTestClass {
     @Order(1)
     public void verifyClusterIsHealthy() throws IOException {
         super.assertClusterHealthResponse();
+    }
+    /**
+     * We want to test the pageableSearch function is right or wrong by setting up more than 4 canned data, then
+     * query all to get them back
+     */
+    @Test
+    public void verifyCorrectPagingLargeData() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        // Given 6 records and we set page to 4, that means each query elastic return 4 record only
+        // and the logic to load the reset can kick in.
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        // Call rest api directly and get query result
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(collections.getStatusCode(), HttpStatus.OK, "Get status OK");
+        assertEquals(Objects.requireNonNull(collections.getBody()).getCollections().size(), 6, "Total equals");
+
+        // Now make sure all id exist
+        Set<String> ids = new HashSet<>(List.of(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                "19da2ce7-138f-4427-89de-a50c724f5f54",
+                "516811d7-cd1e-207a-e0440003ba8c79dd",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011"
+        ));
+
+        for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
+            assertTrue(ids.contains(collection.getId()),"Contains " + collection.getId());
+        }
     }
 
     @Test

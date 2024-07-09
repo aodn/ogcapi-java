@@ -24,6 +24,11 @@
     "properties": {
       "id": {
         "type": "text",
+        "fields" : {
+          "keyword": {
+            "type": "keyword"
+          }
+        },
         "analyzer": "keyword"
       },
       "stac_version": { "type": "text" },
@@ -77,6 +82,7 @@
         "properties" : {
           "score": { "type": "long" },
           "status": { "type": "text" },
+          "credits": { "type": "text" },
           "scope" : {
             "type": "nested",
             "properties" : {
@@ -103,6 +109,59 @@
               "end" : {
                 "type": "date"
               }
+            }
+          }
+        }
+      },
+      "contacts": {
+        "type": "nested",
+        "properties": {
+          "contact": {
+            "type": "nested",
+            "properties": {
+              "name": { "type": "text" },
+              "organization": { "type": "text" },
+              "position": { "type": "text" },
+              "phones": {
+                "type": "nested",
+                "properties": {
+                  "value": { "type": "text" },
+                  "roles": { "type": "text" }
+                }
+              },
+              "emails": {
+                "type": "nested",
+                "properties": {
+                  "value": { "type": "text" },
+                  "roles": { "type": "text" }
+                }
+              },
+              "addresses": {
+                "type": "nested",
+                "properties": {
+                  "delivery_point": { "type": "text" },
+                  "city": { "type": "text" },
+                  "administrative_area": { "type": "text" },
+                  "postal_code": { "type": "text" },
+                  "country": { "type": "text" }
+                }
+              },
+              "links": {
+                "type": "nested",
+                "properties": {
+                  "link" : {
+                    "type": "nested",
+                    "properties": {
+                      "href": { "type": "text" },
+                      "rel": { "type": "text" },
+                      "type": { "type": "text" },
+                      "title": { "type": "text" },
+                      "description": { "type": "text" }
+                    }
+                  }
+                }
+              },
+              "roles": { "type": "text" }
             }
           }
         }

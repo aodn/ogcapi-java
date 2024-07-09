@@ -64,8 +64,8 @@ public class BaseTestClass {
     protected void clearElasticIndex() throws IOException {
 
         List<Map<String, String>> schemas = List.of(
-                Map.of("name", record_index_name, "mapping", "aodn_discovery_parameter_vocabularies_index.json"),
-                Map.of("name", ardc_categories_index_name, "mapping", "portal_records_index_schema.json")
+                Map.of("name", ardc_categories_index_name, "mapping", "aodn_discovery_parameter_vocabularies_index.json"),
+                Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json")
         );
 
         logger.debug("Clear elastic index");
