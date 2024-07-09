@@ -61,6 +61,8 @@ public class ElasticSearch implements Search {
     @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
     protected String[] searchAsYouTypeEnabledFields;
 
+    @Value("${elasticsearch.search_as_you_type.size:10}")
+    protected Integer searchAsYouTypeSize;
 
     /*
      * this secondLevelCategorySuggestFilters for accessing the search_as_you_type "label" field
@@ -106,7 +108,9 @@ public class ElasticSearch implements Search {
     }
 
     protected SearchRequest buildSearchAsYouTypeRequest(List<String> destinationFields, String indexName, List<Query> searchAsYouTypeQueries, List<Query> filters) {
+        // By default it is limited to 10 even not specify, we want to use a variable so that we can change it later if needed.
         return new SearchRequest.Builder()
+                .size(searchAsYouTypeSize)
                 .index(indexName)
                 .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(destinationFields))))
                 .query(b -> b.bool(createBoolQueryForProperties(searchAsYouTypeQueries, null, filters)))
@@ -249,9 +253,10 @@ public class ElasticSearch implements Search {
                                     .field(StacSummeries.Score.searchField)
                                     .order(SortOrder.Desc))))
                     .sort(so -> so
-                            // We need a unique key for the search, so _id is the best
+                            // We need a unique key for the search, cannot use _id in v8 anymore, so we need
+                            // to sort using the keyword, this field is not for search and therefore not in enum
                             .field(FieldSort.of(f -> f
-                                    .field("id.keyword")
+                                    .field(StacBasicField.UUID.sortField)
                                     .order(SortOrder.Asc))));
 
             if(properties != null && !properties.isEmpty()) {
