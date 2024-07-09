@@ -61,6 +61,8 @@ public class ElasticSearch implements Search {
     @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
     protected String[] searchAsYouTypeEnabledFields;
 
+    @Value("${elasticsearch.search_as_you_type.size:10}")
+    protected Integer searchAsYouTypeSize;
 
     /*
      * this secondLevelCategorySuggestFilters for accessing the search_as_you_type "label" field
@@ -106,7 +108,9 @@ public class ElasticSearch implements Search {
     }
 
     protected SearchRequest buildSearchAsYouTypeRequest(List<String> destinationFields, String indexName, List<Query> searchAsYouTypeQueries, List<Query> filters) {
+        // By default it is limited to 10 even not specify, we want to use a variable so that we can change it later if needed.
         return new SearchRequest.Builder()
+                .size(searchAsYouTypeSize)
                 .index(indexName)
                 .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(destinationFields))))
                 .query(b -> b.bool(createBoolQueryForProperties(searchAsYouTypeQueries, null, filters)))
