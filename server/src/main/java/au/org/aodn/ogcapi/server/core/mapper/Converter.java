@@ -112,6 +112,10 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.themes, m.getThemes());
         }
 
+        if (m.getSummaries() != null && m.getSummaries().getTemporal() != null) {
+            collection.getProperties().put(CollectionProperty.temporal, m.getSummaries().getTemporal());
+        }
+
         return collection;
     }
 }

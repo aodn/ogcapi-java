@@ -11,7 +11,8 @@ public enum CollectionProperty {
     credits("credits"),
     contacts("contacts"),
     themes("themes"),
-    geometry("geometry")
+    geometry("geometry"),
+    temporal("temporal"),
     ;
 
     private final String value;

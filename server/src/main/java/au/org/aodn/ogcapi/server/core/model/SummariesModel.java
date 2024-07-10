@@ -19,4 +19,7 @@ public class SummariesModel {
 
     @JsonProperty("proj:geometry")
     protected Map<?,?> geometry;
+
+    @JsonProperty("temporal")
+    protected List<Map<String, String>> temporal;
 }
