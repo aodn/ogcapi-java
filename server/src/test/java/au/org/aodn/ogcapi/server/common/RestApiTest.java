@@ -1,10 +1,15 @@
 package au.org.aodn.ogcapi.server.common;
 
+import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 
+import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
@@ -21,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)         // We need to use @BeforeAll @AfterAll with not static method
 public class RestApiTest extends BaseTestClass {
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     @BeforeAll
     public void beforeClass() throws IOException {
@@ -442,5 +450,19 @@ public class RestApiTest extends BaseTestClass {
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
                 "UUID matches");
+    }
+    /**
+     * You should receive ErrorMessage and as the id is not found, client side should expect ErrorResponse as the default message
+     * on any error
+     */
+    @Test
+    public void verifyErrorMessageCreated() throws JsonProcessingException {
+        ResponseEntity<String> collection = testRestTemplate.getForEntity(getBasePath() + "/collections/12324", String.class);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, collection.getStatusCode(), "Request Status match");
+
+        ErrorResponse response = objectMapper.readValue(Objects.requireNonNull(collection.getBody()), ErrorResponse.class);
+        assertEquals("uuid 12324 not found!", response.getMessage(), "message match");
+        assertEquals("uri=/api/v1/ogc/collections/12324", response.getDetails(), "message url");
     }
 }

@@ -15,6 +15,8 @@ public enum StacBasicField {
     Links("links", "links")
     ;
 
+    // Field that use to do sort, elastic search treat FieldData (searchField) differently, a searchField is not
+    // efficient for sorting.
     public final String sortField;
     public final String searchField;    // Field in STAC object
     public final String displayField;   // Field that is named externally

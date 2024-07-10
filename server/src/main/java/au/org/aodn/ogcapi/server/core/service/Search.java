@@ -13,7 +13,7 @@ public interface Search {
     List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws Exception;
     List<StacCollectionModel> searchAllCollectionsWithGeometry() throws Exception;
 
-    List<StacCollectionModel> searchCollections(List<String> ids) throws Exception;
+    List<StacCollectionModel> searchCollections(List<String> ids);
     List<StacCollectionModel> searchAllCollections() throws Exception;
 
     List<StacCollectionModel> searchByParameters(List<String> targets, String filter, CQLCrsType coor, List<String> properties) throws Exception;
