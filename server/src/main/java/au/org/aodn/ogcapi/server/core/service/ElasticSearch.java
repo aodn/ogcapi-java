@@ -260,20 +260,29 @@ public class ElasticSearch implements Search {
                                     .order(SortOrder.Asc))));
 
             if(properties != null && !properties.isEmpty()) {
-                // Convert the income field name to the real field name in STAC
-                List<String> fs = properties
-                        .stream()
-                        .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
 
-                // Set fetch to false so that it do not return the original document but just the field
-                // we set
-                builder.source(f -> f
-                        .filter(sf -> sf
-                                .includes(fs)
-                        )
-                );
+                // Validate all properties value.
+                List<String> invalid = CQLCollectionsField.findInvalidEnum(properties);
+
+                if(invalid.isEmpty()) {
+                    // Convert the income field name to the real field name in STAC
+                    List<String> fs = properties
+                            .stream()
+                            .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
+                            .filter(Objects::nonNull)
+                            .collect(Collectors.toList());
+
+                    // Set fetch to false so that it do not return the original document but just the field
+                    // we set
+                    builder.source(f -> f
+                            .filter(sf -> sf
+                                    .includes(fs)
+                            )
+                    );
+                }
+                else {
+                    throw new IllegalArgumentException(String.format("Invalid properties in query %s, check ?properties=xx", invalid));
+                }
             }
             else {
                 builder.source(f -> f.fetch(true));
@@ -388,7 +397,7 @@ public class ElasticSearch implements Search {
         }
     }
 
-    protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry) throws IOException {
+    protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry) {
 
         List<Query> queries = new ArrayList<>();
         queries.add(MatchQuery.of(m -> m
@@ -417,27 +426,27 @@ public class ElasticSearch implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) throws Exception {
+    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) {
         return searchCollectionsByIds(ids, Boolean.TRUE);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollectionsWithGeometry() throws IOException {
+    public List<StacCollectionModel> searchAllCollectionsWithGeometry() {
         return searchCollectionsByIds(null, Boolean.TRUE);
     }
 
     @Override
-    public List<StacCollectionModel> searchCollections(List<String> ids) throws Exception {
+    public List<StacCollectionModel> searchCollections(List<String> ids) {
         return searchCollectionsByIds(ids, Boolean.FALSE);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollections() throws IOException {
+    public List<StacCollectionModel> searchAllCollections() {
         return searchCollectionsByIds(null, Boolean.FALSE);
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor, List<String> properties) throws IOException, CQLException {
+    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor, List<String> properties) throws CQLException {
 
         if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections();

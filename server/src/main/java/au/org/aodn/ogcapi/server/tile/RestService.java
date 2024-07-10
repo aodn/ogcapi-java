@@ -1,12 +1,11 @@
 package au.org.aodn.ogcapi.server.tile;
 
-import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.service.GlobalExceptionHandler;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.tile.model.TileMatrixSets;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -23,8 +22,8 @@ public class RestService extends OGCApiService {
     }
 
     public <T, R> ResponseEntity<?> getVectorTileOfCollection(TileMatrixSets coordinateSystem, List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol, Function<T, R> converter) {
+        // TODO: Implements additional filters
         try {
-            // TODO: Implements additional filters
             switch (coordinateSystem) {
                 case WEBMERCATORQUAD -> {
                     return ResponseEntity.ok()
@@ -33,24 +32,12 @@ public class RestService extends OGCApiService {
                 }
                 default -> {
                     // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
-                    ErrorMessage message = ErrorMessage.builder()
-                            .reasons(List.of("Unknown coordinate system"))
-                            .build();
-
-                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .body(message);
+                    throw new IllegalArgumentException("Unknown coordinate system");
                 }
             }
         }
-        catch(IOException ioe) {
-            ErrorMessage errorMessage = ErrorMessage.builder()
-                    .reasons(List.of(ioe.getMessage()))
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body(errorMessage);
+        catch(IOException e) {
+            throw new GlobalExceptionHandler.CustomException(e.getMessage());
         }
     }
 

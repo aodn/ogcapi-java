@@ -1,5 +1,8 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * We do not want to expose the internal field to outsider, the CQL field in the filtler is therefore mapped to our
  * internal stac field.
@@ -44,5 +47,22 @@ public enum CQLCollectionsField {
     public String toString() {
         return searchField;
     }
-
+    /**
+     * Given param, find any of those is not a valid CQLCollectionsField
+     * @param args
+     * @return
+     */
+    public static List<String> findInvalidEnum(List<String> args) {
+        return args.stream()
+                .filter(str -> {
+                    try {
+                        CQLCollectionsField.valueOf(str);
+                        return false;
+                    }
+                    catch (IllegalArgumentException e) {
+                        return true;
+                    }
+                })
+                .collect(Collectors.toList());
+    }
 }

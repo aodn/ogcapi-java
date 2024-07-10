@@ -8,7 +8,7 @@ import au.org.aodn.ogcapi.common.model.LandingPage;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollections;
-import au.org.aodn.ogcapi.server.core.model.ErrorMessage;
+import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
@@ -23,7 +23,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Size;
-import org.geotools.filter.text.cql2.CQLException;
+import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
@@ -152,7 +152,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
                 @RequestParam(value = "filter", required = false) String filter,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
-                @Valid @RequestParam(value = "sortby", required = false, defaultValue = "score") List<String> sortby) throws CQLException {
+                @Valid @RequestParam(value = "sortby", required = false, defaultValue = "score") List<String> sortby) {
 
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
@@ -172,11 +172,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 reasons.add("Unknown crs, support EPSG4326 only");
             }
 
-            ErrorMessage msg = ErrorMessage.builder()
-                    .reasons(reasons)
-                    .build();
-
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).body(msg);
+            throw new NotImplementedException(String.join( ",", reasons));
         }
     }
 }

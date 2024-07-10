@@ -64,8 +64,7 @@ public abstract class OGCApiService {
             }
         }
         catch(Exception e) {
-            logger.error("Error during request", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
+            throw new GlobalExceptionHandler.CustomException(e.getMessage());
         }
     }
     /**
