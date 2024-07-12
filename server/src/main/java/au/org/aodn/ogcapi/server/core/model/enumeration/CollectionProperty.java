@@ -13,6 +13,7 @@ public enum CollectionProperty {
     themes("themes"),
     geometry("geometry"),
     temporal("temporal"),
+    citation("citation"),
     ;
 
     private final String value;

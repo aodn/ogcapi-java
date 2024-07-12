@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
+import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
@@ -114,6 +115,11 @@ public interface Converter<F, T> {
 
         if (m.getSummaries() != null && m.getSummaries().getTemporal() != null) {
             collection.getProperties().put(CollectionProperty.temporal, m.getSummaries().getTemporal());
+        }
+
+        if(m.getCitation() != null && !m.getCitation().isEmpty()) {
+            var citation = CitationModel.constructByJsonString(m.getCitation());
+            collection.getProperties().put(CollectionProperty.citation, citation);
         }
 
         return collection;
