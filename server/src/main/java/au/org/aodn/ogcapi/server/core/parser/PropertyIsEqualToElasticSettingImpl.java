@@ -1,55 +1,64 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.json.JsonData;
 import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.MultiValuedFilter;
-import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
+import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.expression.Expression;
 
-public class PropertyIsGreaterThanOrEqualToImpl<T extends Enum<T>> extends Handler implements PropertyIsGreaterThanOrEqualTo {
-
+/**
+ * Some property is elastic setting not search field of STAC
+ */
+public class PropertyIsEqualToElasticSettingImpl implements PropertyIsEqualTo, ElasticSetting {
     protected Expression expression1;
     protected Expression expression2;
-    protected Boolean isMatchingCase;
-    protected MultiValuedFilter.MatchAction matchAction;
 
-    public PropertyIsGreaterThanOrEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
+    @Getter
+    protected boolean valid;
+
+    @Getter
+    protected CQLElasticSetting elasticSettingName;
+
+    @Getter
+    protected String elasticSettingValue;
+
+    public PropertyIsEqualToElasticSettingImpl(Expression expression1, Expression expression2) {
         this.expression1 = expression1;
         this.expression2 = expression2;
-        this.isMatchingCase = isMatchingCase;
-        this.matchAction = matchAction;
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-            this.query = RangeQuery.of(builder -> builder
-                    .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                    .gte(JsonData.of(literal.toString()))
-            )._toQuery();
+            try {
+                elasticSettingName = Enum.valueOf(CQLElasticSetting.class, attribute.toString().toLowerCase());
+                elasticSettingValue = literal.toString();
+                valid = true;
+            }
+            catch (IllegalArgumentException e) {
+                this.elasticSettingName = null;
+                this.elasticSettingValue = null;
+            }
         }
     }
 
     @Override
     public Expression getExpression1() {
-        return expression1;
+        return null;
     }
 
     @Override
     public Expression getExpression2() {
-        return expression2;
+        return null;
     }
 
     @Override
     public boolean isMatchingCase() {
-        return isMatchingCase;
+        return false;
     }
 
     @Override
     public MatchAction getMatchAction() {
-        return matchAction;
+        return null;
     }
 
     @Override

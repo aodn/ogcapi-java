@@ -17,12 +17,6 @@ public class PropertyEqualToImpl<T extends Enum<T>> extends Handler implements P
     protected Boolean isMatchingCase;
     protected MultiValuedFilter.MatchAction matchAction;
 
-    @Getter
-    protected CQLElasticSetting elasticSettingName;
-
-    @Getter
-    protected String elasticSettingValue;
-
     public PropertyEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
         this.expression1 = expression1;
         this.expression2 = expression2;
@@ -30,23 +24,12 @@ public class PropertyEqualToImpl<T extends Enum<T>> extends Handler implements P
         this.matchAction = matchAction;
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-
-            try {
-                elasticSettingName = Enum.valueOf(CQLElasticSetting.class, attribute.toString().toLowerCase());
-                elasticSettingValue = literal.toString();
-            }
-            catch(IllegalArgumentException illegalArgumentException) {
-                // It is not an Elastic setting, so normal route.
-                this.query = MatchPhraseQuery.of(builder -> builder
-                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                        .query(literal.toString())
-                )._toQuery();
-            }
+            // It is not an Elastic setting, so normal route.
+            this.query = MatchPhraseQuery.of(builder -> builder
+                    .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
+                    .query(literal.toString())
+            )._toQuery();
         }
-    }
-
-    public boolean isElasticSetting() {
-        return elasticSettingName != null && elasticSettingValue != null;
     }
 
     @Override

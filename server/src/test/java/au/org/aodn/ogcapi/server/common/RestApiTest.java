@@ -452,6 +452,37 @@ public class RestApiTest extends BaseTestClass {
                 "UUID matches");
     }
     /**
+     * You can use the score to tune the return result's relevancy, at this moment, only >= make sense other value
+     * will be ignored.
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLPropertyScore() throws IOException {
+        super.insertJsonToElasticIndex(
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
+        );
+        // Make sure AND operation works
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+
+        // Make sure OR works, b
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR category='wave'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+
+        // Lower score rate make more match
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=1", Collections.class);
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2, with score 1");
+        assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
+        assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
+
+        // Increase score will drop one record
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=2", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 2");
+        assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
+    }
+    /**
      * You should receive ErrorMessage and as the id is not found, client side should expect ErrorResponse as the default message
      * on any error
      */

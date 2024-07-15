@@ -130,7 +130,14 @@ abstract class ElasticSearchBase {
             if(querySetting.get(CQLElasticSetting.score) != null) {
                 // By default we do not setup any min_score, the api caller should pass it in so
                 // that the result is more relevant, min may be 2 seems ok
-                builder.minScore(Double.valueOf(querySetting.get(CQLElasticSetting.score)));
+                if((queries == null || queries.isEmpty()) && (should == null || should.isEmpty())) {
+                    // Special case if you are not doing any query then there will be no meaningful score, so
+                    // setting value other than 0 makes no sense
+                    builder.minScore(0.0);
+                }
+                else {
+                    builder.minScore(Double.valueOf(querySetting.get(CQLElasticSetting.score)));
+                }
             }
 
             if(properties != null && !properties.isEmpty()) {

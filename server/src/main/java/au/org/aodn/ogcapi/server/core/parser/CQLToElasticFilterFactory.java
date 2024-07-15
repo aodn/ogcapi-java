@@ -250,17 +250,12 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
 
-        PropertyEqualToImpl<T> p = new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
-        if(p.isElasticSetting()) {
-            // After parsing it is an elastic setting value, however is this support?
-            if(p.getElasticSettingName().isOperationSupported(CQLElasticSetting.SupportOperation.EQUALS)) {
-                querySetting.put(p.getElasticSettingName(), p.getElasticSettingValue());
-            }
-            return null;
+        PropertyIsEqualToElasticSettingImpl setting = new PropertyIsEqualToElasticSettingImpl(expression, expression1);
+        if(setting.isValid()) {
+            return setting;
         }
-        else {
-            return p;
-        }
+
+        return new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
     }
 
     @Override
@@ -311,17 +306,11 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
         logger.debug("PropertyIsGreaterThanOrEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
 
-        PropertyIsGreaterThanOrEqualToImpl<T> p = new PropertyIsGreaterThanOrEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
-        if(p.isElasticSetting()) {
-            // After parsing it is an elastic setting value, however is this support?
-            if(p.getElasticSettingName().isOperationSupported(CQLElasticSetting.SupportOperation.GREATER_THAN_OR_EQUAL)) {
-                querySetting.put(p.getElasticSettingName(), p.getElasticSettingValue());
-            }
-            return null;
+        PropertyIsGreaterThanOrEqualToElasticSettingImpl setting = new PropertyIsGreaterThanOrEqualToElasticSettingImpl(expression, expression1);
+        if(setting.isValid()) {
+            return setting;
         }
-        else {
-            return p;
-        }
+        return new PropertyIsGreaterThanOrEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
     }
 
     @Override

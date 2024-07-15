@@ -17,11 +17,11 @@ public class AndImpl extends Handler implements And {
 
     public AndImpl(Filter filter1, Filter filter2) {
 
-        if(filter1 == null && filter2 instanceof Handler elasticFilter2) {
+        if(filter1 instanceof ElasticSetting && filter2 instanceof Handler elasticFilter2) {
             this.query = elasticFilter2.getQuery();
             this.addErrors(elasticFilter2.getErrors());
         }
-        else if(filter2 == null && filter1 instanceof Handler elasticFilter1){
+        else if(filter2 instanceof ElasticSetting && filter1 instanceof Handler elasticFilter1){
             this.query = elasticFilter1.getQuery();
             this.addErrors(elasticFilter1.getErrors());
         }
