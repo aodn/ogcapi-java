@@ -8,33 +8,43 @@ import org.opengis.filter.FilterVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AndImpl extends ElasticFilter implements And {
+public class AndImpl extends Handler implements And {
 
     protected List<Filter> children = new ArrayList<>();
 
     public AndImpl(Filter filter1, Filter filter2) {
-        if(filter1 instanceof ElasticFilter elasticFilter1 && filter2 instanceof ElasticFilter elasticFilter2) {
+
+        if(filter1 == null && filter2 instanceof Handler elasticFilter2) {
+            this.query = elasticFilter2.getQuery();
+            this.addErrors(elasticFilter2.getErrors());
+        }
+        else if(filter2 == null && filter1 instanceof Handler elasticFilter1){
+            this.query = elasticFilter1.getQuery();
+            this.addErrors(elasticFilter1.getErrors());
+        }
+        else if(filter1 instanceof Handler elasticFilter1 && filter2 instanceof Handler elasticFilter2) {
             this.query = BoolQuery.of(f -> f
                     .filter(elasticFilter1.query, elasticFilter2.query)
             )._toQuery();
-
-            children.add(filter1);
-            children.add(filter2);
 
             // Remember to copy the error from child
             this.addErrors(elasticFilter1.getErrors());
             this.addErrors(elasticFilter2.getErrors());
         }
+        children.add(filter1);
+        children.add(filter2);
     }
 
     public AndImpl(List<Filter> filters) {
         // Extract query object in the filters, it must be an ElasitcFilter
-        List<ElasticFilter> elasticFilters = filters.stream()
-                .filter(f -> f instanceof ElasticFilter)
-                .map(m -> (ElasticFilter)m)
-                .collect(Collectors.toList());
+        List<Handler> elasticFilters = filters.stream()
+                .filter(Objects::nonNull)
+                .filter(f -> f instanceof Handler)
+                .map(m -> (Handler)m)
+                .toList();
 
         List<Query> queries = elasticFilters.stream()
                 .map(m -> m.query)

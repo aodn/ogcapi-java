@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class ElasticFilter {
+public abstract class Handler {
 
     @Getter
     protected Query query;
@@ -31,12 +31,11 @@ public abstract class ElasticFilter {
     protected List<CQLException> errors = new ArrayList<>();
 
     protected final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    protected Logger logger = LoggerFactory.getLogger(ElasticFilter.class);
+    protected Logger logger = LoggerFactory.getLogger(Handler.class);
 
     public void addErrors(CQLException... e) { this.errors.addAll(List.of(e)); }
 
     public void addErrors(List<CQLException> e) { this.errors.addAll(e); }
-
     /**
      * Convert the WKT format from the cql to GeoJson use by Elastic search
      * @param literalExpression

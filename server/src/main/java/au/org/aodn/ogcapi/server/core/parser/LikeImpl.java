@@ -7,7 +7,7 @@ import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.PropertyIsLike;
 import org.opengis.filter.expression.Expression;
 
-public class LikeImpl<T extends Enum<T>> extends ElasticFilter implements PropertyIsLike {
+public class LikeImpl<T extends Enum<T>> extends Handler implements PropertyIsLike {
 
     protected Expression expression;
     protected String literal;

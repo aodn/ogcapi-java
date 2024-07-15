@@ -1,16 +1,17 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.json.JsonData;
 import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.MultiValuedFilter;
-import org.opengis.filter.PropertyIsEqualTo;
+import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.expression.Expression;
 
-public class PropertyEqualToImpl<T extends Enum<T>> extends Handler implements PropertyIsEqualTo {
+public class PropertyIsGreaterThanOrEqualToImpl<T extends Enum<T>> extends Handler implements PropertyIsGreaterThanOrEqualTo {
 
     protected Expression expression1;
     protected Expression expression2;
@@ -21,25 +22,23 @@ public class PropertyEqualToImpl<T extends Enum<T>> extends Handler implements P
     protected CQLElasticSetting elasticSettingName;
 
     @Getter
-    protected String elasticSettingValue;
+    protected String  elasticSettingValue;
 
-    public PropertyEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
+    public PropertyIsGreaterThanOrEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
         this.expression1 = expression1;
         this.expression2 = expression2;
         this.isMatchingCase = isMatchingCase;
         this.matchAction = matchAction;
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-
             try {
                 elasticSettingName = Enum.valueOf(CQLElasticSetting.class, attribute.toString().toLowerCase());
                 elasticSettingValue = literal.toString();
             }
-            catch(IllegalArgumentException illegalArgumentException) {
-                // It is not an Elastic setting, so normal route.
-                this.query = MatchPhraseQuery.of(builder -> builder
+            catch (IllegalArgumentException illegalArgumentException) {
+                this.query = RangeQuery.of(builder -> builder
                         .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                        .query(literal.toString())
+                        .gte(JsonData.of(literal.toString()))
                 )._toQuery();
             }
         }

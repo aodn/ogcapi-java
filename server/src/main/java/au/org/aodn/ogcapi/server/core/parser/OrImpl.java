@@ -10,12 +10,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OrImpl extends ElasticFilter implements Or {
+public class OrImpl extends Handler implements Or {
 
     protected List<Filter> children = new ArrayList<>();
 
     public OrImpl(Filter filter1, Filter filter2) {
-        if(filter1 instanceof ElasticFilter elasticFilter1 && filter2 instanceof ElasticFilter elasticFilter2) {
+        if(filter1 instanceof Handler elasticFilter1 && filter2 instanceof Handler elasticFilter2) {
             this.query = BoolQuery.of(f -> f
                     .should(elasticFilter1.query, elasticFilter2.query)
             )._toQuery();
@@ -31,9 +31,9 @@ public class OrImpl extends ElasticFilter implements Or {
 
     public OrImpl(List<Filter> filters) {
         // Extract query object in the filters, it must be an ElasitcFilter
-        List<ElasticFilter> elasticFilters = filters.stream()
-                .filter(f -> f instanceof ElasticFilter)
-                .map(m -> (ElasticFilter)m)
+        List<Handler> elasticFilters = filters.stream()
+                .filter(f -> f instanceof Handler)
+                .map(m -> (Handler)m)
                 .collect(Collectors.toList());
 
         List<Query> queries = elasticFilters.stream()

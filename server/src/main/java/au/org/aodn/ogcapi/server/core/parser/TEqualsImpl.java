@@ -19,7 +19,7 @@ import org.opengis.filter.temporal.TEquals;
  *
  * @param <T>
  */
-public class TEqualsImpl<T extends Enum<T>> extends ElasticFilter implements TEquals {
+public class TEqualsImpl<T extends Enum<T>> extends Handler implements TEquals {
 
     protected Expression expression1;
     protected Expression expression2;

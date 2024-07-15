@@ -5,64 +5,44 @@ import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
-import au.org.aodn.ogcapi.server.core.parser.ElasticFilter;
+import au.org.aodn.ogcapi.server.core.parser.Handler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.FieldSort;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
 import org.opengis.filter.Filter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ElasticSearch implements Search {
-    protected Logger logger = LoggerFactory.getLogger(ElasticSearch.class);
+@Slf4j
+public class ElasticSearch extends ElasticSearchBase implements Search {
 
-    @Value("${elasticsearch.index.name}")
-    protected String indexName;
+    protected Map<CQLElasticSetting, String> defaultElasticSetting;
 
-    @Value("${elasticsearch.index.pageSize:2000}")
-    protected Integer pageSize;
-
-    protected ElasticsearchClient esClient;
-
-    @Autowired
-    protected ObjectMapper mapper;
+    @Value("${elasticsearch.index.minScore:7}")
+    protected Integer minScore;
 
     @Value("${elasticsearch.search_as_you_type.record_suggest.path}")
     protected String searchAsYouTypeFieldsPath;
 
     @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
     protected String[] searchAsYouTypeEnabledFields;
-
-    @Value("${elasticsearch.search_as_you_type.size:10}")
-    protected Integer searchAsYouTypeSize;
 
     /*
      * this secondLevelCategorySuggestFilters for accessing the search_as_you_type "label" field
@@ -72,49 +52,24 @@ public class ElasticSearch implements Search {
     protected Query secondLevelCategorySuggestFilters = Query.of(q -> q.bool(b -> b.filter(f -> f.nested(n -> n.path("broader")
             .query(qq -> qq.exists(e -> e.field("broader")))))));
 
-
     @Value("${elasticsearch.search_as_you_type.category_suggest.field}")
     protected String secondLevelCategorySuggestField;
 
     @Value("${elasticsearch.search_as_you_type.category_suggest.index_name}")
     protected String categorySuggestIndex;
 
-    public ElasticSearch(ElasticsearchClient client) {
-        this.esClient = client;
-    }
+    public ElasticSearch(ElasticsearchClient client,
+                         ObjectMapper mapper,
+                         String indexName,
+                         Integer pageSize,
+                         Integer searchAsYouTypeSize) {
 
-    protected BoolQuery createBoolQueryForProperties(List<Query> must, List<Query> should, List<Query> filters) {
-        BoolQuery.Builder builder = new BoolQuery.Builder();
-
-        if(must != null && !must.isEmpty()) {
-            builder.must(must);
-        }
-        else {
-            /*
-             Equals to "must": { "match_all": {} }, that is match any, without this empty bool will fail if filter exist
-             */
-            builder.must(QueryBuilders.matchAll().build()._toQuery());
-        }
-
-        if(should != null && !should.isEmpty()) {
-            builder.minimumShouldMatch("1");
-            builder.should(should);
-        }
-
-        if(filters != null && !filters.isEmpty()) {
-            builder.filter(filters);
-        }
-        return builder.build();
-    }
-
-    protected SearchRequest buildSearchAsYouTypeRequest(List<String> destinationFields, String indexName, List<Query> searchAsYouTypeQueries, List<Query> filters) {
-        // By default it is limited to 10 even not specify, we want to use a variable so that we can change it later if needed.
-        return new SearchRequest.Builder()
-                .size(searchAsYouTypeSize)
-                .index(indexName)
-                .source(SourceConfig.of(sc -> sc.filter(f -> f.includes(destinationFields))))
-                .query(b -> b.bool(createBoolQueryForProperties(searchAsYouTypeQueries, null, filters)))
-                .build();
+        this.setEsClient(client);
+        this.setMapper(mapper);
+        this.setIndexName(indexName);
+        this.setPageSize(pageSize);
+        this.setSearchAsYouTypeSize(searchAsYouTypeSize);
+        this.defaultElasticSetting = CQLToElasticFilterFactory.getDefaultSetting();
     }
 
     protected Query generateSearchAsYouTypeQuery(String input, String suggestField) {
@@ -161,7 +116,7 @@ public class ElasticSearch implements Search {
         if (cql != null) {
             CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
             Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-            if (filter instanceof ElasticFilter elasticFilter) {
+            if (filter instanceof Handler elasticFilter) {
                 filters = List.of(elasticFilter.getQuery());
             } else {
                 filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
@@ -171,12 +126,16 @@ public class ElasticSearch implements Search {
         }
 
         // create request
-        SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(List.of("title"), indexName, List.of(searchAsYouTypeQuery), filters);
+        SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
+                List.of("title"),
+                indexName,
+                List.of(searchAsYouTypeQuery),
+                filters);
 
         // execute
-        logger.info("getRecordSuggestions | Elastic search payload {}", searchRequest.toString());
+        log.info("getRecordSuggestions | Elastic search payload {}", searchRequest.toString());
         SearchResponse<RecordSuggestDTO> response = esClient.search(searchRequest, RecordSuggestDTO.class);
-        logger.info("getRecordSuggestions | Elastic search response {}", response);
+        log.info("getRecordSuggestions | Elastic search response {}", response);
 
         // return
         return response.hits().hits();
@@ -187,12 +146,16 @@ public class ElasticSearch implements Search {
         Query secondLevelCategorySuggestQuery = this.generateSearchAsYouTypeQuery(input, secondLevelCategorySuggestField);
 
         // create request
-        SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(List.of("label"), categorySuggestIndex, List.of(secondLevelCategorySuggestQuery), List.of(secondLevelCategorySuggestFilters));
+        SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
+                List.of("label"),
+                categorySuggestIndex,
+                List.of(secondLevelCategorySuggestQuery),
+                List.of(secondLevelCategorySuggestFilters));
 
         // execute
-        logger.info("getCategorySuggestions | Elastic search payload {}", searchRequest.toString());
+        log.info("getCategorySuggestions | Elastic search payload {}", searchRequest.toString());
         SearchResponse<CategorySuggestDTO> response = esClient.search(searchRequest, CategorySuggestDTO.class);
-        logger.info("getCategorySuggestions | Elastic search response {}", response);
+        log.info("getCategorySuggestions | Elastic search response {}", response);
 
         // return
         return response.hits().hits();
@@ -225,177 +188,6 @@ public class ElasticSearch implements Search {
 
         return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
     }
-    /**
-     * Core function to do the search, it used pageableSearch to make sure all records are return.
-     *
-     * @param queries
-     * @param should
-     * @param filters
-     * @param properties
-     * @param maxSize: Max number of records to be return
-     * @return
-     * @throws IOException
-     */
-    protected List<StacCollectionModel> searchCollectionBy(final List<Query> queries,
-                                                           final List<Query> should,
-                                                           final List<Query> filters,
-                                                           final List<String> properties,
-                                                           final Long maxSize) {
-
-        Supplier<SearchRequest.Builder> builderSupplier = () -> {
-            SearchRequest.Builder builder = new SearchRequest.Builder();
-            builder.index(indexName)
-                    .size(pageSize)
-                    .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
-                    .sort(so -> so.score(v -> v.order(SortOrder.Desc)))
-                    .sort(so -> so
-                            .field(FieldSort.of(f -> f
-                                    .field(StacSummeries.Score.searchField)
-                                    .order(SortOrder.Desc))))
-                    .sort(so -> so
-                            // We need a unique key for the search, cannot use _id in v8 anymore, so we need
-                            // to sort using the keyword, this field is not for search and therefore not in enum
-                            .field(FieldSort.of(f -> f
-                                    .field(StacBasicField.UUID.sortField)
-                                    .order(SortOrder.Asc))));
-
-            if(properties != null && !properties.isEmpty()) {
-
-                // Validate all properties value.
-                List<String> invalid = CQLCollectionsField.findInvalidEnum(properties);
-
-                if(invalid.isEmpty()) {
-                    // Convert the income field name to the real field name in STAC
-                    List<String> fs = properties
-                            .stream()
-                            .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
-                            .filter(Objects::nonNull)
-                            .collect(Collectors.toList());
-
-                    // Set fetch to false so that it do not return the original document but just the field
-                    // we set
-                    builder.source(f -> f
-                            .filter(sf -> sf
-                                    .includes(fs)
-                            )
-                    );
-                }
-                else {
-                    throw new IllegalArgumentException(String.format("Invalid properties in query %s, check ?properties=xx", invalid));
-                }
-            }
-            else {
-                builder.source(f -> f.fetch(true));
-            }
-            return builder;
-        };
-
-        try {
-            Iterable<ObjectNode> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
-            List<StacCollectionModel> result = new ArrayList<>();
-
-            response.forEach(
-                    i -> {
-                        if(i != null) {
-                            result.add(this.formatResult(i));
-                        }
-                    });
-
-            return result;
-        }
-        catch(ElasticsearchException ee) {
-            logger.warn("Elastic exception on query, reason is {}", ee.error().rootCause());
-            throw ee;
-        }
-    }
-    /**
-     * There is a limit of how many record a query can return, this mean the record return may not be full set, you
-     * need to keep loading until you reach the end of records
-     *
-     * @param requestBuilder, assume it is sorted with order, what order isn't important, as long as it is sorted
-     * @param clazz
-     * @return
-     * @param <T>
-     */
-    protected <T> Iterable<T> pagableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
-        try {
-            SearchRequest sr = requestBuilder.get().build();
-            logger.debug("Final elastic search payload {}", sr.toString());
-
-            final AtomicLong count = new AtomicLong(0);
-            final AtomicReference<SearchResponse<T>> response = new AtomicReference<>(
-                    esClient.search(sr, clazz)
-            );
-
-            return () -> new Iterator<>() {
-                private int index = 0;
-
-                @Override
-                public boolean hasNext() {
-                    // If we hit the end, that means we have iterated to end of page.
-                    if (index < response.get().hits().hits().size()) {
-                        if(maxSize != null) {
-                            return count.get() < maxSize;
-                        }
-                        else {
-                            return true;
-                        }
-                    }
-                    else {
-                        // If last index is zero that mean nothing found already, so no need to look more
-                        if (index == 0) return false;
-
-                        // Load next batch
-                        try {
-                            // Get the last sorted value from the last batch
-                            List<FieldValue> sortedValues = response.get().hits().hits().get(index - 1).sort();
-
-                            // Use the last builder and append the searchAfter values
-                            SearchRequest request = requestBuilder.get().searchAfter(sortedValues).build();
-                            logger.debug("Final elastic search payload {}", request.toString());
-
-                            response.set(esClient.search(request, clazz));
-                            // Reset counter from start
-                            index = 0;
-                            return index < response.get().hits().hits().size();
-                        }
-                        catch(IOException ieo) {
-                            throw new RuntimeException(ieo);
-                        }
-                    }
-                }
-
-                @Override
-                public T next() {
-                    count.incrementAndGet();
-                    return response.get().hits().hits().get(index++).source();
-                }
-            };
-        }
-        catch(IOException e) {
-            logger.error("Fail to fetch record", e);
-        }
-        return Collections.emptySet();
-    }
-
-    protected StacCollectionModel formatResult(ObjectNode nodes) {
-        try {
-            if(nodes != null) {
-                String json = nodes.toPrettyString();
-                logger.debug("Serialize STAC json to StacCollectionModel {}", json);
-
-                return mapper.readValue(json, StacCollectionModel.class);
-            }
-            else {
-                logger.error("Failed to serialize text to StacCollectionModel");
-                return null;
-            }
-        }
-        catch (JsonProcessingException e) {
-            logger.error("Exception failed to convert text to StacCollectionModel", e);
-            return null;
-        }
-    }
 
     protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry) {
 
@@ -422,7 +214,7 @@ public class ElasticSearch implements Search {
             );
         }
 
-        return searchCollectionBy(queries, null, filters, null, null);
+        return searchCollectionBy(CQLToElasticFilterFactory.getDefaultSetting(), queries, null, filters, null, null);
     }
 
     @Override
@@ -469,14 +261,15 @@ public class ElasticSearch implements Search {
             }
 
             List<Query> filters = new ArrayList<>();
+
+            CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
             if(cql != null) {
-                CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
                 Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-                if(filter instanceof ElasticFilter elasticFilter) {
+                if(filter instanceof Handler elasticFilter) {
                     filters = List.of(elasticFilter.getQuery());
                 }
             }
-            return searchCollectionBy(null, queries, filters,  properties,  null);
+            return searchCollectionBy(factory.getQuerySetting(), queries, null, filters,  properties,  null);
         }
     }
 
@@ -508,7 +301,7 @@ public class ElasticSearch implements Search {
             builder.query(q -> q.bool(b -> b.filter(filters)));
         }
 
-        logger.debug("Final elastic search mvt payload {}", builder);
+        log.debug("Final elastic search mvt payload {}", builder);
 
         return esClient.searchMvt(builder.build());
     }

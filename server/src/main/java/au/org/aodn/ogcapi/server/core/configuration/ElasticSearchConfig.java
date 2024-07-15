@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.server.core.service.Search;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.message.BasicHeader;
@@ -48,7 +49,12 @@ public class ElasticSearchConfig {
     }
 
     @Bean
-    public Search createElasticSearch(ElasticsearchClient client) {
-        return new ElasticSearch(client);
+    public Search createElasticSearch(ElasticsearchClient client,
+                                      ObjectMapper mapper,
+                                      @Value("${elasticsearch.index.name}") String indexName,
+                                      @Value("${elasticsearch.index.pageSize:2000}") Integer pageSize,
+                                      @Value("${elasticsearch.search_as_you_type.size:10}") Integer searchAsYouTypeSize) {
+
+        return new ElasticSearch(client, mapper, indexName, pageSize, searchAsYouTypeSize);
     }
 }

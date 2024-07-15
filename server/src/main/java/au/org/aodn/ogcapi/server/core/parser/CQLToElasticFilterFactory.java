@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
+import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.IllegalFilterException;
 import org.geotools.filter.LiteralExpressionImpl;
@@ -37,9 +39,7 @@ import org.opengis.util.InternationalString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.xml.sax.helpers.NamespaceSupport;
 
@@ -47,9 +47,7 @@ import org.xml.sax.helpers.NamespaceSupport;
  * Here we use the CQL parser from org.geotools, but the default CQL parser do not fit our purpose. So we need to implement
  * FilterFactory2 and add the needed items for our purpose. Some call is copy from FilterFactoryImpl, those with
  * Elastic Query are customized function.
- *
  * Not thread-safe, please create factory each time before compile
- *
  * TODO: Need to implement all functions later, right now only a small amount of functions is done.
  */
 public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFactory2 {
@@ -60,9 +58,26 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     protected CQLCrsType cqlCoorSystem;
 
+    @Getter
+    protected Map<CQLElasticSetting, String> querySetting;
+
     public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass) {
+        this(cqlCoorSystem, tClass, new HashMap<>());
+    }
+
+    public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass, Map<CQLElasticSetting, String> overrideQuerySetting) {
         this.cqlCoorSystem = cqlCoorSystem;
         this.collectionFieldType = tClass;
+        this.querySetting = getDefaultSetting();
+
+        // Some hardcode default values you can always override it with constructor
+        this.querySetting.putAll(overrideQuerySetting);
+    }
+
+    public static Map<CQLElasticSetting, String> getDefaultSetting() {
+        Map<CQLElasticSetting, String> defaultSetting = new HashMap<>();
+        defaultSetting.put(CQLElasticSetting.score, "2");
+        return defaultSetting;
     }
     /**
      * Expect statement like this:
@@ -79,7 +94,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public Intersects intersects(Expression geometry1, Expression geometry2) {
         logger.debug("INTERSECTS {}, {}", geometry1, geometry2);
-        return new IntersectsImpl(geometry1, geometry2, collectionFieldType, cqlCoorSystem);
+        return new IntersectsImpl<>(geometry1, geometry2, collectionFieldType, cqlCoorSystem);
     }
 
     @Override
@@ -96,7 +111,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public <T> Parameter<T> parameter(String name, Class<T> type, InternationalString title, InternationalString description, boolean required, int minOccurs, int maxOccurs, T defaultValue) {
-        return new org.geotools.data.Parameter(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, null);
+        return new org.geotools.data.Parameter<>(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, null);
     }
 
     @Override
@@ -138,7 +153,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public PropertyName property(String name, NamespaceSupport namespaceContext) {
-        logger.debug("property name namespace {}", name, namespaceContext);
+        logger.debug("property name namespace {}, {}", name, namespaceContext);
         return (namespaceContext == null ? this.property(name) : new AttributeExpressionImpl(name, namespaceContext));
     }
 
@@ -194,7 +209,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public Not not(Filter filter) {
         logger.debug("NOT {}", filter);
-        if(filter instanceof ElasticFilter elasticFilter) {
+        if(filter instanceof Handler elasticFilter) {
             return new NotImpl(elasticFilter);
         }
         else {
@@ -234,7 +249,18 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
-        return new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
+
+        PropertyEqualToImpl<T> p = new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
+        if(p.isElasticSetting()) {
+            // After parsing it is an elastic setting value, however is this support?
+            if(p.getElasticSettingName().isOperationSupported(CQLElasticSetting.SupportOperation.EQUALS)) {
+                querySetting.put(p.getElasticSettingName(), p.getElasticSettingValue());
+            }
+            return null;
+        }
+        else {
+            return p;
+        }
     }
 
     @Override
@@ -272,17 +298,30 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     @Override
     public PropertyIsGreaterThanOrEqualTo greaterOrEqual(Expression expression, Expression expression1) {
-        return null;
+        return greaterOrEqual(expression, expression1, false, null);
     }
 
     @Override
     public PropertyIsGreaterThanOrEqualTo greaterOrEqual(Expression expression, Expression expression1, boolean b) {
-        return null;
+        return greaterOrEqual(expression, expression1, b, null);
     }
 
     @Override
     public PropertyIsGreaterThanOrEqualTo greaterOrEqual(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
-        return null;
+
+        logger.debug("PropertyIsGreaterThanOrEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
+
+        PropertyIsGreaterThanOrEqualToImpl<T> p = new PropertyIsGreaterThanOrEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
+        if(p.isElasticSetting()) {
+            // After parsing it is an elastic setting value, however is this support?
+            if(p.getElasticSettingName().isOperationSupported(CQLElasticSetting.SupportOperation.GREATER_THAN_OR_EQUAL)) {
+                querySetting.put(p.getElasticSettingName(), p.getElasticSettingValue());
+            }
+            return null;
+        }
+        else {
+            return p;
+        }
     }
 
     @Override
@@ -318,7 +357,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public PropertyIsLike like(Expression expression, String s) {
         logger.debug("PropertyIsLike {} {}", expression, s);
-        return new LikeImpl(expression,s, collectionFieldType);
+        return new LikeImpl<>(expression,s, collectionFieldType);
     }
 
     @Override
@@ -326,7 +365,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
         logger.debug("PropertyIsLike {} {} {} {} {}",
                 expression, literal, wildCardChar, singleChar, escapeChar);
 
-        LikeImpl i = new LikeImpl(expression,literal, collectionFieldType);
+        LikeImpl<?> i = new LikeImpl<>(expression,literal, collectionFieldType);
         i.setEscapeChar(escapeChar);
         i.setSingleChar(singleChar);
         i.setWildcard(wildCardChar);
@@ -356,7 +395,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public PropertyIsNull isNull(Expression expression) {
         logger.debug("PropertyIsNull {}", expression);
-        return new IsNullImpl(expression, collectionFieldType);
+        return new IsNullImpl<>(expression, collectionFieldType);
     }
 
     @Override
