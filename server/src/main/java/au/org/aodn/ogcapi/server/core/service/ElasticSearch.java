@@ -245,9 +245,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
         else {
 
-            List<Query> queries = null;
+            List<Query> should = null;
             if(keywords != null && !keywords.isEmpty()) {
-                queries = new ArrayList<>();
+                should = new ArrayList<>();
 
                 for (String t : keywords) {
                     Query q = MultiMatchQuery.of(m -> m
@@ -256,7 +256,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                             .fields(StacBasicField.Title.searchField, StacBasicField.Description.searchField)
                             .prefixLength(0)
                             .query(t))._toQuery();
-                    queries.add(q);
+                    should.add(q);
                 }
             }
 
@@ -269,7 +269,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     filters = List.of(elasticFilter.getQuery());
                 }
             }
-            return searchCollectionBy(factory.getQuerySetting(), queries, null, filters,  properties,  null);
+            return searchCollectionBy(factory.getQuerySetting(), null, should,  filters,  properties,  null);
         }
     }
 

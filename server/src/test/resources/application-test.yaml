@@ -6,6 +6,7 @@ elasticsearch:
   index:
     name: testing_index
     pageSize: 4
+
   search_as_you_type:
     record_suggest:
       path: record_suggest

@@ -115,7 +115,6 @@ abstract class ElasticSearchBase {
             builder.index(indexName)
                     .size(pageSize)
                     .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
-                    .minScore(Double.valueOf(querySetting.get(CQLElasticSetting.score)))
                     .sort(so -> so.score(v -> v.order(SortOrder.Desc)))
                     .sort(so -> so
                             .field(FieldSort.of(f -> f
@@ -127,6 +126,12 @@ abstract class ElasticSearchBase {
                             .field(FieldSort.of(f -> f
                                     .field(StacBasicField.UUID.sortField)
                                     .order(SortOrder.Asc))));
+
+            if(querySetting.get(CQLElasticSetting.score) != null) {
+                // By default we do not setup any min_score, the api caller should pass it in so
+                // that the result is more relevant, min may be 2 seems ok
+                builder.minScore(Double.valueOf(querySetting.get(CQLElasticSetting.score)));
+            }
 
             if(properties != null && !properties.isEmpty()) {
 

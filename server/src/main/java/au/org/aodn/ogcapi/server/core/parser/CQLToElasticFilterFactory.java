@@ -76,7 +76,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
     public static Map<CQLElasticSetting, String> getDefaultSetting() {
         Map<CQLElasticSetting, String> defaultSetting = new HashMap<>();
-        defaultSetting.put(CQLElasticSetting.score, "2");
+        defaultSetting.put(CQLElasticSetting.score, null);
         return defaultSetting;
     }
     /**
