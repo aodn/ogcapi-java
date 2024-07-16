@@ -1,9 +1,11 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
+import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
+import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -114,6 +116,12 @@ public interface Converter<F, T> {
 
         if (m.getSummaries() != null && m.getSummaries().getTemporal() != null) {
             collection.getProperties().put(CollectionProperty.temporal, m.getSummaries().getTemporal());
+        }
+
+        if(m.getCitation() != null && !m.getCitation().isEmpty()) {
+            ConstructUtils.constructByJsonString(m.getCitation(), CitationModel.class).ifPresent(
+                    citation -> collection.getProperties().put(CollectionProperty.citation, citation)
+            );
         }
 
         return collection;

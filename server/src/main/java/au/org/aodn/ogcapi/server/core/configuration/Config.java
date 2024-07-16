@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
+import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -17,6 +18,11 @@ public class Config {
 
     @Autowired
     ObjectMapper mapper;
+
+    @Autowired
+    public void initConstrucUtils(ObjectMapper mapper) {
+        ConstructUtils.setObjectMapper(mapper);
+    }
 
     @PostConstruct
     public void init() {

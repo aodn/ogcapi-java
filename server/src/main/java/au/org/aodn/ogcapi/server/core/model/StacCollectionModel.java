@@ -21,6 +21,8 @@ public class StacCollectionModel {
     protected List<LinkModel> links;
     protected List<ContactModel> contacts;
     protected List<ThemeModel> themes;
+    @JsonProperty("sci:citation")
+    protected String citation;
 
     @Getter
     protected String title;
