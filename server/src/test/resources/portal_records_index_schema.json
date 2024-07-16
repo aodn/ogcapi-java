@@ -84,6 +84,7 @@
           }
         }
       },
+      "sci:citation": { "type": "text" },
       "summaries": {
         "properties" : {
           "score": { "type": "long" },
@@ -114,9 +115,16 @@
               },
               "end" : {
                 "type": "date"
+              },
+              "creation" : {
+                "type": "date"
+              },
+              "revision" : {
+                "type": "date"
               }
             }
-          }
+          },
+          "statement": { "type": "text" }
         }
       },
       "contacts": {
