@@ -1,31 +1,31 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
+import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.MultiValuedFilter;
-import org.opengis.filter.PropertyIsEqualTo;
+import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.expression.Expression;
 
-public class PropertyEqualToImpl<T extends Enum<T>> extends QueryHandler implements PropertyIsEqualTo {
+public class PropertyIsGreaterThanOrEqualToImpl<T extends Enum<T>> extends QueryHandler implements PropertyIsGreaterThanOrEqualTo {
 
     protected Expression expression1;
     protected Expression expression2;
     protected Boolean isMatchingCase;
     protected MultiValuedFilter.MatchAction matchAction;
 
-    public PropertyEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
+    public PropertyIsGreaterThanOrEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
         this.expression1 = expression1;
         this.expression2 = expression2;
         this.isMatchingCase = isMatchingCase;
         this.matchAction = matchAction;
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-            // It is not an Elastic setting, so normal route.
-            this.query = MatchPhraseQuery.of(builder -> builder
+            this.query = RangeQuery.of(builder -> builder
                     .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                    .query(literal.toString())
+                    .gte(JsonData.of(literal.toString()))
             )._toQuery();
         }
     }

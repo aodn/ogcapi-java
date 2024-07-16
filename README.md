@@ -48,3 +48,17 @@ The server module contains the implementation of those interfaces, for details p
 | Env info            | `/manage/env`                          | Edge        |
 | Info (Show version) | `/manage/info`                         | Edge        |
 | Health check        | `/manage/health`                       | Edge        |
+
+# CQL
+| Field | Desciption                                                                                                                                                               |
+|-------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| score | The min score value of the return record, the higher the value, the more relevance it will be. By default the score isn't set, it is Elastic Search field not STAC field |
+
+
+
+# Sort
+
+By default the sort is sortby=-score that is desc order of _score of elastic search. You can change it to
+sortby=-score,+title or parameter as long as that field support each, ref to CQLCollectionsField.class and check
+whether the sortField is null or not. The sort function require change in elastic schema so we do not support all
+of the fields. In fact some fields sort do not make sense.

@@ -7,7 +7,7 @@ import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.PropertyIsNull;
 import org.opengis.filter.expression.Expression;
 
-public class IsNullImpl<T extends Enum<T>> extends ElasticFilter implements PropertyIsNull {
+public class IsNullImpl<T extends Enum<T>> extends QueryHandler implements PropertyIsNull {
 
     protected Expression expression;
 

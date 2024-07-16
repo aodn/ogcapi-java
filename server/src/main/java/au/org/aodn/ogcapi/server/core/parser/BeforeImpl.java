@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
  *
  * @param <T>
  */
-public class BeforeImpl<T extends Enum<T>> extends ElasticFilter implements Before {
+public class BeforeImpl<T extends Enum<T>> extends QueryHandler implements Before {
     protected Logger logger = LoggerFactory.getLogger(BeforeImpl.class);
 
     protected Expression expression1;

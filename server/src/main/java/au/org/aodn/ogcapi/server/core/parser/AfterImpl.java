@@ -18,7 +18,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
  *
  * @param <T>
  */
-public class AfterImpl<T extends Enum<T>> extends ElasticFilter implements After {
+public class AfterImpl<T extends Enum<T>> extends QueryHandler implements After {
     protected Logger logger = LoggerFactory.getLogger(AfterImpl.class);
 
     protected Expression expression1;

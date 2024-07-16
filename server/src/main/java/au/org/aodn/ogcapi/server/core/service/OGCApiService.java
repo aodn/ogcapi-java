@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.service;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.service.exception.CustomException;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +32,15 @@ public abstract class OGCApiService {
 
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
                                                    String filter,
+                                                   List<String> properties,
+                                                   String sortBy,
                                                    OGCMediaTypeMapper f,
                                                    CQLCrsType coor,
-                                                   Function<List<StacCollectionModel>, R> converter,
-                                                   List<String> properties) {
+                                                   Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json -> {
-                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, coor, properties);
+                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
@@ -63,8 +65,12 @@ public abstract class OGCApiService {
                 }
             }
         }
+        catch(IllegalArgumentException iae) {
+            // We do not need to wrap it as it is already RuntimeException
+            throw iae;
+        }
         catch(Exception e) {
-            throw new GlobalExceptionHandler.CustomException(e.getMessage());
+            throw new CustomException(e.getMessage(), e);
         }
     }
     /**

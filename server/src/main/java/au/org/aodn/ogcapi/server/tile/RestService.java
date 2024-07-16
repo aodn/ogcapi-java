@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.service.GlobalExceptionHandler;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
+import au.org.aodn.ogcapi.server.core.service.exception.CustomException;
 import au.org.aodn.ogcapi.tile.model.TileMatrixSets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,17 +38,17 @@ public class RestService extends OGCApiService {
             }
         }
         catch(IOException e) {
-            throw new GlobalExceptionHandler.CustomException(e.getMessage());
+            throw new CustomException(e.getMessage());
         }
     }
 
-    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json -> {
                     List<StacCollectionModel> result = (id == null) ?
-                            search.searchAllCollectionsWithGeometry() :
-                            search.searchCollectionWithGeometry(id);
+                            search.searchAllCollectionsWithGeometry(sortBy) :
+                            search.searchCollectionWithGeometry(id, sortBy);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));

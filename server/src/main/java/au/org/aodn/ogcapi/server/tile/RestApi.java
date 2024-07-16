@@ -107,6 +107,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     public ResponseEntity<InlineResponse2002> collectionVectorGetTileSetsList(String collectionId, String f) {
         return restService.getTileSetsListOfCollection(
                 List.of(collectionId),
+                null,
                 OGCMediaTypeMapper.convert(f),
                 stacToInlineResponse2002::convert);
     }
@@ -240,6 +241,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
                 //TODO: The return set seems not correct more study needed.
                 return restService.getTileSetsListOfCollection(
                         collections,
+                        "-score",
                         OGCMediaTypeMapper.convert(f),
                         stacToTileSet::convert);
             }
@@ -254,6 +256,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     public ResponseEntity<InlineResponse2002> datasetVectorGetTileSetsList(String f) {
         return restService.getTileSetsListOfCollection(
                 null,
+                "-score",
                 OGCMediaTypeMapper.convert(f),
                 stacToInlineResponse2002::convert);
     }

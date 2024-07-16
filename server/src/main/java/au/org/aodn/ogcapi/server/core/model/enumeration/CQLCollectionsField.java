@@ -1,5 +1,7 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import lombok.Getter;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,35 +14,37 @@ import java.util.stream.Collectors;
  *
  */
 public enum CQLCollectionsField {
-    dataset_provider(StacSummeries.DatasetProvider.searchField, StacSummeries.DatasetProvider.displayField),
-    dataset_group(StacSummeries.DatasetGroup.searchField, StacSummeries.DatasetGroup.displayField),
-    update_frequency(StacSummeries.UpdateFrequency.searchField, StacSummeries.UpdateFrequency.displayField),
-    geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.searchField),
-    bbox(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField),
-    temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField),
-    title(StacBasicField.Title.searchField, StacBasicField.Title.displayField),
-    description(StacBasicField.Description.searchField, StacBasicField.Description.displayField),
-    category(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField),
-    providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField),
-    discovery_categories(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField),
-    id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField),
-    links(StacBasicField.Links.searchField, StacBasicField.Links.displayField),
-    status(StacSummeries.Status.searchField, StacSummeries.Status.displayField),
+    dataset_provider(StacSummeries.DatasetProvider.searchField, StacSummeries.DatasetProvider.displayField, null),
+    dataset_group(StacSummeries.DatasetGroup.searchField, StacSummeries.DatasetGroup.displayField, null),
+    update_frequency(StacSummeries.UpdateFrequency.searchField, StacSummeries.UpdateFrequency.displayField, null),
+    geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.searchField, null),
+    bbox(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField, null),
+    temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField, null),
+    title(StacBasicField.Title.searchField, StacBasicField.Title.displayField, StacBasicField.Title.sortField),
+    description(StacBasicField.Description.searchField, StacBasicField.Description.displayField, null),
+    category(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField, null),
+    providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField, null),
+    discovery_categories(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField, null),
+    id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField, StacBasicField.UUID.sortField),
+    links(StacBasicField.Links.searchField, StacBasicField.Links.displayField, null),
+    status(StacSummeries.Status.searchField, StacSummeries.Status.displayField, null),
+    score(CQLElasticSetting.score.getSetting(), CQLElasticSetting.score.getSetting(), CQLElasticSetting.score.getSetting()),
     ;
+    // null value indicate it cannot be sort by that field, elastic schema change need to add keyword field in order to
+    // do search
+    @Getter
+    private final String sortField;
 
+    @Getter
     private final String searchField;
+
+    @Getter
     private final String displayField;
 
-    CQLCollectionsField(String field, String displayField) {
+    CQLCollectionsField(String field, String displayField, String order) {
         this.searchField = field;
+        this.sortField = order;
         this.displayField = displayField;
-    }
-
-    public String getSearchField() {
-        return this.searchField;
-    }
-    public String getDisplayField() {
-        return this.displayField;
     }
 
     @Override

@@ -5,9 +5,9 @@ import org.opengis.filter.Filter;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.Not;
 
-public class NotImpl extends ElasticFilter implements Not {
+public class NotImpl extends QueryHandler implements Not {
 
-    public NotImpl(ElasticFilter filter) {
+    public NotImpl(QueryHandler filter) {
         this.query = BoolQuery.of(b -> b
                         .mustNot(filter.getQuery()))
                 ._toQuery();

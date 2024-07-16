@@ -18,7 +18,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.io.StringReader;
 
-public class IntersectsImpl<T extends Enum<T>> extends ElasticFilter implements Intersects {
+public class IntersectsImpl<T extends Enum<T>> extends QueryHandler implements Intersects {
 
     protected Logger logger = LoggerFactory.getLogger(IntersectsImpl.class);
 

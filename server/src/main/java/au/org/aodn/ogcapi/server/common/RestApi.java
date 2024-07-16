@@ -152,14 +152,21 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
                 @RequestParam(value = "filter", required = false) String filter,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
-                @Valid @RequestParam(value = "sortby", required = false, defaultValue = "score") List<String> sortby) {
+                @Valid @RequestParam(value = "sortby", required = false, defaultValue = "-score") String sortBy) {
 
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
             if (datetime != null) {
                 filter = commonService.processDatetimeParameter(datetime, filter);
             }
-            return commonService.getCollectionList(q, filter, OGCMediaTypeMapper.json, CQLCrsType.convertFromUrl(crs), stacToCollection::convert, properties);
+            return commonService.getCollectionList(
+                    q,
+                    filter,
+                    properties,
+                    sortBy,
+                    OGCMediaTypeMapper.json,
+                    CQLCrsType.convertFromUrl(crs),
+                    stacToCollection::convert);
         }
         else {
             List<String> reasons = new ArrayList<>();
