@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  *         }
  * @param <T>
  */
-public class DuringImpl<T extends Enum<T>> extends Handler implements During {
+public class DuringImpl<T extends Enum<T>> extends QueryHandler implements During {
     protected Logger logger = LoggerFactory.getLogger(DuringImpl.class);
 
     protected Expression expression1;

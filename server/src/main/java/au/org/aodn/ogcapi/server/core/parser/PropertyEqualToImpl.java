@@ -1,8 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
-import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
@@ -10,7 +8,7 @@ import org.opengis.filter.MultiValuedFilter;
 import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.expression.Expression;
 
-public class PropertyEqualToImpl<T extends Enum<T>> extends Handler implements PropertyIsEqualTo {
+public class PropertyEqualToImpl<T extends Enum<T>> extends QueryHandler implements PropertyIsEqualTo {
 
     protected Expression expression1;
     protected Expression expression2;

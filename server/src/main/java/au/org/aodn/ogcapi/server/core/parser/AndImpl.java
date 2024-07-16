@@ -11,21 +11,21 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AndImpl extends Handler implements And {
+public class AndImpl extends QueryHandler implements And {
 
     protected List<Filter> children = new ArrayList<>();
 
     public AndImpl(Filter filter1, Filter filter2) {
 
-        if(filter1 instanceof ElasticSetting && filter2 instanceof Handler elasticFilter2) {
+        if(filter1 instanceof ElasticSetting && filter2 instanceof QueryHandler elasticFilter2) {
             this.query = elasticFilter2.getQuery();
             this.addErrors(elasticFilter2.getErrors());
         }
-        else if(filter2 instanceof ElasticSetting && filter1 instanceof Handler elasticFilter1){
+        else if(filter2 instanceof ElasticSetting && filter1 instanceof QueryHandler elasticFilter1){
             this.query = elasticFilter1.getQuery();
             this.addErrors(elasticFilter1.getErrors());
         }
-        else if(filter1 instanceof Handler elasticFilter1 && filter2 instanceof Handler elasticFilter2) {
+        else if(filter1 instanceof QueryHandler elasticFilter1 && filter2 instanceof QueryHandler elasticFilter2) {
             this.query = BoolQuery.of(f -> f
                     .filter(elasticFilter1.query, elasticFilter2.query)
             )._toQuery();
@@ -40,10 +40,10 @@ public class AndImpl extends Handler implements And {
 
     public AndImpl(List<Filter> filters) {
         // Extract query object in the filters, it must be an ElasitcFilter
-        List<Handler> elasticFilters = filters.stream()
+        List<QueryHandler> elasticFilters = filters.stream()
                 .filter(Objects::nonNull)
-                .filter(f -> f instanceof Handler)
-                .map(m -> (Handler)m)
+                .filter(f -> f instanceof QueryHandler)
+                .map(m -> (QueryHandler)m)
                 .toList();
 
         List<Query> queries = elasticFilters.stream()

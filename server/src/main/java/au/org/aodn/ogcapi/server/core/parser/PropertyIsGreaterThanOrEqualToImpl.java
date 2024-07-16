@@ -1,9 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
 import co.elastic.clients.json.JsonData;
-import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
@@ -11,7 +9,7 @@ import org.opengis.filter.MultiValuedFilter;
 import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.expression.Expression;
 
-public class PropertyIsGreaterThanOrEqualToImpl<T extends Enum<T>> extends Handler implements PropertyIsGreaterThanOrEqualTo {
+public class PropertyIsGreaterThanOrEqualToImpl<T extends Enum<T>> extends QueryHandler implements PropertyIsGreaterThanOrEqualTo {
 
     protected Expression expression1;
     protected Expression expression2;

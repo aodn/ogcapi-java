@@ -22,7 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Handler {
+public abstract class QueryHandler {
 
     @Getter
     protected Query query;
@@ -31,7 +31,7 @@ public abstract class Handler {
     protected List<CQLException> errors = new ArrayList<>();
 
     protected final SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-    protected Logger logger = LoggerFactory.getLogger(Handler.class);
+    protected Logger logger = LoggerFactory.getLogger(QueryHandler.class);
 
     public void addErrors(CQLException... e) { this.errors.addAll(List.of(e)); }
 

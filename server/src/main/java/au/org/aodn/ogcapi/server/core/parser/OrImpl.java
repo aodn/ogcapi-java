@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.parser;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import org.geotools.filter.text.cql2.CQLException;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.Or;
@@ -11,21 +10,21 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class OrImpl extends Handler implements Or {
+public class OrImpl extends QueryHandler implements Or {
 
     protected List<Filter> children = new ArrayList<>();
 
     public OrImpl(Filter filter1, Filter filter2) {
 
-        if(filter1 instanceof ElasticSetting && filter2 instanceof Handler elasticFilter2) {
+        if(filter1 instanceof ElasticSetting && filter2 instanceof QueryHandler elasticFilter2) {
             this.addErrors(elasticFilter2.getErrors());
             throw new IllegalArgumentException("Or combine with query setting do not make sense");
         }
-        else if(filter2 instanceof ElasticSetting && filter1 instanceof Handler elasticFilter1){
+        else if(filter2 instanceof ElasticSetting && filter1 instanceof QueryHandler elasticFilter1){
             this.addErrors(elasticFilter1.getErrors());
             throw new IllegalArgumentException("Or combine with query setting do not make sense");
         }
-        else if(filter1 instanceof Handler elasticFilter1 && filter2 instanceof Handler elasticFilter2) {
+        else if(filter1 instanceof QueryHandler elasticFilter1 && filter2 instanceof QueryHandler elasticFilter2) {
             this.query = BoolQuery.of(f -> f
                     .should(elasticFilter1.query, elasticFilter2.query)
             )._toQuery();
@@ -41,9 +40,9 @@ public class OrImpl extends Handler implements Or {
 
     public OrImpl(List<Filter> filters) {
         // Extract query object in the filters, it must be an ElasitcFilter
-        List<Handler> elasticFilters = filters.stream()
-                .filter(f -> f instanceof Handler)
-                .map(m -> (Handler)m)
+        List<QueryHandler> elasticFilters = filters.stream()
+                .filter(f -> f instanceof QueryHandler)
+                .map(m -> (QueryHandler)m)
                 .collect(Collectors.toList());
 
         List<Query> queries = elasticFilters.stream()

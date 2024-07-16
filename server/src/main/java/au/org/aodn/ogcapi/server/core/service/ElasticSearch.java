@@ -5,7 +5,7 @@ import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
-import au.org.aodn.ogcapi.server.core.parser.Handler;
+import au.org.aodn.ogcapi.server.core.parser.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
@@ -116,7 +116,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         if (cql != null) {
             CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
             Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-            if (filter instanceof Handler elasticFilter) {
+            if (filter instanceof QueryHandler elasticFilter) {
                 filters = List.of(elasticFilter.getQuery());
             } else {
                 filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
@@ -266,7 +266,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             if(cql != null) {
                 Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
 
-                if(filter instanceof Handler handler) {
+                if(filter instanceof QueryHandler handler) {
                     if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
                         // There is no error during parsing
                         filters = List.of(handler.getQuery());

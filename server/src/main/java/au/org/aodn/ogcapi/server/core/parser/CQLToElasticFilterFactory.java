@@ -209,7 +209,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     @Override
     public Not not(Filter filter) {
         logger.debug("NOT {}", filter);
-        if(filter instanceof Handler elasticFilter) {
+        if(filter instanceof QueryHandler elasticFilter) {
             return new NotImpl(elasticFilter);
         }
         else {
