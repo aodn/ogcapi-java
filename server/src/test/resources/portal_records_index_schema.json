@@ -33,7 +33,13 @@
       },
       "stac_version": { "type": "text" },
       "type": { "type": "text" },
-      "title": { "type": "text" },
+      "title": { "type": "text",
+        "fields" : {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
       "record_suggest": {
         "type": "nested",
         "properties": {
