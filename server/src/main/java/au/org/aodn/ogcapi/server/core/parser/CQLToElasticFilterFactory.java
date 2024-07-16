@@ -252,6 +252,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
         PropertyIsEqualToElasticSettingImpl setting = new PropertyIsEqualToElasticSettingImpl(expression, expression1);
         if(setting.isValid()) {
+            querySetting.put(setting.getElasticSettingName(), setting.getElasticSettingValue());
             return setting;
         }
 
@@ -308,6 +309,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
 
         PropertyIsGreaterThanOrEqualToElasticSettingImpl setting = new PropertyIsGreaterThanOrEqualToElasticSettingImpl(expression, expression1);
         if(setting.isValid()) {
+            querySetting.put(setting.getElasticSettingName(), setting.getElasticSettingValue());
             return setting;
         }
         return new PropertyIsGreaterThanOrEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);

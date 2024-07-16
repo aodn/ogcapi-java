@@ -467,9 +467,10 @@ public class RestApiTest extends BaseTestClass {
         ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
-        // Make sure OR works, b
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR category='wave'", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+        // Make sure OR not work as it didn't make sense to use or with setting
+        ResponseEntity<ErrorResponse> error = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR category='wave'", ErrorResponse.class);
+        assertEquals(error.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
+        assertEquals(Objects.requireNonNull(error.getBody()).getMessage(), "Or combine with query setting do not make sense", "correct error");
 
         // Lower score rate make more match
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=1", Collections.class);
@@ -478,8 +479,8 @@ public class RestApiTest extends BaseTestClass {
         assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
 
         // Increase score will drop one record
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=2", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 2");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=3", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 3");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
     }
     /**

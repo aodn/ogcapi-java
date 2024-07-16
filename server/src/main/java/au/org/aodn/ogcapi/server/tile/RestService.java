@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.service.GlobalExceptionHandler;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
+import au.org.aodn.ogcapi.server.core.service.exception.CustomException;
 import au.org.aodn.ogcapi.tile.model.TileMatrixSets;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,7 @@ public class RestService extends OGCApiService {
             }
         }
         catch(IOException e) {
-            throw new GlobalExceptionHandler.CustomException(e.getMessage());
+            throw new CustomException(e.getMessage());
         }
     }
 

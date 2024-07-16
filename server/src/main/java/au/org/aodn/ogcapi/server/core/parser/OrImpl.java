@@ -19,11 +19,11 @@ public class OrImpl extends Handler implements Or {
 
         if(filter1 instanceof ElasticSetting && filter2 instanceof Handler elasticFilter2) {
             this.addErrors(elasticFilter2.getErrors());
-            this.addErrors(new CQLException("Or combine with ElasticSetting do not make sense"));
+            throw new IllegalArgumentException("Or combine with query setting do not make sense");
         }
         else if(filter2 instanceof ElasticSetting && filter1 instanceof Handler elasticFilter1){
             this.addErrors(elasticFilter1.getErrors());
-            this.addErrors(new CQLException("Or combine with ElasticSetting do not make sense"));
+            throw new IllegalArgumentException("Or combine with query setting do not make sense");
         }
         else if(filter1 instanceof Handler elasticFilter1 && filter2 instanceof Handler elasticFilter2) {
             this.query = BoolQuery.of(f -> f

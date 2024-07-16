@@ -265,8 +265,23 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
             if(cql != null) {
                 Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-                if(filter instanceof Handler elasticFilter) {
-                    filters = List.of(elasticFilter.getQuery());
+
+                if(filter instanceof Handler handler) {
+                    if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
+                        // There is no error during parsing
+                        filters = List.of(handler.getQuery());
+                    }
+                    else {
+                        throw new IllegalArgumentException(
+                                "CQL Parse Error",
+                                handler.getErrors()
+                                        .stream()
+                                        .reduce(null, (e1, e2) -> {
+                                            if (e1 == null) return e2;
+                                            e1.addSuppressed(e2);
+                                            return e1;
+                                        }));
+                    }
                 }
             }
             return searchCollectionBy(factory.getQuerySetting(), null, should,  filters,  properties,  null);

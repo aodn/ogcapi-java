@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
+import au.org.aodn.ogcapi.server.core.service.exception.CustomException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -20,17 +21,10 @@ public class GlobalExceptionHandler {
         log.info("Enable GlobalExceptionHandler");
     }
 
-    public static class CustomException extends RuntimeException {
-        public CustomException(String message) {
-            super(message);
-        }
-
-        public CustomException(String message, Throwable cause) {
-            super(message, cause);
-        }
-    }
-
-    @ExceptionHandler({IllegalArgumentException.class, CustomException.class})
+    @ExceptionHandler({
+            IllegalArgumentException.class,
+            CustomException.class
+    })
     public ResponseEntity<ErrorResponse> handleCustomException(Exception ex, WebRequest request) {
         ErrorResponse errorResponse = ErrorResponse
                 .builder()

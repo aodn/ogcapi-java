@@ -15,6 +15,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -249,7 +250,11 @@ abstract class ElasticSearchBase {
                 @Override
                 public T next() {
                     count.incrementAndGet();
-                    return response.get().hits().hits().get(index++).source();
+
+                    Hit<T> hit = response.get().hits().hits().get(index++);
+                    log.info("id {}, score {}", hit.id(), hit.score());
+
+                    return hit.source();
                 }
             };
         }
