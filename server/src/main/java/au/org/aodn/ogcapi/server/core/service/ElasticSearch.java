@@ -322,13 +322,23 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         for(String arg: args) {
             arg = arg.trim();
-            if (arg.startsWith("+")) {
+            if (arg.startsWith("-")) {
                 CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
-                sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Asc))));
+
+                if(field.getSortField() != null) {
+                    sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Desc))));
+                }
             }
-            else if (arg.startsWith("-")) {
-                CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
-                sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Desc))));
+            else {
+                // Default is +, there is a catch the + will be replaced as space in the property as + means space in url, by taking
+                // default is ASC we work around the problem, the trim removed the space
+                CQLCollectionsField field = arg.startsWith("+") ?
+                        Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase()) :
+                        Enum.valueOf(CQLCollectionsField.class, arg.toLowerCase());
+
+                if(field.getSortField() != null) {
+                    sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Asc))));
+                }
             }
         }
         return sos;

@@ -2,7 +2,7 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 
 public enum StacBasicField {
     UUID("id", "id", "id.keyword"),
-    Title("title", "title"),
+    Title("title", "title", "title.keyword"),
     Description("description", "description"),
     Providers(
             "providers",    // This result in the whole provider section return

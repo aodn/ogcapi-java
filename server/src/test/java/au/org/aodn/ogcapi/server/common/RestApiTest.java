@@ -158,13 +158,13 @@ public class RestApiTest extends BaseTestClass {
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/2007-06-05T14:00:00Z", Collections.class);
         assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2 only given this time");
         assertEquals(
-                "5c418118-2581-4936-b6fd-d6bedfe74f62",
-                collections.getBody().getCollections().get(0).getId(),
-                "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
-        assertEquals(
                 "516811d7-cd1e-207a-e0440003ba8c79dd",
-                collections.getBody().getCollections().get(1).getId(),
+                collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
+        assertEquals(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                collections.getBody().getCollections().get(1).getId(),
+                "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
     }
     /**
      * The datetime field before xxx/yyy. It uses CQL internally so no need to test Before After During in CQL
@@ -510,9 +510,15 @@ public class RestApiTest extends BaseTestClass {
 
         // Edge case on sort by with 1 item, but typo in argument sortBy, it should be sortby. Hence use API default sort -score
         // https://docs.ogc.org/DRAFTS/20-004.html#sorting-parameter-sortby
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'&sortBy=-score,+title'", Collections.class);
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'&sortBy=-score,+title", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
-
+        // Now return result should sort by score then title, since no query here, the score will auto adjust to 1 as all search without query default score is 1
+        // the search result will be by title
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2&sortby=-score,+title", Collections.class);
+        assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 3");
+        assertEquals("19da2ce7-138f-4427-89de-a50c724f5f54", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "19da2ce7-138f-4427-89de-a50c724f5f54");
+        assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
+        assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(2).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
     }
 }
