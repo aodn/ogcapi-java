@@ -33,13 +33,7 @@
       },
       "stac_version": { "type": "text" },
       "type": { "type": "text" },
-      "title": { "type": "text",
-        "fields" : {
-          "keyword": {
-            "type": "keyword"
-          }
-        }
-      },
+      "title": { "type": "text" },
       "record_suggest": {
         "type": "nested",
         "properties": {
@@ -84,6 +78,7 @@
           }
         }
       },
+      "sci:citation": { "type": "text" },
       "summaries": {
         "properties" : {
           "score": { "type": "long" },
@@ -114,9 +109,16 @@
               },
               "end" : {
                 "type": "date"
+              },
+              "creation" : {
+                "type": "date"
+              },
+              "revision" : {
+                "type": "date"
               }
             }
-          }
+          },
+          "statement": { "type": "text" }
         }
       },
       "contacts": {
