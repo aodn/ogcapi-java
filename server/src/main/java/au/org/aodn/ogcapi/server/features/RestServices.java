@@ -27,8 +27,8 @@ public class RestServices extends OGCApiService {
         return List.of("http://www.opengis.net/doc/IS/ogcapi-features-1/1.0.1");
     }
 
-    public ResponseEntity<Collection> getCollection(String id) throws NoSuchElementException {
-        List<StacCollectionModel> model = search.searchCollections(List.of(id));
+    public ResponseEntity<Collection> getCollection(String id, String sortBy) throws NoSuchElementException {
+        List<StacCollectionModel> model = search.searchCollections(List.of(id), sortBy);
 
         if (!model.isEmpty()) {
             if(model.size() > 1) {

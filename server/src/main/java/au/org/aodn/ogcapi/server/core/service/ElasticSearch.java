@@ -8,6 +8,8 @@ import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -19,8 +21,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
+import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.text.cql2.CQLException;
 import org.opengis.filter.Filter;
+import org.opengis.filter.expression.Expression;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -189,7 +193,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
     }
 
-    protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry) {
+    protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {
 
         List<Query> queries = new ArrayList<>();
         queries.add(MatchQuery.of(m -> m
@@ -214,34 +218,41 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             );
         }
 
-        return searchCollectionBy(CQLToElasticFilterFactory.getDefaultSetting(), queries, null, filters, null, null);
+        return searchCollectionBy(
+                CQLToElasticFilterFactory.getDefaultSetting(),
+                queries,
+                null,
+                filters,
+                null,
+                createSortOptions(sortBy),
+                null);
     }
 
     @Override
-    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids) {
-        return searchCollectionsByIds(ids, Boolean.TRUE);
+    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids, String sortBy) {
+        return searchCollectionsByIds(ids, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollectionsWithGeometry() {
-        return searchCollectionsByIds(null, Boolean.TRUE);
+    public List<StacCollectionModel> searchAllCollectionsWithGeometry(String sortBy) {
+        return searchCollectionsByIds(null, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchCollections(List<String> ids) {
-        return searchCollectionsByIds(ids, Boolean.FALSE);
+    public List<StacCollectionModel> searchCollections(List<String> ids, String sortBy) {
+        return searchCollectionsByIds(ids, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollections() {
-        return searchCollectionsByIds(null, Boolean.FALSE);
+    public List<StacCollectionModel> searchAllCollections(String sortBy) {
+        return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, CQLCrsType coor, List<String> properties) throws CQLException {
+    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
         if((keywords == null || keywords.isEmpty()) && cql == null) {
-            return searchAllCollections();
+            return searchAllCollections(sortBy);
         }
         else {
 
@@ -284,8 +295,43 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     }
                 }
             }
-            return searchCollectionBy(factory.getQuerySetting(), null, should,  filters,  properties,  null);
+
+            return searchCollectionBy(
+                    factory.getQuerySetting(),
+                    null,
+                    should,
+                    filters,
+                    properties,
+                    createSortOptions(sortBy),
+                    null
+            );
         }
+    }
+    /**
+     * Parse and create a sort option
+     * https://github.com/opengeospatial/ogcapi-features/blob/0c508be34aaca0d9cf5e05722276a0ee10585d61/extensions/sorting/standard/clause_7_sorting.adoc#L32
+     *
+     * @param sortBy - Must be of pattern +<property> | -<property>, + mean asc, - mean desc
+     * @return
+     */
+    protected List<SortOptions> createSortOptions(String sortBy) {
+        if(sortBy == null || sortBy.isEmpty()) return null;
+
+        String[] args = sortBy.split(",");
+        List<SortOptions> sos = new ArrayList<>();
+
+        for(String arg: args) {
+            arg = arg.trim();
+            if (arg.startsWith("+")) {
+                CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
+                sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Asc))));
+            }
+            else if (arg.startsWith("-")) {
+                CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
+                sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Desc))));
+            }
+        }
+        return sos;
     }
 
     @Override

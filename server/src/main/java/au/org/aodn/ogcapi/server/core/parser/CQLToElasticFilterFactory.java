@@ -735,7 +735,12 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     public Literal literal(boolean b) {
         return b ? new LiteralExpressionImpl(Boolean.TRUE) : new LiteralExpressionImpl(Boolean.FALSE);
     }
-
+    /**
+     * The jj parse have not setup anything related to sort, so this is not use, manual parse needed.
+     * @param s
+     * @param sortOrder
+     * @return
+     */
     @Override
     public SortBy sort(String s, SortOrder sortOrder) {
         return null;

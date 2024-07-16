@@ -14,15 +14,21 @@ public enum StacSummeries {
     Status("summaries.status", "summaries.status")
     ;
 
+    public final String sortField;
     public final String searchField;
     public final String displayField;
     public final List<StacSummeries> subfields;
 
-    StacSummeries(String s, String d) { this(s,d, null); }
+    StacSummeries(String search, String display) { this(search, display, null); }
 
-    StacSummeries(String s, String d, List<StacSummeries> f) {
-        searchField = s;
-        displayField = d;
+    StacSummeries(String search, String display, List<StacSummeries> f) {
+        this(search, display, search, f);
+    }
+
+    StacSummeries(String search, String display, String order, List<StacSummeries> f) {
+        searchField = search;
+        displayField = display;
+        sortField = order;
         subfields = f;
     }
 }

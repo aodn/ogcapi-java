@@ -22,7 +22,7 @@ public enum StacBasicField {
     public final String displayField;   // Field that is named externally
 
     StacBasicField(String displayField, String searchField) {
-        this(displayField, searchField, null);
+        this(displayField, searchField, searchField);
     }
 
     StacBasicField(String displayField, String searchField, String sortField) {

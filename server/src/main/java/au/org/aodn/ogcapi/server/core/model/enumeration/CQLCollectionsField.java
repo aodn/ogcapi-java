@@ -1,5 +1,7 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import lombok.Getter;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,35 +14,36 @@ import java.util.stream.Collectors;
  *
  */
 public enum CQLCollectionsField {
-    dataset_provider(StacSummeries.DatasetProvider.searchField, StacSummeries.DatasetProvider.displayField),
-    dataset_group(StacSummeries.DatasetGroup.searchField, StacSummeries.DatasetGroup.displayField),
-    update_frequency(StacSummeries.UpdateFrequency.searchField, StacSummeries.UpdateFrequency.displayField),
-    geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.searchField),
-    bbox(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField),
-    temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField),
-    title(StacBasicField.Title.searchField, StacBasicField.Title.displayField),
-    description(StacBasicField.Description.searchField, StacBasicField.Description.displayField),
-    category(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField),
-    providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField),
-    discovery_categories(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField),
-    id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField),
-    links(StacBasicField.Links.searchField, StacBasicField.Links.displayField),
-    status(StacSummeries.Status.searchField, StacSummeries.Status.displayField),
+    dataset_provider(StacSummeries.DatasetProvider.searchField, StacSummeries.DatasetProvider.displayField, StacSummeries.DatasetProvider.sortField),
+    dataset_group(StacSummeries.DatasetGroup.searchField, StacSummeries.DatasetGroup.displayField, StacSummeries.DatasetGroup.sortField),
+    update_frequency(StacSummeries.UpdateFrequency.searchField, StacSummeries.UpdateFrequency.displayField, StacSummeries.UpdateFrequency.sortField),
+    geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.searchField, StacSummeries.Geometry.sortField),
+    bbox(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField, StacSummeries.Geometry.sortField),
+    temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField, StacSummeries.Temporal.sortField),
+    title(StacBasicField.Title.searchField, StacBasicField.Title.displayField, StacBasicField.Title.sortField),
+    description(StacBasicField.Description.searchField, StacBasicField.Description.displayField, StacBasicField.Description.sortField),
+    category(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField, StacBasicField.DiscoveryCategories.sortField),
+    providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField, StacBasicField.Providers.sortField),
+    discovery_categories(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField, StacBasicField.DiscoveryCategories.sortField),
+    id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField, StacBasicField.UUID.sortField),
+    links(StacBasicField.Links.searchField, StacBasicField.Links.displayField, StacBasicField.Links.sortField),
+    status(StacSummeries.Status.searchField, StacSummeries.Status.displayField, StacSummeries.Status.sortField),
+    score(CQLElasticSetting.score.getSetting(), CQLElasticSetting.score.getSetting(), CQLElasticSetting.score.getSetting()),
     ;
 
+    @Getter
+    private final String sortField;
+
+    @Getter
     private final String searchField;
+
+    @Getter
     private final String displayField;
 
-    CQLCollectionsField(String field, String displayField) {
+    CQLCollectionsField(String field, String displayField, String order) {
         this.searchField = field;
+        this.sortField = order;
         this.displayField = displayField;
-    }
-
-    public String getSearchField() {
-        return this.searchField;
-    }
-    public String getDisplayField() {
-        return this.displayField;
     }
 
     @Override

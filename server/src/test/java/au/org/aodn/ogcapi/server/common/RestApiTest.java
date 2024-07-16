@@ -497,4 +497,22 @@ public class RestApiTest extends BaseTestClass {
         assertEquals("uuid 12324 not found!", response.getMessage(), "message match");
         assertEquals("uri=/api/v1/ogc/collections/12324", response.getDetails(), "message url");
     }
+    /**
+     * Test sort by, you can use this as an example for how ot use sortBy
+     */
+    @Test
+    public void verifySortBy() throws IOException {
+        super.insertJsonToElasticIndex(
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
+        );
+
+        // Edge case on sort by with 1 item, but typo in argument sortBy, it should be sortby. Hence use API default sort -score
+        // https://docs.ogc.org/DRAFTS/20-004.html#sorting-parameter-sortby
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'&sortBy=-score,+title'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+
+
+    }
 }

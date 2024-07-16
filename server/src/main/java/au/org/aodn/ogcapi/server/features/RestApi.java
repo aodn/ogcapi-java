@@ -25,7 +25,7 @@ public class RestApi implements CollectionsApi {
 
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
-        return featuresService.getCollection(collectionId);
+        return featuresService.getCollection(collectionId, null);
     }
 
     @Override

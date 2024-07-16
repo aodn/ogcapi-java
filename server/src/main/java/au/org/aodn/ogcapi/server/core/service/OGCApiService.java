@@ -32,14 +32,15 @@ public abstract class OGCApiService {
 
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
                                                    String filter,
+                                                   List<String> properties,
+                                                   String sortBy,
                                                    OGCMediaTypeMapper f,
                                                    CQLCrsType coor,
-                                                   Function<List<StacCollectionModel>, R> converter,
-                                                   List<String> properties) {
+                                                   Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json -> {
-                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, coor, properties);
+                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));

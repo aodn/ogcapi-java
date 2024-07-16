@@ -4,12 +4,8 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
-import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.ElasticsearchException;
-import co.elastic.clients.elasticsearch._types.FieldSort;
-import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
@@ -109,24 +105,25 @@ abstract class ElasticSearchBase {
                                                            final List<Query> should,
                                                            final List<Query> filters,
                                                            final List<String> properties,
+                                                           final List<SortOptions> sortOptions,
                                                            final Long maxSize) {
 
         Supplier<SearchRequest.Builder> builderSupplier = () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(indexName)
                     .size(pageSize)
-                    .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)))
-                    .sort(so -> so.score(v -> v.order(SortOrder.Desc)))
-                    .sort(so -> so
-                            .field(FieldSort.of(f -> f
-                                    .field(StacSummeries.Score.searchField)
-                                    .order(SortOrder.Desc))))
-                    .sort(so -> so
-                            // We need a unique key for the search, cannot use _id in v8 anymore, so we need
-                            // to sort using the keyword, this field is not for search and therefore not in enum
-                            .field(FieldSort.of(f -> f
-                                    .field(StacBasicField.UUID.sortField)
-                                    .order(SortOrder.Asc))));
+                    .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
+
+            if(sortOptions != null) {
+                builder.sort(sortOptions);
+            }
+
+            builder.sort(so -> so
+                    // We need a unique key for the search, cannot use _id in v8 anymore, so we need
+                    // to sort using the keyword, this field is not for search and therefore not in enum
+                    .field(FieldSort.of(f -> f
+                            .field(StacBasicField.UUID.sortField)
+                            .order(SortOrder.Asc))));
 
             if(querySetting.get(CQLElasticSetting.score) != null) {
                 // By default we do not setup any min_score, the api caller should pass it in so

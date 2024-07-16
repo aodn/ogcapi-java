@@ -42,13 +42,13 @@ public class RestService extends OGCApiService {
         }
     }
 
-    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
         try {
             switch (f) {
                 case json -> {
                     List<StacCollectionModel> result = (id == null) ?
-                            search.searchAllCollectionsWithGeometry() :
-                            search.searchCollectionWithGeometry(id);
+                            search.searchAllCollectionsWithGeometry(sortBy) :
+                            search.searchCollectionWithGeometry(id, sortBy);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
