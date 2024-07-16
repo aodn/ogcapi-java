@@ -58,8 +58,7 @@ The server module contains the implementation of those interfaces, for details p
 
 # Sort
 
-By default the sort is sortby=-score that is desc order of _score of elastic search. You can change it to 
-sortby=-score,+title or parameter as long as that field support each, ref to CQLCollectionsField.class and check 
-whether the sortField is null or not. The sort function require change in elastic schema so we do not support all 
+By default the sort is sortby=-score that is desc order of _score of elastic search. You can change it to
+sortby=-score,+title or parameter as long as that field support each, ref to CQLCollectionsField.class and check
+whether the sortField is null or not. The sort function require change in elastic schema so we do not support all
 of the fields. In fact some fields sort do not make sense.
-
