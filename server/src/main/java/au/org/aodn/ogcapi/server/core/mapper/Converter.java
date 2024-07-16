@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
+import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
@@ -118,8 +119,9 @@ public interface Converter<F, T> {
         }
 
         if(m.getCitation() != null && !m.getCitation().isEmpty()) {
-            var citation = CitationModel.constructByJsonString(m.getCitation());
-            collection.getProperties().put(CollectionProperty.citation, citation);
+            ConstructUtils.constructByJsonString(m.getCitation(), CitationModel.class).ifPresent(
+                    citation -> collection.getProperties().put(CollectionProperty.citation, citation)
+            );
         }
 
         return collection;
