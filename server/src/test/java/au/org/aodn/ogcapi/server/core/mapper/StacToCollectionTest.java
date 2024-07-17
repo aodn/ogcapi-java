@@ -74,6 +74,8 @@ public class StacToCollectionTest {
                 .build();
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
 
+        var statement = "This is the statement of this record";
+
         StacCollectionModel model = StacCollectionModel
                 .builder()
                 .summaries(
@@ -82,6 +84,7 @@ public class StacToCollectionTest {
                                 .score(0)
                                 .status("Completed")
                                 .credits(credits)
+                                .statement(statement)
                                 .build()
                 )
                 .contacts(Collections.singletonList(contact))
@@ -100,5 +103,6 @@ public class StacToCollectionTest {
         Assertions.assertEquals("this is suggested Citation", checkedCitation.getSuggestedCitation());
         Assertions.assertEquals(Arrays.asList("this is useLimitations1", "this is useLimitations2"), checkedCitation.getUseLimitations());
         Assertions.assertEquals(Arrays.asList("this is otherConstraints1", "this is otherConstraints2"), checkedCitation.getOtherConstraints());
+        Assertions.assertEquals(statement, collection.getProperties().get(CollectionProperty.statement));
     }
 }

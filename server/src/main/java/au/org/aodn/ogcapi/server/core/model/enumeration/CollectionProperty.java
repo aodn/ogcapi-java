@@ -14,6 +14,7 @@ public enum CollectionProperty {
     geometry("geometry"),
     temporal("temporal"),
     citation("citation"),
+    statement("statement"),
     ;
 
     private final String value;
