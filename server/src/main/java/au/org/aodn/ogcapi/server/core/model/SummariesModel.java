@@ -22,4 +22,6 @@ public class SummariesModel {
 
     @JsonProperty("temporal")
     protected List<Map<String, String>> temporal;
+
+    protected String statement;
 }

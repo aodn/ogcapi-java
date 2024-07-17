@@ -124,6 +124,10 @@ public interface Converter<F, T> {
             );
         }
 
+        if (m.getSummaries() != null && m.getSummaries().getStatement() != null) {
+            collection.getProperties().put(CollectionProperty.statement, m.getSummaries().getStatement());
+        }
+
         return collection;
     }
 }
