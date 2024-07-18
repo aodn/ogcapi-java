@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
+import au.org.aodn.ogcapi.server.core.model.LicenseModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
@@ -126,6 +127,12 @@ public interface Converter<F, T> {
 
         if (m.getSummaries() != null && m.getSummaries().getStatement() != null) {
             collection.getProperties().put(CollectionProperty.statement, m.getSummaries().getStatement());
+        }
+
+        if (m.getLicense() != null) {
+            ConstructUtils.constructByJsonString(m.getLicense(), LicenseModel.class).ifPresent(
+                    license -> collection.getProperties().put(CollectionProperty.license, license)
+            );
         }
 
         return collection;

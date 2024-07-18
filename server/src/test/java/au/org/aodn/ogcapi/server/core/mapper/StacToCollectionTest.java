@@ -76,6 +76,8 @@ public class StacToCollectionTest {
 
         var statement = "This is the statement of this record";
 
+        var license = "{\"title\":\"Attribution 4.0\",\"url\":\"https://creativecommons.org/licenses/by/4.0/\",\"licenseGraphic\":\"https://i.creativecommons.org/l/by/4.0/88x31.png\"}";
+
         StacCollectionModel model = StacCollectionModel
                 .builder()
                 .summaries(
@@ -87,6 +89,7 @@ public class StacToCollectionTest {
                                 .statement(statement)
                                 .build()
                 )
+                .license(license)
                 .contacts(Collections.singletonList(contact))
                 .themes(Collections.singletonList(theme))
                 .citation(citationString)
@@ -99,10 +102,15 @@ public class StacToCollectionTest {
         Assertions.assertEquals(Collections.singletonList(contact), collection.getProperties().get(CollectionProperty.contacts));
         Assertions.assertEquals(Collections.singletonList(theme), collection.getProperties().get(CollectionProperty.themes));
         Assertions.assertInstanceOf(CitationModel.class, collection.getProperties().get(CollectionProperty.citation));
-        var checkedCitation = (CitationModel) collection.getProperties().get(CollectionProperty.citation);
-        Assertions.assertEquals("this is suggested Citation", checkedCitation.getSuggestedCitation());
-        Assertions.assertEquals(Arrays.asList("this is useLimitations1", "this is useLimitations2"), checkedCitation.getUseLimitations());
-        Assertions.assertEquals(Arrays.asList("this is otherConstraints1", "this is otherConstraints2"), checkedCitation.getOtherConstraints());
+        var citationToCheck = (CitationModel) collection.getProperties().get(CollectionProperty.citation);
+        Assertions.assertEquals("this is suggested Citation", citationToCheck.getSuggestedCitation());
+        Assertions.assertEquals(Arrays.asList("this is useLimitations1", "this is useLimitations2"), citationToCheck.getUseLimitations());
+        Assertions.assertEquals(Arrays.asList("this is otherConstraints1", "this is otherConstraints2"), citationToCheck.getOtherConstraints());
         Assertions.assertEquals(statement, collection.getProperties().get(CollectionProperty.statement));
+        var licenseToCheck = (LicenseModel) collection.getProperties().get(CollectionProperty.license);
+        Assertions.assertEquals("Attribution 4.0", licenseToCheck.getTitle());
+        Assertions.assertEquals("https://creativecommons.org/licenses/by/4.0/", licenseToCheck.getUrl());
+        Assertions.assertEquals("https://i.creativecommons.org/l/by/4.0/88x31.png", licenseToCheck.getLicenseGraphic());
+
     }
 }
