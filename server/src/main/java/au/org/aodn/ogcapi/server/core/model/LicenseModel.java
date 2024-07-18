@@ -7,8 +7,8 @@ import lombok.Data;
 @Builder
 public class LicenseModel {
 
-    protected String license;
-    protected String licenseLink;
+    protected String title;
+    protected String url;
     protected String licenseGraphic;
 
 }
