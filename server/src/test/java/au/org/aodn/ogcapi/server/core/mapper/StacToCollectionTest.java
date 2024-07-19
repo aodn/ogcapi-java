@@ -73,9 +73,7 @@ public class StacToCollectionTest {
                 .concepts(Collections.singletonList(ConceptModel.builder().id("id").url("url").build()))
                 .build();
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
-
         var statement = "This is the statement of this record";
-
         var license = "{\"title\":\"Attribution 4.0\",\"url\":\"https://creativecommons.org/licenses/by/4.0/\",\"licenseGraphic\":\"https://i.creativecommons.org/l/by/4.0/88x31.png\"}";
 
         StacCollectionModel model = StacCollectionModel
