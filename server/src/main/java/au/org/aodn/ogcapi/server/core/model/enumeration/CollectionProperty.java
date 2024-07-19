@@ -15,6 +15,7 @@ public enum CollectionProperty {
     temporal("temporal"),
     citation("citation"),
     statement("statement"),
+    license("license"),
     ;
 
     private final String value;

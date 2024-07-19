@@ -13,6 +13,4 @@ public class CitationModel {
     protected List<String> useLimitations;
     protected List<String> otherConstraints;
 
-
-
 }
