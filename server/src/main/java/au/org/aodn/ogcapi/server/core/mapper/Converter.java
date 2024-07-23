@@ -135,6 +135,14 @@ public interface Converter<F, T> {
             );
         }
 
+        if (m.getSummaries() != null && m.getSummaries().getCreation() != null) {
+            collection.getProperties().put(CollectionProperty.creation, m.getSummaries().getCreation());
+        }
+
+        if (m.getSummaries() != null && m.getSummaries().getRevision() != null) {
+            collection.getProperties().put(CollectionProperty.revision, m.getSummaries().getRevision());
+        }
+
         return collection;
     }
 }
