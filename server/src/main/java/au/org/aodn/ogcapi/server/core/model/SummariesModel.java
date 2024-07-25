@@ -16,6 +16,8 @@ public class SummariesModel {
     protected int score;
     protected String status;
     protected List<String> credits;
+    protected String creation;
+    protected String revision;
 
     @JsonProperty("proj:geometry")
     protected Map<?,?> geometry;

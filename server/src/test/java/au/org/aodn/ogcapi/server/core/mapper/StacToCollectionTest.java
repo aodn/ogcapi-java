@@ -84,6 +84,8 @@ public class StacToCollectionTest {
                                 .score(0)
                                 .status("Completed")
                                 .credits(credits)
+                                .creation("creation date")
+                                .revision("revision date")
                                 .statement(statement)
                                 .build()
                 )
@@ -109,6 +111,7 @@ public class StacToCollectionTest {
         Assertions.assertEquals("Attribution 4.0", licenseToCheck.getTitle());
         Assertions.assertEquals("https://creativecommons.org/licenses/by/4.0/", licenseToCheck.getUrl());
         Assertions.assertEquals("https://i.creativecommons.org/l/by/4.0/88x31.png", licenseToCheck.getLicenseGraphic());
-
+        Assertions.assertEquals("creation date", collection.getProperties().get(CollectionProperty.creation));
+        Assertions.assertEquals("revision date", collection.getProperties().get(CollectionProperty.revision));
     }
 }
