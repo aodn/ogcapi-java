@@ -130,9 +130,7 @@ public interface Converter<F, T> {
         }
 
         if (m.getLicense() != null) {
-            ConstructUtils.constructByJsonString(m.getLicense(), LicenseModel.class).ifPresent(
-                    license -> collection.getProperties().put(CollectionProperty.license, license)
-            );
+            collection.getProperties().put(CollectionProperty.license, m.getLicense());
         }
 
         if (m.getSummaries() != null && m.getSummaries().getCreation() != null) {
