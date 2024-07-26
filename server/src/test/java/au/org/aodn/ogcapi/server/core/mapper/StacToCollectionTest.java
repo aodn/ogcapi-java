@@ -74,7 +74,6 @@ public class StacToCollectionTest {
                 .build();
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
         var statement = "This is the statement of this record";
-        var license = "{\"title\":\"Attribution 4.0\",\"url\":\"https://creativecommons.org/licenses/by/4.0/\",\"licenseGraphic\":\"https://i.creativecommons.org/l/by/4.0/88x31.png\"}";
 
         StacCollectionModel model = StacCollectionModel
                 .builder()
@@ -89,7 +88,7 @@ public class StacToCollectionTest {
                                 .statement(statement)
                                 .build()
                 )
-                .license(license)
+                .license("Attribution 4.0")
                 .contacts(Collections.singletonList(contact))
                 .themes(Collections.singletonList(theme))
                 .citation(citationString)
@@ -107,10 +106,7 @@ public class StacToCollectionTest {
         Assertions.assertEquals(Arrays.asList("this is useLimitations1", "this is useLimitations2"), citationToCheck.getUseLimitations());
         Assertions.assertEquals(Arrays.asList("this is otherConstraints1", "this is otherConstraints2"), citationToCheck.getOtherConstraints());
         Assertions.assertEquals(statement, collection.getProperties().get(CollectionProperty.statement));
-        var licenseToCheck = (LicenseModel) collection.getProperties().get(CollectionProperty.license);
-        Assertions.assertEquals("Attribution 4.0", licenseToCheck.getTitle());
-        Assertions.assertEquals("https://creativecommons.org/licenses/by/4.0/", licenseToCheck.getUrl());
-        Assertions.assertEquals("https://i.creativecommons.org/l/by/4.0/88x31.png", licenseToCheck.getLicenseGraphic());
+        Assertions.assertEquals("Attribution 4.0", collection.getProperties().get(CollectionProperty.license));
         Assertions.assertEquals("creation date", collection.getProperties().get(CollectionProperty.creation));
         Assertions.assertEquals("revision date", collection.getProperties().get(CollectionProperty.revision));
     }
