@@ -173,17 +173,17 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
 
         // extract abstract phrases suggestions
-        List<String> abstractPhrases = this.getRecordSuggestions(input, cql, coor)
+        Set<String> abstractPhrases = this.getRecordSuggestions(input, cql, coor)
                 .stream()
                 .filter(item -> item.source() != null)
                 .flatMap(item -> item.source().getAbstractPhrases().stream())
-                .filter(phrase -> phrase.contains(input.toLowerCase()))
-                .collect(Collectors.toList());
+                .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
+                .collect(Collectors.toSet());
 
         Map<String, Object> allSuggestions = new HashMap<>();
         allSuggestions.put("category_suggestions", new ArrayList<>(categorySuggestions));
 
-        Map<String, List<String>> recordSuggestions = new HashMap<>();
+        Map<String, Set<String>> recordSuggestions = new HashMap<>();
         recordSuggestions.put("suggest_phrases", abstractPhrases);
 
         allSuggestions.put("record_suggestions", recordSuggestions);
