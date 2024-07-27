@@ -177,7 +177,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .stream()
                 .filter(item -> item.source() != null)
                 .flatMap(item -> item.source().getAbstractPhrases().stream())
-                .filter(phrase -> phrase.contains(input))
+                .filter(phrase -> phrase.contains(input.toLowerCase()))
                 .collect(Collectors.toList());
 
         Map<String, Object> allSuggestions = new HashMap<>();
