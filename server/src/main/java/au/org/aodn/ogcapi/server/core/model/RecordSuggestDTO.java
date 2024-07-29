@@ -16,11 +16,13 @@ import java.util.Map;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RecordSuggestDTO {
-    private List<String> abstractPhrases;
+    private Map<String, List<String>> recordSuggest;
 
-    // https://stackoverflow.com/questions/37010891/how-to-map-a-nested-value-to-a-property-using-jackson-annotations
+    @JsonProperty("abstract_phrases")
+    public List<String> getAbstractPhrases() { return recordSuggest.get("abstract_phrases"); }
+
     @JsonProperty("record_suggest")
-    private void unpackRecordSuggestNode(Map<String, List<String>> recordSuggest) {
-        this.abstractPhrases = recordSuggest.get("abstract_phrases");
+    private void setRecordSuggest(Map<String, List<String>> recordSuggest) {
+        this.recordSuggest = recordSuggest;
     }
 }
