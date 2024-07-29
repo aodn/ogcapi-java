@@ -13,13 +13,7 @@
         95.5,
         -44.5,
         169.5,
-        -44.5,
-        169.5,
-        -0.5,
-        95.5,
-        -0.5,
-        95.5,
-        -44.5
+        -0.5
       ]
     ],
     "temporal": [
@@ -36,40 +30,53 @@
   "summaries": {
     "score": 95,
     "status": "completed",
+    "credits": [
+      "Australian Climate Change Science Program",
+      "CSIRO carbon cluster",
+      "JSPS KAKENHI Grant no.  26220102",
+      "Integrated Marine Observing System (IMOS) for providing data from their Australian National Reference Stations (NRS)",
+      "Kate Berry and Kristina Patterson for their analysis of the observed carbon data"
+    ],
     "scope": {
       "code": "dataset",
       "name": ""
     },
+    "statement": "This dataset was created using both observed and modelled data. \n\nA full description of the dataset is available from: \"Historical reconstruction of ocean acidification in the Australian region. Lenton et al. 2016, Biogeosciences  13, 1753-1765,http://www.biogeosciences.net/13/1753/2016",
+    "creation": "2019-01-08T15:59:50",
+    "revision": "2019-01-08T15:59:50",
     "dataset_group": "imos",
     "dataset_provider": "IMOS",
     "proj:geometry": {
-      "coordinates": [
-        [
-          [
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
             [
-              95.5,
-              -44.5
-            ],
-            [
-              169.5,
-              -44.5
-            ],
-            [
-              169.5,
-              -0.5
-            ],
-            [
-              95.5,
-              -0.5
-            ],
-            [
-              95.5,
-              -44.5
+              [
+                95.5,
+                -44.5
+              ],
+              [
+                169.5,
+                -44.5
+              ],
+              [
+                169.5,
+                -0.5
+              ],
+              [
+                95.5,
+                -0.5
+              ],
+              [
+                95.5,
+                -44.5
+              ]
             ]
           ]
-        ]
+        }
       ],
-      "type": "MultiPolygon"
+      "type": "GeometryCollection"
     },
     "temporal": [
       {
@@ -79,70 +86,270 @@
     ],
     "discovery_categories": [
       "alkalinity",
+      "carbon",
       "temperature",
       "salinity"
     ]
   },
   "contacts": [
     {
+      "roles": [
+        "principalInvestigator",
+        "about"
+      ],
+      "organization": "CSIRO Oceans and Atmosphere - Hobart",
+      "name": "Lenton, Andrew",
+      "position": "",
       "emails": [
         "Andrew.Lenton@csiro.au"
       ],
       "addresses": [
         {
-          "deliveryPoint": [
+          "delivery_point": [
             "GPO Box 1538"
           ],
-          "country": "Australia",
           "city": "Hobart",
-          "postalCode": "7000",
-          "administrativeArea": "Tasmania"
+          "country": "Australia",
+          "postal_code": "7000",
+          "administrative_area": "Tasmania"
         }
       ],
-      "roles": ["principalInvestigator"],
-      "organization": "CSIRO Oceans and Atmosphere - Hobart",
-      "name": "Lenton, Andrew",
       "phones": [],
-      "links": [],
-      "position": ""
+      "links": []
     },
     {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": "",
+      "position": "Data Officer",
       "emails": [
         "info@aodn.org.au"
       ],
       "addresses": [
         {
-          "deliveryPoint": [
+          "delivery_point": [
             "University of Tasmania",
             "Private Bag 110"
           ],
-          "country": "Australia",
           "city": "Hobart",
-          "postalCode": "7001",
-          "administrativeArea": "Tasmania"
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
         }
       ],
-      "roles": ["pointOfContact"],
-      "organization": "Integrated Marine Observing System (IMOS)",
-      "name": "",
       "phones": [
         {
-          "roles": ["voice"],
+          "roles": [
+            "voice"
+          ],
           "value": "61 3 6226 7488"
         },
         {
-          "roles": ["facsimile"],
+          "roles": [
+            "facsimile"
+          ],
           "value": "61 3 6226 2701"
         }
       ],
       "links": [
         {
           "href": "http://imos.org.au/aodn.html",
-          "title": "Website of the Australian Ocean Data Network (AODN)",
-          "type": "WWW:LINK-1.0-http--link"
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Australian Ocean Data Network (AODN)"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "distributor",
+        "metadata"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": "",
+      "position": "Data Officer",
+      "emails": [
+        "info@aodn.org.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "University of Tasmania",
+            "Private Bag 110"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
         }
       ],
-      "position": "Data Officer"
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "61 3 6226 7488"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "61 3 6226 2701"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://imos.org.au/aodn.html",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Australian Ocean Data Network (AODN)"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "principalInvestigator",
+        "citation"
+      ],
+      "organization": "CSIRO Oceans and Atmosphere - Hobart",
+      "name": "Lenton, Andrew",
+      "position": "",
+      "emails": [
+        "Andrew.Lenton@csiro.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "GPO Box 1538"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7000",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [],
+      "links": [
+        {
+          "href": "http://www.csiro.au/en/Research/OandA",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "CSIRO Oceans & Atmosphere website"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "collaborator",
+        "citation"
+      ],
+      "organization": "CSIRO Oceans and Atmosphere - Hobart",
+      "name": "Tilbrook, Bronte",
+      "position": "",
+      "emails": [
+        "Bronte.Tilbrook@csiro.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "GPO Box 1538"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7000",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [],
+      "links": [
+        {
+          "href": "http://www.csiro.au/en/Research/OandA",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "CSIRO Oceans & Atmosphere website"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "collaborator",
+        "citation"
+      ],
+      "organization": "CSIRO Oceans and Atmosphere - Hobart",
+      "name": "Matear, Richard",
+      "position": "",
+      "emails": [
+        "Richard.Matear@csiro.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "GPO Box 1538"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7000",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [],
+      "links": [
+        {
+          "href": "http://www.csiro.au/en/Research/OandA",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "CSIRO Oceans & Atmosphere website"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "collaborator",
+        "citation"
+      ],
+      "organization": "Climate Change Research Centre (CCRC), The University of New South Wales (UNSW)",
+      "name": "Sasse, Tristan",
+      "position": "",
+      "emails": [
+        "t.sasse@unsw.edu.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "Level 4, Mathews Building",
+            "University of New South Wales"
+          ],
+          "city": "Sydney",
+          "country": "Australia",
+          "postal_code": "2052",
+          "administrative_area": "New South Wales"
+        }
+      ],
+      "phones": [],
+      "links": []
+    },
+    {
+      "roles": [
+        "collaborator",
+        "citation"
+      ],
+      "organization": "National Institute for Environmental Studies (NIES)",
+      "name": "Nojiri, Yukihiro",
+      "position": "",
+      "emails": [
+        "nojiri@nies.go.jp"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "16-2 Onogawa"
+          ],
+          "city": "Tsukuba",
+          "country": "Japan",
+          "postal_code": "305-0053",
+          "administrative_area": "Ibaraki Prefecture"
+        }
+      ],
+      "phones": [],
+      "links": []
     }
   ],
   "languages": [
@@ -223,6 +430,28 @@
       "rel": "self",
       "type": "text/html",
       "title": "GoGoDuck help documentation"
+    },
+    {
+      "href": "https://geonetwork-edge.edge.aodn.org.au:443/geonetwork/images/logos/dbee258b-8730-4072-96d4-2818a69a4afd.png",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://catalogue-imos.aodn.org.au:443/geonetwork/srv/api/records/7709f541-fc0c-4318-b5b9-9053aa474e0e",
+      "rel": "self",
+      "type": "text/html",
+      "title": "Full metadata link"
+    },
+    {
+      "href": "https://licensebuttons.net/l/by/4.0/88x31.png",
+      "rel": "license",
+      "type": "image/png"
+    },
+    {
+      "href": "http://creativecommons.org/licenses/by/4.0/",
+      "rel": "license",
+      "type": "text/html"
     }
   ],
   "license": "Creative Commons Attribution 4.0 International License",
@@ -239,19 +468,24 @@
     {
       "concepts": [
         {
-          "id": "Oceans | Ocean Temperature | Sea Surface Temperature"
+          "id": "Oceans | Ocean Temperature | Sea Surface Temperature",
+          "url": null
         },
         {
-          "id": "Oceans | Salinity/density | Salinity"
+          "id": "Oceans | Salinity/density | Salinity",
+          "url": null
         },
         {
-          "id": "Oceans | Ocean Chemistry | Carbon Dioxide"
+          "id": "Oceans | Ocean Chemistry | Carbon Dioxide",
+          "url": null
         },
         {
-          "id": "Oceans | Ocean Chemistry | Carbonate"
+          "id": "Oceans | Ocean Chemistry | Carbonate",
+          "url": null
         },
         {
-          "id": "Oceans | Ocean Chemistry | pH"
+          "id": "Oceans | Ocean Chemistry | pH",
+          "url": null
         }
       ],
       "scheme": "theme",
@@ -261,10 +495,12 @@
     {
       "concepts": [
         {
-          "id": "Ocean Biogeochemistry"
+          "id": "Ocean Biogeochemistry",
+          "url": null
         },
         {
-          "id": "pCO2"
+          "id": "pCO2",
+          "url": null
         }
       ],
       "scheme": "theme",
@@ -274,40 +510,52 @@
     {
       "concepts": [
         {
-          "id": "Global / Oceans | Pacific Ocean"
+          "id": "Global / Oceans | Pacific Ocean",
+          "url": null
         },
         {
-          "id": "Global / Oceans | Southern Ocean"
+          "id": "Global / Oceans | Southern Ocean",
+          "url": null
         },
         {
-          "id": "Global / Oceans | Indian Ocean"
+          "id": "Global / Oceans | Indian Ocean",
+          "url": null
         },
         {
-          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA"
+          "id": "Marine Features (Australia) | Great Australian Bight, SA/WA",
+          "url": null
         },
         {
-          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC"
+          "id": "Marine Features (Australia) | Bass Strait, TAS/VIC",
+          "url": null
         },
         {
-          "id": "Regional Seas | Coral Sea"
+          "id": "Regional Seas | Coral Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Tasman Sea"
+          "id": "Regional Seas | Tasman Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Timor Sea"
+          "id": "Regional Seas | Timor Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Arafura Sea"
+          "id": "Regional Seas | Arafura Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Banda Sea"
+          "id": "Regional Seas | Banda Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Java Sea"
+          "id": "Regional Seas | Java Sea",
+          "url": null
         },
         {
-          "id": "Regional Seas | Solomon Sea"
+          "id": "Regional Seas | Solomon Sea",
+          "url": null
         }
       ],
       "scheme": "place",
@@ -317,40 +565,52 @@
     {
       "concepts": [
         {
-          "id": "Countries | Australia"
+          "id": "Countries | Australia",
+          "url": null
         },
         {
-          "id": "Countries | Papua New Guinea"
+          "id": "Countries | Papua New Guinea",
+          "url": null
         },
         {
-          "id": "Countries | Indonesia"
+          "id": "Countries | Indonesia",
+          "url": null
         },
         {
-          "id": "Countries | Timor-Leste"
+          "id": "Countries | Timor-Leste",
+          "url": null
         },
         {
-          "id": "Countries | New Zealand"
+          "id": "Countries | New Zealand",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Western Australia"
+          "id": "States, Territories (Australia) | Western Australia",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Queensland"
+          "id": "States, Territories (Australia) | Queensland",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | South Australia"
+          "id": "States, Territories (Australia) | South Australia",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Tasmania"
+          "id": "States, Territories (Australia) | Tasmania",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Victoria"
+          "id": "States, Territories (Australia) | Victoria",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | New South Wales"
+          "id": "States, Territories (Australia) | New South Wales",
+          "url": null
         },
         {
-          "id": "States, Territories (Australia) | Northern Territory"
+          "id": "States, Territories (Australia) | Northern Territory",
+          "url": null
         }
       ],
       "scheme": "place",
@@ -395,8 +655,107 @@
   ],
   "id": "7709f541-fc0c-4318-b5b9-9053aa474e0e",
   "record_suggest": {
-    "title": "Ocean acidification historical reconstruction"
+    "abstract_phrases": [
+      "resolution",
+      "carbon dic",
+      "period 1870",
+      "contains reconstructed",
+      "aragonite calcite",
+      "carbon",
+      "degree resolution over",
+      "dissolved",
+      "distribution dissolved inorganic",
+      "distribution dissolved",
+      "inorganic carbon",
+      "sea surface temperature",
+      "period",
+      "period 1870 2013",
+      "surface",
+      "aragonite",
+      "inorganic carbon dic total",
+      "alkalinity",
+      "inorganic",
+      "time series monthly",
+      "dic total alkalinity alk",
+      "1",
+      "contains",
+      "contains reconstructed time",
+      "dataset contains reconstructed",
+      "alk sea surface temperature",
+      "resolution over period",
+      "australian",
+      "distribution",
+      "sea",
+      "1870 2013",
+      "1870",
+      "temperature",
+      "ph together distribution",
+      "alk sea surface",
+      "together",
+      "reconstructed",
+      "inorganic carbon dic",
+      "carbon dic total",
+      "over period 1870",
+      "mean aragonite",
+      "degree resolution",
+      "dic total",
+      "surface temperature",
+      "surface temperature salinity",
+      "series",
+      "over period",
+      "dataset",
+      "dic",
+      "australian region",
+      "dataset contains",
+      "calcite",
+      "series monthly mean",
+      "sea surface",
+      "calcite ph together",
+      "alkalinity alk sea",
+      "monthly mean",
+      "temperature salinity",
+      "1 degree resolution",
+      "monthly mean aragonite calcite",
+      "total alkalinity alk sea",
+      "total alkalinity alk",
+      "alk",
+      "1 degree resolution over",
+      "reconstructed time",
+      "degree",
+      "time series",
+      "series monthly",
+      "dissolved inorganic",
+      "ph together",
+      "alk sea",
+      "monthly",
+      "aragonite calcite ph",
+      "region",
+      "dissolved inorganic carbon dic",
+      "dic total alkalinity",
+      "mean aragonite calcite",
+      "salinity australian",
+      "monthly mean aragonite",
+      "calcite ph",
+      "resolution over",
+      "carbon dic total alkalinity",
+      "total",
+      "alkalinity alk",
+      "1 degree",
+      "region 1",
+      "dissolved inorganic carbon",
+      "over",
+      "salinity",
+      "alkalinity alk sea surface",
+      "together distribution",
+      "total alkalinity",
+      "reconstructed time series",
+      "mean",
+      "2013",
+      "ph",
+      "time"
+    ]
   },
+  "sci:citation": "{\"suggestedCitation\":null,\"useLimitations\":null,\"otherConstraints\":[\"The citation in a list of references is: citation name/s (year metadata published), metadata title. File identifier and Data accessed at (add http link).\"]}",
   "stac_version": "1.0.0",
   "stac_extensions": [
     "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
