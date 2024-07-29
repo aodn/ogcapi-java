@@ -41,7 +41,6 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     /**
-     * The search is a fuzzy search based on title and description. So you expect 1 hit only
      *
      * @throws IOException
      */
@@ -56,12 +55,13 @@ public class RestExtApiTest extends BaseTestClass {
         ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=austr", String.class);
 
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("MRT AusSeabed PL019 Workshop-1: Attribute Values and Definitions"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("australia research development"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("australian bight"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("australian plankton survey auscpr"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("hf radar coverage area"));
     }
 
     /**
-     * The search is a fuzzy search based on title and description. So you expect 1 hit only
      *
      * @throws IOException
      */
@@ -73,15 +73,15 @@ public class RestExtApiTest extends BaseTestClass {
         );
 
         // complete input
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=australia", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=australian", String.class);
 
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("MRT AusSeabed PL019 Workshop-1: Attribute Values and Definitions"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("australian bight"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("australian plankton survey auscpr"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("australia research development"));
     }
 
     /**
-     * The search is a fuzzy search based on title and description. So you expect 1 hit only
      *
      * @throws IOException
      */
@@ -96,8 +96,10 @@ public class RestExtApiTest extends BaseTestClass {
         ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
-        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)"));
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("MRT AusSeabed PL019 Workshop-1: Attribute Values and Definitions"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("sa node imos"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("collections imos auscpr zooplankton"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("imos auscpr zooplankton"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("dataset comprises zooplankton"));
     }
 
     @Test
@@ -111,9 +113,12 @@ public class RestExtApiTest extends BaseTestClass {
         ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='wave')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
-        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("Ocean acidification historical reconstruction"));
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)"));
+
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("sa node imos"));
+
+        // these have "imos" but are filtered out by filter=
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("collections imos auscpr zooplankton"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("imos auscpr zooplankton"));
     }
 
     @Test
@@ -127,9 +132,12 @@ public class RestExtApiTest extends BaseTestClass {
         ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='temperature' AND discovery_categories='chlorophyll')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
-        assertTrue(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)")); //
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("Ocean acidification historical reconstruction"));
+
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("collections imos auscpr zooplankton"));
+        assertTrue(Objects.requireNonNull(response.getBody()).contains("imos auscpr zooplankton"));
+
+        // this has "imos" but is filtered out by filter=
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("sa node imos"));
     }
 
     @Test
@@ -142,9 +150,9 @@ public class RestExtApiTest extends BaseTestClass {
 
         ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='cat1' AND discovery_categories='cat2')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - Zooplankton Abundance and Biomass Index (CPR)")); //
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
-        assertFalse(Objects.requireNonNull(response.getBody()).contains("Ocean acidification historical reconstruction"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("collections imos auscpr zooplankton"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("imos auscpr zooplankton"));
+        assertFalse(Objects.requireNonNull(response.getBody()).contains("sa node imos"));
     }
 
     @Test
@@ -160,7 +168,6 @@ public class RestExtApiTest extends BaseTestClass {
         assertTrue(wavResponse.getStatusCode().is2xxSuccessful());
         assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("category_suggestions"));
         assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("record_suggestions"));
-        assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("IMOS - ACORN - South Australia Gulfs HF ocean radar site (South Australia, Australia) - Delayed mode wave"));
         assertTrue(wavResponse.getBody().contains("\"category_suggestions\":[\"Wave\"]"));
 
         ResponseEntity<String> tempResponse = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=temp", String.class);

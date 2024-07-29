@@ -21,10 +21,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
-import org.geotools.filter.text.cql2.CQL;
 import org.geotools.filter.text.cql2.CQLException;
 import org.opengis.filter.Filter;
-import org.opengis.filter.expression.Expression;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -131,7 +129,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         // create request
         SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
-                List.of("title"),
+                List.of("record_suggest.abstract_phrases"),
                 indexName,
                 List.of(searchAsYouTypeQuery),
                 filters);
@@ -174,19 +172,19 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             }
         }
 
-        // extract title suggestions
-        List<String> recordTitleSuggestions = new ArrayList<>();
-        for (Hit<RecordSuggestDTO> item : this.getRecordSuggestions(input, cql, coor)) {
-            if (item.source() != null) {
-                recordTitleSuggestions.add(item.source().getTitle());
-            }
-        }
+        // extract abstract phrases suggestions
+        Set<String> abstractPhrases = this.getRecordSuggestions(input, cql, coor)
+                .stream()
+                .filter(item -> item.source() != null)
+                .flatMap(item -> item.source().getAbstractPhrases().stream())
+                .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
+                .collect(Collectors.toSet());
 
         Map<String, Object> allSuggestions = new HashMap<>();
         allSuggestions.put("category_suggestions", new ArrayList<>(categorySuggestions));
 
-        Map<String, List<String>> recordSuggestions = new HashMap<>();
-        recordSuggestions.put("titles", recordTitleSuggestions);
+        Map<String, Set<String>> recordSuggestions = new HashMap<>();
+        recordSuggestions.put("suggest_phrases", abstractPhrases);
 
         allSuggestions.put("record_suggestions", recordSuggestions);
 
