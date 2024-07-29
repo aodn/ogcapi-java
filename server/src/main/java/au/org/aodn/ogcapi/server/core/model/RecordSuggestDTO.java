@@ -18,6 +18,7 @@ import java.util.Map;
 public class RecordSuggestDTO {
     private List<String> abstractPhrases;
 
+    // https://stackoverflow.com/questions/37010891/how-to-map-a-nested-value-to-a-property-using-jackson-annotations
     @JsonProperty("record_suggest")
     private void unpackRecordSuggestNode(Map<String, List<String>> recordSuggest) {
         this.abstractPhrases = recordSuggest.get("abstract_phrases");
