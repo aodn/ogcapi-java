@@ -31,7 +31,7 @@ public class RestExtService {
 
     protected static String details = "/aodn-discovery-parameter-vocabulary/version-1-6/resource.json?uri=%s";
 
-    protected Function<JsonNode, String> label = (node) -> node.get("prefLabel").get("_value").asText();
+    protected Function<JsonNode, String> label = (node) -> node.get("prefLabel").get("_value").asText().toLowerCase();
     protected Function<JsonNode, String> about = (node) -> node.has("_about") ? node.get("_about").asText() : null;
     protected Function<JsonNode, String> definition = (node) -> node.has("definition") ? node.get("definition").asText() : null;
 
