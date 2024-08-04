@@ -17,6 +17,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
+import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -323,8 +324,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             if (arg.startsWith("-")) {
                 CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
 
-                if(field.getSortField() != null) {
-                    sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Desc))));
+                ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Desc);
+                if(sb != null) {
+                    sos.add(sb.build());
                 }
             }
             else {
@@ -334,8 +336,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase()) :
                         Enum.valueOf(CQLCollectionsField.class, arg.toLowerCase());
 
-                if(field.getSortField() != null) {
-                    sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Asc))));
+                ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Asc);
+                if(sb != null) {
+                    sos.add(sb.build());
                 }
             }
         }

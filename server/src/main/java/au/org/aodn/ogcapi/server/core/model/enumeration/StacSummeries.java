@@ -7,7 +7,7 @@ public enum StacSummeries {
     Geometry("summaries.proj:geometry","extent.bbox"),
     TemporalStart("summaries.temporal.start", ""),
     TemporalEnd("summaries.temporal.end", ""),
-    Temporal("summaries.temporal", "extent.temporal", List.of(TemporalStart, TemporalEnd)),
+    Temporal("summaries.temporal", "extent.temporal", "summaries.temporal", List.of(TemporalStart, TemporalEnd)),
     UpdateFrequency("summaries.update_frequency", "summaries.update_frequency"),
     DatasetProvider("summaries.dataset_provider", "summaries.dataset_provider"),
     DatasetGroup("summaries.dataset_group", "summaries.dataset_group"),

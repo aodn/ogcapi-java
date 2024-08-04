@@ -1,8 +1,13 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.util.ObjectBuilder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -14,26 +19,86 @@ import java.util.stream.Collectors;
  *
  */
 public enum CQLCollectionsField {
-    dataset_provider(StacSummeries.DatasetProvider.searchField, StacSummeries.DatasetProvider.displayField, null),
-    dataset_group(StacSummeries.DatasetGroup.searchField, StacSummeries.DatasetGroup.displayField, null),
-    update_frequency(StacSummeries.UpdateFrequency.searchField, StacSummeries.UpdateFrequency.displayField, null),
-    geometry(StacSummeries.Geometry.searchField, StacSummeries.Geometry.searchField, null),
-    bbox(StacSummeries.Geometry.searchField, StacSummeries.Geometry.displayField, null),
-    temporal(StacSummeries.Temporal.searchField, StacSummeries.Temporal.displayField, null),
-    title(StacBasicField.Title.searchField, StacBasicField.Title.displayField, StacBasicField.Title.sortField),
-    description(StacBasicField.Description.searchField, StacBasicField.Description.displayField, null),
-    category(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField, null),
-    providers(StacBasicField.Providers.searchField, StacBasicField.Providers.displayField, null),
-    discovery_categories(StacBasicField.DiscoveryCategories.searchField, StacBasicField.DiscoveryCategories.displayField, null),
-    id(StacBasicField.UUID.searchField, StacBasicField.UUID.displayField, StacBasicField.UUID.sortField),
-    links(StacBasicField.Links.searchField, StacBasicField.Links.displayField, null),
-    status(StacSummeries.Status.searchField, StacSummeries.Status.displayField, null),
-    score(CQLElasticSetting.score.getSetting(), CQLElasticSetting.score.getSetting(), CQLElasticSetting.score.getSetting()),
+    dataset_provider(
+            StacSummeries.DatasetProvider.searchField,
+            StacSummeries.DatasetProvider.displayField,
+            null
+    ),
+    dataset_group(
+            StacSummeries.DatasetGroup.searchField,
+            StacSummeries.DatasetGroup.displayField,
+            null
+    ),
+    update_frequency(
+            StacSummeries.UpdateFrequency.searchField,
+            StacSummeries.UpdateFrequency.displayField,
+            null
+    ),
+    geometry(
+            StacSummeries.Geometry.searchField,
+            StacSummeries.Geometry.searchField,
+            null
+    ),
+    bbox(
+            StacSummeries.Geometry.searchField,
+            StacSummeries.Geometry.displayField,
+            null
+    ),
+    temporal(
+            StacSummeries.Temporal.searchField,
+            StacSummeries.Temporal.displayField,
+            null
+    ),
+    title(
+            StacBasicField.Title.searchField,
+            StacBasicField.Title.displayField,
+            (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.Title.sortField).order(order))
+    ),
+    description(
+            StacBasicField.Description.searchField,
+            StacBasicField.Description.displayField,
+            null
+    ),
+    category(
+            StacBasicField.DiscoveryCategories.searchField,
+            StacBasicField.DiscoveryCategories.displayField,
+            null
+    ),
+    providers(
+            StacBasicField.Providers.searchField,
+            StacBasicField.Providers.displayField,
+            null
+    ),
+    discovery_categories(
+            StacBasicField.DiscoveryCategories.searchField,
+            StacBasicField.DiscoveryCategories.displayField,
+            null
+    ),
+    id(
+            StacBasicField.UUID.searchField,
+            StacBasicField.UUID.displayField,
+            (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.UUID.sortField).order(order))
+    ),
+    links(
+            StacBasicField.Links.searchField,
+            StacBasicField.Links.displayField,
+            null
+    ),
+    status(
+            StacSummeries.Status.searchField,
+            StacSummeries.Status.displayField,
+            null
+    ),
+    score(
+            CQLElasticSetting.score.getSetting(),
+            CQLElasticSetting.score.getSetting(),
+            (order) -> new SortOptions.Builder().field(f -> f.field(CQLElasticSetting.score.getSetting()).order(order))
+    ),
     ;
     // null value indicate it cannot be sort by that field, elastic schema change need to add keyword field in order to
     // do search
     @Getter
-    private final String sortField;
+    private final Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder;
 
     @Getter
     private final String searchField;
@@ -41,9 +106,9 @@ public enum CQLCollectionsField {
     @Getter
     private final String displayField;
 
-    CQLCollectionsField(String field, String displayField, String order) {
+    CQLCollectionsField(String field, String displayField, Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
         this.searchField = field;
-        this.sortField = order;
+        this.sortBuilder = sortBuilder;
         this.displayField = displayField;
     }
 
