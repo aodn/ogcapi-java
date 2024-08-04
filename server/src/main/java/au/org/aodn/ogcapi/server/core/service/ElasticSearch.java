@@ -308,10 +308,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
     /**
      * Parse and create a sort option
-     * https://github.com/opengeospatial/ogcapi-features/blob/0c508be34aaca0d9cf5e05722276a0ee10585d61/extensions/sorting/standard/clause_7_sorting.adoc#L32
+     * <a href="https://github.com/opengeospatial/ogcapi-features/blob/0c508be34aaca0d9cf5e05722276a0ee10585d61/extensions/sorting/standard/clause_7_sorting.adoc#L32">...</a>
      *
      * @param sortBy - Must be of pattern +<property> | -<property>, + mean asc, - mean desc
-     * @return
+     * @return List of sort options
      */
     protected List<SortOptions> createSortOptions(String sortBy) {
         if(sortBy == null || sortBy.isEmpty()) return null;

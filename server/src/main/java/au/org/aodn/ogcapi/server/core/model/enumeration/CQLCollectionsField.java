@@ -7,17 +7,16 @@ import lombok.Getter;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
  * We do not want to expose the internal field to outsider, the CQL field in the filtler is therefore mapped to our
  * internal stac field.
- *
  * searchField is the field that you do the search
  * displayField is the field that you want to return from the elastic search result
  *
  */
+@Getter
 public enum CQLCollectionsField {
     dataset_provider(
             StacSummeries.DatasetProvider.searchField,
@@ -97,13 +96,8 @@ public enum CQLCollectionsField {
     ;
     // null value indicate it cannot be sort by that field, elastic schema change need to add keyword field in order to
     // do search
-    @Getter
     private final Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder;
-
-    @Getter
     private final String searchField;
-
-    @Getter
     private final String displayField;
 
     CQLCollectionsField(String field, String displayField, Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
@@ -118,8 +112,8 @@ public enum CQLCollectionsField {
     }
     /**
      * Given param, find any of those is not a valid CQLCollectionsField
-     * @param args
-     * @return
+     * @param args -
+     * @return Invalid enum
      */
     public static List<String> findInvalidEnum(List<String> args) {
         return args.stream()
