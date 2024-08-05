@@ -529,9 +529,9 @@ public class RestApiTest extends BaseTestClass {
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
-                // This is a special case where temporal is start and end is null
+                // This is a special case where temporal start and end is null
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
-                // This sample is important as it contains two end date where the first end is smaller then end
+                // This sample is important as it contains two end date where the first end is smaller than end
                 // date in bf287dfe-9ce4-4969-9c59-51c39ea4d011, but then second end date is greater, so it
                 // should rank upper due to second end time greater
                 "bb3599d5-ab12-4278-a68b-42cac8e7a746.json",
