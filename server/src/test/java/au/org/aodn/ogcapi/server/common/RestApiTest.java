@@ -485,8 +485,6 @@ public class RestApiTest extends BaseTestClass {
     }
 
     /**
-     * You can use the score to tune the return result's relevancy, at this moment, only >= make sense other value
-     * will be ignored.
      * @throws IOException
      */
     @Test
