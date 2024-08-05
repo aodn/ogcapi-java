@@ -324,8 +324,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             if (arg.startsWith("-")) {
                 CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
 
-                ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Desc);
-                if(sb != null) {
+                if(field.getSortBuilder() != null) {
+                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Desc);
                     sos.add(sb.build());
                 }
             }
@@ -336,8 +336,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase()) :
                         Enum.valueOf(CQLCollectionsField.class, arg.toLowerCase());
 
-                ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Asc);
-                if(sb != null) {
+                if(field.getSortBuilder() != null) {
+                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Asc);
                     sos.add(sb.build());
                 }
             }

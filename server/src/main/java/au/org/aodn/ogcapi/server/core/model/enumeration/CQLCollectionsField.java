@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.util.ObjectBuilder;
 import lombok.Getter;
 
@@ -46,7 +45,51 @@ public enum CQLCollectionsField {
     temporal(
             StacSummeries.Temporal.searchField,
             StacSummeries.Temporal.displayField,
-            null
+            /* You need to test this in elastic console, basically if end is null aka not exist then set the value
+             * to max, else convert the time to epochMilli secs and get the largest if multiple exist,
+             * so it means, when null it is on going and always, then follow by some valid large end dates
+             * desc order always make on going on top.
+             * {
+             * "_script": {
+             *  "type": "number",
+             *  "nested": {
+             *      "path": "summaries.temporal"
+             *   },
+             *   "script": {
+             *      "lang": "painless",
+             *      "source": """
+             *          if (doc['summaries.temporal.end'].size() == 0) {
+             *              return Double.MAX_VALUE;
+             *          }
+                        else {
+                            return doc['summaries.temporal.end'].stream()
+                                .mapToLong(f -> f.toEpochMilli())
+                                .max()
+                                .getAsLong()
+                        }
+             *         """
+             *       },
+             *       "order": "desc"
+             *     }
+             *   }
+             */
+            (order) -> new SortOptions.Builder().script(s -> s
+                    .type(ScriptSortType.Number)
+                    .nested(NestedSortValue.of(p -> p.path(StacSummeries.Temporal.sortField)))
+                    .script(script -> script.inline(line -> line
+                            .lang("painless")
+                            .source("if (doc['" + StacSummeries.TemporalEnd.searchField + "'].size() == 0) {" +
+                                          "  return Long.MAX_VALUE; " +
+                                    "     } " +
+                                    "     else {" +
+                                    "       return doc['" + StacSummeries.TemporalEnd.searchField + "'].stream()" +
+                                    "           .mapToLong(f -> f.toEpochMilli())" +
+                                    "           .max()" +
+                                    "           .getAsLong()" +
+                                    "     }"
+                            ))
+                    ).order(order)
+            )
     ),
     title(
             StacBasicField.Title.searchField,
