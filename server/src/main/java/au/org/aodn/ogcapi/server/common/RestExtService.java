@@ -71,7 +71,7 @@ public class RestExtService {
 
                                 CategoryVocabModel model = CategoryVocabModel
                                         .builder()
-                                        .label(label.apply(target))
+                                        .label(label.apply(target).toLowerCase())
                                         .definition(definition.apply(target))
                                         .about(about.apply(target))
                                         .build();
@@ -112,14 +112,14 @@ public class RestExtService {
             if (objectNode.has("prefLabel") && objectNode.has("_about")) {
                 return CategoryVocabModel.builder()
                         .about(about.apply(currentNode))
-                        .label(label.apply(currentNode))
+                        .label(label.apply(currentNode).toLowerCase())
                         .build();
             }
         } else if (currentNode instanceof TextNode textNode) {
             if (textNode.asText().contains("parameter_classes")) {
                 return CategoryVocabModel.builder()
                         .about(textNode.asText())
-                        .label(this.findLabelByAbout(outerNode, textNode.asText()))
+                        .label(this.findLabelByAbout(outerNode, textNode.asText()).toLowerCase())
                         .build();
             }
         }
@@ -179,7 +179,7 @@ public class RestExtService {
 
                             CategoryVocabModel model = CategoryVocabModel
                                     .builder()
-                                    .label(label.apply(j))
+                                    .label(label.apply(j).toLowerCase())
                                     .definition(definition.apply(j))
                                     .about(about.apply(j))
                                     .broader(broader)

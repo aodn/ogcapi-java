@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
@@ -22,11 +23,19 @@ public class PropertyEqualToImpl<T extends Enum<T>> extends QueryHandler impleme
         this.matchAction = matchAction;
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-            // It is not an Elastic setting, so normal route.
-            this.query = MatchPhraseQuery.of(builder -> builder
-                    .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                    .query(literal.toString())
-            )._toQuery();
+            if (attribute.getPropertyName().toLowerCase().startsWith("fuzzy_")) {
+                this.query = MatchQuery.of(m -> m
+                        .fuzziness("AUTO")
+                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
+                        .prefixLength(0)
+                        .query(literal.toString()))._toQuery();
+            } else {
+                // It is not an Elastic setting, so normal route.
+                this.query = MatchPhraseQuery.of(builder -> builder
+                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
+                        .query(literal.toString())
+                )._toQuery();
+            }
         }
     }
 
