@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 
@@ -10,8 +9,9 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -31,7 +31,7 @@ public class RestApiTest extends BaseTestClass {
     protected ObjectMapper objectMapper;
 
     @BeforeAll
-    public void beforeClass() throws IOException {
+    public void beforeClass() {
         super.createElasticIndex();
     }
 
@@ -201,7 +201,7 @@ public class RestApiTest extends BaseTestClass {
     /**
      * One of the record in the dataset contains two start/end date in the temporal field. It uses CQL internally
      * so no need to test Before After During in CQL
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyDateTimeBoundsWithDiscreteTime() throws IOException {
@@ -262,7 +262,7 @@ public class RestApiTest extends BaseTestClass {
     }
     /**
      * Check Common Query Language behavior is null / is not null
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLPropertyIsNullIsNotNull() throws IOException {
@@ -287,7 +287,7 @@ public class RestApiTest extends BaseTestClass {
     }
     /**
      * Test the equals with clause
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLPropertyEqualsOperation() throws IOException {
@@ -306,7 +306,7 @@ public class RestApiTest extends BaseTestClass {
     /**
      * Verify AND operation for CQL
      *
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLPropertyAndOperation() throws IOException {
@@ -378,7 +378,7 @@ public class RestApiTest extends BaseTestClass {
     /**
      * Verify OR operation for CQL
      *
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLPropertyOrOperation() throws IOException {
@@ -407,7 +407,7 @@ public class RestApiTest extends BaseTestClass {
     /**
      * Verify INTERSECT CQL operation
      *
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLPropertyIntersectOperation() throws IOException {
@@ -435,7 +435,7 @@ public class RestApiTest extends BaseTestClass {
     /**
      * Verify filter on attribute dataset_group works
      *
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLPropertyDatasetGroup() throws IOException {
@@ -454,7 +454,7 @@ public class RestApiTest extends BaseTestClass {
     /**
      * You can use the score to tune the return result's relevancy, at this moment, only >= make sense other value
      * will be ignored.
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLPropertyScore() throws IOException {
@@ -520,5 +520,37 @@ public class RestApiTest extends BaseTestClass {
         assertEquals("19da2ce7-138f-4427-89de-a50c724f5f54", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "19da2ce7-138f-4427-89de-a50c724f5f54");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
         assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(2).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
+    }
+
+    @Test
+    public void verifySortByTemporalCorrect() throws IOException {
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                // This is a special case where temporal start and end is null
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                // This sample is important as it contains two end date where the first end is smaller than end
+                // date in bf287dfe-9ce4-4969-9c59-51c39ea4d011, but then second end date is greater, so it
+                // should rank upper due to second end time greater
+                "bb3599d5-ab12-4278-a68b-42cac8e7a746.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        // Call rest api directly and get query result
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?sortby=-temporal",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(7, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 7");
+        assertEquals("bc55eff4-7596-3565-e044-00144fdd4fa6", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "null date is the greatest, bc55eff4-7596-3565-e044-00144fdd4fa6");
+        assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
+        assertEquals("19da2ce7-138f-4427-89de-a50c724f5f54", Objects.requireNonNull(collections.getBody()).getCollections().get(2).getId(), "19da2ce7-138f-4427-89de-a50c724f5f54");
+        assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(3).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
+        assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(4).getId(), "516811d7-cd1e-207a-e0440003ba8c79dd");
+        assertEquals("bb3599d5-ab12-4278-a68b-42cac8e7a746", Objects.requireNonNull(collections.getBody()).getCollections().get(5).getId(), "bb3599d5-ab12-4278-a68b-42cac8e7a746");
+        assertEquals("5c418118-2581-4936-b6fd-d6bedfe74f62", Objects.requireNonNull(collections.getBody()).getCollections().get(6).getId(), "5c418118-2581-4936-b6fd-d6bedfe74f62");
     }
 }

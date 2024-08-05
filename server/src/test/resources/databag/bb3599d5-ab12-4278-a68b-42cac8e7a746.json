@@ -1,0 +1,333 @@
+{
+  "title" : "Northern Australia Automated Marine Weather and Oceanographic Stations",
+  "description" : "Automatic weather stations have been deployed by AIMS since 1980. Most of the stations are along the Great Barrier Reef including the Torres Strait in North-Eastern Australia but there is also a station in Darwin and one in Ningaloo Reef in Western Australia. Many of the stations are located on the reef itself either on poles located in the reef lagoon or on tourist pontoons or other structures. The following is a list of the weather stations which have been deployed by AIMS and the period of time for which data may be available. Records may not be continuous for the time spans given.\n\n                    Currently Active Stations:\n\n\n                    Queensland:\n                    Agincourt Reef: Start 1/11/1989\n                    Cape Bowling Green: Start 9/7/1983\n                    Cleveland Bay: Start 3/7/1990\n                    Davies Reef: Start 18/10/1991\n                    Square Rocks: Start 19/12/2009\n                    Hardy Reef: Start 14/6/1989\n                    Lizard Island: Start 13/08/2010\n                    Heron Island: Start 02/08/2008\n                    Myrmidon Reef: Start 2/11/1987\n                    Wreck of the Yongala: Start 30/10/2010\n\n\n                    Northern Territory:\n                    Darwin: Start 14/02/2015\n\n\n                    Western Australia:\n                    Ningaloo Reef (Milyering): Start 12/2/1997\n\n\n                    Torres Strait:\n                    Thursday Island: Start 06/02/12\n                    Bramble Cay (Maizab Kaur): Start 15/7/2015\n                    Masig (Yorke) Island: Start 6/2/2012\n\n\n                    Historical Data:\n                    Badu Island: Start 08/05/2018: End 03/06/2021\n                    Beagle Gulf Mooring: Start 24/5/2015: End 16/7/2017\n                    Cape Cleveland: Start 2/6/1993: End 30/9/1996\n                    Cape Ferguson: Start 1/11/1983: End 30/5/1985\n                    Coconut Island: Start 30/9/1988: End 5/11/1991 (Data not yet located)\n                    Coral Creek (Hinchinbrook Island): Start 16/10/1980: End 30/7/1985\n                    Daintree River: Start 12/2/97: End 31/5/98\n                    Halftide Rock: Start 26/7/2000: End 19/12/2009\n                    John Brewer Reef: Start 31/7/1987: End 30/5/1988\n                    One Tree Island: Start 18/11/2008: End 11/06/2021\n                    Orpheus Island: Start 20/12/2002: End 02/09/2010\n                    Raine Island: Start 08/08/2012: End - Station currently maintained by Qld National Parks\n                    Rib Reef: Start 29/2/1980: End 3/12/1985\n                    Saibai Island: Start 01/05/2016: End 05/03/2021\n\n\n                    Weather stations may be equipped with sensors to measure some or all of the following parameters: sea temperature at a range of depths, atmospheric pressure, air temperature, relative humidity, solar radiation (light as PAR), wind direction and wind speed.\n\n\n                    These data are collected to support scientific research at AIMS. A number of funding bodies have contributed to the infrastructure and data collection, or continue to contribute to and support the program. In addition to the Northern Australia Automated Marine Weather and Oceanographic Stations Program, these include:\n\n\n                    -Australian Institute of Marine Science (AIMS)\n                    -Integrated Marine Observing System (IMOS). IMOS is a national collaborative research infrastructure, supported by the Australian Government.\n                    -Queensland State Government Integrated Marine Observing System (IMOS) - an initiative of the Australian Government being conducted as part of the National Research Infrastructure Strategy\n                    -Wireless Sensor Networks Facility (formerly known as Facility for The Automated Intelligent Monitoring of Marine Systems (FAIMMS)), part of the Great Barrier Reef Ocean Observing System project (GBROOS) (IMOS)\n                    -The Tropical Water Quality Hub of the National Environmental Science Programme (NESP) and preceeding body Tropical Ecosystems Hub of the National Environmental Research Program (NERP), funded by the Australian Government.\n\n\n\n                    Download via the AODN Portal is currently unavailable, access through programming links below or the AIMS Time Series Explorer - https://apps.aims.gov.au/ts-explorer/",
+  "extent" : {
+    "bbox" : [ [ 113.917, -23.1538, 150.9385, -10.0511 ], [ 146.4831, -18.6128, 146.4831, -18.6128 ], [ 146.879, -18.4777, 146.879, -18.4777 ], [ 147.0667, -18.6333, 147.0667, -18.6333 ], [ 147.9, -18.8, 147.9, -18.8 ], [ 147.0588, -19.2774, 147.0588, -19.2774 ], [ 147.4, -19.3, 147.4, -19.3 ], [ 145.8225, -15.9617, 145.8225, -15.9617 ], [ 146.23, -18.2453, 146.23, -18.2453 ], [ 149.1808, -19.74, 149.1808, -19.74 ], [ 147.383, -18.2746, 147.383, -18.2746 ], [ 113.917, -22.033, 113.917, -22.033 ], [ 146.8812, -19.1558, 146.8812, -19.1558 ], [ 145.3989, -16.2481, 145.3989, -16.2481 ], [ 150.9385, -23.1538, 150.9385, -23.1538 ], [ 147.015, -19.185, 147.015, -19.185 ], [ 143.0686, -10.0511, 143.0686, -10.0511 ] ],
+    "temporal" : [ [ "1980-02-27T13:00:00Z", "1985-02-27T13:00:00Z" ], [ "1980-02-27T13:00:00Z", "1982-02-27T13:00:00Z" ], [ "1984-02-27T13:00:00Z", "1985-02-27T13:00:00Z" ] ]
+  },
+  "summaries" : {
+    "score" : 1,
+    "status" : "onGoing",
+    "credits" : [ "Queensland State Government Integrated Marine Observing System (IMOS)", "Wireless Sensor Networks Facility (formerly known as Facility for The Automated Intelligent Monitoring of Marine Systems (FAIMMS)), part of the Great Barrier Reef Ocean Observing System project (GBROOS) (IMOS)", "Tropical Water Quality Hub of the National Environmental Science Programme (NESP)", "Torres Strait Regional Authority (TSRA)", "Tropical Ecosystems hub of the National Environmental Research Program (NERP)", "Australian Institute of Marine Science (AIMS)", "Integrated Marine Observing System (IMOS)", "Bainbridge, Scott. (AIMS)" ],
+    "scope" : {
+      "code" : "dataset",
+      "name" : ""
+    },
+    "statement" : "",
+    "creation" : "2009-11-17T00:00:00",
+    "revision" : "2024-08-02T04:43:08.277909Z",
+    "proj:geometry" : {
+      "geometries" : [ {
+        "type" : "Point",
+        "coordinates" : [ 146.4831, -18.6128 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 146.879, -18.4777 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 147.0667, -18.6333 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 147.9, -18.8 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 147.0588, -19.2774 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 147.4, -19.3 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 145.8225, -15.9617 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 146.23, -18.2453 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 149.1808, -19.74 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 147.383, -18.2746 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 113.917, -22.033 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 146.8812, -19.1558 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 145.3989, -16.2481 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 150.9385, -23.1538 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 147.015, -19.185 ]
+      }, {
+        "type" : "Point",
+        "coordinates" : [ 143.0686, -10.0511 ]
+      } ],
+      "type" : "GeometryCollection"
+    },
+    "temporal" : [ {
+      "start" : "1980-02-27T13:00:00Z",
+      "end" : "1982-02-27T13:00:00Z"
+    }, {
+      "start" : "1994-02-27T13:00:00Z",
+      "end" : "1995-02-27T13:00:00Z"
+    } ]
+  },
+  "contacts" : [ {
+    "roles" : [ "principalInvestigator", "about" ],
+    "organization" : "Australian Institute of Marine Science (AIMS)",
+    "name" : "Wojtasiewicz, Bozena, Dr",
+    "position" : "",
+    "emails" : [ "reception@aims.gov.au" ],
+    "addresses" : [ {
+      "deliveryPoint" : [ "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE" ],
+      "city" : "TOWNSVILLE",
+      "country" : "Australia",
+      "postalCode" : "4810",
+      "administrativeArea" : "Queensland"
+    } ],
+    "phones" : [ {
+      "roles" : [ "voice" ],
+      "value" : "+61 7 4753 4444"
+    }, {
+      "roles" : [ "facsimile" ],
+      "value" : ""
+    } ],
+    "links" : [ {
+      "href" : "https://www.aims.gov.au",
+      "type" : "WWW:LINK-1.0-http--link",
+      "title" : "AIMS Web Site"
+    } ]
+  }, {
+    "roles" : [ "pointOfContact", "about" ],
+    "organization" : "Australian Institute of Marine Science (AIMS)",
+    "name" : "Data Manager, AIMS Data Centre",
+    "position" : "",
+    "emails" : [ "adc@aims.gov.au" ],
+    "addresses" : [ {
+      "deliveryPoint" : [ "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE" ],
+      "city" : "TOWNSVILLE",
+      "country" : "Australia",
+      "postalCode" : "4810",
+      "administrativeArea" : "Queensland"
+    } ],
+    "phones" : [ {
+      "roles" : [ "voice" ],
+      "value" : "+61 7 4753 4444"
+    }, {
+      "roles" : [ "facsimile" ],
+      "value" : ""
+    } ],
+    "links" : [ {
+      "href" : "https://www.aims.gov.au",
+      "type" : "WWW:LINK-1.0-http--link",
+      "title" : "AIMS Web Site"
+    } ]
+  }, {
+    "roles" : [ "pointOfContact", "metadata" ],
+    "organization" : "Australian Institute of Marine Science (AIMS)",
+    "name" : "",
+    "position" : "AIMS Data Centre",
+    "emails" : [ "adc@aims.gov.au" ],
+    "addresses" : [ {
+      "deliveryPoint" : [ "PRIVATE MAIL BAG 3" ],
+      "city" : "TOWNSVILLE MAIL CENTRE",
+      "country" : "Australia",
+      "postalCode" : "4810",
+      "administrativeArea" : "Queensland"
+    } ],
+    "phones" : [ {
+      "roles" : [ "voice" ],
+      "value" : "+61 7 4753 4444"
+    }, {
+      "roles" : [ "facsimile" ],
+      "value" : "+61 7 4772 5852"
+    } ],
+    "links" : [ {
+      "href" : "https://www.aims.gov.au/adc",
+      "type" : "WWW:LINK-1.0-http--link"
+    } ]
+  }, {
+    "roles" : [ "publisher", "citation" ],
+    "organization" : "Australian Institute of Marine Science (AIMS)",
+    "name" : "",
+    "position" : "",
+    "emails" : [ "reception@aims.gov.au" ],
+    "addresses" : [ {
+      "deliveryPoint" : [ "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE" ],
+      "city" : "TOWNSVILLE",
+      "country" : "Australia",
+      "postalCode" : "4810",
+      "administrativeArea" : "Queensland"
+    } ],
+    "phones" : [ {
+      "roles" : [ "voice" ],
+      "value" : "+61 7 4753 4444"
+    }, {
+      "roles" : [ "facsimile" ],
+      "value" : ""
+    } ],
+    "links" : [ {
+      "href" : "https://www.aims.gov.au",
+      "type" : "WWW:LINK-1.0-http--link",
+      "title" : "AIMS Web Site"
+    } ]
+  }, {
+    "roles" : [ "owner", "citation" ],
+    "organization" : "Australian Institute of Marine Science (AIMS)",
+    "name" : "",
+    "position" : "",
+    "emails" : [ "reception@aims.gov.au" ],
+    "addresses" : [ {
+      "deliveryPoint" : [ "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE" ],
+      "city" : "TOWNSVILLE",
+      "country" : "Australia",
+      "postalCode" : "4810",
+      "administrativeArea" : "Queensland"
+    } ],
+    "phones" : [ {
+      "roles" : [ "voice" ],
+      "value" : "+61 7 4753 4444"
+    }, {
+      "roles" : [ "facsimile" ],
+      "value" : ""
+    } ],
+    "links" : [ {
+      "href" : "https://www.aims.gov.au",
+      "type" : "WWW:LINK-1.0-http--link",
+      "title" : "AIMS Web Site"
+    } ]
+  } ],
+  "languages" : [ {
+    "code" : "eng",
+    "name" : "English"
+  } ],
+  "links" : [ {
+    "href" : "articleId=2036",
+    "rel" : "self",
+    "type" : "",
+    "title" : "A versatile long-range telementry system particularly suited to meterological, environmental sensing at remote locations. Technical bulletin. Instrumental facilities: Colman RS, Carr K and Gill EF (1982) A versatile long-range telementry system particularly suited to meterological, environmental sensing at remote locations. Technical bulletin. Instrumental facilities. AIMS-IF-82-1. Australian Institute of Marine Science. 30 p."
+  }, {
+    "href" : "https://geoserver.apps.aims.gov.au/aims/ows",
+    "rel" : "self",
+    "type" : "",
+    "title" : "aims:weather_data"
+  }, {
+    "href" : "https://weather.aims.gov.au/#/overview",
+    "rel" : "self",
+    "type" : "",
+    "title" : "AIMS weather stations latest readings"
+  }, {
+    "href" : "https://geoserver.apps.aims.gov.au/aims/wms",
+    "rel" : "self",
+    "type" : "",
+    "title" : "aims:weather_deployment"
+  }, {
+    "href" : "articleId=2205",
+    "rel" : "self",
+    "type" : "",
+    "title" : "Technical notes on weather monitoring telemetry system: Gill EF (1988) Technical notes on weather monitoring telemetry system. Australian Institute of Marine Science. 35 p."
+  }, {
+    "href" : "https://apps.aims.gov.au/ts-explorer/",
+    "rel" : "self",
+    "type" : "",
+    "title" : "Data access through the Time Series Explorer"
+  }, {
+    "href" : "https://doi.org/10.1175/JTECH-D-21-0095.1",
+    "rel" : "self",
+    "type" : "",
+    "title" : "Nunez, M., Cantin, N., Steinberg, C., van Dongen-Vogels, V., & Bainbridge, S. (2022). Correcting PAR Data from Photovoltaic Quantum Sensors on Remote Weather Stations on the Great Barrier Reef, Journal of Atmospheric and Oceanic Technology, 39(4), 425-448 https://doi.org/10.1175/JTECH-D-21-0095.1"
+  }, {
+    "href" : "https://docs.ropensci.org/dataaimsr/",
+    "rel" : "self",
+    "type" : "",
+    "title" : "Data access using R"
+  }, {
+    "href" : "https://open-aims.github.io/data-platform/",
+    "rel" : "self",
+    "type" : "",
+    "title" : "Data access via Programming API"
+  }, {
+    "href" : "https://doi.org/10.25845/5c09bf93f315d",
+    "rel" : "self",
+    "type" : "text/html",
+    "title" : "Full metadata link"
+  }, {
+    "href" : "http://i.creativecommons.org/l/by/3.0/au/88x31.png",
+    "rel" : "license",
+    "type" : "image/png"
+  }, {
+    "href" : "http://creativecommons.org/licenses/by/3.0/au/",
+    "rel" : "license",
+    "type" : "text/html"
+  } ],
+  "license" : "Creative Commons Attribution 3.0 Australia License",
+  "providers" : [ {
+    "name" : "Australian Institute of Marine Science (AIMS)",
+    "roles" : [ "pointOfContact" ]
+  } ],
+  "themes" : [ {
+    "concepts" : [ {
+      "id" : "Wireless Sensor Networks Facility, Integrated Marine Observing System (IMOS)",
+      "url" : null
+    } ],
+    "scheme" : "discipline",
+    "description" : "",
+    "title" : "AODN Organisation Vocabulary"
+  }, {
+    "concepts" : [ {
+      "id" : "Temperature of the atmosphere",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/CTMPZZ01"
+    }, {
+      "id" : "Relative humidity of the atmosphere",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/CRELZZ01"
+    }, {
+      "id" : "Wind from direction in the atmosphere",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/EWDAZZ01"
+    }, {
+      "id" : "Wind speed in the atmosphere",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/ESSAZZ01"
+    }, {
+      "id" : "Thickness of precipitation amount (liquid water equivalent) in the atmosphere",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/386"
+    }, {
+      "id" : "Precipitation duration (liquid water equivalent) in the atmosphere",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/405"
+    }, {
+      "id" : "Thickness of hail amount in the atmosphere",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/638"
+    }, {
+      "id" : "Precipitation rate (liquid water equivalent) in the atmosphere",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/94"
+    }, {
+      "id" : "Hail duration in the atmosphere",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/637"
+    }, {
+      "id" : "Downwelling vector irradiance as photons (PAR wavelengths) in the atmosphere",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/572"
+    }, {
+      "id" : "Temperature of the water body",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/TEMPPR01"
+    }, {
+      "id" : "Pressure (measured variable) exerted by the atmosphere",
+      "url" : "http://vocab.nerc.ac.uk/collection/P01/current/CAPHZZ01"
+    }, {
+      "id" : "Hail intensity in the atmosphere",
+      "url" : "http://vocab.aodn.org.au/def/discovery_parameter/entity/639"
+    } ],
+    "scheme" : "theme",
+    "description" : "",
+    "title" : "AODN Discovery Parameter Vocabulary"
+  } ],
+  "id" : "bb3599d5-ab12-4278-a68b-42cac8e7a746",
+  "record_suggest" : {
+    "abstract_phrases" : [ ]
+  },
+  "sci:citation" : "{\"suggestedCitation\":\"Attribution: Format for citation of metadata sourced from Australian Institute of Marine Science (AIMS) in a list of reference is as follows: \\\"Australian Institute of Marine Science (AIMS). (2009). Northern Australia Automated Marine Weather and Oceanographic Stations. https://doi.org/10.25845/5c09bf93f315d, accessed[date-of-access]\\\".\",\"useLimitations\":null,\"otherConstraints\":[\"Use Limitation: All AIMS data, products and services are provided \\\"as is\\\" and AIMS does not warrant their fitness for a particular purpose or non-infringement. While AIMS has made every reasonable effort to ensure high quality of the data, products and services, to the extent permitted by law the data, products and services are provided without any warranties of any kind, either expressed or implied, including without limitation any implied warranties of title, merchantability, and fitness for a particular purpose or non-infringement. AIMS make no representation or warranty that the data, products and services are accurate, complete, reliable or current. To the extent permitted by law, AIMS exclude all liability to any person arising directly or indirectly from the use of the data, products and services.\",\"Metadata Usage:Security classification code: unclassified\",\"\"]}",
+  "type" : "Collection",
+  "stac_version" : "1.0.0",
+  "stac_extensions" : [ "https://stac-extensions.github.io/scientific/v1.0.0/schema.json", "https://stac-extensions.github.io/contacts/v0.1.1/schema.json", "https://stac-extensions.github.io/projection/v1.1.0/schema.json", "https://stac-extensions.github.io/language/v1.0.0/schema.json", "https://stac-extensions.github.io/themes/v1.0.0/schema.json" ]
+}

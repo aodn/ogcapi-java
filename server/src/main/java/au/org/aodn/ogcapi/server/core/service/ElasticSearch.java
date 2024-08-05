@@ -17,6 +17,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
+import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -307,10 +308,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
     /**
      * Parse and create a sort option
-     * https://github.com/opengeospatial/ogcapi-features/blob/0c508be34aaca0d9cf5e05722276a0ee10585d61/extensions/sorting/standard/clause_7_sorting.adoc#L32
+     * <a href="https://github.com/opengeospatial/ogcapi-features/blob/0c508be34aaca0d9cf5e05722276a0ee10585d61/extensions/sorting/standard/clause_7_sorting.adoc#L32">...</a>
      *
      * @param sortBy - Must be of pattern +<property> | -<property>, + mean asc, - mean desc
-     * @return
+     * @return List of sort options
      */
     protected List<SortOptions> createSortOptions(String sortBy) {
         if(sortBy == null || sortBy.isEmpty()) return null;
@@ -323,8 +324,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             if (arg.startsWith("-")) {
                 CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
 
-                if(field.getSortField() != null) {
-                    sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Desc))));
+                if(field.getSortBuilder() != null) {
+                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Desc);
+                    sos.add(sb.build());
                 }
             }
             else {
@@ -334,8 +336,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase()) :
                         Enum.valueOf(CQLCollectionsField.class, arg.toLowerCase());
 
-                if(field.getSortField() != null) {
-                    sos.add(SortOptions.of(s -> s.field(f -> f.field(field.getSortField()).order(SortOrder.Asc))));
+                if(field.getSortBuilder() != null) {
+                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Asc);
+                    sos.add(sb.build());
                 }
             }
         }
