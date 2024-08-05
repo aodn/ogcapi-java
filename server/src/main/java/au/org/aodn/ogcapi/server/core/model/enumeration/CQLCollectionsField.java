@@ -136,6 +136,8 @@ public enum CQLCollectionsField {
             CQLElasticSetting.score.getSetting(),
             (order) -> new SortOptions.Builder().field(f -> f.field(CQLElasticSetting.score.getSetting()).order(order))
     ),
+    fuzzy_title(StacBasicField.Title.searchField, StacBasicField.Title.displayField, null),
+    fuzzy_description(StacBasicField.Description.searchField, StacBasicField.Description.displayField, null),
     ;
     // null value indicate it cannot be sort by that field, elastic schema change need to add keyword field in order to
     // do search
