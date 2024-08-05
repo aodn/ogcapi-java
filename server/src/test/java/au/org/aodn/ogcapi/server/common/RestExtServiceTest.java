@@ -58,7 +58,7 @@ public class RestExtServiceTest {
 
         Optional<CategoryVocabModel> c = categoryVocabModelList
                 .stream()
-                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("Chemical"))
+                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("chemical"))
                 .findFirst();
 
         assertTrue("Find target Chemical", c.isPresent());
@@ -67,7 +67,7 @@ public class RestExtServiceTest {
 
         Optional<CategoryVocabModel> b = categoryVocabModelList
                 .stream()
-                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("Biological"))
+                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("biological"))
                 .findFirst();
 
         assertTrue("Find target Biological", b.isPresent());
@@ -76,7 +76,7 @@ public class RestExtServiceTest {
 
         Optional<CategoryVocabModel> pa = categoryVocabModelList
                 .stream()
-                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("Physical-Atmosphere"))
+                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("physical-atmosphere"))
                 .findFirst();
 
         assertTrue("Find target Physical-Atmosphere", pa.isPresent());
@@ -84,27 +84,27 @@ public class RestExtServiceTest {
 
         Optional<CategoryVocabModel> airTemperature = pa.get().getNarrower()
                 .stream()
-                .filter(p -> p.getLabel().equals("Air temperature"))
+                .filter(p -> p.getLabel().equals("air temperature"))
                 .findFirst();
         assertTrue("Find target Air temperature", airTemperature.isPresent());
 
         Optional<CategoryVocabModel> visibility = pa.get().getNarrower()
                 .stream()
-                .filter(p -> p.getLabel().equals("Visibility"))
+                .filter(p -> p.getLabel().equals("visibility"))
                 .findFirst();
 
         assertTrue("Find target Visibility", visibility.isPresent());
 
         Optional<CategoryVocabModel> horizontalVisibilityInTheAtmosphere = visibility.get().getNarrower()
                 .stream()
-                .filter(p -> p.getLabel().equals("Horizontal visibility in the atmosphere"))
+                .filter(p -> p.getLabel().equals("horizontal visibility in the atmosphere"))
                 .findFirst();
 
         assertTrue("Horizontal visibility in the atmosphere found", horizontalVisibilityInTheAtmosphere.isPresent());
 
         Optional<CategoryVocabModel> pw = categoryVocabModelList
                 .stream()
-                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("Physical-Water"))
+                .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("physical-water"))
                 .findFirst();
 
         assertTrue("Find target Physical-Water", pw.isPresent());

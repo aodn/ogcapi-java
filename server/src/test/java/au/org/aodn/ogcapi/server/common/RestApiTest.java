@@ -483,6 +483,30 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 3");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
     }
+
+    /**
+     * You can use the score to tune the return result's relevancy, at this moment, only >= make sense other value
+     * will be ignored.
+     * @throws IOException
+     */
+    @Test
+    public void verifyCQLFuzzyKey() throws IOException {
+        super.insertJsonToElasticIndex(
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_title='salinity')", Collections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0 record with fuzzy_title");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity')", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with fuzzy_description");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity' or fuzzy_title='salinity')", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with combined fuzzy_");
+    }
+
     /**
      * You should receive ErrorMessage and as the id is not found, client side should expect ErrorResponse as the default message
      * on any error
