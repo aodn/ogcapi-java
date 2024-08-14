@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
-import co.elastic.clients.elasticsearch._types.query_dsl.RegexpQuery;
 import lombok.Setter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LikeToRegexConverter;
@@ -30,7 +29,7 @@ public class LikeImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandl
             // Use function comes from geotools, but this required class to implement method below
             this.pattern = (new LikeToRegexConverter(this)).getPattern();
 
-            /**
+            /*
              * Given the field do set with default in most case hence the indexer lower case for all value, therefore
              * if we want to match CAP letter search, we need to set caseInsensitive true
              *

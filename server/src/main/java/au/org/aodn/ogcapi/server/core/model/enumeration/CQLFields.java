@@ -5,7 +5,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.util.ObjectBuilder;
 import lombok.Getter;
-import org.apache.commons.lang3.NotImplementedException;
 
 import java.io.StringReader;
 import java.util.List;

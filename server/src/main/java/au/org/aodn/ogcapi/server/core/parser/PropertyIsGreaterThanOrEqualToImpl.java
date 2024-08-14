@@ -1,8 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
-import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;

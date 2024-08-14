@@ -1,9 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
-import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.ExistsQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.PropertyIsNull;
 import org.opengis.filter.expression.Expression;
