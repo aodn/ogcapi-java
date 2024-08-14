@@ -251,6 +251,8 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
 
+        // This is special handle as score or some field is not part or the query in elastic search but a setting in the query.
+        // but we want to include it in the cql
         PropertyIsEqualToElasticSettingImpl setting = new PropertyIsEqualToElasticSettingImpl(expression, expression1);
         if(setting.isValid()) {
             querySetting.put(setting.getElasticSettingName(), setting.getElasticSettingValue());

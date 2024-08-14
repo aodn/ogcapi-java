@@ -122,9 +122,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             if (filter instanceof QueryHandler elasticFilter) {
                 filters = List.of(elasticFilter.getQuery());
             } else {
+                // If no filter, then use the match_all{} to get all record
                 filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
             }
         } else {
+            // If no filter, then use the match_all{} to get all record
             filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
         }
 
@@ -264,7 +266,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                             .fuzziness("AUTO")
                             //TODO: what keywords we want to search?
                             .fields(StacBasicField.Title.searchField, StacBasicField.Description.searchField)
-                            .prefixLength(0)
+                            .prefixLength(3)
                             .query(t))._toQuery();
                     should.add(q);
                 }
