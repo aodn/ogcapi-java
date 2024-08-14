@@ -1,19 +1,25 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import co.elastic.clients.elasticsearch._types.query_dsl.RegexpQuery;
+import lombok.Setter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LikeToRegexConverter;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.PropertyIsLike;
 import org.opengis.filter.expression.Expression;
 
-public class LikeImpl<T extends Enum<T>> extends QueryHandler implements PropertyIsLike {
+public class LikeImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsLike {
 
     protected Expression expression;
     protected String literal;
     protected String pattern;
+
+    @Setter
     protected String wildcard = "%";
+    @Setter
     protected String singleChar = "_";
+    @Setter
     protected String escapeChar = "\\";
 
     public LikeImpl(Expression expression, String literal, Class<T> enumType) {
@@ -36,29 +42,14 @@ public class LikeImpl<T extends Enum<T>> extends QueryHandler implements Propert
              * To solve it you can define a custom analyzer without lowercase filter and use it for your field name.
              * You can define the analyzer as below
              */
-            this.query = RegexpQuery.of(f -> f
-                    .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                    .caseInsensitive(true)
-                    .flags("ALL")
-                    .value(this.pattern))._toQuery();
+            T v = Enum.valueOf(enumType, expression.toString().toLowerCase());
+            this.query = v.getLikeQuery(this.pattern);
         }
     }
 
     @Override
     public Expression getExpression() {
         return this.expression;
-    }
-
-    public void setWildcard(String wildcard) {
-        this.wildcard = wildcard;
-    }
-
-    public void setSingleChar(String singleChar) {
-        this.singleChar = singleChar;
-    }
-
-    public void setEscapeChar(String escapeChar) {
-        this.escapeChar = escapeChar;
     }
 
     @Override

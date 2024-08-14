@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
@@ -18,7 +19,7 @@ import co.elastic.clients.elasticsearch._types.query_dsl.*;
  *
  * @param <T>
  */
-public class AfterImpl<T extends Enum<T>> extends QueryHandler implements After {
+public class AfterImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements After {
     protected Logger logger = LoggerFactory.getLogger(AfterImpl.class);
 
     protected Expression expression1;
@@ -34,8 +35,8 @@ public class AfterImpl<T extends Enum<T>> extends QueryHandler implements After 
 
             try {
                 T type = Enum.valueOf(enumType, attribute.toString().toLowerCase());
-                if(type instanceof CQLCollectionsField cqlCollectionsField
-                        && cqlCollectionsField == CQLCollectionsField.temporal) {
+                if(type instanceof CQLFields cqlFields
+                        && cqlFields == CQLFields.temporal) {
 
                     this.query = NestedQuery.of(n -> n
                             .path(StacSummeries.Temporal.searchField)

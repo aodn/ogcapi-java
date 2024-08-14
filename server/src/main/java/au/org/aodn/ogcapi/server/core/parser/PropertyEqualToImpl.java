@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchPhraseQuery;
-import co.elastic.clients.elasticsearch._types.query_dsl.MatchQuery;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
@@ -9,7 +9,7 @@ import org.opengis.filter.MultiValuedFilter;
 import org.opengis.filter.PropertyIsEqualTo;
 import org.opengis.filter.expression.Expression;
 
-public class PropertyEqualToImpl<T extends Enum<T>> extends QueryHandler implements PropertyIsEqualTo {
+public class PropertyEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsEqualTo {
 
     protected Expression expression1;
     protected Expression expression2;
@@ -23,19 +23,9 @@ public class PropertyEqualToImpl<T extends Enum<T>> extends QueryHandler impleme
         this.matchAction = matchAction;
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
-            if (attribute.getPropertyName().toLowerCase().startsWith("fuzzy_")) {
-                this.query = MatchQuery.of(m -> m
-                        .fuzziness("AUTO")
-                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                        .prefixLength(0)
-                        .query(literal.toString()))._toQuery();
-            } else {
-                // It is not an Elastic setting, so normal route.
-                this.query = MatchPhraseQuery.of(builder -> builder
-                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                        .query(literal.toString())
-                )._toQuery();
-            }
+            T v = Enum.valueOf(enumType, attribute.toString().toLowerCase());
+            // It is not an Elastic setting, so normal route.
+            this.query = v.getPropertyEqualToQuery(literal.toString());
         }
     }
 

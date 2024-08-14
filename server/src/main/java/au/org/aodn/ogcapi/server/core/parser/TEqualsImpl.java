@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.temporal.TEquals;
@@ -19,7 +20,7 @@ import org.opengis.filter.temporal.TEquals;
  *
  * @param <T>
  */
-public class TEqualsImpl<T extends Enum<T>> extends QueryHandler implements TEquals {
+public class TEqualsImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements TEquals {
 
     protected Expression expression1;
     protected Expression expression2;

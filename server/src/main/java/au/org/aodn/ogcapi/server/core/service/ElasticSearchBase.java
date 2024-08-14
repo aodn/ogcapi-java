@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -141,13 +141,13 @@ abstract class ElasticSearchBase {
             if(properties != null && !properties.isEmpty()) {
 
                 // Validate all properties value.
-                List<String> invalid = CQLCollectionsField.findInvalidEnum(properties);
+                List<String> invalid = CQLFields.findInvalidEnum(properties);
 
                 if(invalid.isEmpty()) {
                     // Convert the income field name to the real field name in STAC
                     List<String> fs = properties
                             .stream()
-                            .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
+                            .flatMap(v -> CQLFields.valueOf(v).getDisplayField().stream())
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList());
 

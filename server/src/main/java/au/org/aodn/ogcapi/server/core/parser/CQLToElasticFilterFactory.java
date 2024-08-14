@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.IllegalFilterException;
@@ -50,7 +51,7 @@ import org.xml.sax.helpers.NamespaceSupport;
  * Not thread-safe, please create factory each time before compile
  * TODO: Need to implement all functions later, right now only a small amount of functions is done.
  */
-public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFactory2 {
+public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> implements FilterFactory2 {
 
     protected Logger logger = LoggerFactory.getLogger(CQLToElasticFilterFactory.class);
 
