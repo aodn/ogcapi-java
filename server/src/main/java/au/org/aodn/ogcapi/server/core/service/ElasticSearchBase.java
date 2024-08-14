@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 /**
  * This class contains the core function to do the search, it includes some common item like ordering etc,
- *
  * We want to keep it in one location so that we do not get distracted by other construction.
  */
 @Getter

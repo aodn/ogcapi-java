@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Support temporal field only, we use query similar to this to do the scan of individual temporal range inside
  * the summaries.temporal field
- *
  *  "nested": {
  *             "path": "summaries.temporal",
  *             "query": {
