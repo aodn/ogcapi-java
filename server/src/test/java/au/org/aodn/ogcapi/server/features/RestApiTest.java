@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
+import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
 import io.swagger.models.Method;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,11 +51,11 @@ public class RestApiTest extends BaseTestClass {
         super.assertClusterHealthResponse();
     }
     /**
-     * We want to test the pageableSearch function is right or wrong by setting up more than 4 canned data, then
-     * query all to get them back
+     * We want to test the pageableSearch inside the elastic search is right or wrong by setting up more than 4 canned data, then
+     * query all to get them back even the search result return from elastic is break down into 4 + 2
      */
     @Test
-    public void verifyCorrectPagingLargeData() throws IOException {
+    public void verifyCorrectInternalPagingLargeData() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
@@ -68,14 +69,15 @@ public class RestApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result
-        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
                 getBasePath() + "/collections",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});
 
-        assertEquals(collections.getStatusCode(), HttpStatus.OK, "Get status OK");
-        assertEquals(Objects.requireNonNull(collections.getBody()).getCollections().size(), 6, "Total equals");
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(6, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Total equals");
+        assertEquals(6, collections.getBody().getTotal(), "Get total works");
 
         // Now make sure all id exist
         Set<String> ids = new HashSet<>(List.of(
@@ -90,6 +92,32 @@ public class RestApiTest extends BaseTestClass {
         for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
             assertTrue(ids.contains(collection.getId()),"Contains " + collection.getId());
         }
+    }
+
+    @Test
+    public void verifyCorrectPagingSize() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        // Given 6 records and we set page to 4, that means each query elastic return 4 record only
+        // and the logic to load the reset can kick in.
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        // Call rest api directly and get query result
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(4, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Equals 4");
+        assertEquals(6, collections.getBody().getTotal(), "Get total works");
     }
 
     @Test
