@@ -9,6 +9,8 @@ import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch.core.CountRequest;
+import co.elastic.clients.elasticsearch.core.CountResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -41,6 +43,13 @@ abstract class ElasticSearchBase {
     protected Integer pageSize;
     protected ElasticsearchClient esClient;
     protected ObjectMapper mapper;
+
+    @Getter
+    @Setter
+    public static class SearchResult {
+        Long total;
+        List<StacCollectionModel> collections;
+    }
 
     /**
      * Construct the skeleton of in the elastic query and fill in values
@@ -99,7 +108,7 @@ abstract class ElasticSearchBase {
      * @return - The search result from Elastic query and format in StacCollectionModel
      * @throws IOException
      */
-    protected List<StacCollectionModel> searchCollectionBy(final Map<CQLElasticSetting, String> querySetting,
+    protected SearchResult searchCollectionBy(final Map<CQLElasticSetting, String> querySetting,
                                                            final List<Query> queries,
                                                            final List<Query> should,
                                                            final List<Query> filters,
@@ -174,12 +183,15 @@ abstract class ElasticSearchBase {
 
         try {
             Iterable<ObjectNode> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
-            List<StacCollectionModel> result = new ArrayList<>();
+
+            SearchResult result = new SearchResult();
+            result.collections = new ArrayList<>();
+            result.total = countRecordsHit(builderSupplier);
 
             response.forEach(
                     i -> {
                         if(i != null) {
-                            result.add(this.formatResult(i));
+                            result.collections.add(this.formatResult(i));
                         }
                     });
 
@@ -188,6 +200,23 @@ abstract class ElasticSearchBase {
         catch(ElasticsearchException ee) {
             log.warn("Elastic exception on query, reason is {}", ee.error().rootCause());
             throw ee;
+        }
+    }
+    /**
+     * Count the total number hit. There are two ways to get the total, one is use search but set the size to 0,
+     * then it will fill the size with total.
+     *
+     * @param requestBuilder
+     * @return
+     */
+    protected <T> Long countRecordsHit(Supplier<SearchRequest.Builder> requestBuilder) {
+        try {
+            SearchRequest sr = requestBuilder.get().size(0).build();
+            SearchResponse<ObjectNode> response = esClient.search(sr, ObjectNode.class);
+            return  (response.hits().total() != null) ? response.hits().total().value() : null;
+        }
+        catch (IOException e) {
+            return null;
         }
     }
     /**

@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 
 public interface Search {
-    List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids, String sortBy) throws Exception;
-    List<StacCollectionModel> searchAllCollectionsWithGeometry(String sortBy) throws Exception;
+    ElasticSearchBase.SearchResult searchCollectionWithGeometry(List<String> ids, String sortBy) throws Exception;
+    ElasticSearchBase.SearchResult searchAllCollectionsWithGeometry(String sortBy) throws Exception;
 
-    List<StacCollectionModel> searchCollections(List<String> ids, String sortBy);
-    List<StacCollectionModel> searchAllCollections(String sortBy) throws Exception;
+    ElasticSearchBase.SearchResult searchCollections(List<String> ids, String sortBy);
+    ElasticSearchBase.SearchResult searchAllCollections(String sortBy) throws Exception;
 
-    List<StacCollectionModel> searchByParameters(
+    ElasticSearchBase.SearchResult searchByParameters(
             List<String> targets,
             String filter,
             List<String> properties,

@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.tile.model.TileSet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mapstruct.Mapper;
@@ -12,7 +13,7 @@ import java.util.List;
 
 @Service
 @Mapper(componentModel = "spring")
-public abstract class StacToTileSetWmWGS84Q implements Converter<List<StacCollectionModel>, TileSet> {
+public abstract class StacToTileSetWmWGS84Q implements Converter<ElasticSearch.SearchResult, TileSet> {
 
     @Value("${api.host}")
     protected String hostname;
@@ -27,13 +28,13 @@ public abstract class StacToTileSetWmWGS84Q implements Converter<List<StacCollec
     }
 
     @Override
-    public TileSet convert(List<StacCollectionModel> from) {
+    public TileSet convert(ElasticSearch.SearchResult from) {
         TileSetWorldMercatorWGS84Quad tileSet = new TileSetWorldMercatorWGS84Quad();
 
         tileSet.setTileMatrixSetURI("http://www.opengis.net/def/tilematrixset/OGC/1.0/WorldMercatorWGS84Quad");
         tileSet.addLinksItem(getTileSchema(hostname));
 
-        for(StacCollectionModel s : from) {
+        for(StacCollectionModel s : from.getCollections()) {
             tileSet.addLinksItem(getSelfTileLink(hostname, s.getUuid()));
 
         }

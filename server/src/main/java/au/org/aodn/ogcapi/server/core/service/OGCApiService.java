@@ -36,11 +36,11 @@ public abstract class OGCApiService {
                                                    String sortBy,
                                                    OGCMediaTypeMapper f,
                                                    CQLCrsType coor,
-                                                   Function<List<StacCollectionModel>, R> converter) {
+                                                   Function<ElasticSearchBase.SearchResult, R> converter) {
         try {
             switch (f) {
                 case json -> {
-                    List<StacCollectionModel> result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
+                    ElasticSearchBase.SearchResult result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
 
                     return ResponseEntity.ok()
                             .body(converter.apply(result));
@@ -103,7 +103,7 @@ public abstract class OGCApiService {
             d = datetime;
         }
 
-        if(d != null && operator != null) {
+        if(d != null) {
             f = String.format("temporal %s %s", operator, d);
         }
 

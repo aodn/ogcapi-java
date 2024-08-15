@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.CategorySuggestDTO;
 import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.QueryHandler;
@@ -194,7 +193,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
     }
 
-    protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {
+    protected ElasticSearchBase.SearchResult searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {
 
         List<Query> queries = new ArrayList<>();
         queries.add(MatchQuery.of(m -> m
@@ -230,27 +229,27 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     @Override
-    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids, String sortBy) {
+    public ElasticSearchBase.SearchResult searchCollectionWithGeometry(List<String> ids, String sortBy) {
         return searchCollectionsByIds(ids, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollectionsWithGeometry(String sortBy) {
+    public ElasticSearchBase.SearchResult searchAllCollectionsWithGeometry(String sortBy) {
         return searchCollectionsByIds(null, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchCollections(List<String> ids, String sortBy) {
+    public ElasticSearchBase.SearchResult searchCollections(List<String> ids, String sortBy) {
         return searchCollectionsByIds(ids, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollections(String sortBy) {
+    public ElasticSearchBase.SearchResult searchAllCollections(String sortBy) {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
+    public ElasticSearchBase.SearchResult searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
         if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections(sortBy);
