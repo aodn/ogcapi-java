@@ -117,14 +117,16 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         */
         List<Query> filters;
         if (cql != null) {
-            CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
+            CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
             Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
             if (filter instanceof QueryHandler elasticFilter) {
                 filters = List.of(elasticFilter.getQuery());
             } else {
+                // If no filter, then use the match_all{} to get all record
                 filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
             }
         } else {
+            // If no filter, then use the match_all{} to get all record
             filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
         }
 
@@ -264,7 +266,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                             .fuzziness("AUTO")
                             //TODO: what keywords we want to search?
                             .fields(StacBasicField.Title.searchField, StacBasicField.Description.searchField)
-                            .prefixLength(0)
+                            .prefixLength(3)
                             .query(t))._toQuery();
                     should.add(q);
                 }
@@ -272,7 +274,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             List<Query> filters = new ArrayList<>();
 
-            CQLToElasticFilterFactory<CQLCollectionsField> factory = new CQLToElasticFilterFactory<>(coor, CQLCollectionsField.class);
+            CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
             if(cql != null) {
                 Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
 
@@ -322,7 +324,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         for(String arg: args) {
             arg = arg.trim();
             if (arg.startsWith("-")) {
-                CQLCollectionsField field = Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase());
+                CQLFields field = Enum.valueOf(CQLFields.class, arg.substring(1).toLowerCase());
 
                 if(field.getSortBuilder() != null) {
                     ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Desc);
@@ -332,9 +334,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             else {
                 // Default is +, there is a catch the + will be replaced as space in the property as + means space in url, by taking
                 // default is ASC we work around the problem, the trim removed the space
-                CQLCollectionsField field = arg.startsWith("+") ?
-                        Enum.valueOf(CQLCollectionsField.class, arg.substring(1).toLowerCase()) :
-                        Enum.valueOf(CQLCollectionsField.class, arg.toLowerCase());
+                CQLFields field = arg.startsWith("+") ?
+                        Enum.valueOf(CQLFields.class, arg.substring(1).toLowerCase()) :
+                        Enum.valueOf(CQLFields.class, arg.toLowerCase());
 
                 if(field.getSortBuilder() != null) {
                     ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Asc);

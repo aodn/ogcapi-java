@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.IllegalFilterException;
@@ -50,7 +51,7 @@ import org.xml.sax.helpers.NamespaceSupport;
  * Not thread-safe, please create factory each time before compile
  * TODO: Need to implement all functions later, right now only a small amount of functions is done.
  */
-public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFactory2 {
+public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> implements FilterFactory2 {
 
     protected Logger logger = LoggerFactory.getLogger(CQLToElasticFilterFactory.class);
 
@@ -250,6 +251,8 @@ public class CQLToElasticFilterFactory<T extends Enum<T>> implements FilterFacto
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
 
+        // This is special handle as score or some field is not part or the query in elastic search but a setting in the query.
+        // but we want to include it in the cql
         PropertyIsEqualToElasticSettingImpl setting = new PropertyIsEqualToElasticSettingImpl(expression, expression1);
         if(setting.isValid()) {
             querySetting.put(setting.getElasticSettingName(), setting.getElasticSettingValue());

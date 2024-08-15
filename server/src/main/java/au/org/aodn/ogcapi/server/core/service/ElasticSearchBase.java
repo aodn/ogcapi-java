@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 
 /**
  * This class contains the core function to do the search, it includes some common item like ordering etc,
- *
  * We want to keep it in one location so that we do not get distracted by other construction.
  */
 @Getter
@@ -94,10 +93,10 @@ abstract class ElasticSearchBase {
      *
      * @param queries
      * @param should
-     * @param filters
-     * @param properties
+     * @param filters - The Query coming from CQL parser
+     * @param properties - The fields you want to return in the search, you can search a field but not include in the return
      * @param maxSize: Max number of records to be return
-     * @return
+     * @return - The search result from Elastic query and format in StacCollectionModel
      * @throws IOException
      */
     protected List<StacCollectionModel> searchCollectionBy(final Map<CQLElasticSetting, String> querySetting,
@@ -128,12 +127,16 @@ abstract class ElasticSearchBase {
             if(querySetting.get(CQLElasticSetting.score) != null) {
                 // By default we do not setup any min_score, the api caller should pass it in so
                 // that the result is more relevant, min may be 2 seems ok
-                if((queries == null || queries.isEmpty()) && (should == null || should.isEmpty())) {
+                if((queries == null || queries.isEmpty())
+                        && (should == null || should.isEmpty())) {
+
                     // Special case if you are not doing any query then there will be no meaningful score, so
-                    // setting value other than 0 makes no sense
+                    // setting value other than 0 makes no sense, this also applies to fuzzy field search in cql with
+                    // parameter, because it falls inside the "filter" block of elastic search
                     builder.minScore(0.0);
                 }
                 else {
+                    // The parser, after parse the score parameter, will setup the score value.
                     builder.minScore(Double.valueOf(querySetting.get(CQLElasticSetting.score)));
                 }
             }
@@ -141,13 +144,13 @@ abstract class ElasticSearchBase {
             if(properties != null && !properties.isEmpty()) {
 
                 // Validate all properties value.
-                List<String> invalid = CQLCollectionsField.findInvalidEnum(properties);
+                List<String> invalid = CQLFields.findInvalidEnum(properties);
 
                 if(invalid.isEmpty()) {
                     // Convert the income field name to the real field name in STAC
                     List<String> fs = properties
                             .stream()
-                            .map(v -> CQLCollectionsField.valueOf(v).getDisplayField())
+                            .flatMap(v -> CQLFields.valueOf(v).getDisplayField().stream())
                             .filter(Objects::nonNull)
                             .collect(Collectors.toList());
 

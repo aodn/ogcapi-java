@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCollectionsField;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
@@ -20,7 +21,6 @@ import org.slf4j.LoggerFactory;
 /**
  * Support temporal field only, we use query similar to this to do the scan of individual temporal range inside
  * the summaries.temporal field
- *
  *  "nested": {
  *             "path": "summaries.temporal",
  *             "query": {
@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory;
  *         }
  * @param <T>
  */
-public class DuringImpl<T extends Enum<T>> extends QueryHandler implements During {
+public class DuringImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements During {
     protected Logger logger = LoggerFactory.getLogger(DuringImpl.class);
 
     protected Expression expression1;
@@ -65,8 +65,8 @@ public class DuringImpl<T extends Enum<T>> extends QueryHandler implements Durin
 
             try {
                 T type = Enum.valueOf(enumType, attribute.toString().toLowerCase());
-                if(type instanceof CQLCollectionsField cqlCollectionsField
-                        && cqlCollectionsField == CQLCollectionsField.temporal) {
+                if(type instanceof CQLFields cqlFields
+                        && cqlFields == CQLFields.temporal) {
 
                     Query gte = RangeQuery.of(r -> r
                                     .field(StacSummeries.TemporalStart.searchField)

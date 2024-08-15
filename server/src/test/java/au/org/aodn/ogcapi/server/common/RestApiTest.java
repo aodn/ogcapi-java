@@ -503,6 +503,10 @@ public class RestApiTest extends BaseTestClass {
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity' or fuzzy_title='salinity')", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with combined fuzzy_");
+
+        // Fuzzy_content = fuzzy_title or fuzzy_description
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=fuzzy_content='salinity'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with combined fuzzy_");
     }
 
     /**

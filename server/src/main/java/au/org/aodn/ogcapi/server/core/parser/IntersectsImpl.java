@@ -1,9 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import co.elastic.clients.elasticsearch._types.GeoShapeRelation;
-import co.elastic.clients.elasticsearch._types.query_dsl.GeoShapeQuery;
-import co.elastic.clients.json.JsonData;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.locationtech.jts.io.ParseException;
@@ -16,9 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.StringReader;
 
-public class IntersectsImpl<T extends Enum<T>> extends QueryHandler implements Intersects {
+public class IntersectsImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements Intersects {
 
     protected Logger logger = LoggerFactory.getLogger(IntersectsImpl.class);
 
@@ -33,13 +30,8 @@ public class IntersectsImpl<T extends Enum<T>> extends QueryHandler implements I
             try {
                 String geojson = convertToGeoJson(literal, cqlCrsType);
                 // Create elastic query here
-                this.query = new GeoShapeQuery.Builder()
-                        .field(Enum.valueOf(enumType, attribute.toString().toLowerCase()).toString())
-                        .shape(builder -> builder
-                                .relation(GeoShapeRelation.Intersects)
-                                .shape(JsonData.from(new StringReader(geojson))))
-                        .build()
-                        ._toQuery();
+                T v = Enum.valueOf(enumType, attribute.toString().toLowerCase());
+                this.query = v.getIntersectsQuery(geojson);
             }
             catch (FactoryException | TransformException | ParseException | IOException e) {
                 logger.warn("Exception in parsing, query result will be wrong", e);
