@@ -23,6 +23,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -113,13 +114,27 @@ abstract class ElasticSearchBase {
                                                            final List<Query> should,
                                                            final List<Query> filters,
                                                            final List<String> properties,
-                                                           final List<SortOptions> sortOptions,
-                                                           final Long maxSize) {
+                                                           final List<SortOptions> sortOptions) {
 
+        Long temp = null;
+        try {
+            if(querySetting.get(CQLElasticSetting.page_size) != null) {
+                temp = Long.parseLong(querySetting.get(CQLElasticSetting.page_size));
+            }
+        }
+        catch(NumberFormatException pe) {
+            // Nothing to do as except null as default
+        }
+
+        final Long maxSize = temp;
         Supplier<SearchRequest.Builder> builderSupplier = () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(indexName)
-                    .size(pageSize)
+                    // If user query request a page that is smaller then the internal default, then
+                    // we use the smaller one. The internal page size is use to get the result by
+                    // batch, lets say page is 20 and internal is 10, then we do it in two batch.
+                    // But if we request 5 only, then there is no point to load 10
+                    .size(maxSize != null && maxSize < pageSize ? maxSize.intValue() : pageSize)
                     .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
 
             if(sortOptions != null) {
@@ -188,12 +203,11 @@ abstract class ElasticSearchBase {
             result.collections = new ArrayList<>();
             result.total = countRecordsHit(builderSupplier);
 
-            response.forEach(
-                    i -> {
-                        if(i != null) {
-                            result.collections.add(this.formatResult(i));
-                        }
-                    });
+            for(ObjectNode i : response) {
+                if(i != null) {
+                    result.collections.add(this.formatResult(i));
+                }
+            }
 
             return result;
         }
@@ -243,14 +257,13 @@ abstract class ElasticSearchBase {
 
                 @Override
                 public boolean hasNext() {
+                    // No need continue if we already hit the end
+                    if(maxSize != null) {
+                        return count.get() < maxSize;
+                    }
                     // If we hit the end, that means we have iterated to end of page.
                     if (index < response.get().hits().hits().size()) {
-                        if(maxSize != null) {
-                            return count.get() < maxSize;
-                        }
-                        else {
-                            return true;
-                        }
+                        return true;
                     }
                     else {
                         // If last index is zero that mean nothing found already, so no need to look more

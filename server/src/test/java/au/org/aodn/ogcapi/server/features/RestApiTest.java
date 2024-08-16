@@ -93,6 +93,48 @@ public class RestApiTest extends BaseTestClass {
             assertTrue(ids.contains(collection.getId()),"Contains " + collection.getId());
         }
     }
+    /**
+     * with page_size set, the max number of record return will equals page_size
+     */
+    @Test
+    public void verifyCorrectPageSizeDataReturn() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        // Given 6 records and we set page to 4, that means each query elastic return 4 record only
+        // and the logic to load the reset can kick in.
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        // Call rest api directly and get query result
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=page_size=3",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(3,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+        assertEquals(6, collections.getBody().getTotal(), "Get total works");
+
+        // Now make sure all id exist
+        Set<String> ids = new HashSet<>(List.of(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                "19da2ce7-138f-4427-89de-a50c724f5f54",
+                "516811d7-cd1e-207a-e0440003ba8c79dd"
+        ));
+
+        for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
+            assertTrue(ids.contains(collection.getId()),"Contains " + collection.getId());
+        }
+    }
 
     @Test
     public void verifyGetSingleCollection() throws IOException {

@@ -224,8 +224,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 null,
                 filters,
                 null,
-                createSortOptions(sortBy),
-                null);
+                createSortOptions(sortBy));
     }
 
     @Override
@@ -302,8 +301,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     should,
                     filters,
                     properties,
-                    createSortOptions(sortBy),
-                    null
+                    createSortOptions(sortBy)
             );
         }
     }
