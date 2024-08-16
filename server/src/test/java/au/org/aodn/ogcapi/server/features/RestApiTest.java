@@ -170,6 +170,103 @@ public class RestApiTest extends BaseTestClass {
             assertTrue(ids.contains(collection.getId()),"Contains in next batch " + collection.getId());
         }
     }
+    /**
+     * Extreme case, page size set to 1 and query text "dataset" and page one by one. Only part of the json
+     * will be return, the sort value should give you the next item and you will be able to go to next one.
+     * The first sort value is the relevant and because of query text the value will be something greater than 1.0
+     */
+    @Test
+    public void verifyCorrectPageSizeDataReturnWithQuery() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        // Given 6 records and we set page to 4, that means each query elastic return 4 record only
+        // and the logic to load the reset can kick in.
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        // Call rest api directly and get query result with search on "dataset"
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?q=dataset&filter=page_size=1",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        // Given request page size is 1
+        assertEquals(1,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+        // Total number of record should be this
+        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(2.5404449, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
+        assertEquals(
+                "bc55eff4-7596-3565-e044-00144fdd4fa6",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
+
+        // Now the same search, same page but search_after the result above given sort value
+        // intended to give space after comma for negative test
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?q=dataset&filter=page_size=1 AND search_after='2.5404449, bc55eff4-7596-3565-e044-00144fdd4fa6 '",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(1,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+        // Total number of record should be this as the same search criteria applies
+        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(2.1601071, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
+        assertEquals(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
+
+        // Now the same search, diff page but search_after the result above given sort value
+        // set a bigger page size which exceed more than record hit as negative test
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?q=dataset&filter=page_size=3 AND search_after='2.1601071 , 5c418118-2581-4936-b6fd-d6bedfe74f62'",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(2,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct, total hit is 4, we move to the third record"
+        );
+        // Total number of record should be this as the same search criteria applies
+        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(1.8670629, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
+        assertEquals(
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
+    }
 
     @Test
     public void verifyGetSingleCollection() throws IOException {
@@ -245,4 +342,5 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(154.0, bbox.get(0).get(2).doubleValue(), "Overall bounding box coor 3");
         assertEquals(-9.0, bbox.get(0).get(3).doubleValue(), "Overall bounding box coor 4");
     }
+
 }

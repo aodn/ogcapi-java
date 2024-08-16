@@ -306,10 +306,14 @@ abstract class ElasticSearchBase {
                 public Hit<T> next() {
                     count.incrementAndGet();
 
-                    Hit<T> hit = response.get().hits().hits().get(index++);
-                    log.info("id {}, score {}", hit.id(), hit.score());
-
-                    return hit;
+                    if(index < response.get().hits().hits().size()) {
+                        Hit<T> hit = response.get().hits().hits().get(index++);
+                        log.info("id {}, score {}", hit.id(), hit.score());
+                        return hit;
+                    }
+                    else {
+                        return null;
+                    }
                 }
             };
         }

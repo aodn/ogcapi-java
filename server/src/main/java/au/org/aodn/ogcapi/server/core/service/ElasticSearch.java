@@ -419,7 +419,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     protected static FieldValue toFieldValue(String s) {
         try {
-            Double v = Double.parseDouble(s);
+            Double v = Double.parseDouble(s.trim());
             return FieldValue.of(v);
         }
         catch(NumberFormatException e) {
@@ -427,7 +427,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
 
         try {
-            Long v = Long.parseLong(s);
+            Long v = Long.parseLong(s.trim());
             return FieldValue.of(v);
         }
         catch(NumberFormatException e) {
@@ -439,6 +439,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             return FieldValue.of(v);
         }
         // Assume it is string
-        return FieldValue.of(s);
+        return FieldValue.of(s.trim());
     }
 }
