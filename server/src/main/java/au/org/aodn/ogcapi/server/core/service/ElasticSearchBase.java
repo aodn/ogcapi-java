@@ -49,6 +49,7 @@ abstract class ElasticSearchBase {
     @Setter
     public static class SearchResult {
         Long total;
+        List<Object> sortValues;
         List<StacCollectionModel> collections;
     }
 
@@ -105,28 +106,18 @@ abstract class ElasticSearchBase {
      * @param should
      * @param filters - The Query coming from CQL parser
      * @param properties - The fields you want to return in the search, you can search a field but not include in the return
-     * @param maxSize: Max number of records to be return
      * @return - The search result from Elastic query and format in StacCollectionModel
      * @throws IOException
      */
-    protected SearchResult searchCollectionBy(final Map<CQLElasticSetting, String> querySetting,
-                                                           final List<Query> queries,
+    protected SearchResult searchCollectionBy(final List<Query> queries,
                                                            final List<Query> should,
                                                            final List<Query> filters,
                                                            final List<String> properties,
-                                                           final List<SortOptions> sortOptions) {
+                                                           final List<FieldValue> searchAfter,
+                                                           final List<SortOptions> sortOptions,
+                                                           final Double score,
+                                                           final Long maxSize) {
 
-        Long temp = null;
-        try {
-            if(querySetting.get(CQLElasticSetting.page_size) != null) {
-                temp = Long.parseLong(querySetting.get(CQLElasticSetting.page_size));
-            }
-        }
-        catch(NumberFormatException pe) {
-            // Nothing to do as except null as default
-        }
-
-        final Long maxSize = temp;
         Supplier<SearchRequest.Builder> builderSupplier = () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(indexName)
@@ -136,6 +127,10 @@ abstract class ElasticSearchBase {
                     // But if we request 5 only, then there is no point to load 10
                     .size(maxSize != null && maxSize < pageSize ? maxSize.intValue() : pageSize)
                     .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
+
+            if(searchAfter != null) {
+                builder.searchAfter(searchAfter);
+            }
 
             if(sortOptions != null) {
                 builder.sort(sortOptions);
@@ -148,7 +143,7 @@ abstract class ElasticSearchBase {
                             .field(StacBasicField.UUID.sortField)
                             .order(SortOrder.Asc))));
 
-            if(querySetting.get(CQLElasticSetting.score) != null) {
+            if(score != null) {
                 // By default we do not setup any min_score, the api caller should pass it in so
                 // that the result is more relevant, min may be 2 seems ok
                 if((queries == null || queries.isEmpty())
@@ -161,7 +156,7 @@ abstract class ElasticSearchBase {
                 }
                 else {
                     // The parser, after parse the score parameter, will setup the score value.
-                    builder.minScore(Double.valueOf(querySetting.get(CQLElasticSetting.score)));
+                    builder.minScore(score);
                 }
             }
 
@@ -197,16 +192,34 @@ abstract class ElasticSearchBase {
         };
 
         try {
-            Iterable<ObjectNode> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
+            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
 
             SearchResult result = new SearchResult();
             result.collections = new ArrayList<>();
             result.total = countRecordsHit(builderSupplier);
 
-            for(ObjectNode i : response) {
+            List<FieldValue> lastSortValue = null;
+            for(Hit<ObjectNode> i : response) {
                 if(i != null) {
-                    result.collections.add(this.formatResult(i));
+                    result.collections.add(this.formatResult(i.source()));
+                    lastSortValue = i.sort();
                 }
+            }
+            // Return the last sort value if exist
+            if(lastSortValue != null && !lastSortValue.isEmpty()) {
+                List<Object> values = new ArrayList<>();
+                for (FieldValue value : lastSortValue) {
+                    if (value.isBoolean()) {
+                        values.add(value.booleanValue());
+                    } else if (value.isDouble()) {
+                        values.add(value.doubleValue());
+                    } else if (value.isLong()) {
+                        values.add(value.longValue());
+                    } else if (value.isString()) {
+                        values.add(value.stringValue());
+                    }
+                }
+                result.setSortValues(values);
             }
 
             return result;
@@ -242,7 +255,7 @@ abstract class ElasticSearchBase {
      * @return
      * @param <T>
      */
-    protected <T> Iterable<T> pagableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
+    protected <T> Iterable<Hit<T>> pagableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
         try {
             SearchRequest sr = requestBuilder.get().build();
             log.debug("Final elastic search payload {}", sr.toString());
@@ -290,13 +303,13 @@ abstract class ElasticSearchBase {
                 }
 
                 @Override
-                public T next() {
+                public Hit<T> next() {
                     count.incrementAndGet();
 
                     Hit<T> hit = response.get().hits().hits().get(index++);
                     log.info("id {}, score {}", hit.id(), hit.score());
 
-                    return hit.source();
+                    return hit;
                 }
             };
         }

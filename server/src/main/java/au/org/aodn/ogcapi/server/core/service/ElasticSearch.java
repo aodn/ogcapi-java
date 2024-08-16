@@ -219,12 +219,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
 
         return searchCollectionBy(
-                CQLToElasticFilterFactory.getDefaultSetting(),
                 queries,
                 null,
                 filters,
                 null,
-                createSortOptions(sortBy));
+                null,
+                createSortOptions(sortBy),
+                null,
+                null);
     }
 
     @Override
@@ -278,8 +280,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
                 if(filter instanceof QueryHandler handler) {
                     if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
-                        // There is no error during parsing
-                        filters = List.of(handler.getQuery());
+                        if(handler.getQuery() != null) {
+                            // There is no error during parsing
+                            filters = List.of(handler.getQuery());
+                        }
                     }
                     else {
                         throw new IllegalArgumentException(
@@ -294,14 +298,50 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     }
                 }
             }
+            // Get the page size after parsing
+            Map<CQLElasticSetting, String> setting = factory.getQuerySetting();
+            Long maxSize = null;
+            try {
+                if(setting.get(CQLElasticSetting.page_size) != null &&
+                    !setting.get(CQLElasticSetting.page_size).isBlank()) {
+                    maxSize = Long.parseLong(setting.get(CQLElasticSetting.page_size));
+                }
+            }
+            catch(NumberFormatException pe) {
+                // Nothing to do as except null as default
+            }
+            // Get the score after parsing
+            Double score = null;
+            try {
+                if (setting.get(CQLElasticSetting.score) != null &&
+                        !setting.get(CQLElasticSetting.score).isBlank()) {
+                    score = Double.parseDouble(setting.get(CQLElasticSetting.score));
+                }
+            }
+            catch(Exception e) {
+                // OK to ignore as accept null as the value
+            }
+            // Get the search after
+            List<FieldValue> searchAfter = null;
+            if (setting.get(CQLElasticSetting.search_after) != null &&
+                    !setting.get(CQLElasticSetting.search_after).isBlank()) {
+                // Convert the comma separate string to List<FieldValue>
+                searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after)
+                        .split(","))
+                        .filter(v -> !v.isBlank())
+                        .map(ElasticSearch::toFieldValue)
+                        .toList();
+            }
 
             return searchCollectionBy(
-                    factory.getQuerySetting(),
                     null,
                     should,
                     filters,
                     properties,
-                    createSortOptions(sortBy)
+                    searchAfter,
+                    createSortOptions(sortBy),
+                    score,
+                    maxSize
             );
         }
     }
@@ -375,5 +415,30 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         log.debug("Final elastic search mvt payload {}", builder);
 
         return esClient.searchMvt(builder.build());
+    }
+
+    protected static FieldValue toFieldValue(String s) {
+        try {
+            Double v = Double.parseDouble(s);
+            return FieldValue.of(v);
+        }
+        catch(NumberFormatException e) {
+            // Ok to ignore it as we will try other paring
+        }
+
+        try {
+            Long v = Long.parseLong(s);
+            return FieldValue.of(v);
+        }
+        catch(NumberFormatException e) {
+            // Ok to ignore it as we will try other paring
+        }
+
+        if(s.trim().equalsIgnoreCase("true") || s.trim().equalsIgnoreCase("false")) {
+            Boolean v = Boolean.parseBoolean(s.trim());
+            return FieldValue.of(v);
+        }
+        // Assume it is string
+        return FieldValue.of(s);
     }
 }

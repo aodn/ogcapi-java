@@ -118,11 +118,22 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {});
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        // Given request page size is 3, only 3 return this time
         assertEquals(3,
                 Objects.requireNonNull(collections.getBody()).getCollections().size(),
                 "Record return size correct"
         );
+        // Total number of record should be this
         assertEquals(6, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(1.0, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
+        assertEquals(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
 
         // Now make sure all id exist
         Set<String> ids = new HashSet<>(List.of(
@@ -133,6 +144,30 @@ public class RestApiTest extends BaseTestClass {
 
         for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
             assertTrue(ids.contains(collection.getId()),"Contains " + collection.getId());
+        }
+
+        // Now if we provided the search after we should get the next batch
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=page_size=3 AND search_after='1.0,5c418118-2581-4936-b6fd-d6bedfe74f62'",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        // Given request page size is 3, only 3 return this time
+        assertEquals(3,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+
+        ids = new HashSet<>(List.of(
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011"
+        ));
+
+        for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
+            assertTrue(ids.contains(collection.getId()),"Contains in next batch " + collection.getId());
         }
     }
 
