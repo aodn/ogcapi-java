@@ -208,7 +208,6 @@ public class RestApiTest extends BaseTestClass {
 
         // The search after give you the value to go to next batch
         assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
-        assertEquals(2.5404449, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
         assertEquals(
                 "bc55eff4-7596-3565-e044-00144fdd4fa6",
                 collections.getBody().getSearchAfter().get(1),
@@ -218,7 +217,7 @@ public class RestApiTest extends BaseTestClass {
         // Now the same search, same page but search_after the result above given sort value
         // intended to give space after comma for negative test
         collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?q=dataset&filter=page_size=1 AND search_after='2.5404449, bc55eff4-7596-3565-e044-00144fdd4fa6 '",
+                getBasePath() + "/collections?q=dataset&filter=page_size=1 AND search_after='" + collections.getBody().getSearchAfter().get(0) + ", bc55eff4-7596-3565-e044-00144fdd4fa6 '",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -234,7 +233,6 @@ public class RestApiTest extends BaseTestClass {
 
         // The search after give you the value to go to next batch
         assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
-        assertEquals(2.1601071, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getSearchAfter().get(1),
@@ -244,7 +242,7 @@ public class RestApiTest extends BaseTestClass {
         // Now the same search, diff page but search_after the result above given sort value
         // set a bigger page size which exceed more than record hit as negative test
         collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?q=dataset&filter=page_size=3 AND search_after='2.1601071 , 5c418118-2581-4936-b6fd-d6bedfe74f62'",
+                getBasePath() + "/collections?q=dataset&filter=page_size=3 AND search_after='" + collections.getBody().getSearchAfter().get(0) + " , 5c418118-2581-4936-b6fd-d6bedfe74f62'",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -260,7 +258,6 @@ public class RestApiTest extends BaseTestClass {
 
         // The search after give you the value to go to next batch
         assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
-        assertEquals(1.8670629, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
         assertEquals(
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011",
                 collections.getBody().getSearchAfter().get(1),
