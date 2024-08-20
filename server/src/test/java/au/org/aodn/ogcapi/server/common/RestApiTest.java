@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
+import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -495,18 +496,22 @@ public class RestApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_title='salinity')", Collections.class);
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_title='salinity')", ExtendedCollections.class);
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0 record with fuzzy_title");
+        assertEquals(0, collections.getBody().getTotal());
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity')", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity')", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with fuzzy_description");
+        assertEquals(1, collections.getBody().getTotal());
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity' or fuzzy_title='salinity')", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity' or fuzzy_title='salinity')", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with combined fuzzy_");
+        assertEquals(1, collections.getBody().getTotal());
 
         // Fuzzy_content = fuzzy_title or fuzzy_description
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=fuzzy_content='salinity'", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=fuzzy_content='salinity'", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with combined fuzzy_");
+        assertEquals(1, collections.getBody().getTotal());
     }
 
     /**
@@ -536,13 +541,14 @@ public class RestApiTest extends BaseTestClass {
 
         // Edge case on sort by with 1 item, but typo in argument sortBy, it should be sortby. Hence use API default sort -score
         // https://docs.ogc.org/DRAFTS/20-004.html#sorting-parameter-sortby
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'&sortBy=-score,+title", Collections.class);
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'&sortBy=-score,+title", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
         // Now return result should sort by score then title, since no query here, the score will auto adjust to 1 as all search without query default score is 1
         // the search result will be by title
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2&sortby=-score,+title", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2&sortby=-score,+title", ExtendedCollections.class);
         assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 3");
+        assertEquals(3, collections.getBody().getTotal(), "hit 3");
         assertEquals("19da2ce7-138f-4427-89de-a50c724f5f54", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "19da2ce7-138f-4427-89de-a50c724f5f54");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
         assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(2).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");

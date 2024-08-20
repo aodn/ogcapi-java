@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.GlobalExceptionHandler;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.exception.CustomException;
@@ -42,11 +43,11 @@ public class RestService extends OGCApiService {
         }
     }
 
-    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f, Function<List<StacCollectionModel>, R> converter) {
+    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f, Function<ElasticSearch.SearchResult, R> converter) {
         try {
             switch (f) {
                 case json -> {
-                    List<StacCollectionModel> result = (id == null) ?
+                    ElasticSearch.SearchResult result = (id == null) ?
                             search.searchAllCollectionsWithGeometry(sortBy) :
                             search.searchCollectionWithGeometry(id, sortBy);
 

@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.CategorySuggestDTO;
 import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.QueryHandler;
@@ -194,7 +193,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
     }
 
-    protected List<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {
+    protected ElasticSearchBase.SearchResult searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {
 
         List<Query> queries = new ArrayList<>();
         queries.add(MatchQuery.of(m -> m
@@ -220,37 +219,38 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
 
         return searchCollectionBy(
-                CQLToElasticFilterFactory.getDefaultSetting(),
                 queries,
                 null,
                 filters,
                 null,
+                null,
                 createSortOptions(sortBy),
+                null,
                 null);
     }
 
     @Override
-    public List<StacCollectionModel> searchCollectionWithGeometry(List<String> ids, String sortBy) {
+    public ElasticSearchBase.SearchResult searchCollectionWithGeometry(List<String> ids, String sortBy) {
         return searchCollectionsByIds(ids, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollectionsWithGeometry(String sortBy) {
+    public ElasticSearchBase.SearchResult searchAllCollectionsWithGeometry(String sortBy) {
         return searchCollectionsByIds(null, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchCollections(List<String> ids, String sortBy) {
+    public ElasticSearchBase.SearchResult searchCollections(List<String> ids, String sortBy) {
         return searchCollectionsByIds(ids, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchAllCollections(String sortBy) {
+    public ElasticSearchBase.SearchResult searchAllCollections(String sortBy) {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public List<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
+    public ElasticSearchBase.SearchResult searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
         if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections(sortBy);
@@ -280,8 +280,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
                 if(filter instanceof QueryHandler handler) {
                     if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
-                        // There is no error during parsing
-                        filters = List.of(handler.getQuery());
+                        if(handler.getQuery() != null) {
+                            // There is no error during parsing
+                            filters = List.of(handler.getQuery());
+                        }
                     }
                     else {
                         throw new IllegalArgumentException(
@@ -296,15 +298,50 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     }
                 }
             }
+            // Get the page size after parsing
+            Map<CQLElasticSetting, String> setting = factory.getQuerySetting();
+            Long maxSize = null;
+            try {
+                if(setting.get(CQLElasticSetting.page_size) != null &&
+                    !setting.get(CQLElasticSetting.page_size).isBlank()) {
+                    maxSize = Long.parseLong(setting.get(CQLElasticSetting.page_size));
+                }
+            }
+            catch(NumberFormatException pe) {
+                // Nothing to do as except null as default
+            }
+            // Get the score after parsing
+            Double score = null;
+            try {
+                if (setting.get(CQLElasticSetting.score) != null &&
+                        !setting.get(CQLElasticSetting.score).isBlank()) {
+                    score = Double.parseDouble(setting.get(CQLElasticSetting.score));
+                }
+            }
+            catch(Exception e) {
+                // OK to ignore as accept null as the value
+            }
+            // Get the search after
+            List<FieldValue> searchAfter = null;
+            if (setting.get(CQLElasticSetting.search_after) != null &&
+                    !setting.get(CQLElasticSetting.search_after).isBlank()) {
+                // Convert the comma separate string to List<FieldValue>
+                searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after)
+                        .split(","))
+                        .filter(v -> !v.isBlank())
+                        .map(ElasticSearch::toFieldValue)
+                        .toList();
+            }
 
             return searchCollectionBy(
-                    factory.getQuerySetting(),
                     null,
                     should,
                     filters,
                     properties,
+                    searchAfter,
                     createSortOptions(sortBy),
-                    null
+                    score,
+                    maxSize
             );
         }
     }
@@ -378,5 +415,30 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         log.debug("Final elastic search mvt payload {}", builder);
 
         return esClient.searchMvt(builder.build());
+    }
+
+    protected static FieldValue toFieldValue(String s) {
+        try {
+            Double v = Double.parseDouble(s.trim());
+            return FieldValue.of(v);
+        }
+        catch(NumberFormatException e) {
+            // Ok to ignore it as we will try other paring
+        }
+
+        try {
+            Long v = Long.parseLong(s.trim());
+            return FieldValue.of(v);
+        }
+        catch(NumberFormatException e) {
+            // Ok to ignore it as we will try other paring
+        }
+
+        if(s.trim().equalsIgnoreCase("true") || s.trim().equalsIgnoreCase("false")) {
+            Boolean v = Boolean.parseBoolean(s.trim());
+            return FieldValue.of(v);
+        }
+        // Assume it is string
+        return FieldValue.of(s.trim());
     }
 }

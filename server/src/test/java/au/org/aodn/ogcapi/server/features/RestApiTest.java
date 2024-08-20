@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
+import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
 import io.swagger.models.Method;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -50,11 +51,11 @@ public class RestApiTest extends BaseTestClass {
         super.assertClusterHealthResponse();
     }
     /**
-     * We want to test the pageableSearch function is right or wrong by setting up more than 4 canned data, then
-     * query all to get them back
+     * We want to test the pageableSearch inside the elastic search is right or wrong by setting up more than 4 canned data, then
+     * query all to get them back even the search result return from elastic is break down into 4 + 2
      */
     @Test
-    public void verifyCorrectPagingLargeData() throws IOException {
+    public void verifyCorrectInternalPagingLargeData() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
@@ -68,14 +69,15 @@ public class RestApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result
-        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
                 getBasePath() + "/collections",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});
 
-        assertEquals(collections.getStatusCode(), HttpStatus.OK, "Get status OK");
-        assertEquals(Objects.requireNonNull(collections.getBody()).getCollections().size(), 6, "Total equals");
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(6, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Total equals");
+        assertEquals(6, collections.getBody().getTotal(), "Get total works");
 
         // Now make sure all id exist
         Set<String> ids = new HashSet<>(List.of(
@@ -90,6 +92,177 @@ public class RestApiTest extends BaseTestClass {
         for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
             assertTrue(ids.contains(collection.getId()),"Contains " + collection.getId());
         }
+    }
+    /**
+     * with page_size set, the max number of record return will equals page_size
+     */
+    @Test
+    public void verifyCorrectPageSizeDataReturn() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        // Given 6 records and we set page to 4, that means each query elastic return 4 record only
+        // and the logic to load the reset can kick in.
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        // Call rest api directly and get query result
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=page_size=3",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        // Given request page size is 3, only 3 return this time
+        assertEquals(3,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+        // Total number of record should be this
+        assertEquals(6, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(1.0, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
+        assertEquals(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
+
+        // Now make sure all id exist
+        Set<String> ids = new HashSet<>(List.of(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                "19da2ce7-138f-4427-89de-a50c724f5f54",
+                "516811d7-cd1e-207a-e0440003ba8c79dd"
+        ));
+
+        for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
+            assertTrue(ids.contains(collection.getId()),"Contains " + collection.getId());
+        }
+
+        // Now if we provided the search after we should get the next batch
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=page_size=3 AND search_after='1.0,5c418118-2581-4936-b6fd-d6bedfe74f62'",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        // Given request page size is 3, only 3 return this time
+        assertEquals(3,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+
+        ids = new HashSet<>(List.of(
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011"
+        ));
+
+        for(Collection collection : Objects.requireNonNull(collections.getBody()).getCollections()) {
+            assertTrue(ids.contains(collection.getId()),"Contains in next batch " + collection.getId());
+        }
+    }
+    /**
+     * Extreme case, page size set to 1 and query text "dataset" and page one by one. Only part of the json
+     * will be return, the sort value should give you the next item and you will be able to go to next one.
+     * The first sort value is the relevant and because of query text the value will be something greater than 1.0
+     */
+    @Test
+    public void verifyCorrectPageSizeDataReturnWithQuery() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        // Given 6 records and we set page to 4, that means each query elastic return 4 record only
+        // and the logic to load the reset can kick in.
+        super.insertJsonToElasticIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        // Call rest api directly and get query result with search on "dataset"
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?q=dataset&filter=page_size=1",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        // Given request page size is 1
+        assertEquals(1,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+        // Total number of record should be this
+        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(
+                "bc55eff4-7596-3565-e044-00144fdd4fa6",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
+
+        // Now the same search, same page but search_after the result above given sort value
+        // intended to give space after comma for negative test
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?q=dataset&filter=page_size=1 AND search_after='" + collections.getBody().getSearchAfter().get(0) + ", bc55eff4-7596-3565-e044-00144fdd4fa6 '",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(1,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct"
+        );
+        // Total number of record should be this as the same search criteria applies
+        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
+
+        // Now the same search, diff page but search_after the result above given sort value
+        // set a bigger page size which exceed more than record hit as negative test
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?q=dataset&filter=page_size=3 AND search_after='" + collections.getBody().getSearchAfter().get(0) + " , 5c418118-2581-4936-b6fd-d6bedfe74f62'",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(2,
+                Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "Record return size correct, total hit is 4, we move to the third record"
+        );
+        // Total number of record should be this as the same search criteria applies
+        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+
+        // The search after give you the value to go to next batch
+        assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
+        assertEquals(
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011",
+                collections.getBody().getSearchAfter().get(1),
+                "Search after 2 value"
+        );
     }
 
     @Test
@@ -166,4 +339,5 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(154.0, bbox.get(0).get(2).doubleValue(), "Overall bounding box coor 3");
         assertEquals(-9.0, bbox.get(0).get(3).doubleValue(), "Overall bounding box coor 4");
     }
+
 }

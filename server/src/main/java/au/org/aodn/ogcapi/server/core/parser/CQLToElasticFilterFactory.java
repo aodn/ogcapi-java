@@ -78,6 +78,8 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     public static Map<CQLElasticSetting, String> getDefaultSetting() {
         Map<CQLElasticSetting, String> defaultSetting = new HashMap<>();
         defaultSetting.put(CQLElasticSetting.score, null);
+        defaultSetting.put(CQLElasticSetting.page_size, null);
+        defaultSetting.put(CQLElasticSetting.search_after, null);
         return defaultSetting;
     }
     /**
