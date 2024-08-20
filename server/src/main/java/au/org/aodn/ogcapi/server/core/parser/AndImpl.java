@@ -26,10 +26,19 @@ public class AndImpl extends QueryHandler implements And {
             this.addErrors(elasticFilter1.getErrors());
         }
         else if(filter1 instanceof QueryHandler elasticFilter1 && filter2 instanceof QueryHandler elasticFilter2) {
-            this.query = BoolQuery.of(f -> f
-                    .filter(elasticFilter1.query, elasticFilter2.query)
-            )._toQuery();
-
+            // If the CQL contains ElasticSetting then the query will be null, this check is used to make sure
+            // we ignore those null query
+            if(elasticFilter1.query != null && elasticFilter2.query != null) {
+                this.query = BoolQuery.of(f -> f
+                        .filter(elasticFilter1.query, elasticFilter2.query)
+                )._toQuery();
+            }
+            else if(elasticFilter1.query != null) {
+                this.query = elasticFilter1.query;
+            }
+            else {
+                this.query = elasticFilter2.query;
+            }
             // Remember to copy the error from child
             this.addErrors(elasticFilter1.getErrors());
             this.addErrors(elasticFilter2.getErrors());
