@@ -25,9 +25,19 @@ public class OrImpl extends QueryHandler implements Or {
             throw new IllegalArgumentException("Or combine with query setting do not make sense");
         }
         else if(filter1 instanceof QueryHandler elasticFilter1 && filter2 instanceof QueryHandler elasticFilter2) {
-            this.query = BoolQuery.of(f -> f
-                    .should(elasticFilter1.query, elasticFilter2.query)
-            )._toQuery();
+            // If the CQL contains ElasticSetting then the query will be null, this check is used to make sure
+            // we ignore those null query
+            if(elasticFilter1.query != null && elasticFilter2.query != null) {
+                this.query = BoolQuery.of(f -> f
+                        .should(elasticFilter1.query, elasticFilter2.query)
+                )._toQuery();
+            }
+            else if(elasticFilter1.query != null) {
+                this.query = elasticFilter1.query;
+            }
+            else {
+                this.query = elasticFilter2.query;
+            }
 
             children.add(filter1);
             children.add(filter2);
