@@ -21,5 +21,5 @@ public class ExtendedCollections extends Collections {
     // This is elastic specify for paging
     // check searchAfter for elastic if not sure
     @JsonProperty("search_after")
-    protected List<Object> searchAfter;
+    protected List<String> searchAfter;
 }
