@@ -5,7 +5,7 @@ COPY ./server/target/ogcapi-java-server-*-exec.jar app.jar
 ENTRYPOINT [\
     "java",\
     "-Delasticsearch.index.name=${INDEX_NAME}",\
-    "-Delasticsearch.search_as_you_type.vocabs_index.name=${VOCABS_INDEX_NAME}",\
+    "-Delasticsearch.vocabs_index.name=${VOCABS_INDEX_NAME}",\
     "-Dapi.host=${HOST}:${PORT}",\
     "-Dserver.port=${PORT}",\
     "-Delasticsearch.serverUrl=${ELASTIC_URL}",\

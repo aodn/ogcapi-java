@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.ParameterVocabSuggestDTO;
+import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
@@ -17,6 +17,7 @@ import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import co.elastic.clients.util.ObjectBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -46,20 +47,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
     protected String[] searchAsYouTypeEnabledFields;
 
-    /*
-     * this secondLevelParameterVocabSuggestFilters for accessing the search_as_you_type "label" field
-     * of the second level vocabs of the parameter_vocabs field from the vocabs_index index will never be changed unless the schema is changed,
-     * or the vocabs_index index is no longer be used
-     */
-    protected Query secondLevelParameterVocabSuggestFilters = Query.of(q -> q.bool(b -> b.filter(f -> f.nested(n -> n.path("broader")
-            .query(qq -> qq.exists(e -> e.field("broader")))))));
-
-    // TODO: field is here
-    @Value("${elasticsearch.search_as_you_type.vocabs_index.name}") 
-    protected String secondLevelParameterVocabSuggestField;
-
-    @Value("${elasticsearch.search_as_you_type.vocabs_index.name}")
+    @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabsIndexName;
+
+    @Value("${elasticsearch.search_as_you_type.parameter_vocab.path}")
+    protected String parameterVocabsPath;
+
+    @Value("${elasticsearch.search_as_you_type.parameter_vocab.field}")
+    protected String parameterVocabsField;
 
     public ElasticSearch(ElasticsearchClient client,
                          ObjectMapper mapper,
@@ -146,20 +141,28 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return response.hits().hits();
     }
 
-    protected List<Hit<ParameterVocabSuggestDTO>> getParameterVocabSuggestions(String input) throws IOException {
+    protected List<Hit<JsonNode>> getParameterVocabSuggestions(String input) throws IOException {
         // create query
-        Query secondLevelParameterVocabSuggestQuery = this.generateSearchAsYouTypeQuery(input, secondLevelParameterVocabSuggestField);
+        Query secondLevelParameterVocabSuggestQuery = this.generateSearchAsYouTypeQuery(input, parameterVocabsPath + "." + parameterVocabsField);
+
+        /*
+         * this secondLevelParameterVocabSuggestFilters for accessing the search_as_you_type "label" field
+         * of the second level vocabs of the parameter_vocabs field from the vocabs_index index will never be changed unless the schema is changed,
+         * or the vocabs_index index is no longer be used
+         */
+        Query secondLevelParameterVocabSuggestFilters = Query.of(q -> q.bool(b -> b.filter(f -> f.nested(n -> n.path(parameterVocabsPath + ".broader")
+                .query(qq -> qq.exists(e -> e.field(parameterVocabsPath + ".broader")))))));
 
         // create request
         SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
-                List.of("label"),
+                List.of(parameterVocabsPath + "." + parameterVocabsField),
                 vocabsIndexName,
                 List.of(secondLevelParameterVocabSuggestQuery),
                 List.of(secondLevelParameterVocabSuggestFilters));
 
         // execute
         log.info("getParameterVocabSuggestions | Elastic search payload {}", searchRequest.toString());
-        SearchResponse<ParameterVocabSuggestDTO> response = esClient.search(searchRequest, ParameterVocabSuggestDTO.class);
+        SearchResponse<JsonNode> response = esClient.search(searchRequest, JsonNode.class);
         log.info("getParameterVocabSuggestions | Elastic search response {}", response);
 
         // return
@@ -169,9 +172,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         // extract parameter vocab suggestions
         Set<String> parameterVocabSuggestions = new HashSet<>();
-        for (Hit<ParameterVocabSuggestDTO> item : this.getParameterVocabSuggestions(input)) {
-            if (item.source() != null) {
-                parameterVocabSuggestions.add(item.source().getLabel());
+        for (Hit<JsonNode> item : this.getParameterVocabSuggestions(input)) {
+            if (item.source() != null && item.source().get(parameterVocabsPath) != null) {
+                ParameterVocabModel parameterVocab = mapper.readValue(item.source().get(parameterVocabsPath).toString(), ParameterVocabModel.class);
+                parameterVocabSuggestions.add(parameterVocab.getLabel());
             }
         }
 

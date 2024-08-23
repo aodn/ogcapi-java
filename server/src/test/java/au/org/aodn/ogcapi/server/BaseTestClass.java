@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server;
 
+import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
@@ -23,8 +24,10 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -48,7 +51,7 @@ public class BaseTestClass {
     @Value("${elasticsearch.index.name}")
     protected String record_index_name;
 
-    @Value("${elasticsearch.search_as_you_type.vocabs_index.name}")
+    @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabs_index_name;
 
     protected Logger logger = LoggerFactory.getLogger(BaseTestClass.class);
