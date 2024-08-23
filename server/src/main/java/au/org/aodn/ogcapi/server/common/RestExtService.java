@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.model.CategoryVocabModel;
+import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -39,7 +39,7 @@ public class RestExtService {
 
     /**
      * We want to get the list of leaf node for the API, from there we need to query individual resources to get the broadMatch value
-     * this value is the link to the second level of the category
+     * this value is the link to the second level of the vocab
      *
      * API to the details to get the broadMatch
      * http://vocabs.ardc.edu.au/repository/api/lda/aodn/aodn-discovery-parameter-vocabulary/version-1-6/resource.json?uri=http://vocab.aodn.org.au/def/discovery_parameter/891
@@ -47,8 +47,8 @@ public class RestExtService {
      * @param vocabApiBase
      * @return
      */
-    protected Map<String, List<CategoryVocabModel>> getLeafNodeOfParameterCategory(String vocabApiBase) {
-        Map<String, List<CategoryVocabModel>> result = new HashMap<>();
+    protected Map<String, List<ParameterVocabModel>> getLeafNodeOfParameterVocab(String vocabApiBase) {
+        Map<String, List<ParameterVocabModel>> result = new HashMap<>();
         String url = String.format(vocabApiBase + leafPath);
 
         while (url != null) {
@@ -69,7 +69,7 @@ public class RestExtService {
                             if(isNodeValid.apply(d, "result") && isNodeValid.apply(d.get("result"), "primaryTopic")) {
                                 JsonNode target = d.get("result").get("primaryTopic");
 
-                                CategoryVocabModel model = CategoryVocabModel
+                                ParameterVocabModel model = ParameterVocabModel
                                         .builder()
                                         .label(label.apply(target).toLowerCase())
                                         .definition(definition.apply(target))
@@ -107,17 +107,17 @@ public class RestExtService {
         return result;
     }
 
-    protected CategoryVocabModel buildCategoryVocabModel(JsonNode currentNode, JsonNode outerNode) {
+    protected ParameterVocabModel buildParameterVocabModel(JsonNode currentNode, JsonNode outerNode) {
         if (currentNode instanceof ObjectNode objectNode) {
             if (objectNode.has("prefLabel") && objectNode.has("_about")) {
-                return CategoryVocabModel.builder()
+                return ParameterVocabModel.builder()
                         .about(about.apply(currentNode))
                         .label(label.apply(currentNode).toLowerCase())
                         .build();
             }
         } else if (currentNode instanceof TextNode textNode) {
             if (textNode.asText().contains("parameter_classes")) {
-                return CategoryVocabModel.builder()
+                return ParameterVocabModel.builder()
                         .about(textNode.asText())
                         .label(this.findLabelByAbout(outerNode, textNode.asText()).toLowerCase())
                         .build();
@@ -135,9 +135,9 @@ public class RestExtService {
         return null;
     }
 
-    public List<CategoryVocabModel> getParameterCategory(String vocabApiBase) {
-        Map<String, List<CategoryVocabModel>> leaves = getLeafNodeOfParameterCategory(vocabApiBase);
-        List<CategoryVocabModel> result = new ArrayList<>();
+    public List<ParameterVocabModel> getParameterVocab(String vocabApiBase) {
+        Map<String, List<ParameterVocabModel>> leaves = getLeafNodeOfParameterVocab(vocabApiBase);
+        List<ParameterVocabModel> result = new ArrayList<>();
 
         String url = String.format(vocabApiBase + path);
 
@@ -152,21 +152,21 @@ public class RestExtService {
 
                     if (!node.isEmpty() && node.has("items") && !node.get("items").isEmpty()) {
                         for (JsonNode j : node.get("items")) {
-                            List<CategoryVocabModel> broader = new ArrayList<>();
-                            List<CategoryVocabModel> narrower = new ArrayList<>();
+                            List<ParameterVocabModel> broader = new ArrayList<>();
+                            List<ParameterVocabModel> narrower = new ArrayList<>();
 
 
                             log.debug("Processing label {}", label.apply(j));
 
                             if (j.has("broader")) {
                                 for (JsonNode b : j.get("broader")) {
-                                    broader.add(this.buildCategoryVocabModel(b, node));
+                                    broader.add(this.buildParameterVocabModel(b, node));
                                 }
                             }
 
                             if (j.has("narrower")) {
                                 for (JsonNode b : j.get("narrower")) {
-                                    CategoryVocabModel c = this.buildCategoryVocabModel(b, node);
+                                    ParameterVocabModel c = this.buildParameterVocabModel(b, node);
                                     // The record comes from ardc have two levels only, so the second level for sure
                                     // is empty, but the third level info comes form another link (aka the leaves)
                                     // and therefore we can attach it to the second level to for the third.
@@ -177,7 +177,7 @@ public class RestExtService {
                                 }
                             }
 
-                            CategoryVocabModel model = CategoryVocabModel
+                            ParameterVocabModel model = ParameterVocabModel
                                     .builder()
                                     .label(label.apply(j).toLowerCase())
                                     .definition(definition.apply(j))
@@ -201,7 +201,7 @@ public class RestExtService {
                     url = null;
                 }
             } catch (RestClientException e) {
-                log.error("Fail connect {}, category return likely outdated", url);
+                log.error("Fail connect {}, parameter vocab return likely outdated", url);
                 url = null;
             }
         }

@@ -111,9 +111,9 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
-    category(
-            StacBasicField.DiscoveryCategories.searchField,
-            StacBasicField.DiscoveryCategories.displayField,
+    parameter_vocab(
+            StacBasicField.ParameterVocabs.searchField,
+            StacBasicField.ParameterVocabs.displayField,
             null,
             null
     ),
@@ -123,9 +123,9 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
-    discovery_categories(
-            StacBasicField.DiscoveryCategories.searchField,
-            StacBasicField.DiscoveryCategories.displayField,
+    parameter_vocabs(
+            StacBasicField.ParameterVocabs.searchField,
+            StacBasicField.ParameterVocabs.displayField,
             null,
             null
     ),

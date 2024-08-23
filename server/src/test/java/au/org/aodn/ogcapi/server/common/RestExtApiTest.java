@@ -86,7 +86,7 @@ public class RestExtApiTest extends BaseTestClass {
      * @throws IOException
      */
     @Test
-    public void verifyApiResponseOnTypoInputNoCategoriesFilter() throws IOException {
+    public void verifyApiResponseOnTypoInputNoParameterVocabsFilter() throws IOException {
         super.insertJsonToElasticIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
@@ -103,14 +103,14 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyApiResponseOnTypoInputSingleCategoriesFilter() throws IOException {
+    public void verifyApiResponseOnTypoInputSingleParameterVocabsFilter() throws IOException {
         super.insertJsonToElasticIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='wave')", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(parameter_vocabs='wave')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
 
@@ -122,14 +122,14 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyApiResponseOnTypoInputMultipleCategoriesFilter() throws IOException {
+    public void verifyApiResponseOnTypoInputMultipleParameterVocabsFilter() throws IOException {
         super.insertJsonToElasticIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='temperature' AND discovery_categories='chlorophyll')", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(parameter_vocabs='temperature' AND parameter_vocabs='chlorophyll')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).isEmpty());
 
@@ -141,14 +141,14 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyApiResponseOnTypoInputMultipleCategoriesFilterNoResults() throws IOException {
+    public void verifyApiResponseOnTypoInputMultipleParameterVocabsFilterNoResults() throws IOException {
         super.insertJsonToElasticIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(discovery_categories='cat1' AND discovery_categories='cat2')", String.class);
+        ResponseEntity<String> response = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=imos&filter=(parameter_vocabs='cat1' AND parameter_vocabs='cat2')", String.class);
         assertTrue(response.getStatusCode().is2xxSuccessful());
         assertFalse(Objects.requireNonNull(response.getBody()).contains("collections imos auscpr zooplankton"));
         assertFalse(Objects.requireNonNull(response.getBody()).contains("imos auscpr zooplankton"));
@@ -156,8 +156,8 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyApiResponseOnCategorySuggestions() throws IOException {
-        super.insertTestAodnDiscoveryCategories();
+    public void verifyApiResponseOnParameterVocabSuggestions() throws IOException {
+        super.insertTestAodnDiscoveryParameterVocabs();
 
         super.insertJsonToElasticIndex(
             "19da2ce7-138f-4427-89de-a50c724f5f54.json"
@@ -166,18 +166,18 @@ public class RestExtApiTest extends BaseTestClass {
 
         ResponseEntity<String> wavResponse = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=wav", String.class);
         assertTrue(wavResponse.getStatusCode().is2xxSuccessful());
-        assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("category_suggestions"));
+        assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("parameter_vocab_suggestions"));
         assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("record_suggestions"));
-        assertTrue(wavResponse.getBody().contains("\"category_suggestions\":[\"Wave\"]"));
+        assertTrue(wavResponse.getBody().contains("\"parameter_vocab_suggestions\":[\"Wave\"]"));
 
         ResponseEntity<String> tempResponse = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=temp", String.class);
-        assertTrue(Objects.requireNonNull(tempResponse.getBody()).contains("category_suggestions"));
+        assertTrue(Objects.requireNonNull(tempResponse.getBody()).contains("parameter_vocab_suggestions"));
         assertTrue(Objects.requireNonNull(tempResponse.getBody()).contains("record_suggestions"));
-        assertTrue(tempResponse.getBody().contains("\"category_suggestions\":[\"Temperature\"]"));
+        assertTrue(tempResponse.getBody().contains("\"parameter_vocab_suggestions\":[\"Temperature\"]"));
 
 
         ResponseEntity<String> preResponse = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=pre", String.class);
-        assertTrue(Objects.requireNonNull(preResponse.getBody()).contains("category_suggestions"));
+        assertTrue(Objects.requireNonNull(preResponse.getBody()).contains("parameter_vocab_suggestions"));
         assertTrue(Objects.requireNonNull(preResponse.getBody()).contains("record_suggestions"));
         assertTrue(preResponse.getBody().contains("Water pressure"));
         assertTrue(preResponse.getBody().contains("Air pressure"));

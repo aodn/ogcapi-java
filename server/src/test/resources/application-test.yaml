@@ -11,6 +11,5 @@ elasticsearch:
     record_suggest:
       path: record_suggest
       fields: abstract_phrases  # if you have multiple search_as_you_type fields, separate them with commas e.g title, description
-    category_suggest:
-      index_name: test_discovery_category
-      field: label
+    vocabs_index:
+      name: test_vocabs_index

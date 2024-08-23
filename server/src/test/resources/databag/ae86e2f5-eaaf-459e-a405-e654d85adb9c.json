@@ -93,7 +93,7 @@
       "start" : "2007-09-08T14:00:00Z",
       "end" : null
     } ],
-    "discovery_categories" : null
+    "parameter_vocabs" : null
   },
   "contacts" : [ {
     "roles" : [ "pointOfContact" ],

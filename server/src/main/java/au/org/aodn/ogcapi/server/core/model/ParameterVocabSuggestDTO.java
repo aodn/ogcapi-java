@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class CategorySuggestDTO {
+public class ParameterVocabSuggestDTO {
     private String label;
 }
