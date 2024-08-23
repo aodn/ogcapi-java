@@ -1,17 +1,14 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
-import io.swagger.models.Method;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 
@@ -31,7 +28,7 @@ public class RestApiTest extends BaseTestClass {
     protected Integer pageSize;
 
     @BeforeAll
-    public void beforeClass() throws IOException {
+    public void beforeClass() {
         super.createElasticIndex();
     }
 
@@ -128,7 +125,7 @@ public class RestApiTest extends BaseTestClass {
 
         // The search after give you the value to go to next batch
         assertEquals(2, collections.getBody().getSearchAfter().size(), "Search after two fields");
-        assertEquals(1.0, collections.getBody().getSearchAfter().get(0), "Search after 1 value");
+        assertEquals("1.0", collections.getBody().getSearchAfter().get(0), "Search after 1 value");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getSearchAfter().get(1),
