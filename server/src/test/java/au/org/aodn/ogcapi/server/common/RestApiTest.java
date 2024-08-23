@@ -486,7 +486,7 @@ public class RestApiTest extends BaseTestClass {
     }
 
     /**
-     * @throws IOException
+     * @throws IOException - Not expected
      */
     @Test
     public void verifyCQLFuzzyKey() throws IOException {
@@ -553,10 +553,25 @@ public class RestApiTest extends BaseTestClass {
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
         assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(2).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
     }
-
+    /**
+     * 073fde5a-bff3-1c1f-e053-08114f8c5588 contains a temporal which is ongoing so it should at top when sort by
+     * desc, this is a handcraft record on temporal section
+     *      [
+     *       {
+     *         "start": "2014-11-10T13:00:00Z",
+     *         "end": "2014-11-16T13:00:00Z"
+     *       },
+     *       {
+     *         "start": "2018-11-10T13:00:00Z",
+     *         "end": null
+     *       }
+     *     ]
+     * @throws IOException - Not expected
+     */
     @Test
     public void verifySortByTemporalCorrect() throws IOException {
         super.insertJsonToElasticIndex(
+                "073fde5a-bff3-1c1f-e053-08114f8c5588.json",
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
@@ -576,13 +591,14 @@ public class RestApiTest extends BaseTestClass {
                 null,
                 new ParameterizedTypeReference<>() {});
 
-        assertEquals(7, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 7");
+        assertEquals(8, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 8");
         assertEquals("bc55eff4-7596-3565-e044-00144fdd4fa6", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "null date is the greatest, bc55eff4-7596-3565-e044-00144fdd4fa6");
-        assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
-        assertEquals("19da2ce7-138f-4427-89de-a50c724f5f54", Objects.requireNonNull(collections.getBody()).getCollections().get(2).getId(), "19da2ce7-138f-4427-89de-a50c724f5f54");
-        assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(3).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
-        assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(4).getId(), "516811d7-cd1e-207a-e0440003ba8c79dd");
-        assertEquals("bb3599d5-ab12-4278-a68b-42cac8e7a746", Objects.requireNonNull(collections.getBody()).getCollections().get(5).getId(), "bb3599d5-ab12-4278-a68b-42cac8e7a746");
-        assertEquals("5c418118-2581-4936-b6fd-d6bedfe74f62", Objects.requireNonNull(collections.getBody()).getCollections().get(6).getId(), "5c418118-2581-4936-b6fd-d6bedfe74f62");
+        assertEquals("073fde5a-bff3-1c1f-e053-08114f8c5588", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "null date is the greatest, bc55eff4-7596-3565-e044-00144fdd4fa6");
+        assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(2).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
+        assertEquals("19da2ce7-138f-4427-89de-a50c724f5f54", Objects.requireNonNull(collections.getBody()).getCollections().get(3).getId(), "19da2ce7-138f-4427-89de-a50c724f5f54");
+        assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(4).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
+        assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(5).getId(), "516811d7-cd1e-207a-e0440003ba8c79dd");
+        assertEquals("bb3599d5-ab12-4278-a68b-42cac8e7a746", Objects.requireNonNull(collections.getBody()).getCollections().get(6).getId(), "bb3599d5-ab12-4278-a68b-42cac8e7a746");
+        assertEquals("5c418118-2581-4936-b6fd-d6bedfe74f62", Objects.requireNonNull(collections.getBody()).getCollections().get(7).getId(), "5c418118-2581-4936-b6fd-d6bedfe74f62");
     }
 }
