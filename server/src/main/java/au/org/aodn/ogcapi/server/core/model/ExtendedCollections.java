@@ -16,10 +16,10 @@ import java.util.List;
 @Getter
 public class ExtendedCollections extends Collections {
     @JsonProperty("total")
-    Long total;
+    Long total = 0L;
 
     // This is elastic specify for paging
     // check searchAfter for elastic if not sure
     @JsonProperty("search_after")
-    protected List<Object> searchAfter;
+    protected List<String> searchAfter;
 }

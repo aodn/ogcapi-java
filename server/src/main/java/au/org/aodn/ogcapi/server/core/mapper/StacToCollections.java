@@ -28,7 +28,7 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
 
         ExtendedCollections result = new ExtendedCollections();
         result.setTotal(model.getTotal());
-        result.setSearchAfter(model.getSortValues());
+        result.setSearchAfter(model.getSortValues().stream().map(String::valueOf).toList());
         result.setCollections(collections);
 
         return result;
