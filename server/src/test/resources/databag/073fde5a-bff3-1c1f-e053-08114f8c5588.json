@@ -1,0 +1,1037 @@
+{
+  "title": "RV Investigator Voyage IN2014_E03 End of Voyage (EOV) Archive",
+  "description": "This record describes the End of Voyage archive from the Marine National Facility RV Investigator voyage IN2014_E03: Physical and biological oceanography of the shelf break off Maria Island; And exploration for frontal eddies. This trial voyage departed Hobart on the 11th November and returned to Hobart on the 17th November 2014 Data collected includes Underway (UWY), CTD, Gravity, SST Radiometer, Atmospheric data (Radon), Echosounders (12, 18, 38, 70, 120, 200, 333, Bridge 200 KHz), Multibeam (EM122, EM710 and SBP120) and XBT (deck test only), TRIAXUS, EZnet and Bongo net (un-instrumented). Echosounder data was not captured. The EOV paper documentation - Multibeam: EM122 - EM710 and ME70 and SBP120, Gravity Meter, CTD and XBT logs is archived c/o the Data Centre in Hobart and entered in the records management system TRIM, reference \"in2014_e03\". The paper documentation is scanned and accessible via the local network. Entries from the Triaxus log book have also been scanned and saved to pdf. Whilst systems were being established for a permanent archive at the CSIRO DAP, an LTO tape archive was created on 1/12/2014 and stored at Hobart Marine Labs, IDC Storeroom, Filing Cabinet 1 Drawer-2, Archive Box-7A. Gravity data was added to electronic archive 31/3/2015 and a new manifest file created and EndOfVoyageChecklist.pdf updated. The EOV data collected will be available to the O&A voyage participants via internal network. The archive for the in2014_e03 EOV data will be held temporarily within the CSIRO Oceans and Atmosphere Data Centre in Hobart with a permanent archive to be located at the CSIRO Data Access Portal (DAP).",
+  "extent": {
+    "bbox": [
+      [
+        147,
+        -43.5,
+        149,
+        -41.6
+      ],
+      [
+        147,
+        -43.5,
+        149,
+        -41.6
+      ]
+    ],
+    "temporal": [
+      [
+        "2014-11-10T13:00:00Z",
+        null
+      ],
+      [
+        "2014-11-10T13:00:00Z",
+        "2014-11-16T13:00:00Z"
+      ],
+      [
+        "2018-11-10T13:00:00Z",
+        null
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 100,
+    "status": "completed",
+    "credits": [],
+    "scope": {
+      "code": "observed",
+      "name": ""
+    },
+    "statement": "Original field data. EOV data archive removed from the vessel. Data and paper documentation archived O&A Data Centre. All paper documentation are scanned to 400 dpi PDF. The paper documentation is stored at Hobart with a reference in TRIM system \"in2014_E03\". Data archived to LTO tape and network 1/12/2014. Triaxus log book scanned to pdf and archived to global_docs on the 4 May 2015. Gravity data added to network EOV archive 31/3/2015, new manifest file created manifest_in2014_e03_1.1.txt and EndOfVoyageChecklist.pdf updated. Error in EOV checklist number of folders corrected 17/08/2015. Stored data volume entry correct. Work note entries updated. The archive for the in2014_e03 EOV data will be held temporarily within the CSIRO Oceans and Atmosphere Data Centre in Hobart with a permanent archive to be located at the CSIRO Data Access Portal (DAP).",
+    "revision": "2022-03-03T03:24:40",
+    "dataset_group": "csiro oceans and atmosphere",
+    "proj:geometry": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                147,
+                -43.5
+              ],
+              [
+                149,
+                -43.5
+              ],
+              [
+                149,
+                -41.6
+              ],
+              [
+                147,
+                -41.6
+              ],
+              [
+                147,
+                -43.5
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "temporal": [
+      {
+        "start": "2014-11-10T13:00:00Z",
+        "end": "2014-11-16T13:00:00Z"
+      },
+      {
+        "start": "2018-11-10T13:00:00Z",
+        "end": null
+      }
+    ],
+    "discovery_categories": [
+      "water pressure",
+      "temperature",
+      "salinity"
+    ]
+  },
+  "contacts": [
+    {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "CSIRO Oceans & Atmosphere - Hobart",
+      "name": "CSIRO O&A, Information & Data Centre",
+      "position": "Data Requests",
+      "emails": [],
+      "addresses": [],
+      "phones": [],
+      "links": []
+    },
+    {
+      "roles": [
+        "processor",
+        "metadata"
+      ],
+      "organization": "CSIRO/Oceans and Atmosphere",
+      "name": "Data Officer (AR), Hobart",
+      "position": "",
+      "emails": [],
+      "addresses": [],
+      "phones": [],
+      "links": []
+    },
+    {
+      "roles": [
+        "pointOfContact",
+        "metadata"
+      ],
+      "organization": "CSIRO Oceans & Atmosphere - Hobart",
+      "name": "CSIRO O&A, Information & Data Centre",
+      "position": "Data Requests",
+      "emails": [],
+      "addresses": [],
+      "phones": [],
+      "links": []
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "https://doi.org/10.4225/08/59dc70d471bc4",
+      "rel": "related",
+      "type": "",
+      "title": "Data Access Portal (DOI)"
+    },
+    {
+      "href": "https://creativecommons.org/licenses/by/4.0/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Data Licensing"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/underway/?survey=in2014_e03",
+      "rel": "related",
+      "type": "",
+      "title": "Underway Visualisation Tool"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/survey_list.cfm?source_id=309",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Investigator Surveys"
+    },
+    {
+      "href": "https://mnf.csiro.au/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Marine National Facility"
+    },
+    {
+      "href": "https://geonetwork-edge.edge.aodn.org.au:443/geonetwork/images/logos/c953222f-bb17-4ddf-bdaa-5bf86d04d72a.png",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://www.cmar.csiro.au/data/trawler/dataset_mapfile.cfm?survey=IN2014_E03&data_type=uwy",
+      "rel": "preview",
+      "type": "image"
+    }
+  ],
+  "license": "Attribution 4.0",
+  "providers": [
+    {
+      "name": "CSIRO/Oceans and Atmosphere",
+      "roles": [
+        "processor"
+      ]
+    },
+    {
+      "name": "CSIRO Oceans & Atmosphere - Hobart",
+      "roles": [
+        "pointOfContact"
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Pressure | Atmospheric Pressure Measurements",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/9efbc088-ba8c-4c9c-a458-ad6ad63f4188"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Temperature | Air Temperature",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/f634ab55-de40-4d0b-93bc-691bf5408ccb"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Winds | Surface Winds",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/10685919-bc01-43e7-901a-b62ac44627f3"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Radiation | Solar Radiation",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/a0f3474e-9a54-4a82-97c4-43864b48df4c"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Water Vapor | Humidity",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/427e5121-a142-41cb-a8e9-a70b7f98eb6a"
+        },
+        {
+          "id": "Earth Science | Biosphere | Ecological Dynamics | Ecosystem Functions | Biomass Dynamics",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/a0eb9268-0333-4442-9bc6-efbe338d9836"
+        },
+        {
+          "id": "Earth Science | Biological Classification | Bacteria/Archaea",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/7437925f-7e10-4c96-af36-f3532ec24276"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Acoustics | Acoustic Reflectivity",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/6a583047-6023-4b6a-ab25-b72529721a8c"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Carbon Dioxide",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/26afa886-4866-4536-be3a-6f9db9aacd97"
+        },
+        {
+          "id": "Earth Science | Oceans | Bathymetry/Seafloor Topography | Seafloor Topography",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/b6b51058-1111-4498-a9ac-e1515270fb27"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Biogeochemical Cycles",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/f1e6caa5-2c97-407d-a0db-7bf01794d8e3"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Nitrate",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/4fde380a-38c5-4d46-bc80-4f2515a43983"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Nitrite",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/941410da-0b7f-4ec6-a718-212194ced13f"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Nutrients",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/8dd7c9f0-51d0-4037-b1d0-a2517c1770ad"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Oxygen",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/90aa8838-79bd-4b28-b518-8217e863c385"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Temperature | Sea Surface Temperature",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/bd24a9a9-7d52-4c29-b2a0-6cefd216ae78"
+        },
+        {
+          "id": "Earth Science | Oceans | Salinity/Density | Salinity",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/7e95b5fc-1d58-431a-af36-948b29fa870d"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Chemistry | Pigments",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/ed925b43-db83-4cbb-8347-3dc0081bb8f4"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "GCMD Keywords"
+    },
+    {
+      "concepts": [
+        {
+          "id": "CTDs (Conductivity-Temperature-Depth Profilers)",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:33"
+        },
+        {
+          "id": "Cell Counters",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:31"
+        },
+        {
+          "id": "Multibeam Echosounder",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:115"
+        },
+        {
+          "id": "LIDAR Altimeter",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:56"
+        },
+        {
+          "id": "Meteorological Instruments",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:61"
+        },
+        {
+          "id": "Niskin Bottles",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept"
+        },
+        {
+          "id": "Nutrient Analysers",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:18"
+        },
+        {
+          "id": "XBTs (Expendable Bathythermographs)",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:21"
+        },
+        {
+          "id": "Phytoplankton Nets",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:76"
+        },
+        {
+          "id": "Zooplankton Nets",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:77"
+        }
+      ],
+      "scheme": "equipment",
+      "description": "",
+      "title": "CSIRO Equipment"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine Features (Australia) | Derwent Estuary, TAS",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:69"
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extent Names"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine National Facility",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:cmarAOI&id=urn:marlin.csiro.au:keywords:cmarAOI:concept:3208"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "",
+      "title": "CSIRO Areas Of Interest"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Gear Trials: IN2014_E03",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.survey.urn:marlin.csiro.au:surveyregister&id=urn:marlin.csiro.au:surveyregister:concept:2126"
+        }
+      ],
+      "scheme": "survey",
+      "description": "",
+      "title": "CSIRO Survey List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Investigator - general vessel operations, gear trials, etc.",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.project.urn:marlin.csiro.au:projectregister&id=urn:marlin.csiro.au:projectregister:concept:2457"
+        }
+      ],
+      "scheme": "project",
+      "description": "",
+      "title": "CSIRO Project List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Vessel Data: CTD",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3511"
+        },
+        {
+          "id": "Vessel Data: Dissolved Oxygen",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3512"
+        },
+        {
+          "id": "Vessel Data: Multibeam Echosounder",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3521"
+        },
+        {
+          "id": "Vessel Data: undulating CTD",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3522"
+        },
+        {
+          "id": "Vessel Data: Underway",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3514"
+        },
+        {
+          "id": "Vessel/Station Data: Hydrology",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3513"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "",
+      "title": "CSIRO Standard Data Types"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Ship: Investigator (RV)",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.dataSource.urn:marlin.csiro.au:sourceregister&id=urn:marlin.csiro.au:sourceregister:concept:309"
+        }
+      ],
+      "scheme": "dataSource",
+      "description": "",
+      "title": "CSIRO Source List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "MNF Trial voyage (ShortNameSuffix _enn)",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.project.urn:marlin.csiro.au:globalprojectregister&id=urn:marlin.csiro.au:globalprojectregister:concept:36"
+        }
+      ],
+      "scheme": "project",
+      "description": "",
+      "title": "CSIRO Global Project List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Practical salinity of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/PSLTZZ01"
+        },
+        {
+          "id": "Temperature of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/TEMPPR01"
+        },
+        {
+          "id": "Pressure (measured variable) in the water body exerted by overlying sea water and any medium above it",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/565"
+        },
+        {
+          "id": "Pressure (measured variable) in the water body exerted by overlying sea water only",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/566"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "research vessel",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/31"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "CTD",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/130"
+        },
+        {
+          "id": "bathythermographs",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/132"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": ""
+    }
+  ],
+  "id": "073fde5a-bff3-1c1f-e053-08114f8c5588",
+  "record_suggest": {
+    "abstract_phrases": [
+      "includes underway uwy ctd",
+      "been",
+      "saved",
+      "cabinet 1 drawer",
+      "break off",
+      "filing cabinet 1",
+      "radon echosounders",
+      "via",
+      "ctd gravity",
+      "end voyage archive",
+      "held temporarily within",
+      "trim",
+      "scanned",
+      "record",
+      "voyage in2014e03",
+      "in2014e03 eov data",
+      "csiro data access",
+      "o data centre",
+      "physical biological",
+      "in2014e03 paper documentation",
+      "documentation",
+      "electronic archive 31 3",
+      "em710 sbp120",
+      "instrumented echosounder",
+      "underway uwy ctd gravity",
+      "atmosphere data",
+      "17th november 2014",
+      "xbt deck test only",
+      "1",
+      "18 38",
+      "2",
+      "3",
+      "1 drawer",
+      "oceans",
+      "net un instrumented",
+      "labs idc storeroom filing",
+      "system trim reference in2014e03",
+      "underway uwy",
+      "cabinet 1",
+      "accessible",
+      "200 khz multibeam",
+      "12 18 38",
+      "paper documentation scanned",
+      "biological oceanography",
+      "data radon",
+      "3 2015",
+      "exploration frontal",
+      "archive created",
+      "from marine national",
+      "test only",
+      "pdf whilst",
+      "systems",
+      "access portal dap",
+      "radon echosounders 12",
+      "120 200",
+      "created endofvoyagechecklist.pdf",
+      "underway",
+      "national",
+      "only triaxus",
+      "whilst systems",
+      "within csiro oceans",
+      "csiro",
+      "endofvoyagechecklist.pdf updated eov",
+      "marine labs",
+      "marine labs idc storeroom",
+      "12 2014 stored",
+      "c",
+      "csiro data access portal",
+      "eddies trial voyage",
+      "2014 data collected",
+      "local network entries from",
+      "1 12",
+      "atmospheric data radon echosounders",
+      "archive from",
+      "entered",
+      "bridge 200 khz multibeam",
+      "o",
+      "test only triaxus eznet",
+      "file created endofvoyagechecklist.pdf",
+      "being established",
+      "dap lto",
+      "oceans atmosphere data",
+      "echosounder data",
+      "internal network archive",
+      "returned",
+      "multibeam",
+      "sst radiometer atmospheric data",
+      "frontal",
+      "november",
+      "gravity meter ctd",
+      "11th",
+      "november 2014 data collected",
+      "voyage participants",
+      "200 khz multibeam em122",
+      "added",
+      "un instrumented echosounder data",
+      "deck",
+      "trim reference in2014e03",
+      "national facility",
+      "box 7a gravity",
+      "333 bridge 200",
+      "have also been",
+      "frontal eddies",
+      "instrumented echosounder data",
+      "participants via internal network",
+      "ctd xbt logs",
+      "38 70",
+      "test",
+      "1 drawer 2 archive",
+      "shelf",
+      "data collected",
+      "un instrumented",
+      "labs",
+      "70 120 200 333",
+      "bongo net un",
+      "voyage participants via",
+      "filing cabinet 1 drawer",
+      "333 bridge 200 khz",
+      "echosounder",
+      "12 2014",
+      "captured eov paper",
+      "saved pdf",
+      "eov data",
+      "sst radiometer",
+      "uwy ctd gravity sst",
+      "xbt logs",
+      "captured",
+      "dap lto tape",
+      "end",
+      "maria",
+      "includes underway",
+      "updated eov data",
+      "departed",
+      "70 120",
+      "data centre",
+      "un instrumented echosounder",
+      "off maria",
+      "sbp120 gravity",
+      "radiometer",
+      "box 7a",
+      "11th november",
+      "pdf",
+      "management",
+      "2015",
+      "2014",
+      "sbp120 gravity meter ctd",
+      "me70 sbp120 gravity",
+      "documentation multibeam em122 em710",
+      "via internal network",
+      "facility rv investigator",
+      "hobart 11th",
+      "pdf whilst systems",
+      "facility rv investigator voyage",
+      "2 archive box",
+      "khz multibeam em122 em710",
+      "eznet",
+      "atmosphere",
+      "bridge 200 khz",
+      "departed hobart",
+      "voyage archive",
+      "permanent archive",
+      "data added",
+      "lto tape archive",
+      "shelf break",
+      "eov",
+      "book have",
+      "tape",
+      "gravity sst radiometer atmospheric",
+      "been scanned saved",
+      "documentation multibeam",
+      "documentation multibeam em122",
+      "temporarily within",
+      "portal",
+      "70 120 200",
+      "oceanography shelf",
+      "eznet bongo net",
+      "radiometer atmospheric",
+      "being",
+      "eddies trial",
+      "whilst systems were",
+      "marine national",
+      "system",
+      "located csiro",
+      "biological",
+      "in2014e03 eov",
+      "systems were being",
+      "data radon echosounders",
+      "archive located",
+      "from triaxus log",
+      "established permanent",
+      "scanned saved",
+      "em122",
+      "sst radiometer atmospheric",
+      "local",
+      "echosounders 12",
+      "triaxus eznet bongo",
+      "file",
+      "includes underway uwy",
+      "been scanned",
+      "physical biological oceanography",
+      "have",
+      "electronic",
+      "eov data collected",
+      "ctd gravity sst radiometer",
+      "radon echosounders 12 18",
+      "maria island exploration",
+      "management system trim",
+      "break",
+      "within",
+      "created 1 12",
+      "new manifest file",
+      "echosounders 12 18 38",
+      "investigator voyage in2014e03",
+      "off",
+      "scanned accessible via",
+      "xbt logs archived",
+      "collected includes",
+      "storeroom filing cabinet 1",
+      "archived c o",
+      "oceanography",
+      "stored",
+      "investigator voyage",
+      "em122 em710",
+      "voyage in2014e03 physical",
+      "deck test",
+      "underway uwy ctd",
+      "records management system",
+      "sbp120 gravity meter",
+      "trial",
+      "records management system trim",
+      "triaxus",
+      "oceans atmosphere",
+      "trial voyage departed",
+      "cabinet 1 drawer 2",
+      "200 333 bridge 200",
+      "national facility rv investigator",
+      "data radon echosounders 12",
+      "net",
+      "data access portal",
+      "logs",
+      "created endofvoyagechecklist.pdf updated",
+      "new",
+      "meter",
+      "csiro dap",
+      "includes",
+      "7a gravity",
+      "xbt deck",
+      "200",
+      "entries",
+      "trial voyage",
+      "were",
+      "manifest file created",
+      "200 333 bridge",
+      "added electronic archive",
+      "end voyage",
+      "box",
+      "eov paper",
+      "hobart marine labs",
+      "collected includes underway uwy",
+      "echosounders 12 18",
+      "log book have",
+      "investigator",
+      "333",
+      "31 3 2015",
+      "updated eov",
+      "120 200 333",
+      "bridge 200",
+      "storeroom",
+      "physical",
+      "2014 data",
+      "o voyage participants",
+      "network entries",
+      "manifest",
+      "temporarily within csiro",
+      "drawer",
+      "radiometer atmospheric data",
+      "khz multibeam",
+      "csiro oceans atmosphere",
+      "marine national facility",
+      "documentation scanned",
+      "atmospheric data radon",
+      "in2014e03 physical",
+      "whilst",
+      "11th november returned",
+      "electronic archive",
+      "marine labs idc",
+      "triaxus eznet",
+      "local network",
+      "book have also been",
+      "book have also",
+      "endofvoyagechecklist.pdf updated",
+      "exploration frontal eddies",
+      "centre hobart",
+      "voyage archive from",
+      "ctd",
+      "tape archive",
+      "captured eov",
+      "archive box 7a gravity",
+      "were being established",
+      "sst",
+      "uwy",
+      "voyage departed hobart",
+      "also been scanned",
+      "12",
+      "investigator voyage in2014e03 physical",
+      "in2014e03 paper",
+      "18",
+      "manifest file",
+      "gravity sst radiometer",
+      "120",
+      "portal dap",
+      "trial voyage departed hobart",
+      "idc storeroom filing",
+      "2 archive",
+      "via local",
+      "bridge",
+      "log book have also",
+      "file created",
+      "drawer 2 archive box",
+      "me70",
+      "access",
+      "rv",
+      "paper documentation multibeam",
+      "entries from",
+      "new manifest file created",
+      "november 2014",
+      "from marine",
+      "filing cabinet",
+      "marine",
+      "eov paper documentation multibeam",
+      "12 18",
+      "archived",
+      "data collected includes",
+      "triaxus log book have",
+      "break off maria",
+      "collected available",
+      "from triaxus",
+      "31",
+      "participants",
+      "archived c",
+      "net un instrumented echosounder",
+      "accessible via",
+      "hobart 17th",
+      "38",
+      "idc storeroom filing cabinet",
+      "only triaxus eznet",
+      "uwy ctd gravity",
+      "idc storeroom",
+      "triaxus log book",
+      "describes",
+      "system trim",
+      "in2014e03 physical biological",
+      "storeroom filing cabinet",
+      "cabinet",
+      "drawer 2",
+      "net un",
+      "data access portal dap",
+      "reference in2014e03",
+      "available",
+      "1 drawer 2",
+      "17th november",
+      "reference in2014e03 paper",
+      "via local network",
+      "box 7a gravity data",
+      "island exploration",
+      "un",
+      "via internal",
+      "maria island",
+      "idc",
+      "internal network",
+      "shelf break off maria",
+      "38 70 120",
+      "gravity data added",
+      "khz",
+      "updated",
+      "radon",
+      "18 38 70",
+      "log book",
+      "records",
+      "book",
+      "gravity sst",
+      "rv investigator",
+      "multibeam em122 em710",
+      "deck test only triaxus",
+      "archive in2014e03",
+      "7a gravity data",
+      "electronic archive 31",
+      "xbt",
+      "csiro dap lto",
+      "sbp120 xbt deck",
+      "available o",
+      "held temporarily",
+      "trim reference",
+      "triaxus log",
+      "whilst systems were being",
+      "bongo net",
+      "local network entries",
+      "record describes",
+      "off maria island",
+      "70",
+      "atmospheric data",
+      "200 khz",
+      "2015 new",
+      "marine national facility rv",
+      "em122 em710 me70",
+      "archive csiro",
+      "31 3",
+      "record describes end",
+      "national facility rv",
+      "1 12 2014",
+      "333 bridge",
+      "38 70 120 200",
+      "added electronic",
+      "accessible via local",
+      "gravity",
+      "endofvoyagechecklist.pdf",
+      "data access",
+      "12 18 38 70",
+      "multibeam em122",
+      "me70 sbp120",
+      "meter ctd",
+      "meter ctd xbt",
+      "atmosphere data centre",
+      "within csiro",
+      "storeroom filing",
+      "held",
+      "systems were",
+      "voyage participants via internal",
+      "collected",
+      "7a",
+      "17th",
+      "em710 me70",
+      "were being",
+      "lto tape",
+      "network archive",
+      "returned hobart",
+      "bongo net un instrumented",
+      "hobart entered",
+      "entered records",
+      "test only triaxus",
+      "eov paper documentation",
+      "labs idc storeroom",
+      "eddies",
+      "data captured",
+      "paper documentation multibeam em122",
+      "2014 stored",
+      "17th november 2014 data",
+      "november returned",
+      "logs archived c",
+      "em710",
+      "c o data",
+      "filing",
+      "data held",
+      "november 2014 data",
+      "deck test only",
+      "shelf break off",
+      "gravity meter",
+      "data centre hobart",
+      "internal",
+      "log",
+      "access portal",
+      "archive box 7a",
+      "facility rv",
+      "scanned accessible",
+      "also been",
+      "created 1",
+      "system trim reference",
+      "sbp120",
+      "tape archive created",
+      "collected includes underway",
+      "established",
+      "archive 31 3 2015",
+      "hobart permanent",
+      "centre",
+      "records management",
+      "hobart marine labs idc",
+      "permanent",
+      "located",
+      "facility",
+      "frontal eddies trial",
+      "management system trim reference",
+      "data",
+      "archive 31 3",
+      "participants via",
+      "uwy ctd",
+      "hobart",
+      "reference",
+      "dap",
+      "only",
+      "from",
+      "in2014e03",
+      "paper documentation",
+      "entries from triaxus",
+      "stored hobart marine",
+      "instrumented",
+      "exploration",
+      "data collected includes underway",
+      "logs archived",
+      "systems were being established",
+      "break off maria island",
+      "18 38 70 120",
+      "new manifest",
+      "island",
+      "created",
+      "temporarily",
+      "archive",
+      "voyage",
+      "em122 em710 sbp120",
+      "ctd xbt",
+      "network entries from",
+      "xbt deck test",
+      "khz multibeam em122",
+      "archive 31",
+      "rv investigator voyage",
+      "management system",
+      "pdf whilst systems were",
+      "drawer 2 archive",
+      "network",
+      "stored hobart",
+      "atmospheric",
+      "paper",
+      "saved pdf whilst",
+      "labs idc",
+      "archive from marine",
+      "archive box",
+      "describes end",
+      "o data",
+      "csiro oceans",
+      "lto",
+      "radiometer atmospheric data radon",
+      "also",
+      "o voyage",
+      "hobart marine",
+      "eznet bongo",
+      "rv investigator voyage in2014e03",
+      "bongo",
+      "2014 data collected includes",
+      "ctd gravity sst",
+      "c o",
+      "echosounders",
+      "sbp120 xbt",
+      "2 archive box 7a",
+      "200 333",
+      "gravity data",
+      "participants via internal",
+      "csiro data",
+      "120 200 333 bridge",
+      "have also",
+      "voyage departed",
+      "have also been scanned"
+    ]
+  },
+  "sci:citation": "{\"suggestedCitation\":null,\"useLimitations\":null,\"otherConstraints\":[\"Access to the raw (not quality-controlled) voyage data is intended for the collectors and processors of the data obtained in the MNF RV Investigator voyage. Quality-controlled data products will be made available under the MNF CCBY  licence.\"]}",
+  "type": "Collection",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json"
+  ]
+}
