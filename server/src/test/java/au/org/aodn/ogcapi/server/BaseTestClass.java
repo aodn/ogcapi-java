@@ -1,13 +1,14 @@
 package au.org.aodn.ogcapi.server;
 
+import au.org.aodn.ogcapi.server.core.model.ArdcVocabModel;
 import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.Request;
@@ -27,7 +28,6 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
@@ -122,35 +122,62 @@ public class BaseTestClass {
         });
     }
 
-    protected void insertTestAodnDiscoveryParameterVocabs() {
-        BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
+    protected void insertTestArdcVocabs() throws IOException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<ArdcVocabModel> vocabs = new ArrayList<>();
+
+        // Read the JSON files
         try {
-            // Read the JSON file
             File file = ResourceUtils.getFile("classpath:databag/aodn_discovery_parameter_vocabs.json");
-            // Parse the JSON content
-            ObjectMapper objectMapper = new ObjectMapper();
             JsonNode jsonNode = objectMapper.readTree(file);
-            // Get the array from the JSON content
-            JsonNode parameter_vocabs = jsonNode.get("parameter_vocabs");
-            // Iterate over the JSON array
-            for (JsonNode vocab : parameter_vocabs) {
-                // convert parameterVocabModel values to binary data
-                logger.debug("Ingested json is {}", vocab);
-                // send bulk request to Elasticsearch
-                bulkRequest.operations(op -> op
-                    .index(idx -> idx
-                        .index(vocabs_index_name)
-                        .document(vocab)
-                    )
-                );
+
+            // parameter vocabs
+            JsonNode parameterVocabNodes = jsonNode.get("parameter_vocabs");
+
+            // populate data for parameter vocabs list
+            for (JsonNode parameterVocabNode : parameterVocabNodes) {
+                ParameterVocabModel parameterVocabModel = objectMapper.readValue(parameterVocabNode.toString(), ParameterVocabModel.class);
+                ArdcVocabModel vocab = ArdcVocabModel.builder().parameterVocabModel(parameterVocabModel).build();
+                vocabs.add(vocab);
             }
-            BulkResponse result = client.bulk(bulkRequest.build());
-            assertEquals(parameter_vocabs.size(), result.items().size(), "Number of docs stored is correct");
-        } catch (JsonProcessingException e) {
+        } catch (IOException e) {
             logger.error("Failed to ingest test parameter vocabs to {}", vocabs_index_name);
             throw new RuntimeException(e);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        }
+
+        logger.info("Indexing all vocabs to {}", vocabs_index_name);
+        bulkIndexVocabs(vocabs);
+    }
+
+    protected void bulkIndexVocabs(List<ArdcVocabModel> vocabs) throws IOException {
+        // count portal index documents, or create index if not found from defined mapping JSON file
+        BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
+
+        for (ArdcVocabModel vocab : vocabs) {
+            // send bulk request to Elasticsearch
+            bulkRequest.operations(op -> op
+                .index(idx -> idx
+                    .index(vocabs_index_name)
+                    .document(vocab)
+                )
+            );
+        }
+
+        BulkResponse result = client.bulk(bulkRequest.build());
+
+        // Flush after insert, otherwise you need to wait for next auto-refresh. It is
+        // especially a problem with autotest, where assert happens very fast.
+        client.indices().refresh();
+
+        // Log errors, if any
+        if (result.errors()) {
+            logger.error("Bulk had errors");
+            for (BulkResponseItem item: result.items()) {
+                if (item.error() != null) {
+                    logger.error("{} {}", item.error().reason(), item.error().causedBy());
+                }
+            }
         }
     }
 

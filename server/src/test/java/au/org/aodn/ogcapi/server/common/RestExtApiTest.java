@@ -3,7 +3,6 @@ package au.org.aodn.ogcapi.server.common;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
@@ -157,7 +156,7 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyApiResponseOnParameterVocabSuggestions() throws IOException {
-        super.insertTestAodnDiscoveryParameterVocabs();
+        super.insertTestArdcVocabs();
 
         super.insertJsonToElasticIndex(
             "19da2ce7-138f-4427-89de-a50c724f5f54.json"

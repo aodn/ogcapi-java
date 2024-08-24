@@ -22,7 +22,7 @@
   "mappings": {
     "dynamic": true,
     "properties": {
-      "parameter_vocabs": {
+      "parameter_vocab": {
         "properties": {
           "label": {
             "type": "search_as_you_type",
