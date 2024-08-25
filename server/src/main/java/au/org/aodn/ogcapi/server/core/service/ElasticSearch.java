@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.CategorySuggestDTO;
+import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
@@ -17,6 +17,7 @@ import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import co.elastic.clients.util.ObjectBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -46,19 +47,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
     protected String[] searchAsYouTypeEnabledFields;
 
-    /*
-     * this secondLevelCategorySuggestFilters for accessing the search_as_you_type "label" field
-     * of the second level categories (discovery_category index) will never be changed unless the schema is changed,
-     * or the discovery_category index is no longer be used
-     */
-    protected Query secondLevelCategorySuggestFilters = Query.of(q -> q.bool(b -> b.filter(f -> f.nested(n -> n.path("broader")
-            .query(qq -> qq.exists(e -> e.field("broader")))))));
+    @Value("${elasticsearch.vocabs_index.name}")
+    protected String vocabsIndexName;
 
-    @Value("${elasticsearch.search_as_you_type.category_suggest.field}")
-    protected String secondLevelCategorySuggestField;
+    @Value("${elasticsearch.search_as_you_type.parameter_vocab.path}")
+    protected String parameterVocabsPath;
 
-    @Value("${elasticsearch.search_as_you_type.category_suggest.index_name}")
-    protected String categorySuggestIndex;
+    @Value("${elasticsearch.search_as_you_type.parameter_vocab.field}")
+    protected String parameterVocabsField;
 
     public ElasticSearch(ElasticsearchClient client,
                          ObjectMapper mapper,
@@ -108,11 +104,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         ));
 
         /*
-            this is where the discovery categories filter is applied
-            use term query for exact match of the categories
+            this is where the discovery parameter vocabs filter is applied
+            use term query for exact match of the parameter vocabs
             (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
             see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
-            this query uses AND operator for the categories (e.g "wave" AND "temperature")
+            this query uses AND operator for the parameter vocabs (e.g "wave" AND "temperature")
         */
         List<Query> filters;
         if (cql != null) {
@@ -145,32 +141,41 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return response.hits().hits();
     }
 
-    protected List<Hit<CategorySuggestDTO>> getCategorySuggestions(String input) throws IOException {
+    protected List<Hit<JsonNode>> getParameterVocabSuggestions(String input) throws IOException {
         // create query
-        Query secondLevelCategorySuggestQuery = this.generateSearchAsYouTypeQuery(input, secondLevelCategorySuggestField);
+        Query secondLevelParameterVocabSuggestQuery = this.generateSearchAsYouTypeQuery(input, parameterVocabsPath + "." + parameterVocabsField);
+
+        /*
+         * this secondLevelParameterVocabSuggestFilters for accessing the search_as_you_type "label" field
+         * of the second level vocabs of the parameter_vocabs field from the vocabs_index index will never be changed unless the schema is changed,
+         * or the vocabs_index index is no longer be used
+         */
+        Query secondLevelParameterVocabSuggestFilters = Query.of(q -> q.bool(b -> b.filter(f -> f.nested(n -> n.path(parameterVocabsPath + ".broader")
+                .query(qq -> qq.exists(e -> e.field(parameterVocabsPath + ".broader")))))));
 
         // create request
         SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
-                List.of("label"),
-                categorySuggestIndex,
-                List.of(secondLevelCategorySuggestQuery),
-                List.of(secondLevelCategorySuggestFilters));
+                List.of(parameterVocabsPath + "." + parameterVocabsField),
+                vocabsIndexName,
+                List.of(secondLevelParameterVocabSuggestQuery),
+                List.of(secondLevelParameterVocabSuggestFilters));
 
         // execute
-        log.info("getCategorySuggestions | Elastic search payload {}", searchRequest.toString());
-        SearchResponse<CategorySuggestDTO> response = esClient.search(searchRequest, CategorySuggestDTO.class);
-        log.info("getCategorySuggestions | Elastic search response {}", response);
+        log.info("getParameterVocabSuggestions | Elastic search payload {}", searchRequest.toString());
+        SearchResponse<JsonNode> response = esClient.search(searchRequest, JsonNode.class);
+        log.info("getParameterVocabSuggestions | Elastic search response {}", response);
 
         // return
         return response.hits().hits();
     }
 
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        // extract category suggestions
-        Set<String> categorySuggestions = new HashSet<>();
-        for (Hit<CategorySuggestDTO> item : this.getCategorySuggestions(input)) {
-            if (item.source() != null) {
-                categorySuggestions.add(item.source().getLabel());
+        // extract parameter vocab suggestions
+        Set<String> parameterVocabSuggestions = new HashSet<>();
+        for (Hit<JsonNode> item : this.getParameterVocabSuggestions(input)) {
+            if (item.source() != null && item.source().get(parameterVocabsPath) != null) {
+                ParameterVocabModel parameterVocab = mapper.readValue(item.source().get(parameterVocabsPath).toString(), ParameterVocabModel.class);
+                parameterVocabSuggestions.add(parameterVocab.getLabel());
             }
         }
 
@@ -183,7 +188,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .collect(Collectors.toSet());
 
         Map<String, Object> allSuggestions = new HashMap<>();
-        allSuggestions.put("category_suggestions", new ArrayList<>(categorySuggestions));
+        allSuggestions.put("parameter_vocab_suggestions", new ArrayList<>(parameterVocabSuggestions));
 
         Map<String, Set<String>> recordSuggestions = new HashMap<>();
         recordSuggestions.put("suggest_phrases", abstractPhrases);

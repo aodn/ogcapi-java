@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.model.CategoryVocabModel;
+import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -52,19 +52,19 @@ public class RestExtApi {
     /**
      * Evict cache to allow reload
      */
-    @CacheEvict(value="parameter_categories", allEntries = true)
-    @Scheduled(fixedRateString = "${caching.parameter_category.ttl:43200000}")
-    public void emptyCachedParameterCategory() {
-        log.info("Evict parameter_category cache as TTL pass");
+    @CacheEvict(value="parameter_vocabs", allEntries = true)
+    @Scheduled(fixedRateString = "${caching.parameter_vocab.ttl:43200000}")
+    public void emptyCachedParameterVocab() {
+        log.info("Evict parameter_vocab cache as TTL pass");
     }
 
     /**
      * Value cached to avoid excessive load
      * @return
      */
-    @Cacheable("parameter_categories")
-    @GetMapping(path="/parameter/categories")
-    public ResponseEntity<List<CategoryVocabModel>> getParameterCategory() {
-        return ResponseEntity.ok(restExtService.getParameterCategory(vocabApi));
+    @Cacheable("parameter_vocabs")
+    @GetMapping(path="/parameter/vocabs")
+    public ResponseEntity<List<ParameterVocabModel>> getParameterVocab() {
+        return ResponseEntity.ok(restExtService.getParameterVocab(vocabApi));
     }
 }

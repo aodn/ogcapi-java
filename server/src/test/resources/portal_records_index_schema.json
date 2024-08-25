@@ -62,7 +62,7 @@
           "abstract_phrases": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
         }
       },
-      "discovery_categories" : { "type":  "keyword" },
+      "parameter_vocabs" : { "type":  "keyword" },
       "keywords": {
         "type": "nested",
         "properties": {

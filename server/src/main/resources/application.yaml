@@ -8,14 +8,16 @@ server:
 elasticsearch:
   index:
     name: dev_portal_records
+  vocabs_index:
+    name: vocabs_index
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
   search_as_you_type:
     record_suggest:
       path: record_suggest
       fields: abstract_phrases  # if you have multiple search_as_you_type fields, separate them with commas e.g title, description
-    category_suggest:
-      index_name: discovery_category
+    parameter_vocab:
+      path: parameter_vocab
       field: label
 
 api:

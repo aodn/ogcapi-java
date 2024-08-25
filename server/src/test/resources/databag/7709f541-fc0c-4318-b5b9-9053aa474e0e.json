@@ -84,7 +84,7 @@
         "end": "2013-06-16T14:00:00Z"
       }
     ],
-    "discovery_categories": [
+    "parameter_vocabs": [
       "alkalinity",
       "carbon",
       "temperature",

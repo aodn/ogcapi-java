@@ -354,27 +354,27 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyParameterCategoriesSearchMatch() throws IOException  {
+    public void verifyParameterParameterVocabsSearchMatch() throws IOException  {
         super.insertJsonToElasticIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
 
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='wave'", Collections.class);
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=parameter_vocab='wave'", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record in wave");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='alkalinity' AND category='temperature'", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, 1 record belong to both categories");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=parameter_vocab='alkalinity' AND parameter_vocab='temperature'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, 1 record belong to both parameter vocabs");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='wave' AND category='temperature'", Collections.class);
-        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, no records belong to both categories");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=parameter_vocab='wave' AND parameter_vocab='temperature'", Collections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, no records belong to both parameter vocabs");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='wave' OR category='temperature'", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=parameter_vocab='wave' OR parameter_vocab='temperature'", Collections.class);
         assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 3, 1 in wave and 2 in temperature");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=category='this category does not exist'", Collections.class);
-        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, category none exist");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=parameter_vocab='this parameter vocab does not exist'", Collections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0, parameter vocab none exist");
     }
     /**
      * Verify OR operation for CQL
@@ -465,11 +465,11 @@ public class RestApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
         // Make sure AND operation works
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'", Collections.class);
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND parameter_vocab='wave'", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
         // Make sure OR not work as it didn't make sense to use or with setting
-        ResponseEntity<ErrorResponse> error = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR category='wave'", ErrorResponse.class);
+        ResponseEntity<ErrorResponse> error = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR parameter_vocab='wave'", ErrorResponse.class);
         assertEquals(error.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
         assertEquals(Objects.requireNonNull(error.getBody()).getMessage(), "Or combine with query setting do not make sense", "correct error");
 
@@ -541,7 +541,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Edge case on sort by with 1 item, but typo in argument sortBy, it should be sortby. Hence use API default sort -score
         // https://docs.ogc.org/DRAFTS/20-004.html#sorting-parameter-sortby
-        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND category='wave'&sortBy=-score,+title", ExtendedCollections.class);
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND parameter_vocab='wave'&sortBy=-score,+title", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
         // Now return result should sort by score then title, since no query here, the score will auto adjust to 1 as all search without query default score is 1

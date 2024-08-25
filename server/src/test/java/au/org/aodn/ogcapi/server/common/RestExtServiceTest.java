@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.model.CategoryVocabModel;
+import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -32,7 +32,7 @@ public class RestExtServiceTest {
     protected RestExtService restExtService;
     protected ObjectMapper objectMapper = new ObjectMapper();
     @Test
-    public void verifyGetParameterCategory() throws IOException {
+    public void verifyGetParameterVocab() throws IOException {
         // Create expect result
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-parameter-category-vocabulary/version-2-1/concept.json"), any(), any(Object[].class)))
                 .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab0.json")));
@@ -52,11 +52,11 @@ public class RestExtServiceTest {
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-discovery-parameter-vocabulary/version-1-6/resource.json?uri=http://vocab.aodn.org.au/def/discovery_parameter/entity/390"), any(), any(Object[].class)))
                 .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab_entity_390.json")));
 
-        List<CategoryVocabModel> categoryVocabModelList = restExtService.getParameterCategory("");
-        assertEquals("Total equals", 33, categoryVocabModelList.size());
+        List<ParameterVocabModel> parameterVocabModelList = restExtService.getParameterVocab("");
+        assertEquals("Total equals", 33, parameterVocabModelList.size());
 
 
-        Optional<CategoryVocabModel> c = categoryVocabModelList
+        Optional<ParameterVocabModel> c = parameterVocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("chemical"))
                 .findFirst();
@@ -65,7 +65,7 @@ public class RestExtServiceTest {
         assertEquals("Have narrower equals", 5, c.get().getNarrower().size());
 
 
-        Optional<CategoryVocabModel> b = categoryVocabModelList
+        Optional<ParameterVocabModel> b = parameterVocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("biological"))
                 .findFirst();
@@ -74,7 +74,7 @@ public class RestExtServiceTest {
         assertEquals("Have narrower equals", 5, b.get().getNarrower().size());
 
 
-        Optional<CategoryVocabModel> pa = categoryVocabModelList
+        Optional<ParameterVocabModel> pa = parameterVocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("physical-atmosphere"))
                 .findFirst();
@@ -82,27 +82,27 @@ public class RestExtServiceTest {
         assertTrue("Find target Physical-Atmosphere", pa.isPresent());
         assertEquals("Have narrower equals", 8, pa.get().getNarrower().size());
 
-        Optional<CategoryVocabModel> airTemperature = pa.get().getNarrower()
+        Optional<ParameterVocabModel> airTemperature = pa.get().getNarrower()
                 .stream()
                 .filter(p -> p.getLabel().equals("air temperature"))
                 .findFirst();
         assertTrue("Find target Air temperature", airTemperature.isPresent());
 
-        Optional<CategoryVocabModel> visibility = pa.get().getNarrower()
+        Optional<ParameterVocabModel> visibility = pa.get().getNarrower()
                 .stream()
                 .filter(p -> p.getLabel().equals("visibility"))
                 .findFirst();
 
         assertTrue("Find target Visibility", visibility.isPresent());
 
-        Optional<CategoryVocabModel> horizontalVisibilityInTheAtmosphere = visibility.get().getNarrower()
+        Optional<ParameterVocabModel> horizontalVisibilityInTheAtmosphere = visibility.get().getNarrower()
                 .stream()
                 .filter(p -> p.getLabel().equals("horizontal visibility in the atmosphere"))
                 .findFirst();
 
         assertTrue("Horizontal visibility in the atmosphere found", horizontalVisibilityInTheAtmosphere.isPresent());
 
-        Optional<CategoryVocabModel> pw = categoryVocabModelList
+        Optional<ParameterVocabModel> pw = parameterVocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("physical-water"))
                 .findFirst();

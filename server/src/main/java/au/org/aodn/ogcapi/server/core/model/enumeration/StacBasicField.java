@@ -8,9 +8,9 @@ public enum StacBasicField {
             "providers",    // This result in the whole provider section return
             "providers.name"
     ),
-    DiscoveryCategories(
-            "discovery_categories", // This result in the whole themes section return
-            "summaries.discovery_categories"
+    ParameterVocabs(
+            "parameter_vocabs", // This result in the whole themes section return
+            "summaries.parameter_vocabs"
     ),
     Links("links", "links")
     ;

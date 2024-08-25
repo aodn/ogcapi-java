@@ -1,12 +1,14 @@
 package au.org.aodn.ogcapi.server;
 
+import au.org.aodn.ogcapi.server.core.model.ArdcVocabModel;
+import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.*;
+import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.elasticsearch.client.Request;
@@ -23,6 +25,7 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -48,8 +51,8 @@ public class BaseTestClass {
     @Value("${elasticsearch.index.name}")
     protected String record_index_name;
 
-    @Value("${elasticsearch.search_as_you_type.category_suggest.index_name}")
-    protected String ardc_categories_index_name;
+    @Value("${elasticsearch.vocabs_index.name}")
+    protected String vocabs_index_name;
 
     protected Logger logger = LoggerFactory.getLogger(BaseTestClass.class);
 
@@ -64,7 +67,7 @@ public class BaseTestClass {
     protected void clearElasticIndex() throws IOException {
 
         List<Map<String, String>> schemas = List.of(
-                Map.of("name", ardc_categories_index_name, "mapping", "aodn_discovery_parameter_vocabularies_index.json"),
+                Map.of("name", vocabs_index_name, "mapping", "vocabs_index_schema.json"),
                 Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json")
         );
 
@@ -96,7 +99,7 @@ public class BaseTestClass {
 
         List<Map<String, String>> schemas = List.of(
                 Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json"),
-                Map.of("name", ardc_categories_index_name, "mapping", "aodn_discovery_parameter_vocabularies_index.json")
+                Map.of("name", vocabs_index_name, "mapping", "vocabs_index_schema.json")
         );
 
         schemas.forEach(schema -> {
@@ -119,35 +122,62 @@ public class BaseTestClass {
         });
     }
 
-    protected void insertTestAodnDiscoveryCategories() {
-        BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
+    protected void insertTestArdcVocabs() throws IOException {
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        List<ArdcVocabModel> vocabs = new ArrayList<>();
+
+        // Read the JSON files
         try {
-            // Read the JSON file
-            File file = ResourceUtils.getFile("classpath:databag/aodn_categories.json");
-            // Parse the JSON content
-            ObjectMapper objectMapper = new ObjectMapper();
+            File file = ResourceUtils.getFile("classpath:databag/aodn_discovery_parameter_vocabs.json");
             JsonNode jsonNode = objectMapper.readTree(file);
-            // Get the array from the JSON content
-            JsonNode categories = jsonNode.get("categories");
-            // Iterate over the JSON array
-            for (JsonNode category : categories) {
-                // convert categoryVocabModel values to binary data
-                logger.debug("Ingested json is {}", category);
-                // send bulk request to Elasticsearch
-                bulkRequest.operations(op -> op
-                    .index(idx -> idx
-                        .index(ardc_categories_index_name)
-                        .document(category)
-                    )
-                );
+
+            // parameter vocabs
+            JsonNode parameterVocabNodes = jsonNode.get("parameter_vocabs");
+
+            // populate data for parameter vocabs list
+            for (JsonNode parameterVocabNode : parameterVocabNodes) {
+                ParameterVocabModel parameterVocabModel = objectMapper.readValue(parameterVocabNode.toString(), ParameterVocabModel.class);
+                ArdcVocabModel vocab = ArdcVocabModel.builder().parameterVocabModel(parameterVocabModel).build();
+                vocabs.add(vocab);
             }
-            BulkResponse result = client.bulk(bulkRequest.build());
-            assertEquals(categories.size(), result.items().size(), "Number of docs stored is correct");
-        } catch (JsonProcessingException e) {
-            logger.error("Failed to ingest test ARDC categories to {}", ardc_categories_index_name);
-            throw new RuntimeException(e);
         } catch (IOException e) {
+            logger.error("Failed to ingest test parameter vocabs to {}", vocabs_index_name);
             throw new RuntimeException(e);
+        }
+
+        logger.info("Indexing all vocabs to {}", vocabs_index_name);
+        bulkIndexVocabs(vocabs);
+    }
+
+    protected void bulkIndexVocabs(List<ArdcVocabModel> vocabs) throws IOException {
+        // count portal index documents, or create index if not found from defined mapping JSON file
+        BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
+
+        for (ArdcVocabModel vocab : vocabs) {
+            // send bulk request to Elasticsearch
+            bulkRequest.operations(op -> op
+                .index(idx -> idx
+                    .index(vocabs_index_name)
+                    .document(vocab)
+                )
+            );
+        }
+
+        BulkResponse result = client.bulk(bulkRequest.build());
+
+        // Flush after insert, otherwise you need to wait for next auto-refresh. It is
+        // especially a problem with autotest, where assert happens very fast.
+        client.indices().refresh();
+
+        // Log errors, if any
+        if (result.errors()) {
+            logger.error("Bulk had errors");
+            for (BulkResponseItem item: result.items()) {
+                if (item.error() != null) {
+                    logger.error("{} {}", item.error().reason(), item.error().causedBy());
+                }
+            }
         }
     }
 
