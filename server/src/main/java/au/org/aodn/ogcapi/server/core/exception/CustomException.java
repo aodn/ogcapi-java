@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service.exception;
+package au.org.aodn.ogcapi.server.core.exception;
 
 public class CustomException extends RuntimeException {
 

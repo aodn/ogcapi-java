@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.model;
+package au.org.aodn.ogcapi.server.core.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -15,7 +15,7 @@ import java.util.Map;
 @AllArgsConstructor
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class RecordSuggestDTO {
+public class RecordSuggestDto {
     private Map<String, List<String>> recordSuggest;
 
     @JsonProperty("abstract_phrases")

@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.model;
+package au.org.aodn.ogcapi.server.ardc.model;
 
 import lombok.*;
 
@@ -12,11 +12,11 @@ import java.util.List;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ParameterVocabModel {
+public class PlatformVocabModel {
 
     protected String label;
     protected String definition;
     protected String about;
-    protected List<ParameterVocabModel> broader;
-    protected List<ParameterVocabModel> narrower;
+    protected List<PlatformVocabModel> broader;
+    protected List<PlatformVocabModel> narrower;
 }

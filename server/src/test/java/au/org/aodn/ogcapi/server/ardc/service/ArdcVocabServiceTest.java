@@ -1,6 +1,6 @@
-package au.org.aodn.ogcapi.server.common;
+package au.org.aodn.ogcapi.server.ardc.service;
 
-import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -23,36 +23,36 @@ import java.util.Optional;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class RestExtServiceTest {
+public class ArdcVocabServiceTest {
 
     @Autowired
     protected RestTemplate mockRestTemplate;
 
     @Autowired
-    protected RestExtService restExtService;
+    protected ArdcVocabService ardcVocabService;
     protected ObjectMapper objectMapper = new ObjectMapper();
     @Test
-    public void verifyGetParameterVocab() throws IOException {
+    public void verifyGetParameterVocabs() throws IOException {
         // Create expect result
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-parameter-category-vocabulary/version-2-1/concept.json"), any(), any(Object[].class)))
-                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab0.json")));
+                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/parameter_vocabs/vocab0.json")));
 
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=1"), any(), any(Object[].class)))
-                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab1.json")));
+                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/parameter_vocabs/vocab1.json")));
 
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=2"), any(), any(Object[].class)))
-                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab2.json")));
+                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/parameter_vocabs/vocab2.json")));
 
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-parameter-category-vocabulary/version-2-1/concept.json?_page=3"), any(), any(Object[].class)))
-                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab3.json")));
+                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/parameter_vocabs/vocab3.json")));
 
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-discovery-parameter-vocabulary/version-1-6/concept.json"), any(), any(Object[].class)))
-                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab_discovery0.json")));
+                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/parameter_vocabs/vocab_discovery0.json")));
 
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-discovery-parameter-vocabulary/version-1-6/resource.json?uri=http://vocab.aodn.org.au/def/discovery_parameter/entity/390"), any(), any(Object[].class)))
-                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/vocab_entity_390.json")));
+                .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/parameter_vocabs/vocab_entity_390.json")));
 
-        List<ParameterVocabModel> parameterVocabModelList = restExtService.getParameterVocab("");
+        List<ParameterVocabModel> parameterVocabModelList = ardcVocabService.getParameterVocabs("");
         assertEquals("Total equals", 33, parameterVocabModelList.size());
 
 

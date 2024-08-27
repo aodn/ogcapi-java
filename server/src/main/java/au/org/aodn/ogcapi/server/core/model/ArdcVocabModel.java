@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model;
 
+import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

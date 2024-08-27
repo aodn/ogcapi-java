@@ -1,6 +1,6 @@
-package au.org.aodn.ogcapi.server.common;
+package au.org.aodn.ogcapi.server.ardc.service;
 
-import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.PlatformVocabModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
@@ -17,19 +17,18 @@ import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-/**
- * Use to store the logic and make it easier to test
- */
+
 @Slf4j
-@Service("CommonRestExtService")
-public class RestExtService {
+@Service("PlatformVocabService")
+public class PlatformVocabService {
     @Autowired
-    protected RestTemplate template;
+    protected RestTemplate ardcVocabRestTemplate;
 
-    protected static String path = "/aodn-parameter-category-vocabulary/version-2-1/concept.json";
-    protected static String leafPath = "/aodn-discovery-parameter-vocabulary/version-1-6/concept.json";
+    protected static String platformVocabApiPath = "/aodn-platform-category-vocabulary/version-1-2/concept.json";
 
-    protected static String details = "/aodn-discovery-parameter-vocabulary/version-1-6/resource.json?uri=%s";
+    protected static String leafPath = "/aodn-platform-vocabulary/version-6-1/concept.json";
+
+    protected static String details = "/aodn-platform-vocabulary/version-6-1/resource.json?uri=%s";
 
     protected Function<JsonNode, String> label = (node) -> node.get("prefLabel").get("_value").asText();
     protected Function<JsonNode, String> about = (node) -> node.has("_about") ? node.get("_about").asText() : null;
@@ -47,14 +46,14 @@ public class RestExtService {
      * @param vocabApiBase
      * @return
      */
-    protected Map<String, List<ParameterVocabModel>> getLeafNodeOfParameterVocab(String vocabApiBase) {
-        Map<String, List<ParameterVocabModel>> result = new HashMap<>();
+    protected Map<String, List<PlatformVocabModel>> getLeafNodeOfParameterVocab(String vocabApiBase) {
+        Map<String, List<PlatformVocabModel>> results = new HashMap<>();
         String url = String.format(vocabApiBase + leafPath);
 
         while (url != null) {
             log.debug("Query api -> {}", url);
 
-            ObjectNode r = template.getForObject(url, ObjectNode.class);
+            ObjectNode r = ardcVocabRestTemplate.getForObject(url, ObjectNode.class);
             if (r != null && !r.isEmpty()) {
                 JsonNode node = r.get("result");
 
@@ -64,25 +63,25 @@ public class RestExtService {
                         String dl = String.format(vocabApiBase + details, about.apply(j));
                         try {
                             log.debug("Query api -> {}", dl);
-                            ObjectNode d = template.getForObject(dl, ObjectNode.class);
+                            ObjectNode d = ardcVocabRestTemplate.getForObject(dl, ObjectNode.class);
 
                             if(isNodeValid.apply(d, "result") && isNodeValid.apply(d.get("result"), "primaryTopic")) {
                                 JsonNode target = d.get("result").get("primaryTopic");
 
-                                ParameterVocabModel model = ParameterVocabModel
+                                PlatformVocabModel model = PlatformVocabModel
                                         .builder()
-                                        .label(label.apply(target).toLowerCase())
+                                        .label(label.apply(target))
                                         .definition(definition.apply(target))
                                         .about(about.apply(target))
                                         .build();
 
                                 if(target.has("broadMatch") && !target.get("broadMatch").isEmpty()) {
                                     for(JsonNode bm : target.get("broadMatch")) {
-                                        if (!result.containsKey(bm.asText())) {
-                                            result.put(bm.asText(), new ArrayList<>());
+                                        if (!results.containsKey(bm.asText())) {
+                                            results.put(bm.asText(), new ArrayList<>());
                                         }
                                         // We will have multiple cat under the same parent
-                                        result.get(bm.asText()).add(model);
+                                        results.get(bm.asText()).add(model);
                                     }
                                 }
                             }
@@ -104,22 +103,22 @@ public class RestExtService {
                 url = null;
             }
         }
-        return result;
+        return results;
     }
 
-    protected ParameterVocabModel buildParameterVocabModel(JsonNode currentNode, JsonNode outerNode) {
+    protected PlatformVocabModel buildPlatformVocabModel(JsonNode currentNode, JsonNode outerNode) {
         if (currentNode instanceof ObjectNode objectNode) {
             if (objectNode.has("prefLabel") && objectNode.has("_about")) {
-                return ParameterVocabModel.builder()
+                return PlatformVocabModel.builder()
                         .about(about.apply(currentNode))
-                        .label(label.apply(currentNode).toLowerCase())
+                        .label(label.apply(currentNode))
                         .build();
             }
         } else if (currentNode instanceof TextNode textNode) {
             if (textNode.asText().contains("parameter_classes")) {
-                return ParameterVocabModel.builder()
+                return PlatformVocabModel.builder()
                         .about(textNode.asText())
-                        .label(this.findLabelByAbout(outerNode, textNode.asText()).toLowerCase())
+                        .label(this.findLabelByAbout(outerNode, textNode.asText()))
                         .build();
             }
         }
@@ -135,38 +134,38 @@ public class RestExtService {
         return null;
     }
 
-    public List<ParameterVocabModel> getParameterVocab(String vocabApiBase) {
-        Map<String, List<ParameterVocabModel>> leaves = getLeafNodeOfParameterVocab(vocabApiBase);
-        List<ParameterVocabModel> result = new ArrayList<>();
+    public List<PlatformVocabModel> getPlatformVocabs(String vocabApiBase) {
+        Map<String, List<PlatformVocabModel>> leaves = getLeafNodeOfParameterVocab(vocabApiBase);
+        List<PlatformVocabModel> results = new ArrayList<>();
 
-        String url = String.format(vocabApiBase + path);
+        String url = String.format(vocabApiBase + platformVocabApiPath);
 
         while (url != null) {
             try {
                 log.debug("Query api -> {}", url);
 
-                ObjectNode r = template.getForObject(url, ObjectNode.class);
+                ObjectNode r = ardcVocabRestTemplate.getForObject(url, ObjectNode.class);
 
                 if (r != null && !r.isEmpty()) {
                     JsonNode node = r.get("result");
 
                     if (!node.isEmpty() && node.has("items") && !node.get("items").isEmpty()) {
                         for (JsonNode j : node.get("items")) {
-                            List<ParameterVocabModel> broader = new ArrayList<>();
-                            List<ParameterVocabModel> narrower = new ArrayList<>();
+                            List<PlatformVocabModel> broader = new ArrayList<>();
+                            List<PlatformVocabModel> narrower = new ArrayList<>();
 
 
                             log.debug("Processing label {}", label.apply(j));
 
                             if (j.has("broader")) {
                                 for (JsonNode b : j.get("broader")) {
-                                    broader.add(this.buildParameterVocabModel(b, node));
+                                    broader.add(this.buildPlatformVocabModel(b, node));
                                 }
                             }
 
                             if (j.has("narrower")) {
                                 for (JsonNode b : j.get("narrower")) {
-                                    ParameterVocabModel c = this.buildParameterVocabModel(b, node);
+                                    PlatformVocabModel c = this.buildPlatformVocabModel(b, node);
                                     // The record comes from ardc have two levels only, so the second level for sure
                                     // is empty, but the third level info comes form another link (aka the leaves)
                                     // and therefore we can attach it to the second level to for the third.
@@ -177,16 +176,16 @@ public class RestExtService {
                                 }
                             }
 
-                            ParameterVocabModel model = ParameterVocabModel
+                            PlatformVocabModel model = PlatformVocabModel
                                     .builder()
-                                    .label(label.apply(j).toLowerCase())
+                                    .label(label.apply(j))
                                     .definition(definition.apply(j))
                                     .about(about.apply(j))
                                     .broader(broader)
                                     .narrower(narrower)
                                     .build();
 
-                            result.add(model);
+                            results.add(model);
                         }
                     }
 
@@ -201,11 +200,11 @@ public class RestExtService {
                     url = null;
                 }
             } catch (RestClientException e) {
-                log.error("Fail connect {}, parameter vocab return likely outdated", url);
+                log.error("Fail connect {}, vocab return likely outdated", url);
                 url = null;
             }
         }
 
-        return result;
+        return results;
     }
 }

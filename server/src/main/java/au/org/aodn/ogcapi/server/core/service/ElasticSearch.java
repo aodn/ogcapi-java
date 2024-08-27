@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
-import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
+import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.core.model.dto.RecordSuggestDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.QueryHandler;
@@ -91,7 +91,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         ));
     }
 
-    protected List<Hit<RecordSuggestDTO>> getRecordSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
+    protected List<Hit<RecordSuggestDto>> getRecordSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         // create query
         List<Query> recordSuggestFieldsQueries = new ArrayList<>();
         Stream.of(searchAsYouTypeEnabledFields).forEach(field -> {
@@ -134,7 +134,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         // execute
         log.info("getRecordSuggestions | Elastic search payload {}", searchRequest.toString());
-        SearchResponse<RecordSuggestDTO> response = esClient.search(searchRequest, RecordSuggestDTO.class);
+        SearchResponse<RecordSuggestDto> response = esClient.search(searchRequest, RecordSuggestDto.class);
         log.info("getRecordSuggestions | Elastic search response {}", response);
 
         // return

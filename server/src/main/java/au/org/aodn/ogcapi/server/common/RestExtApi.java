@@ -1,7 +1,9 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.PlatformVocabModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.ardc.service.ArdcVocabService;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -24,10 +26,11 @@ import java.util.*;
 @RequestMapping(value = "/api/v1/ogc/ext")
 public class RestExtApi {
     @Value("${api.vocabs:https://vocabs.ardc.edu.au/repository/api/lda/aodn}")
-    protected String vocabApi;
+    protected String vocabApiBase;
 
     @Autowired
-    protected RestExtService restExtService;
+    protected ArdcVocabService ardcVocabService;
+
     @Autowired
     protected Search searchService;
     /**
@@ -65,6 +68,11 @@ public class RestExtApi {
     @Cacheable("parameter_vocabs")
     @GetMapping(path="/parameter/vocabs")
     public ResponseEntity<List<ParameterVocabModel>> getParameterVocab() {
-        return ResponseEntity.ok(restExtService.getParameterVocab(vocabApi));
+        return ResponseEntity.ok(ardcVocabService.getParameterVocabs(vocabApiBase));
+    }
+
+    @GetMapping(path="/platform/vocabs")
+    public ResponseEntity<List<PlatformVocabModel>> getPlatformVocabs() {
+        return ResponseEntity.ok(ardcVocabService.getPlatformVocabs(vocabApiBase));
     }
 }

@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service;
+package au.org.aodn.ogcapi.server.core.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -7,7 +7,6 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
-import au.org.aodn.ogcapi.server.core.service.exception.CustomException;
 
 import java.time.LocalDateTime;
 import java.util.Arrays;
