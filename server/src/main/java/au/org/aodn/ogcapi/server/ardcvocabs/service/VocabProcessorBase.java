@@ -32,7 +32,7 @@ public class VocabProcessorBase {
                 JsonNode target = detailsObj.get("result").get("primaryTopic");
                 return VocabModel
                         .builder()
-                        .label(label.apply(target))
+                        .label(label.apply(target).toLowerCase())
                         .definition(definition.apply(target))
                         .about(vocabUri)
                         .build();
