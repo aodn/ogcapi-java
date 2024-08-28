@@ -1,6 +1,6 @@
-package au.org.aodn.ogcapi.server.ardc.service;
+package au.org.aodn.ogcapi.server.ardcvocabs.service;
 
-import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
+import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabModel;
 
 import java.util.List;
 

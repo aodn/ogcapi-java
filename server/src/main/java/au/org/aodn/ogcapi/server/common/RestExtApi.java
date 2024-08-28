@@ -1,8 +1,8 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
+import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.server.ardc.service.ArdcVocabService;
+import au.org.aodn.ogcapi.server.ardcvocabs.service.ArdcVocabService;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;

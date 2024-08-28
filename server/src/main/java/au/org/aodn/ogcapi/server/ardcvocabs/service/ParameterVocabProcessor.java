@@ -1,17 +1,17 @@
-package au.org.aodn.ogcapi.server.ardc.service;
+package au.org.aodn.ogcapi.server.ardcvocabs.service;
 
-import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
+import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 
 import java.util.*;
 
 @Slf4j
-@Service
+@Component
 public class ParameterVocabProcessor extends VocabProcessorBase {
     protected static String parameterCategoryVocabPath = "/aodn-parameter-category-vocabulary/version-2-1/concept.json";
     protected static String parameterVocabPath = "/aodn-discovery-parameter-vocabulary/version-1-6/concept.json";

@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.ardc.model;
+package au.org.aodn.ogcapi.server.ardcvocabs.model;
 
 import lombok.*;
 

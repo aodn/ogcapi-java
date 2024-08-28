@@ -1,6 +1,6 @@
-package au.org.aodn.ogcapi.server.ardc.service;
+package au.org.aodn.ogcapi.server.ardcvocabs.service;
 
-import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
+import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

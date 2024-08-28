@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.ardc.model;
+package au.org.aodn.ogcapi.server.ardcvocabs.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
