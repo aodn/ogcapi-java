@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.ardc.service;
 
-import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -52,11 +52,11 @@ public class ArdcVocabServiceTest {
         Mockito.when(mockRestTemplate.<ObjectNode>getForObject(endsWith("/aodn-discovery-parameter-vocabulary/version-1-6/resource.json?uri=http://vocab.aodn.org.au/def/discovery_parameter/entity/390"), any(), any(Object[].class)))
                 .thenReturn((ObjectNode)objectMapper.readTree(ResourceUtils.getFile("classpath:databag/parameter_vocabs/vocab_entity_390.json")));
 
-        List<ParameterVocabModel> parameterVocabModelList = ardcVocabService.getParameterVocabs("");
-        assertEquals("Total equals", 33, parameterVocabModelList.size());
+        List<VocabModel> VocabModelList = ardcVocabService.getParameterVocabs("");
+        assertEquals("Total equals", 33, VocabModelList.size());
 
 
-        Optional<ParameterVocabModel> c = parameterVocabModelList
+        Optional<VocabModel> c = VocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("chemical"))
                 .findFirst();
@@ -65,7 +65,7 @@ public class ArdcVocabServiceTest {
         assertEquals("Have narrower equals", 5, c.get().getNarrower().size());
 
 
-        Optional<ParameterVocabModel> b = parameterVocabModelList
+        Optional<VocabModel> b = VocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("biological"))
                 .findFirst();
@@ -74,7 +74,7 @@ public class ArdcVocabServiceTest {
         assertEquals("Have narrower equals", 5, b.get().getNarrower().size());
 
 
-        Optional<ParameterVocabModel> pa = parameterVocabModelList
+        Optional<VocabModel> pa = VocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("physical-atmosphere"))
                 .findFirst();
@@ -82,27 +82,27 @@ public class ArdcVocabServiceTest {
         assertTrue("Find target Physical-Atmosphere", pa.isPresent());
         assertEquals("Have narrower equals", 8, pa.get().getNarrower().size());
 
-        Optional<ParameterVocabModel> airTemperature = pa.get().getNarrower()
+        Optional<VocabModel> airTemperature = pa.get().getNarrower()
                 .stream()
                 .filter(p -> p.getLabel().equals("air temperature"))
                 .findFirst();
         assertTrue("Find target Air temperature", airTemperature.isPresent());
 
-        Optional<ParameterVocabModel> visibility = pa.get().getNarrower()
+        Optional<VocabModel> visibility = pa.get().getNarrower()
                 .stream()
                 .filter(p -> p.getLabel().equals("visibility"))
                 .findFirst();
 
         assertTrue("Find target Visibility", visibility.isPresent());
 
-        Optional<ParameterVocabModel> horizontalVisibilityInTheAtmosphere = visibility.get().getNarrower()
+        Optional<VocabModel> horizontalVisibilityInTheAtmosphere = visibility.get().getNarrower()
                 .stream()
                 .filter(p -> p.getLabel().equals("horizontal visibility in the atmosphere"))
                 .findFirst();
 
         assertTrue("Horizontal visibility in the atmosphere found", horizontalVisibilityInTheAtmosphere.isPresent());
 
-        Optional<ParameterVocabModel> pw = parameterVocabModelList
+        Optional<VocabModel> pw = VocabModelList
                 .stream()
                 .filter(p -> p.getBroader().isEmpty() && !p.getNarrower().isEmpty() && p.getLabel().equals("physical-water"))
                 .findFirst();

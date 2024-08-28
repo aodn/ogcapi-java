@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
 import au.org.aodn.ogcapi.server.core.model.dto.RecordSuggestDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
@@ -174,7 +174,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         Set<String> parameterVocabSuggestions = new HashSet<>();
         for (Hit<JsonNode> item : this.getParameterVocabSuggestions(input)) {
             if (item.source() != null && item.source().get(parameterVocabsPath) != null) {
-                ParameterVocabModel parameterVocab = mapper.readValue(item.source().get(parameterVocabsPath).toString(), ParameterVocabModel.class);
+                VocabModel parameterVocab = mapper.readValue(item.source().get(parameterVocabsPath).toString(), VocabModel.class);
                 parameterVocabSuggestions.add(parameterVocab.getLabel());
             }
         }

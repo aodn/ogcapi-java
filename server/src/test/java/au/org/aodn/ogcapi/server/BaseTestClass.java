@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server;
 
-import au.org.aodn.ogcapi.server.core.model.ArdcVocabModel;
-import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.VocabDto;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
@@ -125,7 +125,7 @@ public class BaseTestClass {
     protected void insertTestArdcVocabs() throws IOException {
 
         ObjectMapper objectMapper = new ObjectMapper();
-        List<ArdcVocabModel> vocabs = new ArrayList<>();
+        List<VocabDto> vocabs = new ArrayList<>();
 
         // Read the JSON files
         try {
@@ -137,8 +137,8 @@ public class BaseTestClass {
 
             // populate data for parameter vocabs list
             for (JsonNode parameterVocabNode : parameterVocabNodes) {
-                ParameterVocabModel parameterVocabModel = objectMapper.readValue(parameterVocabNode.toString(), ParameterVocabModel.class);
-                ArdcVocabModel vocab = ArdcVocabModel.builder().parameterVocabModel(parameterVocabModel).build();
+                VocabModel parameterVocabModel = objectMapper.readValue(parameterVocabNode.toString(), VocabModel.class);
+                VocabDto vocab = VocabDto.builder().parameterVocabModel(parameterVocabModel).build();
                 vocabs.add(vocab);
             }
         } catch (IOException e) {
@@ -150,11 +150,11 @@ public class BaseTestClass {
         bulkIndexVocabs(vocabs);
     }
 
-    protected void bulkIndexVocabs(List<ArdcVocabModel> vocabs) throws IOException {
+    protected void bulkIndexVocabs(List<VocabDto> vocabs) throws IOException {
         // count portal index documents, or create index if not found from defined mapping JSON file
         BulkRequest.Builder bulkRequest = new BulkRequest.Builder();
 
-        for (ArdcVocabModel vocab : vocabs) {
+        for (VocabDto vocab : vocabs) {
             // send bulk request to Elasticsearch
             bulkRequest.operations(op -> op
                 .index(idx -> idx

@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
-import au.org.aodn.ogcapi.server.ardc.model.PlatformVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.ardc.service.ArdcVocabService;
 import au.org.aodn.ogcapi.server.core.service.Search;
@@ -67,12 +66,12 @@ public class RestExtApi {
      */
     @Cacheable("parameter_vocabs")
     @GetMapping(path="/parameter/vocabs")
-    public ResponseEntity<List<ParameterVocabModel>> getParameterVocab() {
+    public ResponseEntity<List<VocabModel>> getParameterVocab() {
         return ResponseEntity.ok(ardcVocabService.getParameterVocabs(vocabApiBase));
     }
 
     @GetMapping(path="/platform/vocabs")
-    public ResponseEntity<List<PlatformVocabModel>> getPlatformVocabs() {
+    public ResponseEntity<List<VocabModel>> getPlatformVocabs() {
         return ResponseEntity.ok(ardcVocabService.getPlatformVocabs(vocabApiBase));
     }
 }

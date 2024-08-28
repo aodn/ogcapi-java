@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.ardc.service;
 
-import au.org.aodn.ogcapi.server.ardc.model.ParameterVocabModel;
-import au.org.aodn.ogcapi.server.ardc.model.PlatformVocabModel;
+import au.org.aodn.ogcapi.server.ardc.model.VocabModel;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,21 +8,21 @@ import java.util.List;
 
 @Service
 public class ArdcVocabServiceImpl implements ArdcVocabService {
-    private final ParameterVocabService parameterVocabService;
-    private final PlatformVocabService platformVocabService;
+    private final ParameterVocabProcessor parameterVocabProcessor;
+    private final PlatformVocabProcessor platformVocabProcessor;
 
     @Autowired
-    ArdcVocabServiceImpl(ParameterVocabService parameterVocabService,
-                         PlatformVocabService platformVocabService) {
-        this.parameterVocabService = parameterVocabService;
-        this.platformVocabService = platformVocabService;
+    ArdcVocabServiceImpl(ParameterVocabProcessor parameterVocabProcessor,
+                         PlatformVocabProcessor platformVocabProcessor) {
+        this.parameterVocabProcessor = parameterVocabProcessor;
+        this.platformVocabProcessor = platformVocabProcessor;
     }
 
-    public List<ParameterVocabModel> getParameterVocabs(String vocabApiBase) {
-        return parameterVocabService.getParameterVocabs(vocabApiBase);
+    public List<VocabModel> getParameterVocabs(String vocabApiBase) {
+        return parameterVocabProcessor.getParameterVocabs(vocabApiBase);
     }
 
-    public List<PlatformVocabModel> getPlatformVocabs(String vocabApiBase) {
-        return platformVocabService.getPlatformVocabs(vocabApiBase);
+    public List<VocabModel> getPlatformVocabs(String vocabApiBase) {
+        return platformVocabProcessor.getPlatformVocabs(vocabApiBase);
     }
 }
