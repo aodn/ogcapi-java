@@ -43,7 +43,7 @@ public class RestExtService {
             throw new IndexNotFoundException("Failed to get documents count from index: " + indexName + " | " + e.getMessage());
         }
     }
-    
+
     protected List<JsonNode> groupVocabsByKey(String key) throws IOException {
         List<JsonNode> vocabs = new ArrayList<>();
         log.info("Fetching {} vocabularies from {}", key, vocabsIndexName);
