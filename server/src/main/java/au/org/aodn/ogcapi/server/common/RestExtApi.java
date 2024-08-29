@@ -1,14 +1,12 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.server.ardcvocabs.service.ArdcVocabService;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
@@ -18,20 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.*;
 
 @Slf4j
 @RestController("CommonRestExtApi")
 @RequestMapping(value = "/api/v1/ogc/ext")
 public class RestExtApi {
-    @Value("${api.vocabs:https://vocabs.ardc.edu.au/repository/api/lda/aodn}")
-    protected String vocabApiBase;
-
-    @Autowired
-    protected ArdcVocabService ardcVocabService;
-
     @Autowired
     protected Search searchService;
+
+    @Autowired
+    protected RestExtService restExtService;
+
     /**
      * This call is cql aware, so if you provided the filter string, then the return value will be filtered by
      * the cql clause.
@@ -66,8 +63,8 @@ public class RestExtApi {
      */
     @Cacheable("parameter_vocabs")
     @GetMapping(path="/parameter/vocabs")
-    public ResponseEntity<List<VocabModel>> getParameterVocab() {
-        return ResponseEntity.ok(ardcVocabService.getParameterVocabs(vocabApiBase));
+    public ResponseEntity<List<JsonNode>> getParameterVocab() throws IOException {
+        return ResponseEntity.ok(restExtService.getParameterVocabs());
     }
 
 
@@ -78,7 +75,7 @@ public class RestExtApi {
     }
 
     @GetMapping(path="/platform/vocabs")
-    public ResponseEntity<List<VocabModel>> getPlatformVocabs() {
-        return ResponseEntity.ok(ardcVocabService.getPlatformVocabs(vocabApiBase));
+    public ResponseEntity<List<JsonNode>> getPlatformVocabs() throws IOException {
+        return ResponseEntity.ok(restExtService.getPlatformVocabs());
     }
 }

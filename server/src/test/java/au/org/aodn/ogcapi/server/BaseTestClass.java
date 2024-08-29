@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server;
 
-import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabModel;
-import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabDto;
+import au.org.aodn.ogcapi.server.core.model.VocabDto;
+import au.org.aodn.ogcapi.server.core.model.VocabModel;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;

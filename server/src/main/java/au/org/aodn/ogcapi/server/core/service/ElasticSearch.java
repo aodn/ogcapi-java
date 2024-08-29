@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.ardcvocabs.model.VocabModel;
+import au.org.aodn.ogcapi.server.core.model.VocabModel;
 import au.org.aodn.ogcapi.server.core.model.dto.RecordSuggestDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
