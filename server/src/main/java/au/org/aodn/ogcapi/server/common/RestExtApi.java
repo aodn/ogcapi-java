@@ -55,9 +55,9 @@ public class RestExtApi {
      * Evict cache to allow reload
      */
     @CacheEvict(value="parameter_vocabs", allEntries = true)
-    @Scheduled(fixedRateString = "${caching.parameter_vocab.ttl:43200000}")
-    public void emptyCachedParameterVocab() {
-        log.info("Evict parameter_vocab cache as TTL pass");
+    @Scheduled(fixedRateString = "${caching.parameter_vocabs.ttl:43200000}")
+    public void emptyCachedParameterVocabs() {
+        log.info("Evict parameter_vocabs cache as TTL pass");
     }
 
     /**
@@ -68,6 +68,13 @@ public class RestExtApi {
     @GetMapping(path="/parameter/vocabs")
     public ResponseEntity<List<VocabModel>> getParameterVocab() {
         return ResponseEntity.ok(ardcVocabService.getParameterVocabs(vocabApiBase));
+    }
+
+
+    @CacheEvict(value="platform_vocabs", allEntries = true)
+    @Scheduled(fixedRateString = "${caching.platform_vocabs.ttl:43200000}")
+    public void emptyCachedPlatformVocabs() {
+        log.info("Evict platform_vocabs cache as TTL pass");
     }
 
     @GetMapping(path="/platform/vocabs")
