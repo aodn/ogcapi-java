@@ -78,4 +78,16 @@ public class RestExtApi {
     public ResponseEntity<List<JsonNode>> getPlatformVocabs() throws IOException {
         return ResponseEntity.ok(restExtService.getPlatformVocabs());
     }
+
+
+    @CacheEvict(value="organisation_vocabs", allEntries = true)
+    @Scheduled(fixedRateString = "${caching.organisation_vocabs.ttl:43200000}")
+    public void emptyCachedOrganisationVocabs() {
+        log.info("Evict organisation_vocabs cache as TTL pass");
+    }
+
+    @GetMapping(path="/organisation/vocabs")
+    public ResponseEntity<List<JsonNode>> getOrganisationVocabs() throws IOException {
+        return ResponseEntity.ok(restExtService.getOrganisationVocabs());
+    }
 }

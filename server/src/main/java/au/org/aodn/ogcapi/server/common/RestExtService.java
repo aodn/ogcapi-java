@@ -34,6 +34,10 @@ public class RestExtService {
         return this.groupVocabsByKey("platform_vocab");
     }
 
+    public List<JsonNode> getOrganisationVocabs() throws IOException {
+        return this.groupVocabsByKey("organisation_vocab");
+    }
+
     private long getDocumentsCount(String indexName) {
         try {
             return esClient.count(s -> s
