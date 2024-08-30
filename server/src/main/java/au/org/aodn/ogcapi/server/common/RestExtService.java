@@ -26,18 +26,6 @@ public class RestExtService {
     @Autowired
     protected ElasticsearchClient esClient;
 
-    public List<JsonNode> getParameterVocabs() throws IOException {
-        return this.groupVocabsByKey("parameter_vocab");
-    }
-
-    public List<JsonNode> getPlatformVocabs() throws IOException {
-        return this.groupVocabsByKey("platform_vocab");
-    }
-
-    public List<JsonNode> getOrganisationVocabs() throws IOException {
-        return this.groupVocabsByKey("organisation_vocab");
-    }
-
     private long getDocumentsCount(String indexName) {
         try {
             return esClient.count(s -> s
@@ -48,7 +36,7 @@ public class RestExtService {
         }
     }
 
-    protected List<JsonNode> groupVocabsByKey(String key) throws IOException {
+    public List<JsonNode> groupVocabsFromEsByKey(String key) throws IOException {
         List<JsonNode> vocabs = new ArrayList<>();
         log.info("Fetching {} vocabularies from {}", key, vocabsIndexName);
         try {

@@ -64,7 +64,7 @@ public class RestExtApi {
     @Cacheable("parameter_vocabs")
     @GetMapping(path="/parameter/vocabs")
     public ResponseEntity<List<JsonNode>> getParameterVocab() throws IOException {
-        return ResponseEntity.ok(restExtService.getParameterVocabs());
+        return ResponseEntity.ok(restExtService.groupVocabsFromEsByKey("parameter_vocab"));
     }
 
 
@@ -76,7 +76,7 @@ public class RestExtApi {
 
     @GetMapping(path="/platform/vocabs")
     public ResponseEntity<List<JsonNode>> getPlatformVocabs() throws IOException {
-        return ResponseEntity.ok(restExtService.getPlatformVocabs());
+        return ResponseEntity.ok(restExtService.groupVocabsFromEsByKey("platform_vocab"));
     }
 
 
@@ -88,6 +88,6 @@ public class RestExtApi {
 
     @GetMapping(path="/organisation/vocabs")
     public ResponseEntity<List<JsonNode>> getOrganisationVocabs() throws IOException {
-        return ResponseEntity.ok(restExtService.getOrganisationVocabs());
+        return ResponseEntity.ok(restExtService.groupVocabsFromEsByKey("organisation_vocab"));
     }
 }
