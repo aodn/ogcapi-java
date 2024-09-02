@@ -68,6 +68,100 @@
             }
           }
         }
+      },
+      "platform_vocab": {
+        "properties": {
+          "label": {
+            "type": "search_as_you_type",
+            "analyzer": "custom_analyser"
+          },
+          "definition": {
+            "type": "text"
+          },
+          "about": {
+            "type": "keyword"
+          },
+          "broader": {
+            "type": "nested",
+            "properties": {
+              "label": {
+                "type": "text"
+              },
+              "about": {
+                "type": "keyword"
+              }
+            }
+          },
+          "narrower": {
+            "type": "nested",
+            "properties": {
+              "label": {
+                "type": "text"
+              },
+              "about": {
+                "type": "keyword"
+              },
+              "narrower": {
+                "type": "nested",
+                "properties": {
+                  "label": {
+                    "type": "text"
+                  },
+                  "about": {
+                    "type": "keyword"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "organisation_vocab": {
+        "properties": {
+          "label": {
+            "type": "search_as_you_type",
+            "analyzer": "custom_analyser"
+          },
+          "definition": {
+            "type": "text"
+          },
+          "about": {
+            "type": "keyword"
+          },
+          "broader": {
+            "type": "nested",
+            "properties": {
+              "label": {
+                "type": "text"
+              },
+              "about": {
+                "type": "keyword"
+              }
+            }
+          },
+          "narrower": {
+            "type": "nested",
+            "properties": {
+              "label": {
+                "type": "text"
+              },
+              "about": {
+                "type": "keyword"
+              },
+              "narrower": {
+                "type": "nested",
+                "properties": {
+                  "label": {
+                    "type": "text"
+                  },
+                  "about": {
+                    "type": "keyword"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     }
   }

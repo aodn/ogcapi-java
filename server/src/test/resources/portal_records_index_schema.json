@@ -86,6 +86,8 @@
         }
       },
       "parameter_vocabs" : { "type":  "keyword" },
+      "platform_vocabs" : { "type":  "keyword" },
+      "organisation_vocabs" : { "type":  "keyword" },
       "keywords": {
         "type": "nested",
         "properties": {
