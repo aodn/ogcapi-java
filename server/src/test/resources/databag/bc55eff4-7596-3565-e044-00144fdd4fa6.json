@@ -208,15 +208,6 @@
     }
   ],
   "id": "bc55eff4-7596-3565-e044-00144fdd4fa6",
-  "title_suggest": [
-    "50m",
-    "multibeam",
-    "dataset",
-    "australia",
-    "tile",
-    "number",
-    "sd57"
-  ],
   "stac_version": "1.0.0",
   "stac_extensions": [
     "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",

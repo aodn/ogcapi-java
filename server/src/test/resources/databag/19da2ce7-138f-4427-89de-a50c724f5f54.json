@@ -79,9 +79,6 @@
         "start": "2009-09-23T14:00:00Z",
         "end": "2020-12-02T13:00:00Z"
       }
-    ],
-    "parameter_vocabs": [
-      "wave"
     ]
   },
   "contacts": [
@@ -563,7 +560,7 @@
     }
   ],
   "id": "19da2ce7-138f-4427-89de-a50c724f5f54",
-  "record_suggest": {
+  "search_suggestions": {
     "abstract_phrases": [
       "radar wera",
       "radar system",
@@ -1123,6 +1120,9 @@
       "136.879 e",
       "located cape wiles",
       "8.512 mhz"
+    ],
+    "parameter_vocabs": [
+      "wave"
     ]
   },
   "sci:citation": "{\"suggestedCitation\":\"The citation in a list of references is: \\\"IMOS [year-of-data-download], [Title], [data-access-URL], accessed [date-of-access].\\\"\",\"useLimitations\":[\"Data, products and services from IMOS are provided \\\"as is\\\" without any warranty as to fitness for a particular purpose.\"],\"otherConstraints\":[\"Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: \\\"Data was sourced from Australia’s Integrated Marine Observing System (IMOS) – IMOS is enabled by the National Collaborative Research Infrastructure strategy (NCRIS).\\\" If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).\"]}",

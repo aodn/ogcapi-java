@@ -92,8 +92,7 @@
     "temporal" : [ {
       "start" : "2007-09-08T14:00:00Z",
       "end" : null
-    } ],
-    "parameter_vocabs" : null
+    } ]
   },
   "contacts" : [ {
     "roles" : [ "pointOfContact" ],
@@ -382,9 +381,7 @@
     "title" : "AODN Organisation Vocabulary"
   } ],
   "id" : "ae86e2f5-eaaf-459e-a405-e654d85adb9c",
-  "record_suggest" : {
-    "title" : "IMOS - Australian National Mooring Network (ANMN) Facility - Current velocity time-series",
-    "description" : null
+  "search_suggestions" : {
   },
   "type" : "Collection",
   "stac_version" : "1.0.0",

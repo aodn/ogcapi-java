@@ -82,12 +82,12 @@
       "record_suggest": {
         "type": "nested",
         "properties": {
-          "abstract_phrases": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
+          "abstract_phrases": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
+          "parameter_vocabs": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
+          "platform_vocabs": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
+          "organisation_vocabs": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
         }
       },
-      "parameter_vocabs" : { "type":  "keyword" },
-      "platform_vocabs" : { "type":  "keyword" },
-      "organisation_vocabs" : { "type":  "keyword" },
       "keywords": {
         "type": "nested",
         "properties": {

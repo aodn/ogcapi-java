@@ -189,16 +189,6 @@
     }
   ],
   "id": "51e7f42c-e01d-47ea-b8e4-f702e85b5948",
-  "title_suggest": [
-    "gmrt",
-    "ausseabed",
-    "pl019",
-    "workshop",
-    "1",
-    "attribute",
-    "values",
-    "definitions"
-  ],
   "stac_version": "1.0.0",
   "stac_extensions": [
     "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",

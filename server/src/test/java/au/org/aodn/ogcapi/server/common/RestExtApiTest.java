@@ -165,19 +165,19 @@ public class RestExtApiTest extends BaseTestClass {
 
         ResponseEntity<String> wavResponse = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=wav", String.class);
         assertTrue(wavResponse.getStatusCode().is2xxSuccessful());
-        assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("parameter_vocab_suggestions"));
-        assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("record_suggestions"));
-        assertTrue(wavResponse.getBody().contains("\"parameter_vocab_suggestions\":[\"Wave\"]"));
+        assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("parameter_vocabs"));
+        assertTrue(Objects.requireNonNull(wavResponse.getBody()).contains("search_suggestions"));
+        assertTrue(wavResponse.getBody().contains("\"parameter_vocabs\":[\"Wave\"]"));
 
         ResponseEntity<String> tempResponse = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=temp", String.class);
-        assertTrue(Objects.requireNonNull(tempResponse.getBody()).contains("parameter_vocab_suggestions"));
-        assertTrue(Objects.requireNonNull(tempResponse.getBody()).contains("record_suggestions"));
-        assertTrue(tempResponse.getBody().contains("\"parameter_vocab_suggestions\":[\"Temperature\"]"));
+        assertTrue(Objects.requireNonNull(tempResponse.getBody()).contains("parameter_vocabs"));
+        assertTrue(Objects.requireNonNull(tempResponse.getBody()).contains("search_suggestions"));
+        assertTrue(tempResponse.getBody().contains("\"parameter_vocabs\":[\"Temperature\"]"));
 
 
         ResponseEntity<String> preResponse = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=pre", String.class);
-        assertTrue(Objects.requireNonNull(preResponse.getBody()).contains("parameter_vocab_suggestions"));
-        assertTrue(Objects.requireNonNull(preResponse.getBody()).contains("record_suggestions"));
+        assertTrue(Objects.requireNonNull(preResponse.getBody()).contains("parameter_vocabs"));
+        assertTrue(Objects.requireNonNull(preResponse.getBody()).contains("search_suggestions"));
         assertTrue(preResponse.getBody().contains("Water pressure"));
         assertTrue(preResponse.getBody().contains("Air pressure"));
     }

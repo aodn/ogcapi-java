@@ -83,12 +83,6 @@
         "start": "1870-07-16T14:10:44Z",
         "end": "2013-06-16T14:00:00Z"
       }
-    ],
-    "parameter_vocabs": [
-      "alkalinity",
-      "carbon",
-      "temperature",
-      "salinity"
     ]
   },
   "contacts": [
@@ -654,7 +648,7 @@
     }
   ],
   "id": "7709f541-fc0c-4318-b5b9-9053aa474e0e",
-  "record_suggest": {
+  "search_suggestions": {
     "abstract_phrases": [
       "resolution",
       "carbon dic",
@@ -753,6 +747,12 @@
       "2013",
       "ph",
       "time"
+    ],
+    "parameter_vocabs": [
+      "alkalinity",
+      "carbon",
+      "temperature",
+      "salinity"
     ]
   },
   "sci:citation": "{\"suggestedCitation\":null,\"useLimitations\":null,\"otherConstraints\":[\"The citation in a list of references is: citation name/s (year metadata published), metadata title. File identifier and Data accessed at (add http link).\"]}",
