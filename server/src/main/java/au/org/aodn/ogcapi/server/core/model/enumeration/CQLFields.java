@@ -159,8 +159,9 @@ public enum CQLFields implements CQLFieldsInterface {
             (literal) -> MatchQuery.of(m -> m
                     .fuzziness("AUTO")
                     .field(StacBasicField.Title.searchField)
-                    // At least first 3 char need to match before fuzzy to improve speed
-                    .prefixLength(3)
+                    .prefixLength(0)
+                    // Increase the relevance of matches in title
+                    .boost(2.0F)
                     .query(literal))._toQuery(),
             null
     ),
@@ -170,19 +171,7 @@ public enum CQLFields implements CQLFieldsInterface {
             (literal) -> MatchQuery.of(m -> m
                     .fuzziness("AUTO")
                     .field(StacBasicField.Description.searchField)
-                    // At least first 3 char need to match before fuzzy to improve speed
-                    .prefixLength(3)
-                    .query(literal))._toQuery(),
-            null
-    ),
-    fuzzy_content(
-            null,
-            List.of(StacBasicField.Title.displayField, StacBasicField.Description.displayField),
-            (literal) -> MultiMatchQuery.of(m -> m
-                    .fuzziness("AUTO")
-                    .fields(List.of(StacBasicField.Title.searchField, StacBasicField.Description.searchField))
-                    // At least first 3 char need to match before fuzzy to improve speed
-                    .prefixLength(3)
+                    .prefixLength(0)
                     .query(literal))._toQuery(),
             null
     ),
