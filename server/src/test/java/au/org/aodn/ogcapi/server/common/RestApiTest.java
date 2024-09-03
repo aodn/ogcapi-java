@@ -500,16 +500,11 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 0 record with fuzzy_title");
         assertEquals(0, collections.getBody().getTotal());
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity')", ExtendedCollections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_desc='salinity')", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with fuzzy_description");
         assertEquals(1, collections.getBody().getTotal());
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_description='salinity' or fuzzy_title='salinity')", ExtendedCollections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with combined fuzzy_");
-        assertEquals(1, collections.getBody().getTotal());
-
-        // Fuzzy_content = fuzzy_title or fuzzy_description
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=fuzzy_content='salinity'", ExtendedCollections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=(fuzzy_desc='salinity' or fuzzy_title='salinity')", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record with combined fuzzy_");
         assertEquals(1, collections.getBody().getTotal());
     }

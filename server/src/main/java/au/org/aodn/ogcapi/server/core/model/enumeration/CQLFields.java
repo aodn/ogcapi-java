@@ -165,7 +165,7 @@ public enum CQLFields implements CQLFieldsInterface {
                     .query(literal))._toQuery(),
             null
     ),
-    fuzzy_description(
+    fuzzy_desc(
             null,
             StacBasicField.Description.displayField,
             (literal) -> MatchQuery.of(m -> m
