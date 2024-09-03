@@ -15,7 +15,7 @@ elasticsearch:
   search_as_you_type:
     search_suggestions:
       path: search_suggestions
-      fields: abstract_phrases, parameter_vocabs, platform_vocabs, organisation_vocabs
+      fields: abstract_phrases, parameter_vocabs_sayt, platform_vocabs_sayt, organisation_vocabs_sayt
 
 api:
   host: http://localhost:${server.port}

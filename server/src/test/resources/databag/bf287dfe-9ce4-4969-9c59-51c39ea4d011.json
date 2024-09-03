@@ -2069,6 +2069,11 @@
         "start": "2007-11-24T20:11:00Z",
         "end": "2023-11-27T22:11:44Z"
       }
+    ],
+    "parameter_vocabs": [
+      "chlorophyll",
+      "ocean biota",
+      "temperature"
     ]
   },
   "contacts": [
@@ -3282,7 +3287,7 @@
       "443 geonetwork",
       "time ability"
     ],
-    "parameter_vocabs": [
+    "parameter_vocabs_sayt": [
       "chlorophyll",
       "ocean biota",
       "temperature"

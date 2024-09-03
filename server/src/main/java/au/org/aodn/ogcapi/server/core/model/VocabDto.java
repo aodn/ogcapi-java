@@ -15,4 +15,7 @@ public class VocabDto {
 
     @JsonProperty("platform_vocab")
     VocabModel platformVocabModel;
+
+    @JsonProperty("organisation_vocab")
+    VocabModel organisationVocabModel;
 }

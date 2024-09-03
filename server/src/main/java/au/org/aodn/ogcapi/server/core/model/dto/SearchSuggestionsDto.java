@@ -21,14 +21,14 @@ public class SearchSuggestionsDto {
     @JsonProperty("abstract_phrases")
     public List<String> getAbstractPhrases() { return searchSuggestions.get("abstract_phrases"); }
 
-    @JsonProperty("parameter_vocabs")
-    public List<String> getParameterVocabs() { return searchSuggestions.get("parameter_vocabs"); }
+    @JsonProperty("parameter_vocabs_sayt")
+    public List<String> getParameterVocabs() { return searchSuggestions.get("parameter_vocabs_sayt"); }
 
-    @JsonProperty("platform_vocabs")
-    public List<String> getPlatformVocabs() { return searchSuggestions.get("platform_vocabs"); }
+    @JsonProperty("platform_vocabs_sayt")
+    public List<String> getPlatformVocabs() { return searchSuggestions.get("platform_vocabs_sayt"); }
 
-    @JsonProperty("organisation_vocabs")
-    public List<String> getOrganisationVocabs() { return searchSuggestions.get("organisation_vocabs"); }
+    @JsonProperty("organisation_vocabs_sayt")
+    public List<String> getOrganisationVocabs() { return searchSuggestions.get("organisation_vocabs_sayt"); }
 
     @JsonProperty("search_suggestions")
     private void setSearchSuggestions(Map<String, List<String>> searchSuggestions) {

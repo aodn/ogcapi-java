@@ -139,37 +139,36 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         // extract parameter vocab suggestions
         Set<String> parameterVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
                 .stream()
-                .filter(item -> item.source() != null)
+                .filter(item -> item.source() != null && item.source().getParameterVocabs() != null && !item.source().getParameterVocabs().isEmpty())
                 .flatMap(item -> item.source().getParameterVocabs().stream())
-                .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
+                .filter(vocab -> vocab.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
-        searchSuggestions.put("parameter_vocabs", parameterVocabSuggestions);
-        log.info(parameterVocabSuggestions.toString());
+        searchSuggestions.put("suggested_parameter_vocabs", parameterVocabSuggestions);
 
         Set<String> platformVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
                 .stream()
-                .filter(item -> item.source() != null)
+                .filter(item -> item.source() != null && item.source().getPlatformVocabs() != null && !item.source().getPlatformVocabs().isEmpty())
                 .flatMap(item -> item.source().getPlatformVocabs().stream())
-                .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
+                .filter(vocab -> vocab.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
-        searchSuggestions.put("platform_vocabs", platformVocabSuggestions);
+        searchSuggestions.put("suggested_platform_vocabs", platformVocabSuggestions);
 
         Set<String> organisationVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
                 .stream()
-                .filter(item -> item.source() != null)
+                .filter(item -> item.source() != null && item.source().getOrganisationVocabs() != null && !item.source().getOrganisationVocabs().isEmpty())
                 .flatMap(item -> item.source().getOrganisationVocabs().stream())
-                .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
+                .filter(vocab -> vocab.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
-        searchSuggestions.put("organisation_vocabs", organisationVocabSuggestions);
+        searchSuggestions.put("suggested_organisation_vocabs", organisationVocabSuggestions);
 
         // extract abstract phrases suggestions
         Set<String> abstractPhrases = this.getSuggestionsByField(input, cql, coor)
                 .stream()
-                .filter(item -> item.source() != null)
+                .filter(item -> item.source() != null && item.source().getAbstractPhrases() != null && !item.source().getAbstractPhrases().isEmpty())
                 .flatMap(item -> item.source().getAbstractPhrases().stream())
                 .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
-        searchSuggestions.put("abstract_phrases", abstractPhrases);
+        searchSuggestions.put("suggested_phrases", abstractPhrases);
 
         return new ResponseEntity<>(searchSuggestions, HttpStatus.OK);
     }

@@ -122,27 +122,45 @@ public class BaseTestClass {
         });
     }
 
-    protected void insertTestArdcVocabs() throws IOException {
+    protected void insertTestVocabs() throws IOException {
 
         ObjectMapper objectMapper = new ObjectMapper();
         List<VocabDto> vocabs = new ArrayList<>();
 
         // Read the JSON files
         try {
-            File file = ResourceUtils.getFile("classpath:databag/aodn_discovery_parameter_vocabs.json");
-            JsonNode jsonNode = objectMapper.readTree(file);
-
             // parameter vocabs
-            JsonNode parameterVocabNodes = jsonNode.get("parameter_vocabs");
-
+            File parameterVocabsFile = ResourceUtils.getFile("classpath:databag/aodn_discovery_parameter_vocabs.json");
+            JsonNode parameterVocabNodes = objectMapper.readTree(parameterVocabsFile);
             // populate data for parameter vocabs list
             for (JsonNode parameterVocabNode : parameterVocabNodes) {
                 VocabModel parameterVocabModel = objectMapper.readValue(parameterVocabNode.toString(), VocabModel.class);
                 VocabDto vocab = VocabDto.builder().parameterVocabModel(parameterVocabModel).build();
                 vocabs.add(vocab);
             }
+
+            // parameter vocabs
+            File platformVocabsFile = ResourceUtils.getFile("classpath:databag/aodn_platform_vocabs.json");
+            JsonNode platformVocabsNodes = objectMapper.readTree(platformVocabsFile);
+            // populate data for platform vocabs list
+            for (JsonNode platformVocabsNode : platformVocabsNodes) {
+                VocabModel platformVocabModel = objectMapper.readValue(platformVocabsNode.toString(), VocabModel.class);
+                VocabDto vocab = VocabDto.builder().platformVocabModel(platformVocabModel).build();
+                vocabs.add(vocab);
+            }
+
+            // parameter vocabs
+            File organisationVocabsFile = ResourceUtils.getFile("classpath:databag/aodn_organisation_vocabs.json");
+            JsonNode organisationVocabNodes = objectMapper.readTree(organisationVocabsFile);
+            // populate data for organisation vocabs list
+            for (JsonNode organisationVocabNode : organisationVocabNodes) {
+                VocabModel organisationVocabModel = objectMapper.readValue(organisationVocabNode.toString(), VocabModel.class);
+                VocabDto vocab = VocabDto.builder().organisationVocabModel(organisationVocabModel).build();
+                vocabs.add(vocab);
+            }
+
         } catch (IOException e) {
-            logger.error("Failed to ingest test parameter vocabs to {}", vocabs_index_name);
+            logger.error("Failed to ingest test vocabs to {}", vocabs_index_name);
             throw new RuntimeException(e);
         }
 
