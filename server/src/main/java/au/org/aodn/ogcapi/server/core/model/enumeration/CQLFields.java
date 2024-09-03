@@ -159,7 +159,7 @@ public enum CQLFields implements CQLFieldsInterface {
             (literal) -> MatchQuery.of(m -> m
                     .fuzziness("AUTO")
                     .field(StacBasicField.Title.searchField)
-                    .prefixLength(0)
+                    .prefixLength(2)
                     // Increase the relevance of matches in title
                     .boost(2.0F)
                     .query(literal))._toQuery(),
@@ -171,7 +171,7 @@ public enum CQLFields implements CQLFieldsInterface {
             (literal) -> MatchQuery.of(m -> m
                     .fuzziness("AUTO")
                     .field(StacBasicField.Description.searchField)
-                    .prefixLength(0)
+                    .prefixLength(2)
                     .query(literal))._toQuery(),
             null
     ),
