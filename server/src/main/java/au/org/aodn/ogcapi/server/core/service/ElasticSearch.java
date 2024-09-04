@@ -267,13 +267,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 should = new ArrayList<>();
 
                 for (String t : keywords) {
-                    Query q = MultiMatchQuery.of(m -> m
-                            .fuzziness("AUTO")
-                            //TODO: what keywords we want to search?
-                            .fields(StacBasicField.Title.searchField, StacBasicField.Description.searchField)
-                            .prefixLength(3)
-                            .query(t))._toQuery();
-                    should.add(q);
+                    should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(t));
+                    should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(t));
                 }
             }
 
