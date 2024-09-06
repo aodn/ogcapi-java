@@ -8,8 +8,14 @@ import lombok.Data;
 @Data
 @Builder
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ArdcVocabModel {
+public class VocabDto {
     // properties are extendable (e.g platformVocabs, organisationVocabs etc.), currently just parameterVocabs.
     @JsonProperty("parameter_vocab")
-    ParameterVocabModel parameterVocabModel;
+    VocabModel parameterVocabModel;
+
+    @JsonProperty("platform_vocab")
+    VocabModel platformVocabModel;
+
+    @JsonProperty("organisation_vocab")
+    VocabModel organisationVocabModel;
 }

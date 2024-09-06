@@ -2565,7 +2565,7 @@
     }
   ],
   "id": "bf287dfe-9ce4-4969-9c59-51c39ea4d011",
-  "record_suggest": {
+  "search_suggestions": {
     "abstract_phrases": [
       "been",
       "off silk",
@@ -3286,6 +3286,11 @@
       "account",
       "443 geonetwork",
       "time ability"
+    ],
+    "parameter_vocabs_sayt": [
+      "chlorophyll",
+      "ocean biota",
+      "temperature"
     ]
   },
   "sci:citation": "{\"suggestedCitation\":\"The citation in a list of references is: \\\"Integrated Marine Observing System (IMOS); CSIRO Oceans and Atmosphere [year-of-data-downloaded], IMOS - Zooplankton Abundance and Biomass Index (CPR), Downloaded from [url] on [date-of-download]\\\".\",\"useLimitations\":[\"Data, products and services from IMOS are provided \\\"as is\\\" without any warranty as to fitness for a particular purpose.\"],\"otherConstraints\":[\"Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: \\\"Data was sourced from Australia’s Integrated Marine Observing System (IMOS) – IMOS is enabled by the National Collaborative Research Infrastructure strategy (NCRIS).\\\" If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).\"]}",

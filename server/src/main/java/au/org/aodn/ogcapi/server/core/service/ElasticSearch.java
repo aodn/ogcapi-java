@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
-import au.org.aodn.ogcapi.server.core.model.RecordSuggestDTO;
+import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.QueryHandler;
@@ -17,7 +16,6 @@ import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import co.elastic.clients.util.ObjectBuilder;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -41,20 +39,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.index.minScore:7}")
     protected Integer minScore;
 
-    @Value("${elasticsearch.search_as_you_type.record_suggest.path}")
+    @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
     protected String searchAsYouTypeFieldsPath;
 
-    @Value("${elasticsearch.search_as_you_type.record_suggest.fields}")
+    @Value("${elasticsearch.search_as_you_type.search_suggestions.fields}")
     protected String[] searchAsYouTypeEnabledFields;
 
     @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabsIndexName;
-
-    @Value("${elasticsearch.search_as_you_type.parameter_vocab.path}")
-    protected String parameterVocabsPath;
-
-    @Value("${elasticsearch.search_as_you_type.parameter_vocab.field}")
-    protected String parameterVocabsField;
 
     public ElasticSearch(ElasticsearchClient client,
                          ObjectMapper mapper,
@@ -91,16 +83,16 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         ));
     }
 
-    protected List<Hit<RecordSuggestDTO>> getRecordSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
+    protected List<Hit<SearchSuggestionsDto>> getSuggestionsByField(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         // create query
-        List<Query> recordSuggestFieldsQueries = new ArrayList<>();
+        List<Query> suggestFieldsQueries = new ArrayList<>();
         Stream.of(searchAsYouTypeEnabledFields).forEach(field -> {
             String suggestField = searchAsYouTypeFieldsPath + "." + field;
-            recordSuggestFieldsQueries.add(this.generateSearchAsYouTypeQuery(input, suggestField));
+            suggestFieldsQueries.add(this.generateSearchAsYouTypeQuery(input, suggestField));
         });
         Query searchAsYouTypeQuery = Query.of(q -> q.nested(n -> n
                 .path(searchAsYouTypeFieldsPath)
-                .query(bQ -> bQ.bool(b -> b.should(recordSuggestFieldsQueries)))
+                .query(bQ -> bQ.bool(b -> b.should(suggestFieldsQueries)))
         ));
 
         /*
@@ -127,75 +119,58 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         // create request
         SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
-                List.of("record_suggest.abstract_phrases"),
+                Stream.of(searchAsYouTypeEnabledFields).map(destination -> searchAsYouTypeFieldsPath + "." + destination).toList(),
                 indexName,
                 List.of(searchAsYouTypeQuery),
                 filters);
 
         // execute
         log.info("getRecordSuggestions | Elastic search payload {}", searchRequest.toString());
-        SearchResponse<RecordSuggestDTO> response = esClient.search(searchRequest, RecordSuggestDTO.class);
+        SearchResponse<SearchSuggestionsDto> response = esClient.search(searchRequest, SearchSuggestionsDto.class);
         log.info("getRecordSuggestions | Elastic search response {}", response);
 
         // return
         return response.hits().hits();
     }
 
-    protected List<Hit<JsonNode>> getParameterVocabSuggestions(String input) throws IOException {
-        // create query
-        Query secondLevelParameterVocabSuggestQuery = this.generateSearchAsYouTypeQuery(input, parameterVocabsPath + "." + parameterVocabsField);
-
-        /*
-         * this secondLevelParameterVocabSuggestFilters for accessing the search_as_you_type "label" field
-         * of the second level vocabs of the parameter_vocabs field from the vocabs_index index will never be changed unless the schema is changed,
-         * or the vocabs_index index is no longer be used
-         */
-        Query secondLevelParameterVocabSuggestFilters = Query.of(q -> q.bool(b -> b.filter(f -> f.nested(n -> n.path(parameterVocabsPath + ".broader")
-                .query(qq -> qq.exists(e -> e.field(parameterVocabsPath + ".broader")))))));
-
-        // create request
-        SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
-                List.of(parameterVocabsPath + "." + parameterVocabsField),
-                vocabsIndexName,
-                List.of(secondLevelParameterVocabSuggestQuery),
-                List.of(secondLevelParameterVocabSuggestFilters));
-
-        // execute
-        log.info("getParameterVocabSuggestions | Elastic search payload {}", searchRequest.toString());
-        SearchResponse<JsonNode> response = esClient.search(searchRequest, JsonNode.class);
-        log.info("getParameterVocabSuggestions | Elastic search response {}", response);
-
-        // return
-        return response.hits().hits();
-    }
-
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
+        Map<String, Set<String>> searchSuggestions = new HashMap<>();
+
         // extract parameter vocab suggestions
-        Set<String> parameterVocabSuggestions = new HashSet<>();
-        for (Hit<JsonNode> item : this.getParameterVocabSuggestions(input)) {
-            if (item.source() != null && item.source().get(parameterVocabsPath) != null) {
-                ParameterVocabModel parameterVocab = mapper.readValue(item.source().get(parameterVocabsPath).toString(), ParameterVocabModel.class);
-                parameterVocabSuggestions.add(parameterVocab.getLabel());
-            }
-        }
+        Set<String> parameterVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
+                .stream()
+                .filter(item -> item.source() != null && item.source().getParameterVocabs() != null && !item.source().getParameterVocabs().isEmpty())
+                .flatMap(item -> item.source().getParameterVocabs().stream())
+                .filter(vocab -> vocab.toLowerCase().contains(input.toLowerCase()))
+                .collect(Collectors.toSet());
+        searchSuggestions.put("suggested_parameter_vocabs", parameterVocabSuggestions);
+
+        Set<String> platformVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
+                .stream()
+                .filter(item -> item.source() != null && item.source().getPlatformVocabs() != null && !item.source().getPlatformVocabs().isEmpty())
+                .flatMap(item -> item.source().getPlatformVocabs().stream())
+                .filter(vocab -> vocab.toLowerCase().contains(input.toLowerCase()))
+                .collect(Collectors.toSet());
+        searchSuggestions.put("suggested_platform_vocabs", platformVocabSuggestions);
+
+        Set<String> organisationVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
+                .stream()
+                .filter(item -> item.source() != null && item.source().getOrganisationVocabs() != null && !item.source().getOrganisationVocabs().isEmpty())
+                .flatMap(item -> item.source().getOrganisationVocabs().stream())
+                .filter(vocab -> vocab.toLowerCase().contains(input.toLowerCase()))
+                .collect(Collectors.toSet());
+        searchSuggestions.put("suggested_organisation_vocabs", organisationVocabSuggestions);
 
         // extract abstract phrases suggestions
-        Set<String> abstractPhrases = this.getRecordSuggestions(input, cql, coor)
+        Set<String> abstractPhrases = this.getSuggestionsByField(input, cql, coor)
                 .stream()
-                .filter(item -> item.source() != null)
+                .filter(item -> item.source() != null && item.source().getAbstractPhrases() != null && !item.source().getAbstractPhrases().isEmpty())
                 .flatMap(item -> item.source().getAbstractPhrases().stream())
                 .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
+        searchSuggestions.put("suggested_phrases", abstractPhrases);
 
-        Map<String, Object> allSuggestions = new HashMap<>();
-        allSuggestions.put("parameter_vocab_suggestions", new ArrayList<>(parameterVocabSuggestions));
-
-        Map<String, Set<String>> recordSuggestions = new HashMap<>();
-        recordSuggestions.put("suggest_phrases", abstractPhrases);
-
-        allSuggestions.put("record_suggestions", recordSuggestions);
-
-        return new ResponseEntity<>(allSuggestions, HttpStatus.OK);
+        return new ResponseEntity<>(searchSuggestions, HttpStatus.OK);
     }
 
     protected ElasticSearchBase.SearchResult searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {

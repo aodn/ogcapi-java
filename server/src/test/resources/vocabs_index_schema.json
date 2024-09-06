@@ -1,32 +1,11 @@
 {
-  "settings":{
-    "analysis":{
-      "analyzer":{
-        "custom_analyser":{
-          "type":"custom",
-          "tokenizer":"standard",
-          "filter":[
-            "lowercase",
-            "english_stop"
-          ]
-        }
-      },
-      "filter":{
-        "english_stop":{
-          "type":"stop",
-          "stopwords":"_english_"
-        }
-      }
-    }
-  },
   "mappings": {
     "dynamic": true,
     "properties": {
       "parameter_vocab": {
         "properties": {
           "label": {
-            "type": "search_as_you_type",
-            "analyzer": "custom_analyser"
+            "type": "text"
           },
           "definition": {
             "type": "text"
@@ -34,7 +13,7 @@
           "about": {
             "type": "keyword"
           },
-          "broader": {
+          "narrower": {
             "type": "nested",
             "properties": {
               "label": {
@@ -42,8 +21,67 @@
               },
               "about": {
                 "type": "keyword"
+              },
+              "narrower": {
+                "type": "nested",
+                "properties": {
+                  "label": {
+                    "type": "text"
+                  },
+                  "about": {
+                    "type": "keyword"
+                  }
+                }
               }
             }
+          }
+        }
+      },
+      "platform_vocab": {
+        "properties": {
+          "label": {
+            "type": "text"
+          },
+          "definition": {
+            "type": "text"
+          },
+          "about": {
+            "type": "keyword"
+          },
+          "narrower": {
+            "type": "nested",
+            "properties": {
+              "label": {
+                "type": "text"
+              },
+              "about": {
+                "type": "keyword"
+              },
+              "narrower": {
+                "type": "nested",
+                "properties": {
+                  "label": {
+                    "type": "text"
+                  },
+                  "about": {
+                    "type": "keyword"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "organisation_vocab": {
+        "properties": {
+          "label": {
+            "type": "text"
+          },
+          "definition": {
+            "type": "text"
+          },
+          "about": {
+            "type": "keyword"
           },
           "narrower": {
             "type": "nested",

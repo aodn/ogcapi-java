@@ -9,8 +9,16 @@ public enum StacBasicField {
             "providers.name"
     ),
     ParameterVocabs(
-            "parameter_vocabs", // This result in the whole themes section return
+            "parameter_vocabs",
             "summaries.parameter_vocabs"
+    ),
+    PlatformVocabs(
+            "platform_vocabs",
+            "summaries.platform_vocabs"
+    ),
+    OrganisationVocabs(
+            "organisation_vocabs",
+            "summaries.organisation_vocabs"
     ),
     Links("links", "links")
     ;

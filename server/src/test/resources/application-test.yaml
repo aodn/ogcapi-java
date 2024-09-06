@@ -11,9 +11,6 @@ elasticsearch:
     name: test_vocabs_index
 
   search_as_you_type:
-    record_suggest:
-      path: record_suggest
-      fields: abstract_phrases  # if you have multiple search_as_you_type fields, separate them with commas e.g title, description
-    parameter_vocab:
-      path: parameter_vocab
-      field: label
+    search_suggestions:
+      path: search_suggestions
+      fields: abstract_phrases, parameter_vocabs_sayt, platform_vocabs_sayt, organisation_vocabs_sayt

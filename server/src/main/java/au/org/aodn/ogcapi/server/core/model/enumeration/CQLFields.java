@@ -117,6 +117,18 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    platform_vocab(
+            StacBasicField.PlatformVocabs.searchField,
+            StacBasicField.PlatformVocabs.displayField,
+            null,
+            null
+    ),
+    organisation_vocab(
+            StacBasicField.OrganisationVocabs.searchField,
+            StacBasicField.OrganisationVocabs.displayField,
+            null,
+            null
+    ),
     providers(
             StacBasicField.Providers.searchField,
             StacBasicField.Providers.displayField,
@@ -126,6 +138,18 @@ public enum CQLFields implements CQLFieldsInterface {
     parameter_vocabs(
             StacBasicField.ParameterVocabs.searchField,
             StacBasicField.ParameterVocabs.displayField,
+            null,
+            null
+    ),
+    platform_vocabs(
+            StacBasicField.PlatformVocabs.searchField,
+            StacBasicField.PlatformVocabs.displayField,
+            null,
+            null
+    ),
+    organisation_vocabs(
+            StacBasicField.OrganisationVocabs.searchField,
+            StacBasicField.OrganisationVocabs.displayField,
             null,
             null
     ),

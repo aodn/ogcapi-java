@@ -16,7 +16,11 @@
           "filter": [
             "lowercase",
             "english_stop",
-            "shingle_filter"
+            "shingle_filter",
+            "uuid_filter",
+            "non_standard_pattern_filter",
+            "length_filter",
+            "remove_numbers"
           ]
         }
       },
@@ -30,6 +34,25 @@
           "min_shingle_size": 2,
           "max_shingle_size": 4,
           "output_unigrams": true
+        },
+        "uuid_filter": {
+          "type": "pattern_replace",
+          "pattern": "[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}",
+          "replacement": ""
+        },
+        "non_standard_pattern_filter": {
+          "type": "pattern_replace",
+          "pattern": ".*[^a-zA-Z- ].*",
+          "replacement": ""
+        },
+        "remove_numbers": {
+          "type": "pattern_replace",
+          "pattern": "\\b\\d+\\b",
+          "replacement": ""
+        },
+        "length_filter": {
+          "type": "length",
+          "min": 2
         }
       }
     }
@@ -56,13 +79,18 @@
           }
         }
       },
-      "record_suggest": {
+      "search_suggestions": {
         "type": "nested",
         "properties": {
-          "abstract_phrases": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
+          "abstract_phrases": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
+          "parameter_vocabs_sayt": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
+          "platform_vocabs_sayt": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
+          "organisation_vocabs_sayt": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
         }
       },
-      "parameter_vocabs" : { "type":  "keyword" },
+      "parameter_vocabs": { "type": "keyword" },
+      "platform_vocabs": { "type": "keyword" },
+      "organisation_vocabs": { "type": "keyword" },
       "keywords": {
         "type": "nested",
         "properties": {

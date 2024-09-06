@@ -1,9 +1,8 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.service.exception.CustomException;
+import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

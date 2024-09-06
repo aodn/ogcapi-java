@@ -1,0 +1,2592 @@
+[
+  {
+    "label": "Aircraft",
+    "definition": "This category contains vocabulary terms describing aircraft type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/2",
+    "narrower": [
+      {
+        "label": "research aeroplane",
+        "definition": "A fixed-wing self-propelled aircraft that is equipped manned and operated for atmospheric meteorological or oceanographic research.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/61"
+      },
+      {
+        "label": "aeroplane",
+        "definition": "A fixed-wing self-propelled aircraft.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/62"
+      },
+      {
+        "label": "helicopter",
+        "definition": "An aircraft without wings that obtains its lift from the rotation of overhead blades.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/67"
+      },
+      {
+        "label": "glider",
+        "definition": "A fixed-wing aircraft with no propulsion.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/6A"
+      }
+    ]
+  },
+  {
+    "label": "AUV",
+    "definition": "This category contains vocabulary terms describing AUV type of platforms",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/35",
+    "narrower": [
+      {
+        "label": "sea bed vehicle",
+        "definition": "An instrumented platform that is propelled on wheels or tracks on the seabed (e.g benthic crawler).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/12"
+      },
+      {
+        "label": "towed unmanned submersible",
+        "definition": "A vehicle towed by rigid cable through the water column at fixed or varying depth with no propulsion and no human operator (e.g. Towfish Scanfish UOR SeaSoar)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/23"
+      },
+      {
+        "label": "unmanned autonomous underwater vehicle",
+        "definition": "A free-roving platform operating in the water column with propulsion but no human operator on board (e.g. Autosub Glider).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/25",
+        "narrower": [
+          {
+            "label": "Iver",
+            "definition": "The IMOS AUV facility operates a small ocean going AUV called Iver from Ocean Server. Managed by the University of Sydney's Australian Centre for Field Robotics (ACFR), this vehicle is able to be launched from the shore or a small boat, and is used in the support of marine habitat assessment as well as in the surveying of archaeological sites in coastal environments.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/39"
+          },
+          {
+            "label": "Nimbus",
+            "definition": "The IMOS AUV facility owns and operates the ocean going AUV called Nimbus. This platform is a custom designed and developed mid-size robotic vehicle built by the University of Sydney''s Australian Centre for Field Robotics (ACFR).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/59"
+          },
+          {
+            "label": "Sirius",
+            "definition": "The IMOS AUV facility owns and operates the ocean going AUV called Sirius. Managed by the University of Sydney's Australian Centre for Field Robotics (ACFR), this vehicle is a modified version of a mid-size robotic vehicle called Seabed built at the Woods Hole Oceanographic Institution",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/74"
+          }
+        ]
+      },
+      {
+        "label": "lowered unmanned submersible",
+        "definition": "An unmanned platform lowered and raised vertically by a cable from the mothership.  Includes any type of profiling sensor mounting such as CTD frames profiling radiometers and instrumented nets.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/26"
+      },
+      {
+        "label": "propelled unmanned submersible",
+        "definition": "A platform operating in the water column attached to a mothership by an umbilical with limited propulsion and no human operator on board (e.g. ROV).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/22"
+      }
+    ]
+  },
+  {
+    "label": "Fixed station",
+    "definition": "This category contains vocabulary terms describing fixed stations type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/36",
+    "narrower": [
+      {
+        "label": "fixed benthic node",
+        "definition": "A collection of oceanographic instruments mounted at a fixed position on the seabed (e.g. POL Monitoring Platform seabed ADCP)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/11"
+      },
+      {
+        "label": "land/onshore structure",
+        "definition": "A fixed man-made structure on land to which instrumentation may be attached (e.g. meteorological tower)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/14",
+        "narrower": [
+          {
+            "label": "Lizard Island Base Station",
+            "definition": "The infrastructure consists of a base station mounted on the workshop of the Lizard Island Research Station (LIRS), two sensor poles that create the on-reef network and four sensor floats on which the sensors are attached.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/308"
+          },
+          {
+            "label": "Orpheus Island Base Station",
+            "definition": "The infrastructure consists of a base station located on an existing mast at the Orpheus Island Research Station run by James Cook University, two sensor-floats or buoys - one located in Pioneer Bay off the Research Station and one in Little Pioneer Bay and three Relay / Sensor Poles - two located on the reef flat on the north-west point of Orpheus Island and one located on the southern point of near-by Pelorus Island.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/315"
+          },
+          {
+            "label": "Myrmidon Reef Base Station",
+            "definition": "The infrastructure consists of a base station mounted on the existing reef communications tower and a single buoy which carries the actual sensors.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/322"
+          },
+          {
+            "label": "Davies Reef Base Station",
+            "definition": "The infrastructure consists of a base station mounted on the existing reef communications tower, using the Telstra nextG service, and 5 buoys which carry the actual sensors. The Davies Reef Base Station performs two functions. The first is to act as a collection point for the sensor network platforms deployed within the reef and to in turn send the data back to the AIMS Data Centre. The second is as a platform for sensors with current sensors including two underwater PAR sensors and a still camera. The base station is co-located with the AIMS Automatic Weather Station (vaisala WXT520) on the Davies Reef Tower in order to optimise the use of power and communications infrastructure.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/324"
+          },
+          {
+            "label": "One Tree Island Base Station",
+            "definition": "The infrastructure consists of a base station mounted on the existing water tower, using the Telstra nextG service, and three sensor poles located in each of the major lagoon systems around the island. The base station collects data from the outlying sensor stations (RP1-RP3) within the lagoon of One Tree Island as well as having a LiCor 192 PAR sensor. The base station consists of a Campbell Scientific CR1000 logger that talks back to the mainland via a 5m mast located on the top of the tower and a Cybertec nextG modem, and to the rest of the equipment in the lagoon via a 900 MHz spread-spectrum Campbell RF411 radio. The station is powered off the research station power supply but has its own solar panel and battery supply in case of power outages.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/330"
+          },
+          {
+            "label": "Heron Island Base Station",
+            "definition": "The infrastructure consists of a base station mounted on the existing telecommunications tower, eight sensor poles that create the on-reef network and five sensor floats on which the sensors are attached. One of the poles (RP5) also has a weather station mounted on it.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/334"
+          }
+        ]
+      },
+      {
+        "label": "offshore structure",
+        "definition": "A fixed (for the duration of the measurements) man-made structure away from the coast to which instrumentation may be attached (e.g. oil rig gas rig or jack-up barge)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/16",
+        "narrower": [
+          {
+            "label": "Lizard Island Relay Pole 1",
+            "definition": "A 6m galvanized pole has been deployed in the western part of the lagoon. It has no sensors attached to it. The pole was decommissioned in April 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/309"
+          },
+          {
+            "label": "Lizard Island Relay Pole 2",
+            "definition": "A 6m galvanized pole has been deployed in the eastern part of the lagoon in behind Seabird Islet. The Relay Pole has three functions. The first is to propagate the wireless network through which the buoys talk and so it forms part of the network backbone talking directly to Relay-Pole 1. The second function is that a vaisala WXT520 weather station is mounted on the top and so this pole provides above water met observations. These include air temperature, humidity, air pressure, wind speed and direction and rainfall. The third function is that a sensor string is attached to the pole, the sensor string runs through a channel in Seabird Islet across the exposed seaward reef flat to the reef crest and then down the reef slope to around 20m. This gives a profile down the reef slope and gives readings of the water coming onto the reef complex. The pole has two Campbell Scientific loggers (one for the weather station, one for the sensors), spread-spectrum radio and 2.4/5 GHz 802.11 wireless for communicating with the base station (located at the workshop near the Research Station). The sensor string as of August 2010 has a SeaBird SBE37 at the end of the sensor string (around 230m out from the pole), and two SeaBird SBE39's located at teh reef crest and down at the start of the reef slope. The pole was decommissioned in April 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/310"
+          },
+          {
+            "label": "Orpheus Island Relay Pole 1",
+            "definition": "A 6m steel self supporting pole was erected on the southern side of Pelorus Island in the channel between Pelorus Island and Orpheus Island. The pole provides network connectivity for the other Relay Poles located on the northen edge of Orpheus Island (RP2 and RP3) as well as a back-haul link to the mainland using a nextG connection. The pole has an array of sensors on it including two MEA thermistors located 50m and 100m away from the pole on a transect from the pole into the deep water of the channel. The pole also has a SeaBird SBE39 (temp + pressure) located around 100m from teh pole and a SBE37 (conductivity, temperature and pressure) located approximatly 200m from teh pole in the deep waters of the channels. The pole was decommissioned in July 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/316"
+          },
+          {
+            "label": "Orpheus Island Relay Pole 2",
+            "definition": "A 6m steel self supporting pole was erected on the northern side of Orpehus Island in the channel between Pelorus Island and Orpheus Island. The pole is set up as per RP1 with two MEA thermistors located at 50m and 100m from the pole and an SBE39 located 100m from the pole and an SBE37 located 200m from the pole in the deeper water. This pole was decommissioned in July 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/317"
+          },
+          {
+            "label": "Orpheus Island Relay Pole 3",
+            "definition": "A 6m steel self supporting pole was erected on the north/west side of Orpehus Island in the channel between Pelorus Island and Orpheus Island but positioned to face more towards the ocean and just on teh entrance to the channel. RP3 on the seaward side of Orpheus Island is set up the same as RP1 and RP2 although as of early 2010 only the two MEA thermistors at 50 and 100m are installed, the SBE37 and SBE39 wil be instaled later in 2010. A vaisala WTX520 weather station is installed on this pole. This pole was decommissioned in July 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/318"
+          },
+          {
+            "label": "One Tree Island Relay Pole 1",
+            "definition": "A 6m steel pole has been installed within Central Bommie within the main lagoon of One Tree Island as part of the sensor network infrastructure at One Tree Island in the southern Great Barrier Reef off Gladstone, Australia. The sensor-relay pole provides a platform for the installation of sensors to measure and monitor water conditions within the lagoon of One Tree Island. The pole has real time communications using 900MHz spread spectrum radio back to a base station on One Tree Island. The pole is initially configured with a single thermistor string with six thermistors that is located down the outer wall of the bommie into the main lagoon and so provides a temperature profile of the main lagoon of One Tree Island. The data is collected every 10 minutes and relayed via the base station to the Data Centre at the Australian Institute of Marine Science (AIMS). The system uses a Campbell Scientific logger into which the sensors are connected. The equipment is serviced every six months with plans to install additional instruments such as pressure and salinity. The pole is available for mounting of additional third part instruments and so forms an infrastructure to support future observational work at the Island. The pole was decommissioned in September 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/331"
+          },
+          {
+            "label": "One Tree Island Relay Pole 2",
+            "definition": "A 6m steel pole has been installed within a small bommie within Second Lagoon of One Tree Island as part of the sensor network infrastructure at One Tree Island in the southern Great Barrier Reef off Gladstone, Australia. The sensor-relay pole provides a platform for the installation of sensors to measure and monitor water conditions within the lagoon of One Tree Island. The pole has real time communications using 900MHz spread spectrum radio back to a base station on One Tree Island. The pole is initially configured with a single thermistor string with six thermistors that is located down the outer wall of the bommie into the second lagoon and so provides a temperature profile of the second lagoon of One Tree Island. The data is collected every 10 minutes and relayed via the base station to the Data Centre at the Australian Institute of Marine Science (AIMS). The system uses a Campbell Scientific logger into which the sensors are connected. The equipment is serviced every six months with plans to install additional instruments such as pressure and salinity. The pole is available for mounting of additional third part instruments and so forms an infrastructure to support future observational work at the Island.The pole was decommissioned in September 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/332"
+          },
+          {
+            "label": "One Tree Island Relay Pole 3",
+            "definition": "A 6m steel pole has been installed within a small bommie in Third Lagoon on One Tree Island as part of the sensor network infrastructure at One Tree Island in the southern Great Barrier Reef off Gladstone, Australia. The sensor-relay pole provides a platform for the installation of sensors to measure and monitor water conditions within the lagoon of One Tree Island. The pole has real time communications using 900MHz spread spectrum radio back to a base station on One Tree Island. The pole is initially configured with a single thermistor string with six thermistors that is located down the outer wall of the bommie into the lagoon and so provides a temperature profile of the third lagoon of One Tree Island. The data is collected every 10 minutes and relayed via the base station to the Data Centre at the Australian Institute of Marine Science (AIMS). The system uses a Campbell Scientific logger into which the sensors are connected. The equipment is serviced every six months with plans to install additional instruments such as pressure and salinity. The pole is available for mounting of additional third part instruments and so forms an infrastructure to support future observational work at the Island. A Vaisala WXT520 integrated weather station has been installed on RP3. The weather station provides measurement of air temperature (Deg. C.), humidity as relative percent, barometric pressure (milliBars or hPa), rainfall amount, intensity and duration, hail amount, intensity and duration (not common on coral reefs!) and wind speed and direction. The wind speed and direction and processed into scalar and vector (directional) based readings and presented as 10 and 30 minute averages to give mean values and maximum values. From these you can get the average wind conditions at either 10 minute or 30 minute periods as well as the gust or maximum wind conditions. The weather station is connected via an SDI-12 interface to a Campbell Scientific CR1000 logger which uses a RF411 radio to transmit the data, every 10 minutes, to the base station on One Tree Island and then a Telstra nextG link is used to send the data back to AIMS. The pole was decommissioned in September 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/333"
+          },
+          {
+            "label": "Heron Island Relay Pole 1",
+            "definition": "A 6m steel pole. The pole is solar powered and routes data from the Sensor Floats and other Sensor Relay Poles back to the Base Station located on Heron Island. The system uses the Campbell Scientific CR1000 loggers and RF411 Spread-Spectrum radios to process and route the data. The poles also can support a range of sensors, this pole also has a simple bottom mounted thermistor using the MEA thermistors. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The pole was decommissioned in 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/335"
+          },
+          {
+            "label": "Heron Island Relay Pole 2",
+            "definition": "A 6m steel pole. The pole is solar powered and routes data from the Sensor Floats and other Sensor Relay Poles back to the Base Station located on Heron Island. The system uses the Campbell Scientific CR1000 loggers and RF411 Spread-Spectrum radios to process and route the data. The poles also can support a range of sensors, this pole also has a simple bottom mounted thermistor using the MEA thermistors. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The pole was decommissioned in September 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/336"
+          },
+          {
+            "label": "Heron Island Relay Pole 3",
+            "definition": "A 6m steel pole.  The pole is solar powered and routes data from the Sensor Floats and other Sensor Relay Poles back to the Base Station located on Heron Island. The system uses the Campbell Scientific CR1000 loggers and RF411 Spread-Spectrum radios to process and route the data. The poles also can support a range of sensors, this pole also has a simple bottom mounted thermistor using the MEA thermistors. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The pole was decommissioned in September 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/337"
+          },
+          {
+            "label": "Heron Island Relay Pole 4",
+            "definition": "A 6m steel pole. The pole is solar powered and routes data from the Sensor Floats and other Sensor Relay Poles back to the Base Station located on Heron Island. The system uses the Campbell Scientific CR1000 loggers and RF411 Spread-Spectrum radios to process and route the data. The poles also can support a range of sensors, this pole also has a simple bottom mounted thermistor using the MEA thermistors. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The pole was decommissioned in 2019.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/338"
+          },
+          {
+            "label": "Heron Island Relay Pole 5",
+            "definition": "A 6m steel pole. The pole is solar powered and routes data from the Sensor Floats and other Sensor Relay Poles back to the Base Station located on Heron Island. The system uses the Campbell Scientific CR1000 loggers and RF411 Spread-Spectrum radios to process and route the data. The poles also can support a range of sensors, this pole also has a simple bottom mounted thermistor using the MEA thermistors as well as a Vaisala WXT520 weather station. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The weather station provides measurement of air temperature (Deg. C.), humidity as relative percent, barometric pressure (milliBars or hPa), rainfall amount, intensity and duration, hail amount, intensity and duration (not common on coral reefs!) and wind speed and direction. The wind speed and direction and processed into scalar and vector (directional) based readings and presented as 10 and 30 minute averages to give mean values and maximum values. From these you can get the average wind conditions at either 10 minute or 30 minute periods as well as the gust or maximum wind conditions. The weather station is connected via an SDI-12 interface to a Campbell Scientific CR1000 logger which uses a RF411 radio to transmit the data, every 10 minutes, to the base station on Heron Island and then a Telstra nextG link is used to send the data back to AIMS. The pole was decommissioned in September 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/339"
+          },
+          {
+            "label": "Heron Island Relay Pole 6",
+            "definition": "A 6m steel pole. The pole is solar powered and routes data from the Sensor Floats and other Sensor Relay Poles back to the Base Station located on Heron Island. The system uses the Campbell Scientific CR1000 loggers and RF411 Spread-Spectrum radios to process and route the data. The poles also can support a range of sensors, this pole also has a simple bottom mounted thermistor using the MEA thermistors. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The pole was decommissioned in 2019.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/340"
+          },
+          {
+            "label": "Heron Island Relay Pole 7",
+            "definition": "A 6m steel pole. This pole was to be installed in April 2013, in the Wistari Channel. The pole was decommissioned in September 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/341"
+          },
+          {
+            "label": "Heron Island Relay Pole 8",
+            "definition": "A 6m steel pole. The pole is solar powered and routes data from the Sensor Floats and other Sensor Relay Poles back to the Base Station located on Heron Island. The system uses the Campbell Scientific CR1000 loggers and RF411 Spread-Spectrum radios to process and route the data. The poles also can support a range of sensors. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The pole was decommissioned in September 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/342"
+          }
+        ]
+      },
+      {
+        "label": "coastal structure",
+        "definition": "A fixed man-made structure permanently linked to land with access to water at all states of the tide to which instrumentation may be attached (e.g. pier)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/17"
+      }
+    ]
+  },
+  {
+    "label": "Float",
+    "definition": "This category contains vocabulary terms describing profiling float type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/37",
+    "narrower": [
+      {
+        "label": "drifting surface float",
+        "definition": "An unmanned instrumented platform operating on the surface of the water column often attached to a drogue to track currents rather than winds (e.g. Argos buoy).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/42"
+      },
+      {
+        "label": "fixed subsurface vertical profiler",
+        "definition": "A platform that periodically makes an automated vertical traverse of the water column at a predetermined fixed location. (e.g. YSI vertical profiler HOMER CTD)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/45"
+      },
+      {
+        "label": "drifting subsurface profiling float",
+        "definition": "An unmanned instrumented platform drifting freely in the water column that periodically makes vertical traverses through the water column (e.g. Argo float)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/46",
+        "narrower": [
+          {
+            "label": "NEMO Argo Float",
+            "definition": "Navigating European Marine Observer (NEMO) Argo floats are manufactured by Optimare Sensorsystems AG. They are 2m (not including antenna) long, and weigh 30kg. Their maximum operational depth is 2000m, with a life time of 5 years / 150 profiles.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/296"
+          },
+          {
+            "label": "NINJA Argo Float with SBE",
+            "definition": "New profilINg float of JApan (NINJA) Argo floats are manufactured by the Tsurumi Seiki Co. (TSK). They are approx. 2420mm long, and weigh approx 32kg. Their maximum operational depth is 2000m. This float has a SBE conductivity sensor.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/297"
+          },
+          {
+            "label": "NAVIS Argo Float with Iridium antenna",
+            "definition": "Navis Argo floats are manufactured by Sea-Bird Electronics Inc. They are 159cm long, and weigh about 17kg. Their maximum operational depth is 2000m, with a life time of 300 CTD profiles. This float uses an alternative to the usual Systeme Argos location and data transmission system, and uses positions from the Global Positioning System (GPS) and data communication using the Iridium satellites. As of 2010, 250 floats have been deployed with Iridium antennas.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/298"
+          },
+          {
+            "label": "ARVOR Argo Float",
+            "definition": "Arvor Argo floats were originally manufactured by Kannad. The scientific instrumentation division for deep-sea oceanography was purchased by NKE Instrumentation on January 1st, 2009. They are 120cm long, and weight about 20kg. Their maximum operational depth is 2100m, with a life time of 4 years / 150+ cycles.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/299"
+          },
+          {
+            "label": "SOLO Argo Float",
+            "definition": "SOLO Argo floats are manufactured by Scripps Institution of Oceanography, UC San Diego. They are 26 inches long, and weigh 18.6kg. Their maximum operational depth is 2300m, with a life time of 8.5 years / 300 profiles.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/300"
+          },
+          {
+            "label": "SOLO Argo Float with Iridium antenna",
+            "definition": "SOLO Argo floats are manufactured by Scripps Institution of Oceanography, UC San Diego. They are 26 inches long, and weigh 18.6kg. Their maximum operational depth is 2300m, with a life time of 8.5 years / 300 profiles. This float uses an alternative to the usual Systeme Argos location and data transmission system, and uses positions from the Global Positioning System (GPS) and data communication using the Iridium satellites. As of 2010, 250 floats have been deployed with Iridium antennas.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/301"
+          },
+          {
+            "label": "SOLO-II Argo Float with Iridium antenna",
+            "definition": "MRV Systems has licensed the intellectual property from Scripps Institution of Oceanography, UC San Diego to manufacture SOLO-II floats. They are 26 inches long, and weigh 18.6kg. Their maximum operational depth is 2300m, with a life time of 8.5 years / 300 profiles.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/302"
+          },
+          {
+            "label": "PALACE R1 Argo Float",
+            "definition": "Profiling Autonomous Lagrangian Circulation Explorer (PALACE) R1 Argo floats were manufactured by Webb Research Corporation. They have been replaced by the APEX model.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/303"
+          },
+          {
+            "label": "APEX Argo Float",
+            "definition": "Autonomous Profiling EXplorer (APEX) Argo floats are manufactured by Teledyne Webb Research. The are 130 cm (not including antenna) long, and weigh 26kg. Their maximum operational depth is 2000m, with a life time of 4 years / 150 profiles.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/304"
+          },
+          {
+            "label": "APEX Argo Float with Iridium antenna",
+            "definition": "Autonomous Profiling EXplorer (APEX) Argo floats are manufactured by Teledyne Webb Research. The are 130 cm (not including antenna) long, and weigh 26kg. Their maximum operational depth is 2000m, with a life time of 4 years / 150 profiles. This float uses an alternative to the usual Systeme Argos location and data transmission system, and uses positions from the Global Positioning System (GPS) and data communication using the Iridium satellites. As of 2010, 250 floats have been deployed with Iridium antennas.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/305"
+          },
+          {
+            "label": "APEX Argo Float with APF8 controller board",
+            "definition": "Autonomous Profiling EXplorer (APEX) Argo floats are manufactured by Teledyne Webb Research. The are 130 cm (not including antenna) long, and weigh 26kg. Their maximum operational depth is 2000m, with a life time of 4 years / 150 profiles. This float uses an APF8 controller board.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/306"
+          },
+          {
+            "label": "PROVOR Argo Float",
+            "definition": "Martec and MetOcean Data Systems Ltd. merged in 2001, with Martec creating PROVOR floats for the French and European markets, and MetOcean will manufacture PROVOR floats for the markets in North America and outside of Europe. PROVOR CTS3 has been designed by IFREMER and MARTEC in industrial partnership. and are manufactured by NKE Instrumentation. The scientific instrumentation division for deep-sea oceanography of Kannad was purchased by NKE Instrumentation on January 1st, 2009. They are 170cm long, and weight about 34kg. Their maximum operational depth is 2000m, with a life time of 4/4.5 years / 170 cycles.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/307"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Vessel",
+    "definition": "This category contains vocabulary terms describing ship type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/39",
+    "narrower": [
+      {
+        "label": "small boat",
+        "definition": "A small self-propelled platform operating on the surface of the water column in unpredictable locations that is smaller than a ship but too large to easily remove from the water.",
+        "about": "http://vocab.aodn.org.au/def/platform/entity/823",
+        "narrower": [
+          {
+            "label": "Kinetic Energy",
+            "definition": "Sailing vessel, which is currently flying the flag of Australia (August, 2023)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/98"
+          }
+        ]
+      },
+      {
+        "label": "ship",
+        "definition": "A large platform operating on the surface of the water column. Objective definitions for guidelines: >50m length (EU) >100 foot length (USA) >300 GRT weight (SOLAS). Subjective definition: a ship is a vessel big enough to carry a boat.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/30"
+      },
+      {
+        "label": "research vessel",
+        "definition": "A platform of any size operating on the surface of the water column in unpredictable locations that is specifically equipped manned and operated for scientific usually oceanographic research.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/31",
+        "narrower": [
+          {
+            "label": "Lady Basten",
+            "definition": "Research vessel, which was operated by the Australian Institute of Marine Science (AIMS). It was replaced by the Cape Solander at AIMS. It is now known as the Ocean Hunter III.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/10"
+          },
+          {
+            "label": "Linnaeus",
+            "definition": "RV Linnaeus is a small CSIRO research vessel collecting underway bulk SST from its occasional trips within 200 nm from Hillarys Boat Harbour, WA.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/109"
+          },
+          {
+            "label": "James Kirby",
+            "definition": "Research vessel which is operated by James Cook University (JCU)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/11"
+          },
+          {
+            "label": "Tangaroa",
+            "definition": "Fishing support vessel, which is currently flying the flag of New Zealand (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/111"
+          },
+          {
+            "label": "Hespérides",
+            "definition": "Research vessel, currently flying the flag of Spain (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/118"
+          },
+          {
+            "label": "Marion Dufresne",
+            "definition": "Research/survey vessel, currently flying the flag of France.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/12"
+          },
+          {
+            "label": "Melville",
+            "definition": "Research vessel, which was operated by Scripps Oceanography.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/13"
+          },
+          {
+            "label": "Mirai",
+            "definition": "Research vessel, currently flying the flag of Japan.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/14"
+          },
+          {
+            "label": "Glaucus",
+            "definition": "Research vessel, which was operated by the Department of Environment, Climate Change and Water (DECCW), NSW.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/17"
+          },
+          {
+            "label": "Bombora",
+            "definition": "Research vessel which is operated by the Office of Environment and Heritage (OEH), NSW.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/18"
+          },
+          {
+            "label": "Yolla",
+            "definition": "Research vessel, which is operated by Deakin University.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/19"
+          },
+          {
+            "label": "Franklin",
+            "definition": "Research ship vessel, which was flying the flag of Australia. It was decommissioned in 2002.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/273"
+          },
+          {
+            "label": "Kaharoa II",
+            "definition": "Research vessel owned by NIWA, which is flying the flag of New Zealand.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/357"
+          },
+          {
+            "label": "Kaharoa",
+            "definition": "Research vessel owned by NIWA, currently flying the flag of New Zealand (July 2015).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/4"
+          },
+          {
+            "label": "Everest",
+            "definition": "This multi purpose vessel (MPV), is classed as an offshore construction vessel, which is currently flying the flag of Bahamas (March 2021)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/62"
+          },
+          {
+            "label": "Nuyina",
+            "definition": "Research and supply vessel owned by the Australian Government, which is currently flying the flag of Australia.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/70"
+          },
+          {
+            "label": "Cape Ferguson",
+            "definition": "Research vessel owned by the Australian Institute of Marine Science (AIMS). Active as Mar 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/71"
+          },
+          {
+            "label": "Solander",
+            "definition": "Research vessel owned by the Australian Institute of Marine Science (AIMS). Active as Mar 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/72"
+          },
+          {
+            "label": "Ramform Sovereign",
+            "definition": "Research/survey vessel, currently flying the flag of Singapore (March 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/894"
+          },
+          {
+            "label": "Falkor",
+            "definition": "Research/survey vessel, operating for the Schmidt Ocean Institute, currently flying the flag of the Cayman Islands (March 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/895"
+          },
+          {
+            "label": "Polarstern",
+            "definition": "Research vessel operated by the Alfred Wegener Institute for Polar and Marine Research. Currently flying the flag of Germany (February, 2024).",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/06AQ"
+          },
+          {
+            "label": "Investigator",
+            "definition": "CSIRO Marine National Facility research vessel. Length 94m.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/096U"
+          },
+          {
+            "label": "Aurora Australis",
+            "definition": "Research vessel owned by P and O Polar, length 94.91m.  Active as at Mar 2013.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/09AR"
+          },
+          {
+            "label": "Southern Surveyor",
+            "definition": "Was a CSIRO Marine National Facility research vessel. Built 1972 as Ranger Callisto (Norway), then became the UK registered Kurd (1 Jan 1982), then renamed Kurdeen (2 Jan 1982). Renamed Southern Surveyor 31 Dec 1982 and registered in Australia from 15 Nov 1988. Renamed Jupiter in July 2014 (St Kitts and Nevis).  Length 66.16m.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/09SS"
+          },
+          {
+            "label": "Okeanos Explorer",
+            "definition": "Research vessel owned by NOAA, which is currently flying the US flag.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/334A"
+          },
+          {
+            "label": "Oscar Elton Sette",
+            "definition": "\"IMO\": \"8835097\",\n  \"title\": \"NOAA Ship\",\n  \"country\": \"United States\",\n  \"platformclass\": \"research vessel\",\n  \"callsign\": \"WTEE\",\n  \"pennant\": \"R 335\",\n  \"commissioned\": \"2003-01-23\",\n  \"previous_name\": \"Adventurous\",\n  \"length\": \"68\",\n  \"built\": \"1988-08\",\n  \"notes\": \"US NODC WOD code 9315.\"",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/33OC"
+          },
+          {
+            "label": "L'Astrolabe {FHZI}",
+            "definition": "Research vessel built 1986 as the Canadian vessel Fort Resolution, re-registered in France and renamed Austral Fish 12 May 1988, renamed L'Astrolabe 18 May 1989. Re-registered in French Southern Territories between 20 Jun 1995 - 11 Oct 2006, then re-registered in France. Owned by Bourbon Offshore Surf. Commissioned by TAAF and Institut Polaire Francais Paul-Emile Victor. It was decommissioned in 2017.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/353L"
+          },
+          {
+            "label": "L'Astrolabe {FASB}",
+            "definition": "The Astrolabe is a research vessel which is an icebreaker (Class IB5 of the Polar Code), built in 2017 as part of a partnership between the French Southern and Antarctic Territories (TAAF), the French Polar Institute Paul-Emile Victor (IPEV) and the Ministry of Defense (National Navy (MN)). The partnership is made through the creation of a public interest grouping between the TAAF and the MN and an agreement between the MN and the IPEV.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/35O7"
+          }
+        ]
+      },
+      {
+        "label": "vessel of opportunity",
+        "definition": "A platform for purpose of commerce of any size operating on the surface of the water column in unpredictable locations that regularly collects scientific (oceanographic and meteorological) data (e.g. an instrumented cargo vessel).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/32",
+        "narrower": [
+          {
+            "label": "OOCL Panama",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong January 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/1"
+          },
+          {
+            "label": "Stadacona",
+            "definition": "General Cargo ship vessel, which is currently flying the flag of Bahamas (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/101"
+          },
+          {
+            "label": "Wana Bhum",
+            "definition": "Container ship vessel, which is currently flying the flag of Thailand (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/102"
+          },
+          {
+            "label": "Iron Yandi",
+            "definition": "Bulk Carrier vessel, which was flying the flag of Australia. It was renamed the Star Yandi (call sign: C6ZY9) after July 2012. It was disposed of in approximately 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/103"
+          },
+          {
+            "label": "Pacific Sun",
+            "definition": "Passenger (Cruise) ship Vessel, which was flying the flag of Malta. It was renamed the Henna after July 2012.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/104"
+          },
+          {
+            "label": "Portland",
+            "definition": "General Cargo ship vessel, which is currently flying the flag of Australia (May 2013). It was disposed of in 2016.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/105"
+          },
+          {
+            "label": "Pacific Celebes",
+            "definition": "General Cargo ship vessel, which is currently flying the flag of Hong Kong (May 2013). It was disposed of in approximately 2012.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/106"
+          },
+          {
+            "label": "Xutra Bhum",
+            "definition": "Container ship vessel, which is currently flying the flag of Thailand (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/110"
+          },
+          {
+            "label": "ANL Windarra",
+            "definition": "Container ship vessel, currently flying the flag of Marshall Islands (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/119"
+          },
+          {
+            "label": "Capitaine Quiros",
+            "definition": "Cargo ship vessel. It was called the Forum Samoa II from 2001 until June 2010. It was then shortly called the Opal Harmony, then Southern Moana, then Capitaine Fearn. It currently flies the flag of Singapore (2018).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/16"
+          },
+          {
+            "label": "Joana Bonita",
+            "definition": "General Cargo ship vessel. It was called the Joana Bonita from 1988 until April 2002. It is now called the Xuan De Men (Panama, June 2010). It was disposed of in approximately 2010.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/199"
+          },
+          {
+            "label": "M-Sagar",
+            "definition": "Container ship vessel. It was called the d M-Sagar between Aug 2010 and Aug 2012, and is now called the Meratus Gorontalo (Indonesia, Feb 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/200"
+          },
+          {
+            "label": "Medontario",
+            "definition": "Container ship vessel, which is currently flying the flag of Cyprus (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/201"
+          },
+          {
+            "label": "Forum Samoa II",
+            "definition": "General Cargo ship vessel. It was called the Forum Samoa II from 2001 until June 2010. It was then shortly called the Opal Harmony, then Southern Moana, and is now known as Capitaine Fearn (July, 2015).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/202"
+          },
+          {
+            "label": "Montreal Senator",
+            "definition": "Container ship vessel. It was called the Montreal Senator between June 1998 and January 2006, it is now called the Strait Mas (Indonesia, January 2009). It was disposed of in 2016.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/203"
+          },
+          {
+            "label": "Swan River Bridge",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/204"
+          },
+          {
+            "label": "Australia Star",
+            "definition": "Container ship vessel. It was called the Australia Star from 1978 until Feb 1989, and March 1992 until May 1994. It was disposed of in 2001 (Sea Express).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/205"
+          },
+          {
+            "label": "Tower Bridge",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (May 2013). It was disposed of in approximately 2010.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/206"
+          },
+          {
+            "label": "Anro Asia",
+            "definition": "Container ship vessel, which flew the flag of Singapore. It was disposed of in 1997.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/207"
+          },
+          {
+            "label": "New Zealand Star",
+            "definition": "Container ship vessel, which flew the flag of Singapore. It was disposed of in 1998.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/208"
+          },
+          {
+            "label": "Capitaine Tasman",
+            "definition": "General Cargo ship vessel. It was called the Capitaine Tasman from March 2002 until April 2010. This ship's callsign was P3CV9 in 2002. It is now called Ual Coburg (Cyprus, August 2009).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/209"
+          },
+          {
+            "label": "Fua Kavenga",
+            "definition": "Ro-ro cargo ship vessel. It was called the Fua Kavenga from 1979 until May 2002. It is now called the Ocean Glory (Comoros, May 2013). It was disposed of in approximately 2011.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/210"
+          },
+          {
+            "label": "Southern Moana",
+            "definition": "General Cargo ship vessel. It was called the Southern Moana from Dec 2001 until may 2011. It is now called the Red Rock (Indonesia, October 2010).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/211"
+          },
+          {
+            "label": "Nedlloyd Nelson",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Nelson from July 2002 until May 2004. It is now called the Hansa Nordburg (Liberia, January 2008).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/212"
+          },
+          {
+            "label": "MSC Hobart",
+            "definition": "Container ship vessel. This ship was also called the MSC Hobart from Oct 2004 until May 2007. It has been named as such again from July 2007, and is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/213"
+          },
+          {
+            "label": "CMA CGM Charcot",
+            "definition": "Container ship vessel. It was called the CMA CGA Charcot from Nov 2007 until Aug 2011. It is now called the Euro Max (Liberia, October 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/214"
+          },
+          {
+            "label": "CMA CGM Mimosa",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/215"
+          },
+          {
+            "label": "CMA CGM Melbourne",
+            "definition": "Container ship vessel. It was called the CMA CGM Melbourne from 2006 until Aug 2008. It is now called the Westertal (Liberia, March 2008).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/216"
+          },
+          {
+            "label": "Passat Spring",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/217"
+          },
+          {
+            "label": "CMA CGM Auckland",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/218"
+          },
+          {
+            "label": "Ital Ottima",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/219"
+          },
+          {
+            "label": "Buxlink",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/220"
+          },
+          {
+            "label": "AS Cypria",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/221"
+          },
+          {
+            "label": "MSC Federica",
+            "definition": "A vessel, which flew the flag of Cyprus. It was disposed of in approximately 2010.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/222"
+          },
+          {
+            "label": "Brisbane Star",
+            "definition": "Container ship vessel. It was called the Brisbane Star from July 1993 until Jan 1998. It was disposed of in 2002.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/223"
+          },
+          {
+            "label": "P&O Nedlloyd Adelaide",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Adelaide from Oct 2000 until Jan 2006. It is now called the Sky Interest (Hong Kong, 2006). It was disposed of in 2007.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/224"
+          },
+          {
+            "label": "CMA CGM Utrillo",
+            "definition": "Container ship vessel, which flew the flag of Bahamas. It is now called the CMA CGM Matisse (Cyprus, January 2009).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/225"
+          },
+          {
+            "label": "Stadt Weimar",
+            "definition": "Container ship vessel. This ship was also called the Stadt Weimar from 2006 until March 2011. It has been named as such again from March 2012, and is currently flying the flag of Germany (July 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/226"
+          },
+          {
+            "label": "Canberra Express",
+            "definition": "Container ship vessel, which is currently flying the flag of Germany (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/227"
+          },
+          {
+            "label": "Wellington Express {DFCX2}",
+            "definition": "Container ship vessel, which is currently flying the flag of Germany (May 2013). The ship's callsign was VSUA5 from 2006 until May 2007.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/228"
+          },
+          {
+            "label": "Adelaide Express",
+            "definition": "Container ship vessel. It was called the Adelaide Express form Feb 2006 until July 2009. It is now called the Classica (Antigua & Barbuda, April 2009). It was disposed of in 2016.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/229"
+          },
+          {
+            "label": "Northwest Sanderling",
+            "definition": "LNG tanker vessel, which is currently flying the flag of Australia (June 2017).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/23"
+          },
+          {
+            "label": "Contship Action",
+            "definition": "Container ship vessel, managed by Contship Containerlines, and was sold in 2003. It was disposed of in approximately 2012.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/230"
+          },
+          {
+            "label": "P&O Nedlloyd Encounter",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Encounter from April 2002 until Jan 2006.  The ship's callsign was ELZZ4 from 2003 until October 2004. It is now called the Santa Rebecca (Germany, January 2008).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/231"
+          },
+          {
+            "label": "Bay Bridge",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May 2013). It was disposed of in approximately 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/232"
+          },
+          {
+            "label": "P&O Nedlloyd Otago",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Otago from Aug 1999 until July 2000. It is now called the Provider (Liberia, March 2006). It was disposed of in approximately 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/233"
+          },
+          {
+            "label": "Pacific Triangle",
+            "definition": "Bulk Carrier vessel, which is currently flying the flag of Liberia (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/234"
+          },
+          {
+            "label": "P&O Nedlloyd Salerno",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Salerno from July 2000 until June 2002. It is now called the Isolde (Liberia, Feb 2008).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/235"
+          },
+          {
+            "label": "MSC New Plymouth",
+            "definition": "Container ship vessel. It was called the MSC New Plymouth from January 2002 until January 2004. It is now called the Hansa Aelesund (Liberia, May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/236"
+          },
+          {
+            "label": "Dalian",
+            "definition": "Container ship vessel, which is currently flying the flag of Malta (September, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/237"
+          },
+          {
+            "label": "Melbourne Star",
+            "definition": "Container ship vessel, which is currently flying the flag of UK (June 2011). It was disposed of in 2003.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/238"
+          },
+          {
+            "label": "Encounter Bay",
+            "definition": "Container ship vessel, which was flying the flag of UK. It was disposed of in 1999.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/239"
+          },
+          {
+            "label": "Tonsberg",
+            "definition": "Vehicle carrier vessel, currently flying the flag of Malta (February 2017).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/24"
+          },
+          {
+            "label": "Flinders Bay",
+            "definition": "Container ship vessel, which was flying the flag of UK. It was disposed of in 1996.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/240"
+          },
+          {
+            "label": "Botany Bay",
+            "definition": "Container ship vessel, which was flying the flag of UK. It was disposed of in 1999.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/241"
+          },
+          {
+            "label": "Discovery Bay",
+            "definition": "Container ship vessel, which was flying the flag of Saint Vincent & Grenadines. It was disposed of in 1998.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/242"
+          },
+          {
+            "label": "America Star",
+            "definition": "Container ship vessel, which was flying the flag of UK. It was disposed of in 2003.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/243"
+          },
+          {
+            "label": "MSC Didem",
+            "definition": "Container ship vessel, which is currently flying the flag of Panama (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/244"
+          },
+          {
+            "label": "Safmarine Meru",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (April 2012). It was disposed of in 2016.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/245"
+          },
+          {
+            "label": "Wellington Express {MWSD3}",
+            "definition": "Container ship vessel. It was called the Wellington Express from 1996 until August 2002. It is now caled the Troy Y (Moldova, August 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/246"
+          },
+          {
+            "label": "Polar Star",
+            "definition": "Icebreaker vessel, which is currently flying the flag of the US (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/247"
+          },
+          {
+            "label": "SA Sederberg",
+            "definition": "Container ship vessel, which was flying the flag of Belgium (2003). It was disposed of in approximately 2008.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/248"
+          },
+          {
+            "label": "Maersk Constantia",
+            "definition": "Container ship vessel. It was called the Maersk Constantia from May 2001 until June 2008. It was disposed of in 2008.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/249"
+          },
+          {
+            "label": "ANL Waratah",
+            "definition": "Container ship vessel, currently flying the flag of Liberia (March 2017).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/25"
+          },
+          {
+            "label": "Lowlands Prosperity",
+            "definition": "Bulk Carrier vessel. It was called the Lowlands Prosperity from Aug 2004 until Jan 2012. It is now called the John Oldendorff (Liberia, September 2011).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/250"
+          },
+          {
+            "label": "Pacific Endeavour {VRUK8}",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (September, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/251"
+          },
+          {
+            "label": "Contship Ambition",
+            "definition": "Container ship vessel. It was called the CONTSHIP Ambition from 1996 until Dec 2002. It is now called the Pisti (Panama, April 2008).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/252"
+          },
+          {
+            "label": "Bartok",
+            "definition": "General cargo ship vessel. It was called the Bartok from 1990 until 1995. It is now called the Crown Pearl (Panama, April 2010). It was disposed of in approximately 2012.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/253"
+          },
+          {
+            "label": "P&O Nedlloyd Jakarta",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Jakarta from 1998 until Feb 2006. It is now called the Maersk Penang (Netherlands, November 2010).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/254"
+          },
+          {
+            "label": "P&O Nedlloyd Sydney",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Sydney from 1998 until Feb 2006. It is now called the Maersk Pembroke (Netherlands, January 2011).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/255"
+          },
+          {
+            "label": "Nedlloyd Raleigh Bay",
+            "definition": "Container ship vessel. It was called the Raleigh Bay from Aug 1994 to Oct 1996. It is now called the Jupiter (Tuvalu, December 2008). It was disposed of in approximately 2012.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/256"
+          },
+          {
+            "label": "P&O Nedlloyd Brisbane",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Brisbane from Jan 1997 to Jan 2006. It is now called the Jupiter (Tuvalu, December 2008). It was disposed of in approximately 2012.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/257"
+          },
+          {
+            "label": "Maersk Aberdeen",
+            "definition": "Containter ship vessel, which is flying the flag of Hong Kong (May, 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/258"
+          },
+          {
+            "label": "ANL Whyalla",
+            "definition": "Container ship vessel which was known as the ANL Whyalla from 2009 until 2015. It is now known as the SCT Vietnam.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/26"
+          },
+          {
+            "label": "Meridian",
+            "definition": "Training Ship vessel, which was flying the flag of USSR. It was disposed of in 1984.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/260"
+          },
+          {
+            "label": "ANL Progress",
+            "definition": "Containter ship vessel. It was called the ANL Progress from July 2003 until May 2005. It is now called the Meratus Batam (Indonesia, May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/261"
+          },
+          {
+            "label": "Ranginui",
+            "definition": "General Cargo ship vessel. It was called the Ranginui from August 1994 until November 1999. It is now called the Aylin (Turkey, May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/262"
+          },
+          {
+            "label": "Baltrum Trader",
+            "definition": "Container ship vessel. It was called the Baltrum Trader (which callsign V2AP6) from Jan 2000 until May 2007. It is again called the Baltrum Trader (callsign A8ZP9), flying the flag of Liberia (April, 2007).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/263"
+          },
+          {
+            "label": "Florence",
+            "definition": "Container ship vessel. It was called the Florence from Oct 2005 until May 2012. It is now called the Damai Sejahtera li (Indonesia, Oct 2010).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/264"
+          },
+          {
+            "label": "Vega Gotland",
+            "definition": "Container ship vessel, which is currently flying the flag of Antigua & Barbuda (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/265"
+          },
+          {
+            "label": "Rangitata",
+            "definition": "Cargo ship vessel. It was called the Rangitata from February 1992 until August 1998. It is now called the Emma (Antigua & Barbuda, May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/266"
+          },
+          {
+            "label": "Karin Knorr",
+            "definition": "General Cargo ship vessel. It was called the Karin from October 1990 until 1998. It is now called the Melody li (Panama, May 2013). It was disposed of in approximately 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/267"
+          },
+          {
+            "label": "Iron Dampier",
+            "definition": "Cargo ship vessel. It was called the Iron Dampier from May 1992 until April 1998. The ship's callsign was VNGZ from 1992 until September 1996. It was disposed of in 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/268"
+          },
+          {
+            "label": "Anro Australia",
+            "definition": "Ro-ro Cargo ship vessel. It was called the Anro Australia from 1977 until June 1997. It was then called the Kevat (Saint Vincent & Grenadines). It was disposed of in 1997.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/269"
+          },
+          {
+            "label": "Island Chief",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (December 2016)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/27"
+          },
+          {
+            "label": "Iron Newcastle",
+            "definition": "Bulk carrier ship vessel. It was called the Iron Newcastle from 1985 until June 1999. It is now called the Camriz (Panama, Aug 2007). It was disposed of in approximately 2010.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/270"
+          },
+          {
+            "label": "Iron Kembla",
+            "definition": "Bulk carrier ship vessel. It was called the Iron Kembla from 1986 until May 2005. It was then called the Merit Land (Panama). It was disposed of in approximately 2011.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/271"
+          },
+          {
+            "label": "Iron Pacific",
+            "definition": "Bulk carrier ship vessel. It was called the Iron Pacific from 1986 until 1998. It was then called the Berge Pacific (Norway). It was disposed of in approximately 2011.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/272"
+          },
+          {
+            "label": "Australian Progress",
+            "definition": "Bulk carrier ship vessel. It was called the Australian Progress from 1977 until March 1991. It was then called Treasure Sea (Panama). It was disposed of in 1992.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/274"
+          },
+          {
+            "label": "Iron Flinders",
+            "definition": "General cargo ship vessel. It was called the Iron Flinders from February 1991 until May 1999. It is now called the India Express (Panama, January 2008). It was disposed of in approximately 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/275"
+          },
+          {
+            "label": "MH Green",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (October, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/276"
+          },
+          {
+            "label": "Australian Enterprise",
+            "definition": "Container ship vessel. It was called the Australian Enterprise from January 1997 until 2001. It was most recently called the ANL Explorer. It was disposed of in approximately 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/277"
+          },
+          {
+            "label": "Contship Borealis",
+            "definition": "Container ship vessel. It was called the Contship Borealis from 2002 until Aug 2005. It is now called the Glasgow Express (Germany, January 2008).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/278"
+          },
+          {
+            "label": "Contship Australis",
+            "definition": "Container ship vessel. It was called the Contship Australis from 2002 until July 2005. It is now called the Dublin Express (Germany, October 2010).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/279"
+          },
+          {
+            "label": "Kweichow",
+            "definition": "Cargo ship vessel, which is currently flying the flag of Hong Kong (November 2015).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/28"
+          },
+          {
+            "label": "Coral Chief",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/280"
+          },
+          {
+            "label": "Papuan Chief",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/281"
+          },
+          {
+            "label": "Kokopo Chief",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/282"
+          },
+          {
+            "label": "P&O Nedlloyd Napier",
+            "definition": "Container ship vessel, which was flying the flag of Hong Kong. It was called the P&O Nedlloyd Napier from Aug 1998. It was disposed of in approximately 2000.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/283"
+          },
+          {
+            "label": "P&O Nedlloyd Wellington",
+            "definition": "Container ship vessel. It was called the P&O Nedlloyd Wellington from June 2004 until Nov 2005. It is now called the Cs Star (UK, September 2011).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/284"
+          },
+          {
+            "label": "TMM Tabasco",
+            "definition": "Container ship vessel. It was called the Tmm Tabasco from 2000 until August 2005. It is now called the Wellington Express {DFCX2} (Germany, May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/285"
+          },
+          {
+            "label": "Ionikos",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (October, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/286"
+          },
+          {
+            "label": "Canmar Dynasty",
+            "definition": "Container ship vessel. It was called the Canmar Dynasty from May 2003 until July 2005. It is now called the Sydney Express (UK, Feb 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/287"
+          },
+          {
+            "label": "Sydney Express",
+            "definition": "Container ship vessel, which is currently flying the flag of the UK (Feb, 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/288"
+          },
+          {
+            "label": "Nimos",
+            "definition": "Container ship vessel. It was called the Nimos from 1977 until December 1990. It was disposed of in approximately 2011.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/289"
+          },
+          {
+            "label": "Philadelphia",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (August 2015).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/29"
+          },
+          {
+            "label": "Contship Aurora",
+            "definition": "Container ship vessel. It was called the Contship Aurora from 2002 until 2005. It is currently called the Liverpool Express (Germany, May 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/290"
+          },
+          {
+            "label": "Act 6",
+            "definition": "Container ship vessel. It was called the Act 6 from 1972 until January 1992. It was disposed of in 2003.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/291"
+          },
+          {
+            "label": "Progress C",
+            "definition": "Container ship vessel, which is currently flying the flag of Panama (October, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/292"
+          },
+          {
+            "label": "RTM Wakmatha",
+            "definition": "Bulk Carrier vessel, which is currently flying the flag of Singapore (October 2014). This ship previously flew the UK flag, with a corresponding callsign of MVTW4.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/3"
+          },
+          {
+            "label": "Portugal",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (December 2015).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/30"
+          },
+          {
+            "label": "Salome",
+            "definition": "Vehicle carrier vessel, currently flying the flag of Singapore (April 2015).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/31"
+          },
+          {
+            "label": "Pacific Endeavour {D5SO2}",
+            "definition": "General cargo vessel, which is currently flying the flag of Liberia (February, 2024)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/349"
+          },
+          {
+            "label": "Rusalka",
+            "definition": "Sailing vessel, which is currently flying the flag of Australia (February, 2024)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/350"
+          },
+          {
+            "label": "Maersk Gairloch {9V6221}",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/351"
+          },
+          {
+            "label": "Asia Endeavour",
+            "definition": "Gas tanker vessel, which is currently flying the flag of Singapore (February, 2024).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/352"
+          },
+          {
+            "label": "Melanesian Chief",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (February, 2024).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/353"
+          },
+          {
+            "label": "Arkadia",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (February, 2024).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/354"
+          },
+          {
+            "label": "Coral Adventurer",
+            "definition": "Passenger ship vessel, which is currently flying the flag of Australia (February, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/358"
+          },
+          {
+            "label": "Coral Geographer",
+            "definition": "Passenger ship vessel, which is currently flying the flag of Australia (February, 2024).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/359"
+          },
+          {
+            "label": "ANL Elaroo",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (January 2019).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/41"
+          },
+          {
+            "label": "HMB Endeavour",
+            "definition": "Passenger ship vessel, which is currently flying the flag of Australia (February, 2019).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/43"
+          },
+          {
+            "label": "Highland Chief {VROJ8}",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (October, 2019).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/44"
+          },
+          {
+            "label": "Hansa Freyburg",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (October, 2019).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/45"
+          },
+          {
+            "label": "Tropical Islander",
+            "definition": "General Cargo ship vessel, which is currently flying the flag of Panama (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/453"
+          },
+          {
+            "label": "CMA CGM Onyx",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/454"
+          },
+          {
+            "label": "Cap Reinga",
+            "definition": "Container ship vessel. It was called the Cap Reinga from August 2007 until September 2010. It is now called the Jupiter (Liberia, November 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/455"
+          },
+          {
+            "label": "CSCL Longkou",
+            "definition": "Container ship vessel. It was called the CSCL Longkou from May 2001 until Augus 2007. It is now called the Jupiter (Liberia, November 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/456"
+          },
+          {
+            "label": "CMA CGM Lavender",
+            "definition": "Container ship vessel. It was called the CMA CGM Lavender until November 2016. It is now called the Montpellier (Liberia, July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/457"
+          },
+          {
+            "label": "ANL Benalla",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/458"
+          },
+          {
+            "label": "JPO Scorpius",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/459"
+          },
+          {
+            "label": "Seatrade Orange",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (October, 2019).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/46"
+          },
+          {
+            "label": "Maersk Fuji",
+            "definition": "Container ship vessel. It was called the Maersk Fuji from July 2005 unitl June 2010. It is now called the Spyros (Marshall Islands, February 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/460"
+          },
+          {
+            "label": "Merkur Sky",
+            "definition": "Container ship vessel. It was called the Merkur Sky from 1997 to April 1998, December 1998 to 1999, May 2001 to March 2002, November 2002 to June 2003, August 2005 to July 2007 and April 2011 to September 2012. It is now called the M Sky (Saint Kitts & Nevis, June 2012). It was disposed of in approximately 2012.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/461"
+          },
+          {
+            "label": "Icebird",
+            "definition": "Cargo ship vessel. It was called the Icebird from 1984 until December 1994. It is now called the Almog (Honduras, November 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/462"
+          },
+          {
+            "label": "Hoegh Seoul",
+            "definition": "Vehicles carrier vessel, which is currently flying the flag of Norway (July, 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/463"
+          },
+          {
+            "label": "Hoegh St. Petersburg",
+            "definition": "Vehicles carrier vessel, which is currently flying the flag of Norway (July, 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/464"
+          },
+          {
+            "label": "Conti Harmony",
+            "definition": "Container ship vessel, which is currently flying the flag of Cyprus (July 2013). It was disposed of in approximately 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/465"
+          },
+          {
+            "label": "Schelde Trader",
+            "definition": "Container ship vessel, which is currently flying the flag of Netherlands (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/466"
+          },
+          {
+            "label": "Maersk Fukuoka",
+            "definition": "Container ship vessel. It was called the Maersk Fukuoka from 2005 until December 2010. It is now called the Georgia (Marshall Islands, September 2011).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/467"
+          },
+          {
+            "label": "Isar Trader",
+            "definition": "Container ship vessel. It was called the Isar Trader from December 2010 until August 2012. It is now called the Georgia (Marshall Islands, September 2011).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/468"
+          },
+          {
+            "label": "Sofrana Surville",
+            "definition": "Container ship vessel, which is currently flying the flag of Antigua and Barbuda (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/469"
+          },
+          {
+            "label": "Montpellier",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (October, 2019).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/47"
+          },
+          {
+            "label": "BC San Francisco",
+            "definition": "Container ship vessel, which is currently flying the flag of Antigua and Barbuda (June 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/470"
+          },
+          {
+            "label": "CMA CGM Jade",
+            "definition": "Container ship vessel, which is currently flying the flag of Marshall Islands (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/471"
+          },
+          {
+            "label": "Santos Express",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/472"
+          },
+          {
+            "label": "Manila Express",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/473"
+          },
+          {
+            "label": "Pacific Gas",
+            "definition": "LPG Tanker vessel, which is currently flying the flag of Vanuatu (October 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/474"
+          },
+          {
+            "label": "Mississauga Express",
+            "definition": "Container ship vessel, which is currently flying the flag of Bermuda (July 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/475"
+          },
+          {
+            "label": "Seatrade Red",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (October, 2020).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/58"
+          },
+          {
+            "label": "Szechuen",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (January, 2021). It was called Scechuen between 2014 and 2021, it is now called Vanuatu Chief.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/60"
+          },
+          {
+            "label": "Everest",
+            "definition": "This multi purpose vessel (MPV), is classed as an offshore construction vessel, which is currently flying the flag of Bahamas (March 2021)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/62"
+          },
+          {
+            "label": "Akademik Shokalskiy",
+            "definition": "Passenger ship vessel, which is currently flying the flag of Russia (November, 2020).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/63"
+          },
+          {
+            "label": "Hansa Offenburg",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (March, 2021).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/64"
+          },
+          {
+            "label": "CMA CGM Abu Dhabi",
+            "definition": "Container ship vessel, which is currently flying the flag of Malta (December, 2021)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/75"
+          },
+          {
+            "label": "Nordpacific",
+            "definition": "Container ship vessel, which is currently flying the flag of Cyprus (December, 2021)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/76"
+          },
+          {
+            "label": "Vanuatu Chief",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (February, 2022). It was called the Szechuen until 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/81"
+          },
+          {
+            "label": "Seatrade Blue",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (July, 2022)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/82"
+          },
+          {
+            "label": "Safeen Prime",
+            "definition": "Container ship vessel, which is currently flying the flag of the Marshall Island (July, 2022)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/83"
+          },
+          {
+            "label": "Samoa Chief",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (July, 2022)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/84"
+          },
+          {
+            "label": "Mariner",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (October, 2022).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/85"
+          },
+          {
+            "label": "Tasman Chief",
+            "definition": "Cargo ship vessel, which is currently flying the flag of Liberia (October, 2022).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/86"
+          },
+          {
+            "label": "Seatrade White",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (February, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/87"
+          },
+          {
+            "label": "Mia Schulte",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (March, 2023)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/88"
+          },
+          {
+            "label": "Maersk Jalan",
+            "definition": "Cargo ship vessel, which is currently flying the flag of Singapore (February 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/890"
+          },
+          {
+            "label": "Patricia Schulte",
+            "definition": "Container ship vessel, which is currently flying the flag of Cyprus (February 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/891"
+          },
+          {
+            "label": "Siangtan",
+            "definition": "Cargo ship vessel, which is currently flying the flag of Singapore (February 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/892"
+          },
+          {
+            "label": "Capitaine Fearn",
+            "definition": "General Cargo ship vessel. It was called the Forum Samoa II from 2001 until June 2010. It was then shortly called the Opal Harmony, then Southern Moana, and is now known as Capitaine Fearn, and flies the flag of Samoa (July, 2015).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/908"
+          },
+          {
+            "label": "Shengking",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (February 2016)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/909"
+          },
+          {
+            "label": "Chenan",
+            "definition": "General Cargo ship vessel. It was called the Chenan from December 1999 to February 2005, and again from January 2012, and is currently flying the flag of Hong Kong (Feb 2016)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/910"
+          },
+          {
+            "label": "Southern Lily",
+            "definition": "Container ship vessel. It was called the Southern Lily in 2011, and is now known as the Southern Trader, which is currently flying the flag of Singapore (Jan, 2015)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/912"
+          },
+          {
+            "label": "ANL Yarrunga",
+            "definition": "Container ship vessel, which was called the ANL Yarrunga until October 2009. It is now called the Karin Rambow, and is currently flying the flag of Antigua and Barbados (May, 2016)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/913"
+          },
+          {
+            "label": "Shearwater",
+            "definition": "Bulk Carrier vessel, which flew the flag of Panama (September 2010). It was disposed of in ??.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/914"
+          },
+          {
+            "label": "Act 10",
+            "definition": "Container ship vessel, which was called the Act 10 from 1990 until 1991. It's final name was P and O Nedlloyd Luanda. It was disposed of in 2002.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/915"
+          },
+          {
+            "label": "Southern Queen",
+            "definition": "General Cargo ship vessel. It was called the Southern Queen from Oct-Dec 2001. It is now called the Red Rock (Indonesia, October 2010).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/916"
+          },
+          {
+            "label": "Maersk Auckland",
+            "definition": "Container ship vessel, which was known as the Maersk Auckland from February 2003 until July 2007. It was disposed of in 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/917"
+          },
+          {
+            "label": "E.R. Wilhelmshaven",
+            "definition": "Container ship vessel, which is currently flying the flag of Liberia (May, 2013).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/918"
+          },
+          {
+            "label": "Maersk Phuket",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (July, 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/919"
+          },
+          {
+            "label": "Southland Star",
+            "definition": "Reefer vessel, which flew the flag of Britain. It was disposed of in 1993.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/920"
+          },
+          {
+            "label": "California Star",
+            "definition": "Container ship vessel, which was known as the Caifornia Star from 1989 until 1996. It's final name was the Golden Gate. It was disposed of in 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/921"
+          },
+          {
+            "label": "Vishva Nandin",
+            "definition": "General cargo ship vessel, which flew the flag of India. It was disposed of in 1999.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/922"
+          },
+          {
+            "label": "Vishva Prafulla",
+            "definition": "General cargo ship vessel, which flew the flag of India, and was last known as the Asha Manan. It was disposed of in 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/923"
+          },
+          {
+            "label": "Bhavabhuti",
+            "definition": "General cargo ship vessel, which flew the flag of India. It was disposed of in 2001.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/924"
+          },
+          {
+            "label": "Vishva Parijet",
+            "definition": "General cargo ship vessel, which flew the flag of India. It was disposed of in 2000.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/925"
+          },
+          {
+            "label": "CMA CGM Orchid",
+            "definition": "Container ship vessel, which flew the flag of Liberia. It is now known as the As Cypria (January, 2011).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/926"
+          },
+          {
+            "label": "OOCL Houston",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (April, 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/927"
+          },
+          {
+            "label": "Swan",
+            "definition": "Reefer ship vessel. It was called the Swan from April 1999 until September 2007. It is now called the Pavlovsk.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/928"
+          },
+          {
+            "label": "Mathilde Schulte",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore (July, 2023).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/97"
+          },
+          {
+            "label": "Highland Chief {VROB}",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/99"
+          },
+          {
+            "label": "Northwest Sandpiper",
+            "definition": "LNG Tanker vessel, which is currently flying the flag of Australia.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/0970"
+          },
+          {
+            "label": "Goliath",
+            "definition": "Bulk carrier vessel, which is currently flying the flag of Australia.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/09ZK"
+          },
+          {
+            "label": "Josephine Maersk",
+            "definition": "Container ship vessel, which is currently flying the flag of Denmark (September 2016).",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/26JM"
+          },
+          {
+            "label": "Maersk Gairloch {VQGQ4}",
+            "definition": "Container ship vessel, which is currently flying the flag of Singapore.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/747M"
+          },
+          {
+            "label": "OOCL Texas",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong (January, 2019).",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/HK8L"
+          },
+          {
+            "label": "OOCL Le Havre",
+            "definition": "Container ship vessel, which is currently flying the flag of Hong Kong.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/HKC2"
+          }
+        ]
+      },
+      {
+        "label": "self-propelled small boat",
+        "definition": "A small self-propelled platform operating on the surface of the water column that may be easily removed from the water (e.g. shore-based RIBs ships' boats).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/33"
+      },
+      {
+        "label": "vessel of opportunity on fixed route",
+        "definition": "A platform repeatedly following a predictable fixed track on the surface of the water column that collects scientific (oceanographic and meteorological) data (e.g. an instrumented ferry).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/35",
+        "narrower": [
+          {
+            "label": "Spirit of Tasmania 2",
+            "definition": "Passenger/Ro-Ro Cargo ship vessel, which is currently flying the flag of Australia (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/100"
+          },
+          {
+            "label": "Sea Flyte",
+            "definition": "Passenger ship vessel, which is currently flying the flag of Australia (February, 2009).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/107"
+          },
+          {
+            "label": "Fantasea Wonder",
+            "definition": "Passenger ship vessel, which is currently flying the flag of Australia (June, 2012).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/108"
+          },
+          {
+            "label": "Spirit of Tasmania 1",
+            "definition": "Spirit of Tasmania 1 is owned by the TT-Line Company. It was built in 1998 by Kvaerner Masa-Yards in Finland as Superfast IV on the Patras-Ancona route. Since 2002, It is operating on the Melbourne (Victoria) - Devonport (Tasmania) route across Bass Strait",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/73"
+          },
+          {
+            "label": "Harbour Master",
+            "definition": "Passenger ship vessel, which is currently flying the flag of Australia.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/77"
+          }
+        ]
+      },
+      {
+        "label": "fishing vessel",
+        "definition": "A platform operating on the surface of the water column whose primary purpose is the commercial harevsting of fish or shellfish but may be engaged in scientific activities such as fish stock surveys or mooring deployments and recoveries.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/36",
+        "narrower": [
+          {
+            "label": "Tangaroa",
+            "definition": "Fishing support vessel, which is currently flying the flag of New Zealand (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/111"
+          },
+          {
+            "label": "Santo Rocco",
+            "definition": "Trawler fishing vessel operated by Australian Wild Tuna, which is currently flying the Australian flag (May 2012)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/112"
+          },
+          {
+            "label": "Austral Leader II",
+            "definition": "Trawler fishing vessel, currently flying the Australian flag (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/113"
+          },
+          {
+            "label": "Janas",
+            "definition": "Fishing vessel, currently flying the New Zealand flag (May 2013)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/114"
+          },
+          {
+            "label": "Will Watch",
+            "definition": "Trawler fishing vessel, currently flying the New Zealand flag (May 2012)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/115"
+          },
+          {
+            "label": "Southern Champion",
+            "definition": "Trawler fishing vessel, currently flying the Australian flag (May 2013). It was decommissioned in 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/116"
+          },
+          {
+            "label": "Rehua",
+            "definition": "Trawler fishing vessel, currently flying the New Zealand flag (August 2011)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/117"
+          },
+          {
+            "label": "San Tongariro",
+            "definition": "Trawler fishing vessel, currently flying the flag of New Zealand.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/15"
+          },
+          {
+            "label": "Elena Rose",
+            "definition": "Fishing vessel, which is currently flying the flag of Australia (February, 2024)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/348"
+          },
+          {
+            "label": "Amaltal Enterprise",
+            "definition": "Fishing vessel, which was flying the flag of New Zealand (December, 2011).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/355"
+          },
+          {
+            "label": "Paerangi",
+            "definition": "Fishing vessel which was known as the Paerangi until 2008. It is now known as the Jawhart Al Wusta.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/356"
+          },
+          {
+            "label": "Tokatu",
+            "definition": "Trawler fishing vessel, currently flying the New Zealand flag (November 2019)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/48"
+          },
+          {
+            "label": "Geelong Star",
+            "definition": "Fishing vessel, currently flying the Netherlands flag (January 2017)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/6"
+          },
+          {
+            "label": "Antarctic Aurora",
+            "definition": "Fishing vessel, which is currently flying the flag of Australia (December, 2020)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/61"
+          },
+          {
+            "label": "Empress Pearl",
+            "definition": "Trawler fishing vessel, currently flying the Australian flag (January, 2017)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/7"
+          },
+          {
+            "label": "Amaltal Explorer",
+            "definition": "Trawler fishing vessel, which is currently flying the flag of New Zealand (February, 2022).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/78"
+          },
+          {
+            "label": "Amaltal Columbia",
+            "definition": "Factory trawler fishing vessel, which is currently flying the flag of New Zealand (January, 2022).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/79"
+          },
+          {
+            "label": "Antarctic Discovery",
+            "definition": "Fishing vessel, currently flying the Australian flag (January 2017)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/8"
+          },
+          {
+            "label": "Cape Arkona",
+            "definition": "Fishing vessel, which is currently flying the flag of Australia (February, 2022).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/80"
+          },
+          {
+            "label": "Isla Eden",
+            "definition": "Fishing vessel, currently flying the Australian flag (March 2016)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/896"
+          },
+          {
+            "label": "Saxon Onward",
+            "definition": "Fishing vessel, currently flying the Australian flag (March 2016)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/897"
+          },
+          {
+            "label": "Sniper",
+            "definition": "Fishing vessel, currently flying the Australian flag (January 2017)",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/9"
+          },
+          {
+            "label": "Antarctic Chieftain",
+            "definition": "Fishing vessel, currently flying the Australian flag (August 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/933"
+          },
+          {
+            "label": "Corinthian Bay",
+            "definition": "Fishing vessel, currently flying the Australian flag (September 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/934"
+          },
+          {
+            "label": "Atlas Cove",
+            "definition": "Fishing vessel, currently flying the Australian flag (August 2016).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/935"
+          },
+          {
+            "label": "Oscar Dyson",
+            "definition": "Fishery vessel owned by NOAA, which is currently flying the US flag.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/33OA"
+          },
+          {
+            "label": "Reuben Lasker",
+            "definition": "Fishing vessel owned by NOAA, which is currently flying the US flag.",
+            "about": "http://vocab.nerc.ac.uk/collection/C17/current/33UD"
+          }
+        ]
+      },
+      {
+        "label": "self-propelled boat",
+        "definition": "A small self-propelled platform operating on the surface of the water column in unpredictable locations that is smaller than a ship but too large to easily remove from the water.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/37"
+      },
+      {
+        "label": "man-powered boat",
+        "definition": "A platform operating on the surface of the water column that is manually propelled and may not be easily removed from the water (e.g. trireme).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/38"
+      },
+      {
+        "label": "naval vessel",
+        "definition": "A platform operating on the surface of the water column in unpredictable locations that is primarily equipped manned and operated for military purposes.  Includes surface warships of all sizes and logistic support vessels.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/39"
+      },
+      {
+        "label": "man-powered small boat",
+        "definition": "A platform operating on the surface of the water column that is manually propelled and may be easily removed from the water (e.g. rowing boat canoe).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/3A"
+      }
+    ]
+  },
+  {
+    "label": "Biological platform",
+    "definition": "This category contains vocabulary terms describing animal type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/40",
+    "narrower": [
+      {
+        "label": "organism",
+        "definition": "A living creature carrying instruments or collecting samples",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/70"
+      },
+      {
+        "label": "human",
+        "definition": "A human being without specialised equipment operating on land or the surface of the water column.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/71"
+      },
+      {
+        "label": "diver",
+        "definition": "A human being with self-contained equipment or surface-connected suit enabling operation within the water column.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/72"
+      },
+      {
+        "label": "flightless bird",
+        "definition": "A bird that is unable to fly with the ability to exist within the water column (e.g. penguin).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/73"
+      },
+      {
+        "label": "seabird and duck",
+        "definition": "A flighted bird that is able to exist on the water column surface and dive into the water column (e.g. cormorants auks ducks and gulls).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/74"
+      },
+      {
+        "label": "cetacean",
+        "definition": "A mammal that exists within the water column but needing to regularly surface to breathe (i.e. dolphins and whales).",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/75"
+      },
+      {
+        "label": "fish",
+        "definition": "A free-swimming creature that exists totally within the water column.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/76"
+      },
+      {
+        "label": "land-sea mammals",
+        "definition": "A mammal that exists both on land and within the water column. Includes seals sealions sea-otters and walruses.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/77"
+      }
+    ]
+  },
+  {
+    "label": "Satellite",
+    "definition": "This category contains vocabulary terms describing satellite type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/41",
+    "narrower": [
+      {
+        "label": "geostationary orbiting satellite",
+        "definition": "A vehicle operating beyond the Earth's atmosphere without human occupants that orbits the Earth at the same rate as the Earth's rotation keeping it over a fixed location on the Earth's surface..",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/64",
+        "narrower": [
+          {
+            "label": "Himawari-8",
+            "definition": "This satellite was the 1st flight of the Himawari 3rd generation programme. It operated from October 2014, and was replaced by Himawari-9 as the primary satellite in December 2022, it operated at an altitude of 35786km, in a geostationary orbit. Instrumentation: Advanced Himawari Imager, Data Collection Service, Space Environment Data Acquisition monitor.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/95"
+          },
+          {
+            "label": "Himawari-9",
+            "definition": "This satellite was the 2nd flight of the Himawari 3rd generation programme. It operated from Novermber 2016, it operated at an altitude of 35786km, in a geostationary orbit. Instrumentation: Advanced Himawari Imager, Data Collection Service, Space Environment Data Acquisition monitor.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/96"
+          }
+        ]
+      },
+      {
+        "label": "orbiting satellite",
+        "definition": "A vehicle operating beyond the Earth's atmosphere without human occupants that orbits the Earth at a different rate to the Earth's rotation so it moves over the Earth's surface..",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/65",
+        "narrower": [
+          {
+            "label": "SNPP",
+            "definition": "This satellite was a prototype of the JPSS programme, originally designed as Preparatory Programme of the aborted NPOESS (National Polar-orbiting Operational Environmental Satellite System). It operated from October 2011, at an altitute of 825km, in a sunsynchronous orbit. Instrumentation: Advanced Technology Microwave Sounder, Clouds and the Earth’s Radiant Energy System, Cross-track Infrared Sounder, Ozone Mapping and Profiler Suite, and Visible/Infrared Imager Radiometer Suite.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/42"
+          },
+          {
+            "label": "Sentinel-1A",
+            "definition": "This satellite was the 1st flight of the Sentinel-1 programme, providing SAR observation. It operated between April 2014 and is operational until 2021, at an altitude of 693km, in a sunsynchronous orbit. Instrumentation: Synthetic Aperture Radar (C-band).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/49"
+          },
+          {
+            "label": "Sentinel-1B",
+            "definition": "This satellite was the 2nd flight of the Sentinel-1 programme, providing SAR observation. It operated between April 2016 and is operational until 2023, at an altitude of 693km, in a sunsynchronous orbit. Instrumentation: Synthetic Aperture Radar (C-band).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/50"
+          },
+          {
+            "label": "NOAA-8",
+            "definition": "This satellite was the 4th flight unit of the NOAA 4th generation programme, and 1st of the ATN series. It operated between March 1983 and December 1985 at an altitutde of 820km, in a sunsynchronous orbit. Instrumentation: Argos Data Collection System , Advanced Very High Resolution Radiometer, High-resolution Infra Red Sounder / 2, Microwave Sounding Unit, Search and Rescue Satellite-Aided Tracking System, Stratospheric Sounding Unit, SEM / Medium energy proton detector and SEM / Total Energy Detector.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/863"
+          },
+          {
+            "label": "NOAA-9",
+            "definition": "This satellite was the 5th flight unit of the NOAA 4th generation programme, and 2nd of the ATN series. It operated between December 1984 and February 1998 at an altitutde of 850km, in a sunsynchronous orbit. Instrumentation: Argos Data Collection System, Advanced Very High Resolution Radiometer / 2, Earth Radiation Budget Experiment, High-resolution Infra Red Sounder / 2, Microwave Sounding Unit, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Stratospheric Sounding Unit, SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/864"
+          },
+          {
+            "label": "NOAA-10",
+            "definition": "This satellite was the 6th flight unit of the NOAA 4th generation programme, and 3rd of the ATN series. It operated between September 1986 and August 2001 at an altitutde of 810km, in a sunsynchronous orbit. Instrumentation: Argos Data Collection System, Advanced Very High Resolution Radiometer, Earth Radiation Budget Experiment, High-resolution Infra Red Sounder / 2, Microwave Sounding Unit, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Stratospheric Sounding Unit, SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/865"
+          },
+          {
+            "label": "NOAA-11",
+            "definition": "This satellite was the 7th flight unit of the NOAA 4th generation programme, and 4th of the ATN series. It operated between September 1988 and June 2004 at an altitutde of 843km, in a sunsynchronous orbit. Instrumentation: Argos Data Collection System, Advanced Very High Resolution Radiometer / 2, High-resolution Infra Red Sounder / 2, Microwave Sounding Unit, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Stratospheric Sounding Unit, SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/866"
+          },
+          {
+            "label": "NOAA-12",
+            "definition": "This satellite was the 8th flight unit of the NOAA 4th generation programme, and 5th of the ATN series. It operated between May 1991 and August 2007 at an altitutde of 804km, in a sunsynchronous orbit. Instrumentation: Argos Data Collection System, Advanced Very High Resolution Radiometer / 2, High-resolution Infra Red Sounder / 2, Microwave Sounding Unit, Stratospheric Sounding Unit, SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/867"
+          },
+          {
+            "label": "NOAA-13",
+            "definition": "This satellite was the 9th flight unit of the NOAA 4th generation programme, and 6th of the ATN series. It operated between 09 August 1993 and 21 August 1993 at an altitutde of 820km, in a sunsynchronous orbit. Instrumentation: Argos Data Collection System, Advanced Very High Resolution Radiometer / 2, High-resolution Infra Red Sounder / 2, Microwave Sounding Unit, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Stratospheric Sounding Unit, SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/868"
+          },
+          {
+            "label": "NOAA-14",
+            "definition": "This satellite was the 10th (last) flight unit of the NOAA 4th generation programme, and 7th of the ATN series. It operated between December 1994 and May 2007 at an altitutde of 844km, in a sunsynchronous orbit. Instrumentation: Argos Data Collection System, Advanced Very High Resolution Radiometer / 2, High-resolution Infra Red Sounder / 2, Microwave Sounding Unit, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Stratospheric Sounding Unit, SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/869"
+          },
+          {
+            "label": "NOAA-15",
+            "definition": "This satellite was the 1st flight of the NOAA 5th generation programme. It operated between May 1998 and 2018, at an altitude of 807km, in a sunsynchronous orbit. Instrumentation: Advanced Microwave Sounding Unit - A, Advanced Microwave Sounding Unit - B, Advanced Very High Resolution Radiometer / 3, High-resolution Infra Red Sounder / 3, Search and Rescue Satellite-Aided Tracking System, Data Collection System / 2 (also called Argos-2), SEM / Medium energy proton detector and SEM / Total Energy Detector.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/870"
+          },
+          {
+            "label": "NOAA-16",
+            "definition": "This satellite was the 2nd flight of the NOAA 5th generation programme. It operated between September 2000 and June 2014, at an altitude of 849km, in a sunsynchronous orbit. Instrumentation: Advanced Microwave Sounding Unit - A, Advanced Microwave Sounding Unit - B, Advanced Very High Resolution Radiometer / 3, High-resolution Infra Red Sounder / 3, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Data Collection System / 2 (also called Argos-2), SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/871"
+          },
+          {
+            "label": "NOAA-17",
+            "definition": "This satellite was the 3rd flight of the NOAA 5th generation programme. It operated between June 2002 and April 2013, at an altitude of 810km, in a sunsynchronous orbit. Instrumentation: Advanced Microwave Sounding Unit - A, Advanced Microwave Sounding Unit - B, Advanced Very High Resolution Radiometer / 3, High-resolution Infra Red Sounder / 3, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Data Collection System / 2 (also called Argos-2), SEM / Medium energy proton detector and SEM / Total Energy Detector",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/872"
+          },
+          {
+            "label": "NOAA-18",
+            "definition": "This satellite was the 4th flight of the NOAA 5th generation programme. It operated between May 2005 and 2018, at an altitude of 854km, in a sunsynchronous orbit. Instrumentation: Advanced Microwave Sounding Unit - A, Advanced Very High Resolution Radiometer / 3, High-resolution Infra Red Sounder / 4, Microwave Humidity Sounding, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, Data Collection System / 2 (also called Argos-2), SEM / Medium energy proton detector and SEM / Total Energy Detector.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/873"
+          },
+          {
+            "label": "NOAA-19",
+            "definition": "This satellite was the 5th (last) flight of the NOAA 5th generation programme. It operated between February 2009 and 2018, at an altitude of 870km, in a sunsynchronous orbit. Instrumentation: Advanced Data Collection System (also called Argos-3), Advanced Microwave Sounding Unit - A, Advanced Very High Resolution Radiometer / 3, High-resolution Infra Red Sounder / 4, Microwave Humidity Sounding, Search and Rescue Satellite-Aided Tracking System, Solar Backscatter Ultraviolet / 2, SEM / Medium energy proton detector and SEM / Total Energy Detector.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/874"
+          },
+          {
+            "label": "Aqua",
+            "definition": "This satellite was the 2nd flight of the NASA EOS programme. It operated between May 2002 and 2018, at an altitude of 705km, in a sunsynchronous orbit. Instrumentation: Atmospheric Infra-Red Sounder, Advanced Microwave Scanning Radiometer for EOS, Advanced Microwave Sounding Unit - A, Clouds and the Earth’s Radiant Energy System, Humidity Sounder for Brazil and Moderate-resolution Imaging Spectro-radiometer.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/879"
+          },
+          {
+            "label": "OrbView-2",
+            "definition": "This satellite was the only flight of the OrbView-2/SeaStar (former name) programme. It operated between August 1997 and December 2010, at an altitude of 705km, in a sunsynchronous orbit. Instrumentation: Sea-viewing Wide Field-of-view Sensor (SeaWiFS).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/881"
+          },
+          {
+            "label": "SAC-D",
+            "definition": "This satellite was the 4th flight of the Satélite de Aplicaciones Cientificas (SAC) Aquarius Mission programme. It operated between June 2011 and June 2015, at an altitude of 661km, in a sunsynchronous orbit. Instrumentation: Aquarius.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/882"
+          },
+          {
+            "label": "TOPEX-Poseidon",
+            "definition": "This satellite was the only flight of the TOPEX-Poseidon programme. It operated between August 1992 and October 2005, at an altitude of 1336km, in a drifting orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite, GPS Demonstration Receiver, Laser Retroreflector Array, Single-frequency Solid-state Altimeter, TOPEX Microwave Radiometer, NASA Radar Altimeter.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/883"
+          },
+          {
+            "label": "JASON-1",
+            "definition": "This satellite was the 1st flight of the JASON series. It operated between December 2001 and July 2013, at an altitude of 1324km, in a drifting orbit. Instrumentation: Doppler Orbitography and Radiopositioning Integrated by Satellite, JASON Microwave Radiometer, Laser Retroreflector Array, Poseidon 2, Turbo Rogue Space Receiver.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/884"
+          },
+          {
+            "label": "JASON-2",
+            "definition": "This satellite was the 2nd flight of the JASON series, also called the Ocean Surface Topography Mission (OSTM). It operated between June 2008 and October 2019, at an altitude of 1336km, in a drifting orbit. Instrumentation: Advanced Microwave Radiometer, Doppler Orbitography and Radiopositioning Integrated by Satellite, Laser Retroreflector Array, Poseidon 3, Turbo Rogue Space Receiver.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/885"
+          },
+          {
+            "label": "JASON-3",
+            "definition": "This satellite will be the 3rd flight of the JASON series, also called the Ocean Surface Topography Mission (OSTM). It is planned to be operational between 2016 and 2021, at an altitude of 1336km, in a drifting orbit. Instrumentation: Advanced Microwave Radiometer, Doppler Orbitography and Radiopositioning Integrated by Satellite, Laser Retroreflector Array, Poseidon 3B, Turbo Rogue Space Receiver.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/886"
+          },
+          {
+            "label": "GFO",
+            "definition": "This satellite was the 2nd (last) flight of the GEOSat programme. It operated between February 1998 and October 2008 at an altitude of 784km, in a drifting orbit. Instrumentation: GEOSat Follow-On Radar Altimeter, Laser Retroreflector Array, Turbo Rogue Space Receiver and Water Vapor Radiometer.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/887"
+          },
+          {
+            "label": "NOAA-20",
+            "definition": "This satellite was the 1st flight of the JPSS programme, re-named NOAA-20 after the launch. It operated from November 2017, at an altitude of 834km, in a sunsynchronous orbit. Instrumentation: Advanced Technology Microwave Sounder, Clouds and the Earth’s Radiant Energy System, Cross-track Infrared Sounder, Ozone Mapping and Profiler Suite, and Visible/Infrared Imager Radiometer Suite.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/91"
+          },
+          {
+            "label": "MetOpA",
+            "definition": "This satellite was the 1st flight of the EPS programme.It operated from October 2006 until November 2021, at an altitude of 827km, in a sunsychronous orbit. Instrumentation: Advanced Data Collection System, Advanced Microwave Sounding Unit, Advanced Scatterometer, Advanced Very High Resolution Radiometer, Global Ozone Monitoring Experiment, GNSS Receiver for Atmospheric Sounding, High-resolution Infra Red Sounder, Infrared Atmospheric Sounding Interferometer, Microwave Humidity Sounding, Search & Rescue Satellite-Aided Tracking System, SEM / Total Energy Detector, SEM / Medium energy proton detector.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/92"
+          },
+          {
+            "label": "MetOpB",
+            "definition": "This satellite was the 2nd flight of the EPS programme.It operated from September 2012, at an altitude of 827km, in a sunsychronous orbit. Instrumentation: Advanced Data Collection System, Advanced Microwave Sounding Unit, Advanced Scatterometer, Advanced Very High Resolution Radiometer, Global Ozone Monitoring Experiment, GNSS Receiver for Atmospheric Sounding, High-resolution Infra Red Sounder, Infrared Atmospheric Sounding Interferometer, Microwave Humidity Sounding, Search & Rescue Satellite-Aided Tracking System, SEM / Total Energy Detector, SEM / Medium energy proton detector.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/93"
+          },
+          {
+            "label": "MetOpC",
+            "definition": "This satellite was the 3rd flight of the EPS programme.It operated from November 2018, at an altitude of 817km, in a sunsychronous orbit. Instrumentation: Advanced Data Collection System, Advanced Microwave Sounding Unit, Advanced Scatterometer, Advanced Very High Resolution Radiometer, Global Ozone Monitoring Experiment, GNSS Receiver for Atmospheric Sounding, Infrared Atmospheric Sounding Interferometer, Microwave Humidity Sounding, SEM / Total Energy Detector, SEM / Medium energy proton detector.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/94"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Radar",
+    "definition": "This category contains vocabulary terms describing radar type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/42",
+    "narrower": [
+      {
+        "label": "WERA beam forming HF radar",
+        "definition": "",
+        "about": "http://vocab.aodn.org.au/def/platform/entity/726"
+      },
+      {
+        "label": "SeaSonde direction finding HF radar",
+        "definition": "",
+        "about": "http://vocab.aodn.org.au/def/platform/entity/727"
+      }
+    ]
+  },
+  {
+    "label": "Glider",
+    "definition": "This category contains vocabulary terms describing glider type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/43",
+    "narrower": [
+      {
+        "label": "sub-surface gliders",
+        "definition": "Platforms with buoyancy-based propulsion that are capable of operations of variable depths which are not constrained to be near the sea surface.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/27",
+        "narrower": [
+          {
+            "label": "Slocum Glider",
+            "definition": "The Slocum glider is 1.8 m long, 21.3 cm in diameter and weighs 52 kg.  Manufactured by Webb Research Corporation, the glider is designed to operate in coastal waters of up to 200 m deep where high maneuverability is needed.  Moving at an average forward velocity of 25 - 40 cm/s the glider travels in a sawtooth pattern through the water navigating its way to a series of pre-programmed waypoints using GPS and altimeter measurements.  Operating on C cell alkaline batteries, typical deployments can range up to 500 km with a duration of approximately 30 days.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/293"
+          },
+          {
+            "label": "Seaglider UW",
+            "definition": "These Seagliders are 1.8m long, 30cm in diameter and weigh 52kg. Manufactured by the Seaglider Fabrication Center at the University of Washington, the gliders are designed to operate in the open ocean in depth up to 1000m.  Moving at an average forward velocity of 25 cm/s, Seagliders travel more slowly, alternately diving and climbing along slanting glide paths.  The gliders obtain GPS navigation fixes when they surface, which they use to glide through a sequence of programmed targets.  As they are deployed in the open ocean, Seagliders have a very large range sufficient to transit entire ocean basins and can be deployed for periods of up to 6 months.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/294"
+          },
+          {
+            "label": "1KA Seaglider",
+            "definition": "These Seagliders are 1.8-2m long, 30cm in diameter and weigh 52kg. Manufactured by iROBOT, they are designed to operate in the open ocean in depth up to 1000m.  Moving at an average forward velocity of 25 cm/s, Seagliders travel more slowly, alternately diving and climbing along slanting glide paths.  The gliders obtain GPS navigation fixes when they surface, which they use to glide through a sequence of programmed targets.  As they are deployed in the open ocean, Seagliders have a very large range sufficient to transit entire ocean basins and can be deployed for periods of up to 6 months.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/295"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "label": "Mooring and buoy",
+    "definition": "This category contains vocabulary terms describing mooring type of platform",
+    "about": "http://vocab.aodn.org.au/def/platform_classes/category/44",
+    "narrower": [
+      {
+        "label": "moored surface buoy",
+        "definition": "An unmanned instrumented platform operating on the surface of the water column loosely tethered to the seafloor to maintain a fixed position (e.g. ODAS buoy)",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/41",
+        "narrower": [
+          {
+            "label": "Lizard Island Sensor Float 1",
+            "definition": "A round 1.4m yellow buoy has been deployed in the southern part of the main lagoon of Lizard Island to the south-east of Palfrey Island. The buoy is configured as a sensor-float with a Campbell Scientific logger, spread-spectrum radio and 2.4/5 GHz 802.11 wireless for communicating with the base station (located at the workshop near the Research Station) a surface mounted (60cm under the water surface) thermistor and an inductive modem to support a range of inductive sensors, initially this will be a SeaBird SBE39 measuring temperature and pressure (depth) and a SeaBird SBE37 measuring conductivity (salinity), temperature and depth. As of August 2010 the inductive sensors are just located in the area around the buoy, it is intended at a later date to re-position these southwards on the external reef slope to give a profile of water outside the lagoon. This buoy was decommissioned in March 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/311"
+          },
+          {
+            "label": "Lizard Island Sensor Float 2",
+            "definition": "A round 1.4m yellow buoy has been deployed in the southern part of the main lagoon of Lizard Island to the east of Palfrey Island. The buoy is configured as a sensor-float with a Campbell Scientific logger, spread-spectrum radio and 2.4/5 GHz 802.11 wireless for communicating with the base station (located at the workshop near the Research Station) a surface mounted (60cm under the water surface) thermistor and an inductive modem to support a range of inductive sensors, initially this will be a SeaBird SBE39 measuring temperature and pressure (depth) and a SeaBird SBE37 measuring conductivity (salinity), temperature and depth. As of August 2010 the inductive sensors are located along a 30m cable that runs north into the main lagoon with a SBE39 located at the base of the buoy and the SBE37 at the end of the sensor run. This buoy was decommissioned in March 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/312"
+          },
+          {
+            "label": "Lizard Island Sensor Float 3",
+            "definition": "A round 1.4m yellow buoy has been deployed in the eastern part of the main lagoon of Lizard Island. The buoy is configured as a sensor-float with a Campbell Scientific logger, spread-spectrum radio and 2.4/5 GHz 802.11 wireless for communicating with the base station (located at the workshop near the Research Station) a surface mounted (60cm under the water surface) thermistor and an inductive modem to support a range of inductive sensors, initially this will be a SeaBird SBE39 measuring temperature and pressure (depth). As of August 2010 the inductive sensors are located along a 30m cable that runs north into the main lagoon with a SBE39 located at the end of the sensor run. This float was decommissioned in April 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/313"
+          },
+          {
+            "label": "Lizard Island Sensor Float 4",
+            "definition": "A round 1.4m yellow buoy has been deployed in the western part of the main lagoon of Lizard Island to the south of the research station. The buoy is configured as a sensor-float with a Campbell Scientific logger, spread-spectrum radio and 2.4/5 GHz 802.11 wireless for communicating with the base station (located at the workshop near the Research Station) a surface mounted (60cm under the water surface) thermistor and an inductive modem to support a range of inductive sensors, initially this will be a SeaBird SBE39 measuring temperature and pressure (depth) and a SeaBird SBE37 measuring conductivity (salinity), temperature and pressure (depth). As of August 2010 the inductive sensors are located along a 50m cable that runs north into the main lagoon with a SBE39 located at the base of the buoy and the 37 at the end of the sensor run. This float was decommissioned in April 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/314"
+          },
+          {
+            "label": "Orpheus Island Sensor Float 1",
+            "definition": "A round 1.4m yellow buoy has been deployed in Little Pioneer Bay, Orpheus Island, just off the research station in the central part of the Great Barrier Reef. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the base station (located near the Research Station) a surface mounted (60cm under the water surface) thermistor and an inductive modem to support a range of inductive sensors, initially this will be a SeaBird SBE39 measuring temperature and pressure (depth). The float is moored at the entrance to Little Pioneer Bay, just deep of the reef front and will be used to measure the water entering the bay with particular interest in warm water pushing up into the bay. The data will support work being done in the bay by James Cook University researchers. This float was decommissioned in June 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/319"
+          },
+          {
+            "label": "Orpheus Island Sensor Float 2",
+            "definition": "A round 1.4m yellow buoy has been deployed in Little Pioneer Bay, Orpheus Island, just off the research station in the central part of the Great Barrier Reef. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the base station (located near the Research Station) a surface mounted (60cm under the water surface) thermistor and an inductive modem to support a range of inductive sensors, initialy this will be a SeaBird SBE39 measuring temperature and pressure (depth). The float is moored at the entrance to Little Pioneer Bay, just deep of the reef front and will be used to measure the water entering the bay with particular interest in warm water pushing up into the bay. The data will support work being done in the bay by James Cook University researchers. This float was decommissioned in June 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/320"
+          },
+          {
+            "label": "Rib Reef Sensor Float 1",
+            "definition": "The infrastructure consists of a single 1300 mm buoy located off the north (front) of the reef. The buoy has an Inductive Modem (IM) line that extends from the buoy to the bottom and then along the bottom for around 50 m and then rises to flotation located 9 m below the surface. Instruments are located on this riser to give a profile through the water column. The station is designed to measure temperature of the water column at the front of the reef and in particular to detect upwelling and other events where warmer bottom water is pushed across the shelf onto the reefs. This not only indicates processes operating across the shelf but also conditions when coral bleaching may be more common. The buoy was decommissioned in July 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/321"
+          },
+          {
+            "label": "Myrmidon Reef Sensor Float 1",
+            "definition": "In February 2011 Cyclone 'Yasi' damaged the existing AIMS weather station and so this buoy was deployed with both AIMS weather station sensors and sensors for the IMOS funded GBROOS project. In December 2011, a replacement buoy was deployed with the above water sensors being the existing AIMS weather station units and the in-water sensors being provided under the IMOS funded GBROOS project. This resulted in a data gap between the cyclone in February 2011 and the buoy being deployed in December 2011. It is antcipated that the AIMS weather station will be restored in late 2012 in which case the above water sensors will transition back to the AIMS tower with the in-water sensors remaining as part of the IMOS funded work. This buoy was decommissioned in 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/323"
+          },
+          {
+            "label": "Davies Reef Sensor Float 1",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Davies Reef lagoon as part of the sensor network infrastructure at Davies Reef in the central Great Barrier Reef off Townsville, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a SeaBird Inductive modem and initially a surface mounted (30cm under the water surface) thermistor and bottom mounted SeaBird SBE39 (temperature and pressure). This buoy was decommissioned in March 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/325"
+          },
+          {
+            "label": "Davies Reef Sensor Float 2",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Davies Reef lagoon as part of the sensor network infrastructure at Davies Reef in the central Great Barrier Reef off Townsville, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a SeaBird Inductive modem and initially a surface mounted (30cm under the water surface) thermistor and bottom mounted SeaBird SBE39 (temperature and pressure). The buoy was decommissioned in 2011.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/326"
+          },
+          {
+            "label": "Davies Reef Sensor Float 3",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Davies Reef lagoon as part of the sensor network infrastructure at Davies Reef in the central Great Barrier Reef off Townsville, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a SeaBird Inductive modem and initially a surface mounted (30cm under the water surface) thermistor and bottom mounted SeaBird SBE39 (temperature and pressure). The buoy was decommissioned in 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/327"
+          },
+          {
+            "label": "Davies Reef Sensor Float 4",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Davies Reef lagoon as part of the sensor network infrastructure at Davies Reef in the central Great Barrier Reef off Townsville, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a SeaBird Inductive modem and initially a surface mounted (30cm under the water surface) thermistor and bottom mounted SeaBird SBE37 (conductivity, temperature and pressure). This buoy was decommissioned in March 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/328"
+          },
+          {
+            "label": "Davies Reef Sensor Float 5",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Davies Reef lagoon as part of the sensor network infrastructure at Davies Reef in the central Great Barrier Reef off Townsville, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a SeaBird Inductive modem and initially a surface mounted (30cm under the water surface) thermistor and bottom mounted SeaBird SBE37 (conductivity, temperature and pressure). This buoy was decommissioned in March 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/329"
+          },
+          {
+            "label": "Heron Island Sensor Float 1",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Heron Island lagoon as part of the sensor network infrastructure at Heron Island in the southern Great Barrier Reef off Gladstone, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a GPS and initially a surface mounted (30cm under the water surface) thermistor. The float is moored in the lagoon of Heron Island in around 3m of water and will be used to monitor the flow of water through the lagoon. It will be fitted with surface salinity and bottom depth and temperature in late 2008. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The buoy is re-locatable and the GPS data should be used to find the current location. This float was decommissioned in September 2021.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/343"
+          },
+          {
+            "label": "Heron Island Sensor Float 2",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Heron Island lagoon as part of the sensor network infrastructure at Heron Island in the southern Great Barrier Reef off Gladstone, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a GPS and initially a surface mounted (30cm under the water surface) thermistor. The float is moored in the lagoon of Heron Island in around 3m of water and will be used to monitor the flow of water through the lagoon. It will be fitted with surface salinity and bottom depth and temperature in late 2008. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The buoy is re-locatable and the GPS data should be used to find the current location. This buoy was decommissioned in 2016.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/344"
+          },
+          {
+            "label": "Heron Island Sensor Float 3",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Heron Island lagoon as part of the sensor network infrastructure at Heron Island in the southern Great Barrier Reef off Gladstone, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a GPS and initially a surface mounted (30cm under the water surface) thermistor. The float is moored in the lagoon of Heron Island in around 3m of water and will be used to monitor the flow of water through the lagoon. It will be fitted with surface salinity and bottom depth and temperature in late 2008. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The buoy is re-locatable and the GPS data should be used to find the current location. This buoy was decommissioned in 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/345"
+          },
+          {
+            "label": "Heron Island Sensor Float 4",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Heron Island lagoon as part of the sensor network infrastructure at Heron Island in the southern Great Barrier Reef off Gladstone, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a GPS and initially a surface mounted (30cm under the water surface) thermistor. The float is moored in the lagoon of Heron Island in around 3m of water and will be used to monitor the flow of water through the lagoon. It will be fitted with surface salinity and bottom depth and temperature in late 2008.  The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The buoy is re-locatable and the GPS data should be used to find the current location. This buoy was decommissioned in 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/346"
+          },
+          {
+            "label": "Heron Island Sensor Float 5",
+            "definition": "A round 1.4m yellow buoy has been deployed in the Heron Island lagoon as part of the sensor network infrastructure at Heron Island in the southern Great Barrier Reef off Gladstone, Australia. The buoy is configured as a sensor-float with a Campbell Scientific logger, a spread-spectrum radio for communicating with the on-reef wireless network, a GPS and initially a surface mounted (30cm under the water surface) thermistor. The float is moored in the lagoon of Heron Island in around 3m of water and will be used to monitor the flow of water through the lagoon. It will be fitted with surface salinity and bottom depth and temperature in late 2008. The unit will be serviced every six months and will be used in the future for attaching new sets of sensors. The buoy is re-locatable and the GPS data should be used to find the current location. This buoy was decommissioned in 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/347"
+          }
+        ]
+      },
+      {
+        "label": "subsurface mooring",
+        "definition": "A collection of oceanographic instruments attached to wires suspended between anchors on the seabed and buoyant spheres in the water column.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/43",
+        "narrower": [
+          {
+            "label": "Esperance National Reference Station Sub-surface Mooring",
+            "definition": "Sub-surface mooring located at the Esperance National Reference Station. This mooring is operated by CSIRO. This mooring was decommissioned in December 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/143"
+          },
+          {
+            "label": "Kangaroo Island National Reference Station Sub-surface Mooring",
+            "definition": "Sub-surface mooring located at the Kangaroo Island National Reference Station. This mooring is operated by SARDI (South Australian Research and Development Institute).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/145"
+          },
+          {
+            "label": "North Stradbroke Island National Reference Station Sub-surface Mooring",
+            "definition": "Sub-surface mooring located at the North Stradbroke Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/148"
+          },
+          {
+            "label": "Rottnest Island National Reference Station Sub-surface Mooring",
+            "definition": "Sub-surface mooring located at the Rottnest Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/151"
+          },
+          {
+            "label": "Perth Canyon, WA Passive Acoustic Observatory",
+            "definition": "The Perth Canyon, WA Passive Acoustic Observatory, is a series of moorings operated by Curtin University which collect data in the Perth Canyon region. This observatory was decommissioned in October 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/178"
+          },
+          {
+            "label": "Portland, VIC Passive Acoustic Observatory",
+            "definition": "The Portland, VIC Passive Acoustic Observatory, is a series of moorings operated by Curtin University which collect data in the Portland region. This observatory was decommissioned early in 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/179"
+          },
+          {
+            "label": "Tuncurry, NSW Passive Acoustic Observatory",
+            "definition": "The Tuncurry, NSW Passive Acoustic Observatory, is a series of moorings operated by Curtin University which collect data in the Tuncurry/Forster region. This observatory was decommissioned in early 2018.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/180"
+          },
+          {
+            "label": "Kangaroo Island, SA Passive Acoustic Observatory",
+            "definition": "The Kangaroo Island, SA Passive Acoustic Observatory, is a series of moorings operated by SARDI (South Australian Research and Development Institute) which collect data west of Kangaroo Island. This observatory was decommissioned in November 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/5"
+          },
+          {
+            "label": "Bass Strait Calibration site Mooring",
+            "definition": "This calibration site mooring is located in Bass Strait. This is used for the calibration of the TOPEX/Poseidon (T/P) and Jason-1 satellite altimeters. This location lies on the descending (N -> S) pass 088 of the satellite altimeter, and thus shares similar satellite orbit characteristics to the Storm Bay mooring. The use of these two sites allows detailed investigation into the accuracy of the altimeter over two different wave climates. The average significant wave height at Storm Bay is approximately double that observed at the comparatively sheltered Bass Strait location. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/560"
+          },
+          {
+            "label": "Storm Bay Calibration site Mooring",
+            "definition": "This calibration site mooring is located in Storm Bay. This is used for the calibration of the TOPEX/Poseidon (T/P) and Jason-1 satellite altimeters. This location lies on the descending (N -> S) pass 088 of the satellite altimeter, and thus shares similar satellite orbit characteristics to the Bass Strait mooring. The use of these two sites allows detailed investigation into the accuracy of the altimeter over two different wave climates. The average significant wave height at Storm Bay is approximately double that observed at the comparatively sheltered Bass Strait location. This mooring is operated by CSIRO. This mooring was decommissioned in September 2016.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/561"
+          },
+          {
+            "label": "Maria Island National Reference Station sub-surface mooring",
+            "definition": "Sub-surface mooring located at the Maria Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/67"
+          },
+          {
+            "label": "Kimberley, WA Passive Acoustic Observatory",
+            "definition": "The Kimberley, WA Passive Acoustic Observatory, is a series of moorings operated by Curtin University which collect data in the Kimberley region. This observatory was decommissioned in May 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/904"
+          },
+          {
+            "label": "Pilbara, WA Passive Acoustic Observatory",
+            "definition": "The Pilbara, WA Passive Acoustic Observatory, is a series of moorings operated by Curtin University which collect data in the Pilbara region. This mooring was decommissioned in June 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/905"
+          }
+        ]
+      },
+      {
+        "label": "mooring",
+        "definition": "A tethered collection of oceanographic instruments at a fixed location that may include seafloor mid-water and surface components.",
+        "about": "http://vocab.nerc.ac.uk/collection/L06/current/48",
+        "narrower": [
+          {
+            "label": "Bateman's Marine Park 90m Mooring",
+            "definition": "The Bateman's Marine Park 90m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data adjacent to the Bateman's Marine Park. This mooring was decommissioned in September 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/120"
+          },
+          {
+            "label": "Bateman's Marine Park 120m Mooring",
+            "definition": "The Bateman's Marine Park 120m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data adjacent to the Bateman's Marine Park. This mooring was briefly decommissioned in 2014, but re-deployed shortly afterwards.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/121"
+          },
+          {
+            "label": "Coffs Harbour 70m Mooring",
+            "definition": "The Coffs Harbour 100m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data in the Coffs Harbour region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/122"
+          },
+          {
+            "label": "Coffs Harbour 100m Mooring",
+            "definition": "The Coffs Harbour 100m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data in the Coffs Harbour region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/123"
+          },
+          {
+            "label": "Capricorn Channel Mooring",
+            "definition": "The Capricorn Channel Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/124"
+          },
+          {
+            "label": "Elusive Reef Mooring",
+            "definition": "The Elusive Reef Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region. This mooring was decommissioned in October 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/125"
+          },
+          {
+            "label": "Heron Island South Mooring",
+            "definition": "The Heron Island South Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/126"
+          },
+          {
+            "label": "Lizard Shelf Mooring",
+            "definition": "The Lizard Shelf Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region. This mooring was decommissioned in May 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/127"
+          },
+          {
+            "label": "Lizard Slope Mooring",
+            "definition": "The Lizard Slope Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region. This mooring was decommissioned in May 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/128"
+          },
+          {
+            "label": "Myrmidon Mooring",
+            "definition": "The Myrmidon Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/129"
+          },
+          {
+            "label": "One Tree East Mooring",
+            "definition": "The One Tree East Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/130"
+          },
+          {
+            "label": "Palm Passage Mooring",
+            "definition": "The Palm Passage Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data in the Great Barrier Reef region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/131"
+          },
+          {
+            "label": "Flat Top Banks Shelf Mooring",
+            "definition": "The Flat Top Banks Shelf Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Indonesian Thoughflow array. It was decommissioned in 2019.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/132"
+          },
+          {
+            "label": "Joseph Bonaparte Gulf Shelf Mooring",
+            "definition": "The Joseph Bonaparte Gulf Shelf Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Indonesian Thoughflow array. It was decommissioned in 2019.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/133"
+          },
+          {
+            "label": "Margaret Harries Banks Shelf Mooring",
+            "definition": "The Margaret Harries Banks Shelf Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Indonesian Thoughflow array. It was decommissioned in 2019.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/134"
+          },
+          {
+            "label": "Timor South Shelf Mooring",
+            "definition": "The Timor South Shelf Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Indonesian Thoughflow array. It was decommissioned in 2019.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/135"
+          },
+          {
+            "label": "Jervis Bay Mooring",
+            "definition": "The Jervis Bay Mooring is operated by UNSW (University of New South Wales), ADFA (Australian Defence Force Academy) and collects data in Jervis Bay. This mooring was decommissioned in October 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/136"
+          },
+          {
+            "label": "Kimberley 50m Mooring",
+            "definition": "The Kimberley 50m Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Kimberley array. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/137"
+          },
+          {
+            "label": "Kimberley 100m Mooring",
+            "definition": "The Kimberley 100m Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Kimberley array. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/138"
+          },
+          {
+            "label": "Kimberley 200m Mooring",
+            "definition": "The Kimberley 200m Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Kimberley array. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/139"
+          },
+          {
+            "label": "Kimberley 400m Mooring",
+            "definition": "The Kimberley 400m Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Kimberley array. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/140"
+          },
+          {
+            "label": "Darwin National Reference Station Mooring",
+            "definition": "The Darwin National Reference Station Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data from coastal ocean waters off Darwin.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/141"
+          },
+          {
+            "label": "Esperance National Reference Station ADCP Mooring",
+            "definition": "ADCP mooring located at the Esperance National Reference Station. This mooring is operated by CSIRO. This mooring was decommissioned in December 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/142"
+          },
+          {
+            "label": "Kangaroo Island National Reference Station Acidification Mooring",
+            "definition": "Acidification mooring located at the Kangaroo Island National Reference Station. This mooring is operated by SARDI (South Australian Research and Development Institute).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/144"
+          },
+          {
+            "label": "Ningaloo Reef National Reference Station Mooring",
+            "definition": "The Ningaloo Reef National Reference Station Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data from coastal ocean waters around Nigaloo Reef. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/146"
+          },
+          {
+            "label": "North Stradbroke Island National Reference Station ADCP Mooring",
+            "definition": "ADCP mooring located at the North Stradbroke Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/147"
+          },
+          {
+            "label": "North Stradbroke Island National Reference Station Surface Mooring",
+            "definition": "Surface mooring located at the North Stradbroke Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/149"
+          },
+          {
+            "label": "Rottnest Island National Reference Station ADCP Mooring",
+            "definition": "ADCP mooring located at the Rottnest Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/150"
+          },
+          {
+            "label": "Yongala National Reference Station Mooring",
+            "definition": "The Yongala National Reference Station Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data near the Yongala Wreck, out from Cape Bowling Green in the central Great Barrier Reef.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/152"
+          },
+          {
+            "label": "Port Hacking 100m Mooring",
+            "definition": "The Port Hacking 100m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data from coastal ocean waters off Port Hacking.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/153"
+          },
+          {
+            "label": "Pilbara 50m Mooring",
+            "definition": "The Pilbara 50m Mooring is operated by AIMS (Australian Institute of Marine Science)  and collects data as part of the Pilbara array. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/154"
+          },
+          {
+            "label": "Pilbara 100m Mooring",
+            "definition": "The Pilbara 100m Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Pilbara array. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/155"
+          },
+          {
+            "label": "Pilbara 200m Mooring",
+            "definition": "The Pilbara 200m Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data as part of the Pilbara array. This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/156"
+          },
+          {
+            "label": "Deep Slope Mooring (M1)",
+            "definition": "The Deep Slope Mooring (M1) is operated by SARDI (South Australian Research and Development Institute), and was a South Australian regional mooring. This mooring was decommissioned in June 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/157"
+          },
+          {
+            "label": "Cabbage Patch Mooring (M2)",
+            "definition": "The Cabbage Patch Mooring (M2) is operated by SARDI (South Australian Research and Development Institute), and is a South Australian regional mooring. This mooring was decommissioned in March 2010.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/158"
+          },
+          {
+            "label": "Mid-Slope Mooring (M3)",
+            "definition": "The Mid-Slope Mooring (M3) is operated by SARDI (South Australian Research and Development Institute), and was a South Australian regional mooring. This mooring was decommissioned in June 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/159"
+          },
+          {
+            "label": "Canyon Mooring (M4)",
+            "definition": "The Canyon Mooring (M4) is operated by SARDI (South Australian Research and Development Institute), and is a South Australian regional mooring. This mooring was decommissioned in March 2010.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/160"
+          },
+          {
+            "label": "Coffin Bay Mooring (M5)",
+            "definition": "The Coffin Bay Mooring (M5) is operated by SARDI (South Australian Research and Development Institute), and is one of five South Australian regional moorings.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/161"
+          },
+          {
+            "label": "Investigator Strait Mooring (M6)",
+            "definition": "The Investigator Strait Mooring (M6) is operated by SARDI (South Australian Research and Development Institute), and is a South Australian regional mooring. This mooring was decommissioned in June 2009.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/162"
+          },
+          {
+            "label": "Deep-Slope Mooring (M7)",
+            "definition": "The Deep Slope Mooring (M7) is operated by SARDI (South Australian Research and Development Institute), and was a South Australian regional mooring. This mooring was decommissioned in March 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/163"
+          },
+          {
+            "label": "Spencer Gulf Mouth Mooring (M8)",
+            "definition": "The Spencer Gulf Mooring (M8) is operated by SARDI (South Australian Research and Development Institute), and is one of five South Australian regional moorings.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/164"
+          },
+          {
+            "label": "Sydney 100m Mooring",
+            "definition": "The Sydney 100m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data in the Sydney region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/165"
+          },
+          {
+            "label": "Sydney 140m Mooring",
+            "definition": "The Sydney 140m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data in the Sydney region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/166"
+          },
+          {
+            "label": "Canyon 200m Head Mooring",
+            "definition": "The Canyon 200m Head Mooring is operated by CSIRO and collects data in the Perth Canyon region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/167"
+          },
+          {
+            "label": "Canyon 500m North Mooring",
+            "definition": "The Canyon 500m North Mooring is operated by CSIRO and collects data in the Perth Canyon region. This mooring was decommissioned in July 2010.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/168"
+          },
+          {
+            "label": "Canyon 500m South Mooring",
+            "definition": "The Canyon 500m South Mooring is operated by CSIRO and collects data in the Perth Canyon region. This mooring was decommissioned in March 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/169"
+          },
+          {
+            "label": "Two Rocks 50m Shelf Mooring",
+            "definition": "The Two Rocks 50m Shelf Mooring is operated by CSIRO and collects data in the Two Rocks region. This mooring was decommissioned in May 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/170"
+          },
+          {
+            "label": "Two Rocks 100m Shelf Mooring",
+            "definition": "The Two Rocks 100m Shelf Mooring is operated by CSIRO and collects data in the Two Rocks region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/171"
+          },
+          {
+            "label": "Two Rocks 150m Shelf Mooring",
+            "definition": "The Two Rocks 150m Shelf Mooring is operated by CSIRO and collects data in the Two Rocks region. This mooring was decommissioned in October 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/172"
+          },
+          {
+            "label": "Two Rocks 200m Shelf Mooring",
+            "definition": "The Two Rocks 200m Shelf Mooring is operated by CSIRO and collects data in the Two Rocks region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/173"
+          },
+          {
+            "label": "Two Rocks 500m Shelf Mooring",
+            "definition": "The Two Rocks 500m Shelf Mooring is operated by CSIRO and collects data in the Two Rocks region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/174"
+          },
+          {
+            "label": "South-East Queensland 200m Mooring",
+            "definition": "The South-East Queensland 200m Mooring is operated by CSIRO and collects data as part of the East Australian Current (EAC) array. This mooring was decommissioned in June 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/175"
+          },
+          {
+            "label": "South-East Queensland 400m Mooring",
+            "definition": "The South-East Queensland 400m Mooring is operated by CSIRO and collects data as part of the East Australian Current (EAC) array. This mooring was decommissioned in June 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/176"
+          },
+          {
+            "label": "Ocean Reference Station Sydney Mooring",
+            "definition": "The Ocean Reference Station Sydney Mooring is operated by Sydney Water and collects data in the Sydney region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/177"
+          },
+          {
+            "label": "Southern ocean Flux Station mooring",
+            "definition": "The Southern ocean Flux Station Mooring is operated by the Australian Bureau of Meteorology (BOM), which collect data in the Sub-Antarctic Zone.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/181"
+          },
+          {
+            "label": "Sub-Antarctic Zone Sediment Trap Mooring",
+            "definition": "The Sub-Antarctic Zone Sediment Trap Mooring is operated by CSIRO, which collect data in the Sub-Antarctic Zone.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/187"
+          },
+          {
+            "label": "East Australian Current 1 Mooring",
+            "definition": "The East Australian Current 1 Mooring is operated by CSIRO, and collects data in the East Australian Current. The array that this mooring was part of was decommissioned in August 2013, and a newly configured array (with new moorings) was redeployed in May 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/188"
+          },
+          {
+            "label": "East Australian Current 2 Mooring",
+            "definition": "The East Australian Current 2 Mooring is operated by CSIRO, and collects data in the East Australian Current. The array that this mooring was part of was decommissioned in August 2013, and a newly configured array (with new moorings) was redeployed in May 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/189"
+          },
+          {
+            "label": "East Australian Current 3 Mooring",
+            "definition": "The East Australian Current 3 Mooring is operated by CSIRO, and collects data in the East Australian Current. The array that this mooring was part of was decommissioned in August 2013, and a newly configured array (with new moorings) was redeployed in May 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/190"
+          },
+          {
+            "label": "East Australian Current 4 Mooring",
+            "definition": "The East Australian Current 4 Mooring is operated by CSIRO, and collects data in the East Australian Current. The array that this mooring was part of was decommissioned in August 2013, and a newly configured array (with new moorings) was redeployed in May 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/191"
+          },
+          {
+            "label": "East Australian Current 5 Mooring",
+            "definition": "The East Australian Current 5 Mooring is operated by CSIRO, and collects data in the East Australian Current. The array that this mooring was part of was decommissioned in August 2013, and a newly configured array (with new moorings) was redeployed in May 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/192"
+          },
+          {
+            "label": "Ombai Mooring",
+            "definition": "The Ombai Mooring is operated by CSIRO, and collects data in the Indonesian Throughflow. This mooring was decommissioned in October 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/193"
+          },
+          {
+            "label": "Timor North Mooring",
+            "definition": "The Timor North Mooring is operated by CSIRO, and collects data in the Indonesian Throughflow. This mooring was decommissioned in April 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/194"
+          },
+          {
+            "label": "Timor Sill Mooring",
+            "definition": "The Timor Sill Mooring is operated by CSIRO, and collects data in the Indonesian Throughflow. This mooring was decommissioned in October 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/195"
+          },
+          {
+            "label": "Polynya1 Mooring",
+            "definition": "The Polynya1 mooring is operated by CSIRO, and collects data near the Adelie Land coast, in the Southern Ocean. This mooring was decommissioned in January 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/196"
+          },
+          {
+            "label": "Polynya2 Mooring",
+            "definition": "The Polynya2 mooring is operated by CSIRO, and collects data near the Adelie Land coast, in the Southern Ocean. This mooring was decommissioned in January 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/197"
+          },
+          {
+            "label": "Polynya3 Mooring",
+            "definition": "The Polynya3 mooring is operated by CSIRO, and collects data near the Adelie Land coast, in the Southern Ocean. The mooring is trapped in sea ice, and considered irretrievable in 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/198"
+          },
+          {
+            "label": "Beagle Gulf Mooring",
+            "definition": "The Beagle Gulf Mooring is operated by AIMS (Australian Institute of Marine Science) and collects data which complements the National Reference Station in Darwin Harbour. This mooring was decommissioned in July 2017.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/2"
+          },
+          {
+            "label": "Bateman's Marine Park 70m Mooring",
+            "definition": "It is one of two moorings deployed near Narooma, southern NSW, to capture the variability of the shelf waters, poleward of the East Australian Current (EAC) separation point. This mooring replaces the former 90m mooring, and was enabled through co-investment from Bega Valley Shire Council.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/20"
+          },
+          {
+            "label": "Camden Sound 50m Mooring",
+            "definition": "The Camden 50m mooring (platform code CAM050) was deployed in 2014 for a short time in the Kimberley region replacing the former Kimberley and Pilbara arrays. It was decommissioned in 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/21"
+          },
+          {
+            "label": "Camden Sound 100m Mooring",
+            "definition": "The Camden 100m mooring (platform code CAM100) was deployed in 2014 for a short time in the Kimberley region replacing the former Kimberley and Pilbara arrays. It was decommissioned in 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/22"
+          },
+          {
+            "label": "Pulse Mooring",
+            "definition": "The Pulse mooring is operated by CSIRO, and measures biogeochemical properties of the Southern Ocean. It was first deployed in October 2008. This mooring was decommissioned in April 2016.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/32"
+          },
+          {
+            "label": "East Australian Current 500m Mooring",
+            "definition": "The East Australian Current 500m Mooring is operated by CSIRO Oceans and Atmosphere, and collects data in the East Australian Current. This mooring forms part of the second deployment of the EAC array, and was reconfigured to incorporate parts of the continental shelf. The array that this mooring was part of was decommissioned in July 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/33"
+          },
+          {
+            "label": "East Australian Current 2000m Mooring",
+            "definition": "The East Australian Current 2000m Mooring is operated by CSIRO Oceans and Atmosphere, and collects data in the East Australian Current. This mooring forms part of the second deployment of the EAC array, and was reconfigured to incorporate parts of the continental shelf. The array that this mooring was part of was decommissioned in July 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/34"
+          },
+          {
+            "label": "East Australian Current 3200m Mooring",
+            "definition": "The East Australian Current 3200m Mooring is operated by CSIRO Oceans and Atmosphere, and collects data in the East Australian Current. This mooring forms part of the second deployment of the EAC array, and was reconfigured to incorporate parts of the continental shelf. The array that this mooring was part of was decommissioned in July 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/35"
+          },
+          {
+            "label": "East Australian Current 4200m Mooring",
+            "definition": "The East Australian Current 4200m Mooring is operated by CSIRO Oceans and Atmosphere, and collects data in the East Australian Current. This mooring forms part of the second deployment of the EAC array, and was reconfigured to incorporate parts of the continental shelf. The array that this mooring was part of was decommissioned in July 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/36"
+          },
+          {
+            "label": "East Australian Current 4700m Mooring",
+            "definition": "The East Australian Current 4700m Mooring is operated by CSIRO Oceans and Atmosphere, and collects data in the East Australian Current. This mooring forms part of the second deployment of the EAC array, and was reconfigured to incorporate parts of the continental shelf. The array that this mooring was part of was decommissioned in July 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/37"
+          },
+          {
+            "label": "East Australian Current 4800m Mooring",
+            "definition": "The East Australian Current 4800m Mooring is operated by CSIRO Oceans and Atmosphere, and collects data in the East Australian Current. This mooring forms part of the second deployment of the EAC array, and was reconfigured to incorporate parts of the continental shelf. The array that this mooring was part of was decommissioned in July 2022.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/38"
+          },
+          {
+            "label": "Coffs Harbour 50m Mooring",
+            "definition": "The Coffs Harbour 50m Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data in the Coffs Harbour region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/40"
+          },
+          {
+            "label": "Bonney Coast Mooring",
+            "definition": "The Bonney Coast Mooring is operated by SARDI (South Australian Research and Development Institute), and collects data off the Victorian coast.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/51"
+          },
+          {
+            "label": "Lynedoch Shoal Mooring",
+            "definition": "The Lynedoch Shoal Mooring is operated by the Australian Institute of Marine Science (AIMS), and collects data on the North West Shelf, WA.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/52"
+          },
+          {
+            "label": "Browse Island Mooring",
+            "definition": "The Browse Island Mooring is operated by the Australian Institute of Marine Science (AIMS), and collects data on the North West Shelf, WA.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/53"
+          },
+          {
+            "label": "Rowley Shoals Mooring",
+            "definition": "The Rowley Shoals Mooring is operated by the Australian Institute of Marine Science (AIMS), and collects data on the North West Shelf, WA.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/54"
+          },
+          {
+            "label": "Barrow Island Mooring",
+            "definition": "The Barrow Island Mooring is operated by the Australian Institute of Marine Science (AIMS), and collects data on the North West Shelf, WA.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/55"
+          },
+          {
+            "label": "Upper Spencer Gulf Mooring",
+            "definition": "The Upper Spencer Gulf Mooring is operated by SARDI (South Australian Research and Development Institute), and collects data in the Spencer Gulf, SA.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/56"
+          },
+          {
+            "label": "Gulf St Vincent Mooring",
+            "definition": "The Gulf St Vincent Mooring is operated by SARDI (South Australian Research and Development Institute), and collects data in the Gulf St Vincent, SA.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/57"
+          },
+          {
+            "label": "Heron Island North mooring",
+            "definition": "The Heron Island North Mooring is operated by AIMS (Australian Institute of Marine Science) and collect data in Great Barrier Reef region. This mooring was decommissioned in March 2013.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/65"
+          },
+          {
+            "label": "Maria Island National Reference Station ADCP mooring",
+            "definition": "ADCP mooring located at the Maria Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/66"
+          },
+          {
+            "label": "Maria Island National Reference Station surface mooring",
+            "definition": "Surface mooring located at the Maria Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/68"
+          },
+          {
+            "label": "Maria Island National Reference Station Acidification Mooring",
+            "definition": "Acidification mooring located at the Maria Island National Reference Station. This mooring is operated by CSIRO.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/69"
+          },
+          {
+            "label": "Animal Tracking Facility Seal Rocks Line (SRL2) Mooring",
+            "definition": "The Animal Tracking Facility Seal Rocks Line (SRL2) Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data in the mid north coast region of New South Wales.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/89"
+          },
+          {
+            "label": "Wistari Channel acidification Mooring",
+            "definition": "Acidification mooring located adjacent to the Heron Island reef slope in the Wistari channel on the Great Barrier Reef. This mooring is operated by AIMS (Australian Institute of Marine Science).",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/898"
+          },
+          {
+            "label": "Yongala National Reference Station Acidification Mooring",
+            "definition": "Acidification mooring co-located with the Yongala National Reference Station (NRSYON) in Queensland. This mooring is operated by AIMS (Australian Institute of Marine Science). This mooring was decommissioned in August 2014.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/899"
+          },
+          {
+            "label": "Animal Tracking Facility Seal Rocks Line (SRL5) Mooring",
+            "definition": "The Animal Tracking Facility Seal Rocks Line (SRL5) Mooring is operated by SIMS (Sydney Institute of Marine Science) and collects data in the mid north coast region of New South Wales.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/90"
+          },
+          {
+            "label": "TOTTEN1 Mooring",
+            "definition": "Mooring 1 in the 2014-2015 Dalton/Totten mooring array, which was operated by CSIRO, and collects data adjacent to the Totten Glacier. This mooring was decommissioned in January 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/900"
+          },
+          {
+            "label": "TOTTEN2 Mooring",
+            "definition": "Mooring 2 in the 2014-2015 Dalton/Totten mooring array, which was operated by CSIRO, and collects data adjacent to the Totten Glacier. This mooring was decommissioned in January 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/901"
+          },
+          {
+            "label": "TOTTEN3 Mooring",
+            "definition": "Mooring 3 in the 2014-2015 Dalton/Totten mooring array, which was operated by CSIRO, and collects data adjacent to the Totten Glacier. This mooring was decommissioned in January 2015.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/902"
+          },
+          {
+            "label": "Two Rocks 44m Mooring",
+            "definition": "The Two Rocks 44m Shelf Mooring is operated by CSIRO and collects data in the Two Rocks region.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/903"
+          },
+          {
+            "label": "FluxPulse Mooring",
+            "definition": "The FluxPulse mooring is operated by CSIRO, and measures biogeochemical properties of the Southern Ocean. It combines the instrumentation from previous separate deployments of the Pulse and SOFS mooring. It had one deployment in April 2016 and was replaced by a SOFS mooring.",
+            "about": "http://vocab.aodn.org.au/def/platform/entity/911"
+          }
+        ]
+      }
+    ]
+  }
+]

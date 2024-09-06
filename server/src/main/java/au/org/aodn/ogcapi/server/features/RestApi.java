@@ -5,7 +5,6 @@ import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
-import au.org.aodn.ogcapi.server.core.service.GlobalExceptionHandler;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

@@ -1,13 +1,12 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.model.ParameterVocabModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
@@ -17,19 +16,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.*;
 
 @Slf4j
 @RestController("CommonRestExtApi")
 @RequestMapping(value = "/api/v1/ogc/ext")
 public class RestExtApi {
-    @Value("${api.vocabs:https://vocabs.ardc.edu.au/repository/api/lda/aodn}")
-    protected String vocabApi;
+    @Autowired
+    protected Search searchService;
 
     @Autowired
     protected RestExtService restExtService;
-    @Autowired
-    protected Search searchService;
+
     /**
      * This call is cql aware, so if you provided the filter string, then the return value will be filtered by
      * the cql clause.
@@ -53,9 +52,9 @@ public class RestExtApi {
      * Evict cache to allow reload
      */
     @CacheEvict(value="parameter_vocabs", allEntries = true)
-    @Scheduled(fixedRateString = "${caching.parameter_vocab.ttl:43200000}")
-    public void emptyCachedParameterVocab() {
-        log.info("Evict parameter_vocab cache as TTL pass");
+    @Scheduled(fixedRateString = "${caching.parameter_vocabs.ttl:43200000}")
+    public void emptyCachedParameterVocabs() {
+        log.info("Evict parameter_vocabs cache as TTL pass");
     }
 
     /**
@@ -64,7 +63,31 @@ public class RestExtApi {
      */
     @Cacheable("parameter_vocabs")
     @GetMapping(path="/parameter/vocabs")
-    public ResponseEntity<List<ParameterVocabModel>> getParameterVocab() {
-        return ResponseEntity.ok(restExtService.getParameterVocab(vocabApi));
+    public ResponseEntity<List<JsonNode>> getParameterVocab() throws IOException {
+        return ResponseEntity.ok(restExtService.groupVocabsFromEsByKey("parameter_vocab"));
+    }
+
+
+    @CacheEvict(value="platform_vocabs", allEntries = true)
+    @Scheduled(fixedRateString = "${caching.platform_vocabs.ttl:43200000}")
+    public void emptyCachedPlatformVocabs() {
+        log.info("Evict platform_vocabs cache as TTL pass");
+    }
+
+    @GetMapping(path="/platform/vocabs")
+    public ResponseEntity<List<JsonNode>> getPlatformVocabs() throws IOException {
+        return ResponseEntity.ok(restExtService.groupVocabsFromEsByKey("platform_vocab"));
+    }
+
+
+    @CacheEvict(value="organisation_vocabs", allEntries = true)
+    @Scheduled(fixedRateString = "${caching.organisation_vocabs.ttl:43200000}")
+    public void emptyCachedOrganisationVocabs() {
+        log.info("Evict organisation_vocabs cache as TTL pass");
+    }
+
+    @GetMapping(path="/organisation/vocabs")
+    public ResponseEntity<List<JsonNode>> getOrganisationVocabs() throws IOException {
+        return ResponseEntity.ok(restExtService.groupVocabsFromEsByKey("organisation_vocab"));
     }
 }
