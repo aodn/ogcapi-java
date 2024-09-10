@@ -214,22 +214,22 @@ public class RestExtApiTest extends BaseTestClass {
         assertNotEquals(List.of("vessel"), objectMapper.convertValue(suggestedVocabs3, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // matching filter
-        ResponseEntity<String> response4 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=bea&filter=(platform_vocab='wera beam forming hf radar')", String.class);
+        ResponseEntity<String> response4 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=bea&filter=(platform_vocabs='wera beam forming hf radar')", String.class);
         JsonNode suggestedVocabs4 = objectMapper.readTree(response4.getBody()).path("suggested_platform_vocabs");
         assertEquals(List.of("wera beam forming hf radar"), objectMapper.convertValue(suggestedVocabs4, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // not matching filter
-        ResponseEntity<String> response5 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=bea&filter=(platform_vocab='vessel')", String.class);
+        ResponseEntity<String> response5 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=bea&filter=(platform_vocabs='vessel')", String.class);
         JsonNode suggestedVocabs5 = objectMapper.readTree(response5.getBody()).path("suggested_platform_vocabs");
         assertNotEquals(List.of("wera beam forming hf radar"), objectMapper.convertValue(suggestedVocabs5, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // matching filter but not matching input
-        ResponseEntity<String> response6 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=random&filter=(platform_vocab='wera beam forming hf radar')", String.class);
+        ResponseEntity<String> response6 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=random&filter=(platform_vocabs='wera beam forming hf radar')", String.class);
         JsonNode suggestedVocabs6 = objectMapper.readTree(response6.getBody()).path("suggested_platform_vocabs");
         assertNotEquals(List.of("wera beam forming hf radar"), objectMapper.convertValue(suggestedVocabs6, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // matching filter and matching input
-        ResponseEntity<String> response7 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=bea&filter=(platform_vocab='wera beam forming hf radar')", String.class);
+        ResponseEntity<String> response7 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=bea&filter=(platform_vocabs='wera beam forming hf radar')", String.class);
         JsonNode suggestedVocabs7 = objectMapper.readTree(response7.getBody()).path("suggested_platform_vocabs");
         assertEquals(List.of("wera beam forming hf radar"), objectMapper.convertValue(suggestedVocabs7, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
     }
@@ -260,22 +260,22 @@ public class RestExtApiTest extends BaseTestClass {
         assertNotEquals(List.of("university of tasmania"), objectMapper.convertValue(suggestedVocabs3, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // matching filter
-        ResponseEntity<String> response4 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=ocean&filter=(organisation_vocab='ocean radar facility, integrated marine observing system (imos)')", String.class);
+        ResponseEntity<String> response4 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=ocean&filter=(organisation_vocabs='ocean radar facility, integrated marine observing system (imos)')", String.class);
         JsonNode suggestedVocabs4 = objectMapper.readTree(response4.getBody()).path("suggested_organisation_vocabs");
         assertEquals(List.of("ocean radar facility, integrated marine observing system (imos)"), objectMapper.convertValue(suggestedVocabs4, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // not matching filter
-        ResponseEntity<String> response5 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=ocean&filter=(organisation_vocab='university of tasmania')", String.class);
+        ResponseEntity<String> response5 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=ocean&filter=(organisation_vocabs='university of tasmania')", String.class);
         JsonNode suggestedVocabs5 = objectMapper.readTree(response5.getBody()).path("suggested_organisation_vocabs");
         assertNotEquals(List.of("ocean radar facility, integrated marine observing system (imos)"), objectMapper.convertValue(suggestedVocabs5, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // matching filter but not matching input
-        ResponseEntity<String> response6 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=random&filter=(organisation_vocab='ocean radar facility, integrated marine observing system (imos)')", String.class);
+        ResponseEntity<String> response6 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=random&filter=(organisation_vocabs='ocean radar facility, integrated marine observing system (imos)')", String.class);
         JsonNode suggestedVocabs6 = objectMapper.readTree(response6.getBody()).path("suggested_organisation_vocabs");
         assertNotEquals(List.of("ocean radar facility, integrated marine observing system (imos)"), objectMapper.convertValue(suggestedVocabs6, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
 
         // matching filter and matching input
-        ResponseEntity<String> response7 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=ocean&filter=(organisation_vocab='ocean radar facility, integrated marine observing system (imos)')", String.class);
+        ResponseEntity<String> response7 = testRestTemplate.getForEntity(getExternalBasePath() + "/autocomplete?input=ocean&filter=(organisation_vocabs='ocean radar facility, integrated marine observing system (imos)')", String.class);
         JsonNode suggestedVocabs7 = objectMapper.readTree(response7.getBody()).path("suggested_organisation_vocabs");
         assertEquals(List.of("ocean radar facility, integrated marine observing system (imos)"), objectMapper.convertValue(suggestedVocabs7, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)));
     }
