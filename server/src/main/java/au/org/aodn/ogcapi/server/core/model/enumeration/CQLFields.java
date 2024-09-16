@@ -159,6 +159,14 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             (order) -> new SortOptions.Builder().field(f -> f.field(CQLElasticSetting.score.getSetting()).order(order))
     ),
+    // Rank score is an internal calculated score, it is different from the one use by ElasticSearch,
+    // @see es-indexer RankingService
+    rank(
+            StacSummeries.Score.searchField,
+            StacSummeries.Score.displayField,
+            null,
+            (order) -> new SortOptions.Builder().field(f -> f.field(StacSummeries.Score.sortField).order(order))
+    ),
     fuzzy_title(
             null,
             StacBasicField.Title.displayField,
