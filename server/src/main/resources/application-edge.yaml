@@ -1,3 +1,9 @@
+# Show only on edge because we do not have a tag version
+spring:
+  info:
+    git:
+      location: "classpath:git.properties"
+
 management:
   endpoints:
     web:
