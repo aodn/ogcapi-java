@@ -159,13 +159,13 @@ public class RestApiTest extends BaseTestClass {
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/2007-06-05T14:00:00Z", Collections.class);
         assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2 only given this time");
         assertEquals(
-                "516811d7-cd1e-207a-e0440003ba8c79dd",
-                collections.getBody().getCollections().get(0).getId(),
-                "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
-        assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
-                collections.getBody().getCollections().get(1).getId(),
+                collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
+        assertEquals(
+                "516811d7-cd1e-207a-e0440003ba8c79dd",
+                collections.getBody().getCollections().get(1).getId(),
+                "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
     }
     /**
      * The datetime field before xxx/yyy. It uses CQL internally so no need to test Before After During in CQL
