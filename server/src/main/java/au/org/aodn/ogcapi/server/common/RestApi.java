@@ -94,9 +94,8 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                         .body(new ConfClasses().conformsTo(result));
             }
             default: {
-                /**
+                /*
                  * https://opengeospatial.github.io/ogcna-auto-review/19-072.html
-                 *
                  * The OGC API — Common Standard does not mandate a specific encoding or format for
                  * representations of resources. However, both HTML and JSON are commonly used encodings for spatial
                  * data on the web. The HTML and JSON requirements classes specify the encoding of resource
@@ -117,11 +116,10 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
      * In ogc api, it defines the same getCollections (/collections) in a couple of places, and it assumed that
      * user will extend the same function with different argument, which cannot be done with openapi directly.
      * Hence, all those getCollections are marked @Hidden and replace by this one.
-     *
      * TODO: Need text/html output?
-     * @return
+     * @return - The Collections
      */
-    @Operation(summary = "The collections in the dataset", description = "", tags = {"Capabilities"})
+    @Operation(summary = "The collections in the dataset", description = "Return the collection", tags = {"Capabilities"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200",
                     description = "The collections shared by this API.  The dataset is organized as one or more feature collections. This resource provides information about and access to the collections.  The response contains the list of collections. For each collection, a link to the items in the collection (path `/collections/{collectionId}/items`, link relation `items`) as well as key information about the collection. This information includes:  * A local identifier for the collection that is unique for the dataset; * A list of coordinate reference systems (CRS) in which geometries may be returned by the server. The first CRS is the default coordinate reference system (the default is always WGS 84 with axis order longitude/latitude); * An optional title and description for the collection; * An optional extent that can be used to provide an indication of the spatial and temporal extent of the collection - typically derived from the data; * An optional indicator about the type of the items in the collection (the default value, if the indicator is not provided, is 'feature').",
@@ -150,8 +148,8 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 @RequestParam(value = "crs", required = false, defaultValue = "https://epsg.io/4326") String crs,
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
                 @RequestParam(value = "filter", required = false) String filter,
-            @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "" ,schema=@Schema())
-                @Valid @RequestParam(value = "sortby", required = false, defaultValue = "-score") String sortBy) {
+            @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "Sort by, property needs to valid in the CQL" ,schema=@Schema())
+                @Valid @RequestParam(value = "sortby", required = false, defaultValue = "-score,-rank") String sortBy) {
 
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
