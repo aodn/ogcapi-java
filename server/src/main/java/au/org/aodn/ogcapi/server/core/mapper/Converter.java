@@ -3,7 +3,6 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
-import au.org.aodn.ogcapi.server.core.model.LicenseModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
@@ -95,18 +94,6 @@ public interface Converter<F, T> {
                     .collect(Collectors.toList()));
         }
 
-        if (m.getSummaries() != null && m.getSummaries().getStatus() != null) {
-            collection.getProperties().put(CollectionProperty.status, m.getSummaries().getStatus());
-        }
-
-        if (m.getSummaries() != null && m.getSummaries().getCredits() != null) {
-            collection.getProperties().put(CollectionProperty.credits, m.getSummaries().getCredits());
-        }
-
-        if (m.getSummaries() != null && m.getSummaries().getGeometry() != null) {
-            collection.getProperties().put(CollectionProperty.geometry, m.getSummaries().getGeometry());
-        }
-
         if (m.getContacts() != null) {
             collection.getProperties().put(CollectionProperty.contacts, m.getContacts());
         }
@@ -115,30 +102,48 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.themes, m.getThemes());
         }
 
-        if (m.getSummaries() != null && m.getSummaries().getTemporal() != null) {
-            collection.getProperties().put(CollectionProperty.temporal, m.getSummaries().getTemporal());
-        }
-
         if(m.getCitation() != null && !m.getCitation().isEmpty()) {
             ConstructUtils.constructByJsonString(m.getCitation(), CitationModel.class).ifPresent(
                     citation -> collection.getProperties().put(CollectionProperty.citation, citation)
             );
         }
 
-        if (m.getSummaries() != null && m.getSummaries().getStatement() != null) {
-            collection.getProperties().put(CollectionProperty.statement, m.getSummaries().getStatement());
-        }
-
         if (m.getLicense() != null) {
             collection.getProperties().put(CollectionProperty.license, m.getLicense());
         }
 
-        if (m.getSummaries() != null && m.getSummaries().getCreation() != null) {
-            collection.getProperties().put(CollectionProperty.creation, m.getSummaries().getCreation());
-        }
+        if(m.getSummaries() != null ) {
+            if (m.getSummaries().getCentroid() != null) {
+                collection.getProperties().put(CollectionProperty.centroid, m.getSummaries().getCentroid());
+            }
 
-        if (m.getSummaries() != null && m.getSummaries().getRevision() != null) {
-            collection.getProperties().put(CollectionProperty.revision, m.getSummaries().getRevision());
+            if (m.getSummaries().getStatus() != null) {
+                collection.getProperties().put(CollectionProperty.status, m.getSummaries().getStatus());
+            }
+
+            if (m.getSummaries().getCredits() != null) {
+                collection.getProperties().put(CollectionProperty.credits, m.getSummaries().getCredits());
+            }
+
+            if (m.getSummaries().getGeometry() != null) {
+                collection.getProperties().put(CollectionProperty.geometry, m.getSummaries().getGeometry());
+            }
+
+            if (m.getSummaries().getTemporal() != null) {
+                collection.getProperties().put(CollectionProperty.temporal, m.getSummaries().getTemporal());
+            }
+
+            if (m.getSummaries().getStatement() != null) {
+                collection.getProperties().put(CollectionProperty.statement, m.getSummaries().getStatement());
+            }
+
+            if (m.getSummaries().getCreation() != null) {
+                collection.getProperties().put(CollectionProperty.creation, m.getSummaries().getCreation());
+            }
+
+            if (m.getSummaries().getRevision() != null) {
+                collection.getProperties().put(CollectionProperty.revision, m.getSummaries().getRevision());
+            }
         }
 
         return collection;
