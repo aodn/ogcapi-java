@@ -18,6 +18,7 @@ public enum CollectionProperty {
     license("license"),
     creation("creation"),
     revision("revision"),
+    centroid("centroid"),
     ;
 
     private final String value;

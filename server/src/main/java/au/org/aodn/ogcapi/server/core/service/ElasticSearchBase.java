@@ -2,15 +2,12 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
-import co.elastic.clients.elasticsearch.core.CountRequest;
-import co.elastic.clients.elasticsearch.core.CountResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -23,7 +20,6 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -58,7 +54,7 @@ abstract class ElasticSearchBase {
      * @param must - The must portion of Elastic query
      * @param should - The should portion of Elastic query
      * @param filters - The filter to the Elastic query
-     * @return
+     * @return - A boolean query for elastic
      */
     protected BoolQuery createBoolQueryForProperties(List<Query> must, List<Query> should, List<Query> filters) {
         BoolQuery.Builder builder = new BoolQuery.Builder();
@@ -327,8 +323,6 @@ abstract class ElasticSearchBase {
         try {
             if(nodes != null) {
                 String json = nodes.toPrettyString();
-                log.debug("Serialize STAC json to StacCollectionModel {}", json);
-
                 return mapper.readValue(json, StacCollectionModel.class);
             }
             else {

@@ -49,6 +49,12 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    centroid(
+            StacSummeries.Centroid.searchField,
+            StacSummeries.Centroid.displayField,
+            null,
+            null
+    ),
     temporal(
             StacSummeries.Temporal.searchField,
             StacSummeries.Temporal.displayField,
