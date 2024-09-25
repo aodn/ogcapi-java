@@ -39,6 +39,7 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.ok()
                     .body(StacToCollection.convert(model.getCollections().get(0)));
         } else {
+            log.error("UUID {} not found", id);
             return ResponseEntity.notFound().build();
         }
     }
