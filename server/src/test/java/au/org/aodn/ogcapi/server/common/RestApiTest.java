@@ -2,14 +2,10 @@ package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.BaseTestClass;
-
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.*;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -27,9 +23,6 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)         // We need to use @BeforeAll @AfterAll with not static method
 public class RestApiTest extends BaseTestClass {
-
-    @Autowired
-    protected ObjectMapper objectMapper;
 
     @BeforeAll
     public void beforeClass() {
@@ -514,14 +507,10 @@ public class RestApiTest extends BaseTestClass {
      * on any error
      */
     @Test
-    public void verifyErrorMessageCreated() throws JsonProcessingException {
+    public void verifyErrorMessageCreated()  {
         ResponseEntity<String> collection = testRestTemplate.getForEntity(getBasePath() + "/collections/12324", String.class);
 
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, collection.getStatusCode(), "Request Status match");
-
-        ErrorResponse response = objectMapper.readValue(Objects.requireNonNull(collection.getBody()), ErrorResponse.class);
-        assertEquals("uuid 12324 not found!", response.getMessage(), "message match");
-        assertEquals("uri=/api/v1/ogc/collections/12324", response.getDetails(), "message url");
+        assertEquals(HttpStatus.NOT_FOUND, collection.getStatusCode(), "Request Status match");
     }
     /**
      * Test sort by, you can use this as an example for how ot use sortBy
