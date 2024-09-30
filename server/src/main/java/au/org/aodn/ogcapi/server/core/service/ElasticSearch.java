@@ -48,6 +48,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabsIndexName;
 
+    @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
+    protected String searchAfterSplitRegex;
+
     public ElasticSearch(ElasticsearchClient client,
                          ObjectMapper mapper,
                          String indexName,
@@ -300,10 +303,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             List<FieldValue> searchAfter = null;
             if (setting.get(CQLElasticSetting.search_after) != null &&
                     !setting.get(CQLElasticSetting.search_after).isBlank()) {
-                // Convert the comma separate string to List<FieldValue>
+                // Convert the regex separate string to List<FieldValue>
                 searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after)
-                        .split(","))
+                        .split(searchAfterSplitRegex))
                         .filter(v -> !v.isBlank())
+                        .map(String::trim)
                         .map(ElasticSearch::toFieldValue)
                         .toList();
             }

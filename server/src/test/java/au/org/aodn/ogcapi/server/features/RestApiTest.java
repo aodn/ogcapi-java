@@ -151,7 +151,7 @@ public class RestApiTest extends BaseTestClass {
         // Now if we provided the search after we should get the next batch
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?filter=page_size=3 AND search_after=" +
-                        String.format("'%s,%s,%s'",
+                        String.format("'%s||%s||%s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
                                 collections.getBody().getSearchAfter().get(2)),
@@ -224,7 +224,7 @@ public class RestApiTest extends BaseTestClass {
         // intended to give space after comma for negative test
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?q=dataset&filter=page_size=1 AND search_after=" +
-                        String.format("'%s,%s,%s'",
+                        String.format("'%s||%s||%s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
                                 "bc55eff4-7596-3565-e044-00144fdd4fa6"),
@@ -253,7 +253,7 @@ public class RestApiTest extends BaseTestClass {
         // set a bigger page size which exceed more than record hit as negative test
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?q=dataset&filter=page_size=3 AND search_after=" +
-                        String.format("'%s,%s,%s'",
+                        String.format("'%s||%s ||%s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
                                 "5c418118-2581-4936-b6fd-d6bedfe74f62"),
@@ -330,7 +330,7 @@ public class RestApiTest extends BaseTestClass {
         // intended to give space after comma for negative test
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?q=dataset&filter=page_size=6 AND score>=1.3 AND search_after=" +
-                        String.format("'%s, %s , %s'",
+                        String.format("'%s|| %s || %s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
                                 "bc55eff4-7596-3565-e044-00144fdd4fa6"),
