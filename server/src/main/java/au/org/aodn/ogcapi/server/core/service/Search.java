@@ -1,8 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.DatasetSearchResult;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import org.springframework.http.ResponseEntity;
 
@@ -16,6 +15,7 @@ public interface Search {
 
     ElasticSearchBase.SearchResult searchCollections(List<String> ids, String sortBy);
     ElasticSearchBase.SearchResult searchAllCollections(String sortBy) throws Exception;
+    DatasetSearchResult searchDataset(String collectionId, String startDate, String endDate) throws Exception;
 
     ElasticSearchBase.SearchResult searchByParameters(
             List<String> targets,

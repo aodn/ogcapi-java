@@ -1,5 +1,10 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.ogcapi.features.model.GeometrycollectionGeoJSON;
+import au.org.aodn.ogcapi.features.model.PointGeoJSON;
+import au.org.aodn.ogcapi.server.core.model.DatasetModel;
+import au.org.aodn.ogcapi.server.core.model.DatasetSearchResult;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
@@ -17,6 +22,7 @@ import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
@@ -27,7 +33,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -47,6 +55,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabsIndexName;
+
+    @Value("${elasticsearch.dataset_index.name}")
+    protected String datasetIndexName;
 
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
@@ -419,5 +430,44 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
         // Assume it is string
         return FieldValue.of(s.trim());
+    }
+
+    @Override
+    public DatasetSearchResult searchDataset(
+            String collectionId,
+            String startDate,
+            String endDate
+    ) {
+        List<Query> queries = new ArrayList<>();
+        queries.add(MatchQuery.of(query -> query
+                .field("uuid")
+                .query(collectionId))._toQuery());
+
+        Supplier<SearchRequest.Builder> builderSupplier = () -> {
+            SearchRequest.Builder builder = new SearchRequest.Builder();
+            builder.index(datasetIndexName)
+                    .size(2000)
+                    .query(query -> query.bool(createBoolQueryForProperties(queries, null, null)));
+
+            return builder;
+        };
+
+        try {
+            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, 2000L);
+
+            DatasetSearchResult result = new DatasetSearchResult(collectionId);
+
+            for (var node : response) {
+                if (node != null && node.source() != null) {
+                    var json = node.source().toPrettyString();
+                    var dataSubset = mapper.readValue(json, DatasetModel.class);
+                    dataSubset.getData().forEach(result::addRecord);
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("Error while searching dataset.", e);
+        }
+        return null;
     }
 }

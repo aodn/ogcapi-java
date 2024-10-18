@@ -10,6 +10,8 @@ elasticsearch:
     name: dev_portal_records
   vocabs_index:
     name: vocabs_index
+  dataset_index:
+    name: sample_index_havier
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
   search_as_you_type:

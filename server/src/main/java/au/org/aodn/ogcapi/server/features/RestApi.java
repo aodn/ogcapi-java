@@ -9,8 +9,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,10 +26,35 @@ public class RestApi implements CollectionsApi {
         return featuresService.getCollection(collectionId, null);
     }
 
+    /**
+     * Hidden because we want to have a more functional implementation
+     */
+    @Hidden
     @Override
     public ResponseEntity<FeatureGeoJSON> getFeature(String collectionId, String featureId) {
-        return null;
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
+
+    @RequestMapping(
+            value = {"/collections/{collectionId}/items/{featureId}"},
+            produces = {"application/geo+json", "text/html", "application/json"},
+            method = {RequestMethod.GET}
+    )
+    public ResponseEntity<FeatureGeoJSON> getFeature(
+            // TODO:  For making it work first, only added below parameters.
+            //  Please add other parameters as needed
+            @PathVariable("collectionId") String collectionId,
+            @PathVariable("featureId") String featureId,
+            @RequestParam(value = "start_datetime", required = false) String startDate,
+            @RequestParam(value = "end_datetime", required = false) String endDate
+    ) {
+        if (featureId.equals("dataset")) {
+            return  featuresService.getDataset(collectionId, startDate, endDate);
+        }
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+
 
     @Override
     public ResponseEntity<FeatureCollectionGeoJSON> getFeatures(String collectionId, Integer limit, List<BigDecimal> bbox, String datetime) {
