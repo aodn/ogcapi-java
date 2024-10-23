@@ -11,7 +11,7 @@ elasticsearch:
   vocabs_index:
     name: vocabs_index
   dataset_index:
-    name: sample_index_havier
+    name: dataset_index
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
   search_as_you_type:
