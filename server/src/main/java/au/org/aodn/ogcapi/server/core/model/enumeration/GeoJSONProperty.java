@@ -5,6 +5,8 @@ import lombok.Getter;
 @Getter
 public enum GeoJSONProperty {
     TIME("time"),
+    DEPTH("depth"),
+    POINT_COUNT("point_count")
     ;
 
     private final String value;
