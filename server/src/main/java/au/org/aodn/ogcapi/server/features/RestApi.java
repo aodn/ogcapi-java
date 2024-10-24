@@ -41,8 +41,7 @@ public class RestApi implements CollectionsApi {
             method = {RequestMethod.GET}
     )
     public ResponseEntity<FeatureGeoJSON> getFeature(
-            // TODO:  For making it work first, only added below parameters.
-            //  Please add other parameters as needed
+
             @PathVariable("collectionId") String collectionId,
             @PathVariable("featureId") String featureId,
             @RequestParam(value = "start_datetime", required = false) String startDate,

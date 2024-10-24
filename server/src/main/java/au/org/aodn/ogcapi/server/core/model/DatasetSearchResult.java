@@ -38,6 +38,11 @@ public class DatasetSearchResult implements IFeatureSearchResult{
     }
 
     public void addRecord(DataRecordModel record) {
+
+        if (record == null) {
+            throw new IllegalArgumentException("Record cannot be null");
+        }
+
         var geoRecord = new ExtendedPointGeoJSON();
         var coordinates = new ArrayList<BigDecimal>();
 
@@ -45,12 +50,13 @@ public class DatasetSearchResult implements IFeatureSearchResult{
         // it still needs "null" to occupy the space
         coordinates.add(record.getLongitude());
         coordinates.add(record.getLatitude());
-        coordinates.add(record.getDepth());
 
         geoRecord.setCoordinates(coordinates);
 
         // Please add more properties if needed
         geoRecord.addProperty(GeoJSONProperty.TIME.getValue(), record.getTime());
+        geoRecord.addProperty(GeoJSONProperty.DEPTH.getValue(), record.getDepth());
+        geoRecord.addProperty(GeoJSONProperty.POINT_COUNT.getValue(), record.getCount());
 
         setGeometry(geoRecord);
     }
