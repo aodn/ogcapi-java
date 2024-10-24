@@ -1,20 +1,17 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
+import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
-import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Service("FeaturesRestService")
 @Slf4j
@@ -42,5 +39,19 @@ public class RestServices extends OGCApiService {
             log.error("UUID {} not found", id);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    public ResponseEntity<FeatureGeoJSON> getDataset(
+            String collectionId,
+            String startDate,
+            String endDate
+    ) {
+        try {
+            var result = search.searchDataset(collectionId, startDate, endDate);
+            return ResponseEntity.ok()
+                    .body(result.getDataset());
+        } catch (Exception ignored) {
+        }
+        return null;
     }
 }
