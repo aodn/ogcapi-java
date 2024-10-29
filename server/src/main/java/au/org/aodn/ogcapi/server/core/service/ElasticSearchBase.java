@@ -1,9 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
-import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.*;

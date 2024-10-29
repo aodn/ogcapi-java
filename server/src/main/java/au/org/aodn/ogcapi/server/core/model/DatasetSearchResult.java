@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model;
 
 import au.org.aodn.ogcapi.features.model.*;
-import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
 import lombok.Getter;
 
@@ -10,24 +9,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class DatasetSearchResult implements IFeatureSearchResult{
+@Getter
+public class DatasetSearchResult {
 
-    private final FeatureType featureType;
-
-
-    @Getter
     private final FeatureCollectionGeoJSON dataset;
 
     public DatasetSearchResult() {
-        this.featureType = FeatureType.DATASET;
         this.dataset = new FeatureCollectionGeoJSON();
         initDataset();
-    }
-
-
-    @Override
-    public FeatureType getFeatureType() {
-        return featureType;
     }
 
     private void initDataset() {
