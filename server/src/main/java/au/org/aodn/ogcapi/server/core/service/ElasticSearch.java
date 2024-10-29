@@ -58,6 +58,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
 
+    private final int DATASET_ENTRY_MAX = 2000;
+
     public ElasticSearch(ElasticsearchClient client,
                          ObjectMapper mapper,
                          String indexName,
@@ -442,14 +444,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         Supplier<SearchRequest.Builder> builderSupplier = () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(datasetIndexName)
-                    .size(2000)
+                    .size(DATASET_ENTRY_MAX)
                     .query(query -> query.bool(createBoolQueryForProperties(queries, null, null)));
 
             return builder;
         };
 
         try {
-            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, 2000L);
+            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, (long) DATASET_ENTRY_MAX);
 
             DatasetSearchResult result = new DatasetSearchResult();
 
