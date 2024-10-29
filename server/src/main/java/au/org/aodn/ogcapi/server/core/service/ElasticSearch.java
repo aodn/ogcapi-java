@@ -1,5 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.model.DatasetModel;
+import au.org.aodn.ogcapi.server.core.model.DatasetSearchResult;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.CQLToElasticFilterFactory;
@@ -8,15 +10,16 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch._types.query_dsl.*;
-import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
@@ -28,6 +31,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -48,8 +52,13 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabsIndexName;
 
+    @Value("${elasticsearch.dataset_index.name}")
+    protected String datasetIndexName;
+
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
+
+    private final int DATASET_ENTRY_MAX = 2000;
 
     public ElasticSearch(ElasticsearchClient client,
                          ObjectMapper mapper,
@@ -419,5 +428,43 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
         // Assume it is string
         return FieldValue.of(s.trim());
+    }
+
+    @Override
+    public DatasetSearchResult searchDataset(
+            String collectionId,
+            String startDate,
+            String endDate
+    ) {
+        List<Query> queries = new ArrayList<>();
+        queries.add(MatchQuery.of(query -> query
+                .field("uuid")
+                .query(collectionId))._toQuery());
+
+        Supplier<SearchRequest.Builder> builderSupplier = () -> {
+            SearchRequest.Builder builder = new SearchRequest.Builder();
+            builder.index(datasetIndexName)
+                    .size(DATASET_ENTRY_MAX)
+                    .query(query -> query.bool(createBoolQueryForProperties(queries, null, null)));
+
+            return builder;
+        };
+
+        try {
+            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, (long) DATASET_ENTRY_MAX);
+
+            DatasetSearchResult result = new DatasetSearchResult();
+
+            for (var node : response) {
+                if (node != null && node.source() != null) {
+                    var monthlyData = mapper.readValue(node.source().toPrettyString(), DatasetModel.class);
+                    monthlyData.getData().forEach(result::addDatum);
+                }
+            }
+            return result;
+        } catch (Exception e) {
+            log.error("Error while searching dataset.", e);
+        }
+        return null;
     }
 }
