@@ -50,8 +50,9 @@ public class RestServices extends OGCApiService {
             var result = search.searchDataset(collectionId, startDate, endDate);
             return ResponseEntity.ok()
                     .body(result.getDataset());
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            log.error("Error while getting dataset", e);
+            return ResponseEntity.internalServerError().build();
         }
-        return null;
     }
 }

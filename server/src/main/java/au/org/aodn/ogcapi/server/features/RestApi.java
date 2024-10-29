@@ -26,32 +26,10 @@ public class RestApi implements CollectionsApi {
         return featuresService.getCollection(collectionId, null);
     }
 
-    /**
-     * Hidden because we want to have a more functional implementation
-     */
-    @Hidden
     @Override
     public ResponseEntity<FeatureGeoJSON> getFeature(String collectionId, String featureId) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
-
-    // Deprecated for now because we are using getFeatures to return dataset. May be useful in the future
-    @Deprecated
-    @RequestMapping(
-            value = {"/collections/{collectionId}/items/{featureId}"},
-            produces = {"application/geo+json", "text/html", "application/json"},
-            method = {RequestMethod.GET}
-    )
-    public ResponseEntity<FeatureGeoJSON> getFeature(
-
-            @PathVariable("collectionId") String collectionId,
-            @PathVariable("featureId") String featureId,
-            @RequestParam(value = "start_datetime", required = false) String startDate,
-            @RequestParam(value = "end_datetime", required = false) String endDate
-    ) {
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-    }
-
 
     @RequestMapping(
             value = {"/collections/{collectionId}/items"},

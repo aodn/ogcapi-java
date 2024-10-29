@@ -457,9 +457,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             for (var node : response) {
                 if (node != null && node.source() != null) {
-                    var json = node.source().toPrettyString();
-                    var dataSubset = mapper.readValue(json, DatasetModel.class);
-                    dataSubset.getData().forEach(result::addDatum);
+                    var monthlyData = mapper.readValue(node.source().toPrettyString(), DatasetModel.class);
+                    monthlyData.getData().forEach(result::addDatum);
                 }
             }
             return result;

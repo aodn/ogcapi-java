@@ -49,7 +49,6 @@ abstract class ElasticSearchBase {
         List<StacCollectionModel> collections;
     }
 
-
     /**
      * Construct the skeleton of in the elastic query and fill in values
      * @param must - The must portion of Elastic query
