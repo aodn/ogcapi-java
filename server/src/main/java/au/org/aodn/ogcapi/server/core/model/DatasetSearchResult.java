@@ -1,14 +1,14 @@
 package au.org.aodn.ogcapi.server.core.model;
 
-import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
-import au.org.aodn.ogcapi.features.model.GeometryGeoJSON;
-import au.org.aodn.ogcapi.features.model.GeometrycollectionGeoJSON;
+import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureType;
-import au.org.aodn.ogcapi.server.core.model.enumeration.GeoJSONProperty;
+import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
 import lombok.Getter;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class DatasetSearchResult implements IFeatureSearchResult{
 
@@ -16,13 +16,12 @@ public class DatasetSearchResult implements IFeatureSearchResult{
 
 
     @Getter
-    private final FeatureGeoJSON dataset;
+    private final FeatureCollectionGeoJSON dataset;
 
-    public DatasetSearchResult(String uuid) {
+    public DatasetSearchResult() {
         this.featureType = FeatureType.DATASET;
-        this.dataset = new FeatureGeoJSON();
+        this.dataset = new FeatureCollectionGeoJSON();
         initDataset();
-        this.dataset.setId(new FeatureGeoJsonId(uuid));
     }
 
 
@@ -32,9 +31,8 @@ public class DatasetSearchResult implements IFeatureSearchResult{
     }
 
     private void initDataset() {
-        var geoCollection = new GeometrycollectionGeoJSON();
-        geoCollection.setGeometries(new ArrayList<>());
-        dataset.setGeometry(geoCollection);
+        dataset.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
+        dataset.setFeatures(new ArrayList<>());
     }
 
     public void addRecord(DataRecordModel record) {
@@ -43,7 +41,10 @@ public class DatasetSearchResult implements IFeatureSearchResult{
             throw new IllegalArgumentException("Record cannot be null");
         }
 
-        var geoRecord = new ExtendedPointGeoJSON();
+        var feature = new FeatureGeoJSON();
+        feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        var geometry = new PointGeoJSON();
+        geometry.setType(PointGeoJSON.TypeEnum.POINT);
         var coordinates = new ArrayList<BigDecimal>();
 
         // Don't use null checks here because it is a list and even if it is null,
@@ -51,19 +52,17 @@ public class DatasetSearchResult implements IFeatureSearchResult{
         coordinates.add(record.getLongitude());
         coordinates.add(record.getLatitude());
 
-        geoRecord.setCoordinates(coordinates);
+        geometry.setCoordinates(coordinates);
+        feature.setGeometry(geometry);
 
         // Please add more properties if needed
-        geoRecord.addProperty(GeoJSONProperty.TIME.getValue(), record.getTime());
-        geoRecord.addProperty(GeoJSONProperty.DEPTH.getValue(), record.getDepth());
-        geoRecord.addProperty(GeoJSONProperty.POINT_COUNT.getValue(), record.getCount());
+        Map<String, Object> properties = new HashMap<>();
+        properties.put(FeatureProperty.TIME.getValue(), record.getTime());
+        properties.put(FeatureProperty.DEPTH.getValue(), record.getDepth());
+        properties.put(FeatureProperty.COUNT.getValue(), record.getCount());
 
-        setGeometry(geoRecord);
-    }
-
-    private void setGeometry(GeometryGeoJSON geometry) {
-        var geoCollection = (GeometrycollectionGeoJSON) dataset.getGeometry();
-        geoCollection.getGeometries().add(geometry);
+        feature.setProperties(properties);
+        dataset.getFeatures().add(feature);
     }
 
 }

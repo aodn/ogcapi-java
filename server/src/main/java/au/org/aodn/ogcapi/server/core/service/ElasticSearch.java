@@ -1,8 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
-import au.org.aodn.ogcapi.features.model.GeometrycollectionGeoJSON;
-import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.DatasetModel;
 import au.org.aodn.ogcapi.server.core.model.DatasetSearchResult;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
@@ -13,11 +10,11 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
-import co.elastic.clients.elasticsearch._types.query_dsl.*;
-import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import co.elastic.clients.util.ObjectBuilder;
@@ -33,7 +30,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -455,7 +451,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         try {
             Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, 2000L);
 
-            DatasetSearchResult result = new DatasetSearchResult(collectionId);
+            DatasetSearchResult result = new DatasetSearchResult();
 
             for (var node : response) {
                 if (node != null && node.source() != null) {
