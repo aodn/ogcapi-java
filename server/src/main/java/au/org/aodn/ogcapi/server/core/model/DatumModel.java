@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 
 @Data
 @Builder
-public class DataRecordModel {
+public class DatumModel {
 
     private String time;
     private BigDecimal latitude;

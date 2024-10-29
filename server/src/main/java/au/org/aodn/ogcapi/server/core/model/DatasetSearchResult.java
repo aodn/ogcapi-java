@@ -24,10 +24,10 @@ public class DatasetSearchResult {
         dataset.setFeatures(new ArrayList<>());
     }
 
-    public void addRecord(DataRecordModel record) {
+    public void addDatum(DatumModel datum) {
 
-        if (record == null) {
-            throw new IllegalArgumentException("Record cannot be null");
+        if (datum == null) {
+            throw new IllegalArgumentException("Datum cannot be null");
         }
 
         var feature = new FeatureGeoJSON();
@@ -38,17 +38,17 @@ public class DatasetSearchResult {
 
         // Don't use null checks here because it is a list and even if it is null,
         // it still needs "null" to occupy the space
-        coordinates.add(record.getLongitude());
-        coordinates.add(record.getLatitude());
+        coordinates.add(datum.getLongitude());
+        coordinates.add(datum.getLatitude());
 
         geometry.setCoordinates(coordinates);
         feature.setGeometry(geometry);
 
         // Please add more properties if needed
         Map<String, Object> properties = new HashMap<>();
-        properties.put(FeatureProperty.TIME.getValue(), record.getTime());
-        properties.put(FeatureProperty.DEPTH.getValue(), record.getDepth());
-        properties.put(FeatureProperty.COUNT.getValue(), record.getCount());
+        properties.put(FeatureProperty.TIME.getValue(), datum.getTime());
+        properties.put(FeatureProperty.DEPTH.getValue(), datum.getDepth());
+        properties.put(FeatureProperty.COUNT.getValue(), datum.getCount());
 
         feature.setProperties(properties);
         dataset.getFeatures().add(feature);

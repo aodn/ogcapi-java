@@ -8,5 +8,5 @@ import java.util.List;
 @Builder
 public class DatasetModel {
     private String uuid;
-    private List<DataRecordModel> data;
+    private List<DatumModel> data;
 }
