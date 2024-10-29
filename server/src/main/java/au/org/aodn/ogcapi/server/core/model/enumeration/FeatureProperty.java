@@ -6,7 +6,8 @@ import lombok.Getter;
 public enum FeatureProperty {
     TIME("time"),
     DEPTH("depth"),
-    POINT_COUNT("point_count")
+    COUNT("count"),
+    UUID("uuid")
     ;
 
     private final String value;

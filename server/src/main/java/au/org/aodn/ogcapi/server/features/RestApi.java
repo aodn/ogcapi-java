@@ -35,6 +35,8 @@ public class RestApi implements CollectionsApi {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
+    // Deprecated for now because we are using getFeatures to return dataset. May be useful in the future
+    @Deprecated
     @RequestMapping(
             value = {"/collections/{collectionId}/items/{featureId}"},
             produces = {"application/geo+json", "text/html", "application/json"},
@@ -47,14 +49,30 @@ public class RestApi implements CollectionsApi {
             @RequestParam(value = "start_datetime", required = false) String startDate,
             @RequestParam(value = "end_datetime", required = false) String endDate
     ) {
-        if (featureId.equals("dataset")) {
-            return  featuresService.getDataset(collectionId, startDate, endDate);
-        }
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
 
+    @RequestMapping(
+            value = {"/collections/{collectionId}/items"},
+            produces = {"application/geo+json", "text/html", "application/json"},
+            method = {RequestMethod.GET}
+    )
+    public ResponseEntity<FeatureCollectionGeoJSON> getFeatures(
 
+            @PathVariable("collectionId") String collectionId,
+            @RequestParam(value = "start_datetime", required = false) String startDate,
+            @RequestParam(value = "end_datetime", required = false) String endDate
+    ) {
+        return  featuresService.getDataset(collectionId, startDate, endDate);
+    }
+
+
+
+    /**
+     * Hidden because we want to have a more functional implementation
+     */
+    @Hidden
     @Override
     public ResponseEntity<FeatureCollectionGeoJSON> getFeatures(String collectionId, Integer limit, List<BigDecimal> bbox, String datetime) {
         return null;
