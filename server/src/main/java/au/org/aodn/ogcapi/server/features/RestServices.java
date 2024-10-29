@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
@@ -41,7 +41,7 @@ public class RestServices extends OGCApiService {
         }
     }
 
-    public ResponseEntity<FeatureGeoJSON> getDataset(
+    public ResponseEntity<FeatureCollectionGeoJSON> getDataset(
             String collectionId,
             String startDate,
             String endDate
