@@ -118,7 +118,7 @@ abstract class ElasticSearchBase {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(indexName)
                     // If user query request a page that is smaller then the internal default, then
-                    // we use the smaller one. The internal page size is use to get the result by
+                    // we use the smaller one. The internal page size is used to get the result by
                     // batch, lets say page is 20 and internal is 10, then we do it in two batch.
                     // But if we request 5 only, then there is no point to load 10
                     .size(maxSize != null && maxSize < pageSize ? maxSize.intValue() : pageSize)
@@ -167,15 +167,11 @@ abstract class ElasticSearchBase {
                             .stream()
                             .flatMap(v -> CQLFields.valueOf(v).getDisplayField().stream())
                             .filter(Objects::nonNull)
-                            .collect(Collectors.toList());
+                            .toList();
 
                     // Set fetch to false so that it do not return the original document but just the field
                     // we set
-                    builder.source(f -> f
-                            .filter(sf -> sf
-                                    .includes(fs)
-                            )
-                    );
+                    builder.source(f -> f.filter(sf -> sf.includes(fs)));
                 }
                 else {
                     throw new IllegalArgumentException(String.format("Invalid properties in query %s, check ?properties=xx", invalid));
