@@ -34,7 +34,6 @@ import static au.org.aodn.ogcapi.server.core.util.GeometryUtils.createCentroid;
 public interface Converter<F, T> {
 
     Logger logger = LoggerFactory.getLogger(Converter.class);
-    CQLToStacFilterFactory factory = new CQLToStacFilterFactory();
     GeometryVisitor visitor = GeometryVisitor.builder()
             .build();
 
@@ -81,7 +80,7 @@ public interface Converter<F, T> {
      * @param m - Income object to be transformed
      * @return A mapped JSON which match the St
      */
-    default <D extends StacCollectionModel> Collection getCollection(D m, Param param, String host) {
+    default <D extends StacCollectionModel> Collection getCollection(D m, Filter filter, String host) {
 
         ExtendedCollection collection = new ExtendedCollection();
         collection.setId(m.getUuid());
@@ -145,21 +144,11 @@ public interface Converter<F, T> {
             if (m.getSummaries().getGeometryNoLand() != null) {
                 GeometryUtils.readGeometry(m.getSummaries().getGeometryNoLand())
                         .ifPresent(input -> {
-                            try {
-                                Geometry g = input;
-                                // The map structure must be parseable to GeometryCollection
-                                if (param != null && param.getFilter() != null && param.getCoordinationSystem() != null) {
-                                    Filter f = CompilerUtil.parseFilter(Language.CQL, param.getFilter(), factory);
-                                    g = (Geometry)f.accept(visitor, input);
-                                }
-                                collection.getProperties().put(
-                                        CollectionProperty.centroid,
-                                        createCentroid(g)
-                                );
-                            }
-                            catch(CQLException ex) {
-                                // Ignore
-                            }
+                            Geometry g = filter != null ? (Geometry)filter.accept(visitor, input) : input;
+                            collection.getProperties().put(
+                                    CollectionProperty.centroid,
+                                    createCentroid(g)
+                            );
                         });
             }
 

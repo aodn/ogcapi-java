@@ -28,7 +28,10 @@ import java.util.Optional;
 @Slf4j
 public class ParserTest {
 
-    protected static CQLToStacFilterFactory factory = new CQLToStacFilterFactory();
+    protected static CQLToStacFilterFactory factory = CQLToStacFilterFactory
+            .builder()
+            .cqlCrsType(CQLCrsType.EPSG4326)
+            .build();
     protected static ObjectMapper mapper = new ObjectMapper();
 
     @BeforeAll

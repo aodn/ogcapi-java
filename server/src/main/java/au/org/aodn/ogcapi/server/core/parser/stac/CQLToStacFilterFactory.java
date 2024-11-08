@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser.stac;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +35,7 @@ import java.util.Set;
 
 @Setter
 @Getter
+@Builder
 @Slf4j
 public class CQLToStacFilterFactory implements FilterFactory2 {
 

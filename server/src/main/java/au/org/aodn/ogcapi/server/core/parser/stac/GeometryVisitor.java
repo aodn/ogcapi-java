@@ -13,8 +13,11 @@ public class GeometryVisitor extends DefaultFilterVisitor {
     @Override
     public Object visit(Intersects filter, Object data) {
         if(filter instanceof IntersectsImpl<?> impl && data instanceof Geometry geo) {
-            if(impl.getGc().isPresent()) {
-                return impl.getGc().get().intersection(geo);
+            if(impl.getPreparedGeometry().isPresent()) {
+                return impl.getPreparedGeometry()
+                        .get()
+                        .getGeometry()
+                        .intersection(geo);
             }
         }
         return null;

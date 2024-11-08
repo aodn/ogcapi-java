@@ -125,59 +125,6 @@ public class GeometryUtils {
             return coordinates;
         }
     }
-
-    protected static List<List<Geometry>> splitAreaToGrid(List<List<Geometry>> geoList, final int gridSize) {
-        return geoList.stream()
-                .flatMap(Collection::stream)
-                .map(i -> GeometryUtils.breakLargeGeometryToGrid(i, gridSize))
-                .toList();
-    }
-    /**
-     * Some geometry polygon cover the whole australia which is very big, it would be easier to process by UI
-     * if we break it down in to grid of polygon. The grid size is hardcode here to 100.0, you can adjust it
-     * but need to re-compile the code.
-     * @param large - A Polygon to break into grid
-     * @return - A polygon the break into grid.
-     */
-    protected static List<Geometry> breakLargeGeometryToGrid(final Geometry large, int gridSize) {
-        logger.debug("Break down large geometry to grid {}", large);
-        // Get the bounding box (extent) of the large polygon
-        Envelope envelope = large.getEnvelopeInternal();
-
-        // Hard code cell size, we can adjust the break grid size. 10.0 result in 3x3 grid
-        // cover Australia
-        List<Polygon> gridPolygons = createGridPolygons(envelope, gridSize);
-
-        // List to store Future objects representing the results of the tasks
-        List<Future<Geometry>> futureResults = new ArrayList<>();
-
-        // Submit tasks to executor for each gridPolygon
-        for (Polygon gridPolygon : gridPolygons) {
-            Callable<Geometry> task = () -> {
-                Geometry intersection = gridPolygon.intersection(large);
-                return !intersection.isEmpty() ? intersection : null;
-            };
-            Future<Geometry> future = executorService.submit(task);
-            futureResults.add(future);
-        }
-
-        // List to store the intersected polygons
-        final List<Geometry> intersectedPolygons = new ArrayList<>();
-
-        // Collect the results from the futures
-        for (Future<Geometry> future : futureResults) {
-            try {
-                // This blocks until the result is available
-                Geometry result = future.get();
-                if (result != null) {
-                    intersectedPolygons.add(result);
-                }
-            } catch (InterruptedException | ExecutionException e) {
-                // Nothing to report
-            }
-        }
-        return intersectedPolygons;
-    }
     /**
      * Create a grid based on the area of the spatial extents. Once we have the grid, we can union the area
      * @param envelope - An envelope that cover the area of the spatial extents

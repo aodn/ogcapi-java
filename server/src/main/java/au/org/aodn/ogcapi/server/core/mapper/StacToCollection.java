@@ -17,6 +17,6 @@ public abstract class StacToCollection implements Converter<StacCollectionModel,
 
     @Override
     public Collection convert(StacCollectionModel model, Param param) {
-        return getCollection(model, param, hostname);
+        return getCollection(model, null, hostname);
     }
 }
