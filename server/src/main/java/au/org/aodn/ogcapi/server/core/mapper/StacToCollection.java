@@ -6,6 +6,8 @@ import org.mapstruct.Mapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
+
 @Service
 @Mapper(componentModel = "spring")
 public abstract class StacToCollection implements Converter<StacCollectionModel, Collection> {
@@ -14,7 +16,7 @@ public abstract class StacToCollection implements Converter<StacCollectionModel,
     protected String hostname;
 
     @Override
-    public Collection convert(StacCollectionModel model) {
-        return getCollection(model, hostname);
+    public Collection convert(StacCollectionModel model, Param param) {
+        return getCollection(model, param, hostname);
     }
 }

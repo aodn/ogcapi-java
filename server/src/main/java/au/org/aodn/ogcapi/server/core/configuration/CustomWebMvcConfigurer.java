@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.configuration;
+package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.tile.model.TileMatrixSets;
 import org.springframework.format.FormatterRegistry;

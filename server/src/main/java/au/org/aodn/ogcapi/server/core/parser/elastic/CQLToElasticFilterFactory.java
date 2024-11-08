@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
@@ -96,19 +96,24 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
      */
     @Override
     public Intersects intersects(Expression geometry1, Expression geometry2) {
-        logger.debug("INTERSECTS {}, {}", geometry1, geometry2);
+        logger.debug("INTERSECTS expression {}, {}", geometry1, geometry2);
         return new IntersectsImpl<>(geometry1, geometry2, collectionFieldType, cqlCoorSystem);
     }
 
     @Override
     public Intersects intersects(String s, org.opengis.geometry.Geometry geometry) {
-        logger.debug("INTERSECTS {}, {}", s, geometry);
+        logger.debug("INTERSECTS with geometry {}, {}", s, geometry);
         return null;
     }
 
     @Override
     public Intersects intersects(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("INTERSECTS {}, {} {}", s, geometry, matchAction);
+        return null;
+    }
+
+    @Override
+    public Intersects intersects(Expression expression, Expression expression1, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
@@ -696,7 +701,6 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
             return new LiteralExpressionImpl(obj);
         }
         catch (IllegalFilterException var3) {
-            (new IllegalArgumentException()).initCause(var3);
             return null;
         }
     }
@@ -913,11 +917,6 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public Equals equal(Expression expression, Expression expression1, MultiValuedFilter.MatchAction matchAction) {
-        return null;
-    }
-
-    @Override
-    public Intersects intersects(Expression expression, Expression expression1, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 

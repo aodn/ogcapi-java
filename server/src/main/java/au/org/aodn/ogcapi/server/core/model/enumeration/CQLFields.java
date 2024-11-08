@@ -50,8 +50,8 @@ public enum CQLFields implements CQLFieldsInterface {
             null
     ),
     centroid(
-            StacSummeries.Centroid.searchField,
-            StacSummeries.Centroid.displayField,
+            StacSummeries.GeometryNoLand.searchField,
+            StacSummeries.GeometryNoLand.displayField,
             null,
             null
     ),

@@ -16,7 +16,7 @@ public abstract class BinaryResponseToBytes implements Converter<BinaryResponse,
     protected Logger logger = LoggerFactory.getLogger(BinaryResponseToBytes.class);
 
     @Override
-    public byte[] convert(BinaryResponse from) {
+    public byte[] convert(BinaryResponse from, Param noUse) {
         logger.debug("Incoming BinaryResponse type is {}", from.contentType());
 
         try (InputStream s = from.content()) {

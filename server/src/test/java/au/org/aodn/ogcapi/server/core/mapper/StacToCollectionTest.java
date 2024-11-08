@@ -33,7 +33,7 @@ public class StacToCollectionTest {
                 .build();
 
         // Should not throw null pointer
-        stacToCollection.convert(model);
+        stacToCollection.convert(model, null);
 
         model = StacCollectionModel
                 .builder()
@@ -41,7 +41,7 @@ public class StacToCollectionTest {
                 .build();
 
         // Empty bbox no issue
-        stacToCollection.convert(model);
+        stacToCollection.convert(model, null);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class StacToCollectionTest {
                 .build();
 
         // Should not throw null pointer
-        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model);
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
         Assertions.assertEquals("Completed", collection.getProperties().get(CollectionProperty.status));
         Assertions.assertEquals(credits, collection.getProperties().get(CollectionProperty.credits));
         Assertions.assertEquals(Collections.singletonList(contact), collection.getProperties().get(CollectionProperty.contacts));

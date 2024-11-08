@@ -4,20 +4,45 @@ import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
+import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+import org.geotools.filter.text.commons.CompilerUtil;
+import org.geotools.filter.text.commons.Language;
+import org.geotools.filter.text.cql2.CQLException;
+import org.geotools.geojson.geom.GeometryJSON;
+import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.opengis.filter.expression.Expression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
+import java.lang.Exception;
 import java.util.stream.Collectors;
+
+import static au.org.aodn.ogcapi.server.core.util.GeometryUtils.createCentroid;
 
 @FunctionalInterface
 public interface Converter<F, T> {
 
     Logger logger = LoggerFactory.getLogger(Converter.class);
+    CQLToStacFilterFactory factory = new CQLToStacFilterFactory();
 
-    T convert(F from);
+    @Builder
+    @Getter
+    @Setter
+    class Param {
+        CQLCrsType coordinationSystem;
+        String filter;
+    }
+
+    T convert(F from, Param param);
 
     default au.org.aodn.ogcapi.features.model.Link getSelfCollectionLink(String hostname, String id) {
         au.org.aodn.ogcapi.features.model.Link self = new au.org.aodn.ogcapi.features.model.Link();
@@ -52,7 +77,7 @@ public interface Converter<F, T> {
      * @param m - Income object to be transformed
      * @return A mapped JSON which match the St
      */
-    default <D extends StacCollectionModel> Collection getCollection(D m, String host) {
+    default <D extends StacCollectionModel> Collection getCollection(D m, Param param, String host) {
 
         ExtendedCollection collection = new ExtendedCollection();
         collection.setId(m.getUuid());
@@ -113,8 +138,24 @@ public interface Converter<F, T> {
         }
 
         if(m.getSummaries() != null ) {
-            if (m.getSummaries().getCentroid() != null) {
-                collection.getProperties().put(CollectionProperty.centroid, m.getSummaries().getCentroid());
+            if (m.getSummaries().getGeometryNoLand() != null) {
+                GeometryUtils.readGeometry(m.getSummaries().getGeometryNoLand())
+                        .ifPresent(input -> {
+                            try {
+                                // The map structure must be parseable to GeometryCollection
+                                if (param != null && param.getFilter() != null && param.getCoordinationSystem() != null) {
+                                    Expression expression = CompilerUtil.parseExpression(Language.CQL, param.getFilter(), factory);
+                                    expression.evaluate(input);
+                                }
+                                collection.getProperties().put(
+                                        CollectionProperty.centroid,
+                                        createCentroid(input)
+                                );
+                            }
+                            catch(CQLException ex) {
+                                // Ignore
+                            }
+                        });
             }
 
             if (m.getSummaries().getStatus() != null) {

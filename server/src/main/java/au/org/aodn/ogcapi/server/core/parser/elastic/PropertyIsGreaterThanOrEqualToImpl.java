@@ -1,21 +1,21 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.MultiValuedFilter;
-import org.opengis.filter.PropertyIsEqualTo;
+import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.expression.Expression;
 
-public class PropertyEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsEqualTo {
+public class PropertyIsGreaterThanOrEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsGreaterThanOrEqualTo {
 
     protected Expression expression1;
     protected Expression expression2;
     protected Boolean isMatchingCase;
     protected MultiValuedFilter.MatchAction matchAction;
 
-    public PropertyEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
+    public PropertyIsGreaterThanOrEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
         this.expression1 = expression1;
         this.expression2 = expression2;
         this.isMatchingCase = isMatchingCase;
@@ -23,8 +23,7 @@ public class PropertyEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             T v = Enum.valueOf(enumType, attribute.toString().toLowerCase());
-            // It is not an Elastic setting, so normal route.
-            this.query = v.getPropertyEqualToQuery(literal.toString());
+            this.query = v.getPropertyGreaterThanOrEqualsToQuery(literal.toString());
         }
     }
 

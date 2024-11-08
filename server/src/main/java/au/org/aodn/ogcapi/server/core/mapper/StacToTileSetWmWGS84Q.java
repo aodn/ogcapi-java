@@ -28,7 +28,7 @@ public abstract class StacToTileSetWmWGS84Q implements Converter<ElasticSearch.S
     }
 
     @Override
-    public TileSet convert(ElasticSearch.SearchResult from) {
+    public TileSet convert(ElasticSearch.SearchResult from, Param noUse) {
         TileSetWorldMercatorWGS84Quad tileSet = new TileSetWorldMercatorWGS84Quad();
 
         tileSet.setTileMatrixSetURI("http://www.opengis.net/def/tilematrixset/OGC/1.0/WorldMercatorWGS84Quad");

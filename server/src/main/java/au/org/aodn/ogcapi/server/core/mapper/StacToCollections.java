@@ -19,9 +19,9 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
     protected String hostname;
 
     @Override
-    public Collections convert(ElasticSearch.SearchResult model) {
+    public Collections convert(ElasticSearch.SearchResult model, Param param) {
         List<Collection> collections = model.getCollections().stream()
-                .map(m -> getCollection(m, hostname))
+                .map(m -> getCollection(m, param, hostname))
                 .collect(Collectors.toList());
 
         ExtendedCollections result = new ExtendedCollections();
