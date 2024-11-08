@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
+import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.Builder;
@@ -18,6 +19,7 @@ import org.geotools.filter.text.cql2.CQLException;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
+import org.opengis.filter.Filter;
 import org.opengis.filter.expression.Expression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +35,8 @@ public interface Converter<F, T> {
 
     Logger logger = LoggerFactory.getLogger(Converter.class);
     CQLToStacFilterFactory factory = new CQLToStacFilterFactory();
+    GeometryVisitor visitor = GeometryVisitor.builder()
+            .build();
 
     @Builder
     @Getter
@@ -142,14 +146,15 @@ public interface Converter<F, T> {
                 GeometryUtils.readGeometry(m.getSummaries().getGeometryNoLand())
                         .ifPresent(input -> {
                             try {
+                                Geometry g = input;
                                 // The map structure must be parseable to GeometryCollection
                                 if (param != null && param.getFilter() != null && param.getCoordinationSystem() != null) {
-                                    Expression expression = CompilerUtil.parseExpression(Language.CQL, param.getFilter(), factory);
-                                    expression.evaluate(input);
+                                    Filter f = CompilerUtil.parseFilter(Language.CQL, param.getFilter(), factory);
+                                    g = (Geometry)f.accept(visitor, input);
                                 }
                                 collection.getProperties().put(
                                         CollectionProperty.centroid,
-                                        createCentroid(input)
+                                        createCentroid(g)
                                 );
                             }
                             catch(CQLException ex) {
