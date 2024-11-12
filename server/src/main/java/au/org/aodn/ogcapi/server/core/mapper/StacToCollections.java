@@ -30,7 +30,7 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
 
         Filter f = null;
         try {
-            f = CompilerUtil.parseFilter(Language.CQL, param.getFilter(), factory);
+            f = param.getFilter() != null ? CompilerUtil.parseFilter(Language.CQL, param.getFilter(), factory) : null;
         }
         catch(Exception ex) {
             // Do nothing
@@ -43,6 +43,7 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
 
         ExtendedCollections result = new ExtendedCollections();
         result.setTotal(model.getTotal());
+
         if(model.getSortValues() != null) {
             result.setSearchAfter(model.getSortValues().stream().map(String::valueOf).toList());
         }

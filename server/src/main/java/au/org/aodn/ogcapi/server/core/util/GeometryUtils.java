@@ -24,15 +24,17 @@ import java.util.concurrent.*;
 
 public class GeometryUtils {
 
+    protected static final int PRECISION = 15;
+
     protected static GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
     protected static ObjectMapper mapper = new ObjectMapper();
     // This number of decimal is needed to do some accurate
-    protected static GeometryJSON json = new GeometryJSON(15);
+    protected static GeometryJSON json = new GeometryJSON(PRECISION);
 
     @Getter
     @Setter
-    protected static int centroidScale = 3;
+    protected static int centroidScale = 5;
 
     // Create an ExecutorService with a fixed thread pool size
     @Getter
@@ -171,10 +173,10 @@ public class GeometryUtils {
     }
     /**
      * Convert the WKT format from the cql to GeoJson use by Elastic search
-     * @param literalExpression
-     * @return
-     * @throws ParseException
-     * @throws IOException
+     * @param literalExpression - Expression from parser
+     * @return A Json string represent the literalExpression
+     * @throws ParseException - Not expected to parse
+     * @throws IOException - Not expected to parse
      */
     public static String convertToGeoJson(LiteralExpressionImpl literalExpression, CQLCrsType cqlCoorSystem) throws ParseException, IOException, FactoryException, TransformException {
         GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
