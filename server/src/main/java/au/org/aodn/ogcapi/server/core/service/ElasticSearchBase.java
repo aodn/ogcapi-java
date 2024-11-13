@@ -24,7 +24,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * This class contains the core function to do the search, it includes some common item like ordering etc,
@@ -98,8 +97,8 @@ abstract class ElasticSearchBase {
     /**
      * Core function to do the search, it used pageableSearch to make sure all records are return.
      *
-     * @param queries
-     * @param should
+     * @param queries - The query come from text query
+     * @param should - This query will use in the should block of elastic search
      * @param filters - The Query coming from CQL parser
      * @param properties - The fields you want to return in the search, you can search a field but not include in the return
      * @return - The search result from Elastic query and format in StacCollectionModel
@@ -225,10 +224,10 @@ abstract class ElasticSearchBase {
      * Count the total number hit. There are two ways to get the total, one is use search but set the size to 0,
      * then it will fill the size with total.
      *
-     * @param requestBuilder
-     * @return
+     * @param requestBuilder - A query builder, this make the function general count given a query
+     * @return - The number of record that matches the requestBuilder
      */
-    protected <T> Long countRecordsHit(Supplier<SearchRequest.Builder> requestBuilder) {
+    protected Long countRecordsHit(Supplier<SearchRequest.Builder> requestBuilder) {
         try {
             SearchRequest sr = requestBuilder.get().size(0).build();
             SearchResponse<ObjectNode> response = esClient.search(sr, ObjectNode.class);
@@ -243,9 +242,9 @@ abstract class ElasticSearchBase {
      * need to keep loading until you reach the end of records
      *
      * @param requestBuilder, assume it is sorted with order, what order isn't important, as long as it is sorted
-     * @param clazz
-     * @return
-     * @param <T>
+     * @param clazz - The type
+     * @return - The items that matches the query mentioned in the requestBuilder
+     * @param <T> A generic type for Elastic query
      */
     protected <T> Iterable<Hit<T>> pagableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
         try {
@@ -299,9 +298,7 @@ abstract class ElasticSearchBase {
                     count.incrementAndGet();
 
                     if(index < response.get().hits().hits().size()) {
-                        Hit<T> hit = response.get().hits().hits().get(index++);
-                        log.info("id {}, score {}", hit.id(), hit.score());
-                        return hit;
+                        return response.get().hits().hits().get(index++);
                     }
                     else {
                         return null;
