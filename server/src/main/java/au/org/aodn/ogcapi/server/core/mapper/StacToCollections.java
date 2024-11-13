@@ -37,7 +37,7 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
         }
         final Filter filter = f;
 
-        List<Collection> collections = model.getCollections().stream()
+        List<Collection> collections = model.getCollections().parallelStream()
                 .map(m -> getCollection(m, filter, hostname))
                 .collect(Collectors.toList());
 
