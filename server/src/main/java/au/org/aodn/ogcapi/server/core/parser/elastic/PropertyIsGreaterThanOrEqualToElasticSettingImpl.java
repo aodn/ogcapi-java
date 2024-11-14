@@ -1,17 +1,17 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.PropertyIsEqualTo;
+import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
 import org.opengis.filter.expression.Expression;
 
 /**
  * Some property is elastic setting not search field of STAC
  */
-public class PropertyIsEqualToElasticSettingImpl implements PropertyIsEqualTo, ElasticSetting {
+public class PropertyIsGreaterThanOrEqualToElasticSettingImpl implements PropertyIsGreaterThanOrEqualTo, ElasticSetting {
     protected Expression expression1;
     protected Expression expression2;
 
@@ -24,7 +24,7 @@ public class PropertyIsEqualToElasticSettingImpl implements PropertyIsEqualTo, E
     @Getter
     protected String elasticSettingValue;
 
-    public PropertyIsEqualToElasticSettingImpl(Expression expression1, Expression expression2) {
+    public PropertyIsGreaterThanOrEqualToElasticSettingImpl(Expression expression1, Expression expression2) {
         this.expression1 = expression1;
         this.expression2 = expression2;
 

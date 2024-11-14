@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.configuration;
+package au.org.aodn.ogcapi.server.core.configuration;
 
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.boot.autoconfigure.web.servlet.WebMvcRegistrations;

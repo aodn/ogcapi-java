@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -36,26 +36,4 @@ public abstract class QueryHandler {
     public void addErrors(CQLException... e) { this.errors.addAll(List.of(e)); }
 
     public void addErrors(List<CQLException> e) { this.errors.addAll(e); }
-    /**
-     * Convert the WKT format from the cql to GeoJson use by Elastic search
-     * @param literalExpression
-     * @return
-     * @throws ParseException
-     * @throws IOException
-     */
-    protected String convertToGeoJson(LiteralExpressionImpl literalExpression, CQLCrsType cqlCoorSystem) throws ParseException, IOException, FactoryException, TransformException {
-        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
-        WKTReader reader = new WKTReader(geometryFactory);
-        Geometry geo = reader.read(literalExpression.toString());
-
-        try(StringWriter writer = new StringWriter()) {
-            GeometryJSON geometryJson = new GeometryJSON();
-            Geometry t = CQLCrsType.transformGeometry(geo, cqlCoorSystem, CQLCrsType.EPSG4326);
-            geometryJson.write(t, writer);
-
-            String r = writer.toString();
-            logger.debug("Converted to GeoJson {}", r);
-            return r;
-        }
-    }
 }

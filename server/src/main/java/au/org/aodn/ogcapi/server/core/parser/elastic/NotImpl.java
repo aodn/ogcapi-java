@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import org.opengis.filter.Filter;

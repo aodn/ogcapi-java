@@ -21,7 +21,7 @@ public abstract class StacToInlineResponse2002 implements Converter<ElasticSearc
     protected String hostname;
 
     @Override
-    public InlineResponse2002 convert(ElasticSearch.SearchResult model) {
+    public InlineResponse2002 convert(ElasticSearch.SearchResult model, Param noUse) {
         List<TileSetItem> items = model.getCollections().stream()
                 .map(m -> {
                     TileSetItem item = new TileSetItem();

@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.mapper.Converter;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
@@ -11,6 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -35,14 +37,19 @@ public abstract class OGCApiService {
                                                    String sortBy,
                                                    OGCMediaTypeMapper f,
                                                    CQLCrsType coor,
-                                                   Function<ElasticSearchBase.SearchResult, R> converter) {
+                                                   BiFunction<ElasticSearchBase.SearchResult, Converter.Param, R> converter) {
         try {
             switch (f) {
                 case json -> {
                     ElasticSearchBase.SearchResult result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
 
+                    Converter.Param param = Converter.Param.builder()
+                            .coordinationSystem(coor)
+                            .filter(filter)
+                            .build();
+
                     return ResponseEntity.ok()
-                            .body(converter.apply(result));
+                            .body(converter.apply(result, param));
                 }
                 default -> {
                     /**

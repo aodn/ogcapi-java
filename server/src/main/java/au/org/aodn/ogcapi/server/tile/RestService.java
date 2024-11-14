@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.tile;
 
+import au.org.aodn.ogcapi.server.core.mapper.Converter;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 @Service("TileRestService")
@@ -21,14 +23,22 @@ public class RestService extends OGCApiService {
         return List.of("http://www.opengis.net/spec/ogcapi-tiles-1/1.0");
     }
 
-    public <T, R> ResponseEntity<?> getVectorTileOfCollection(TileMatrixSets coordinateSystem, List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol, Function<T, R> converter) {
+    @SuppressWarnings("unchecked")
+    public <T, R> ResponseEntity<?> getVectorTileOfCollection(
+            TileMatrixSets coordinateSystem,
+            List<String> ids,
+            Integer tileMatrix,
+            Integer tileRow,
+            Integer tileCol,
+            BiFunction<T, Converter.Param, R> converter) {
+
         // TODO: Implements additional filters
         try {
             switch (coordinateSystem) {
                 case WEBMERCATORQUAD -> {
                     return ResponseEntity.ok()
                             .contentType(OGCMediaTypeMapper.mapbox.getMediaType())
-                            .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol)));
+                            .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol), null));
                 }
                 default -> {
                     // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
@@ -41,7 +51,8 @@ public class RestService extends OGCApiService {
         }
     }
 
-    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f, Function<ElasticSearch.SearchResult, R> converter) {
+    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f,
+                                                             BiFunction<ElasticSearch.SearchResult, Converter.Param, R> converter) {
         try {
             switch (f) {
                 case json -> {
@@ -50,7 +61,7 @@ public class RestService extends OGCApiService {
                             search.searchCollectionWithGeometry(id, sortBy);
 
                     return ResponseEntity.ok()
-                            .body(converter.apply(result));
+                            .body(converter.apply(result, null));
                 }
                 default -> {
                     /**
