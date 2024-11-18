@@ -5,8 +5,12 @@ import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.model.*;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
+import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.geotools.filter.text.commons.CompilerUtil;
+import org.geotools.filter.text.commons.Language;
+import org.geotools.filter.text.cql2.CQLException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,20 +121,22 @@ public class StacToCollectionTest {
     }
 
     @Test
-    public void verifyConvertWorks1() throws IOException {
+    public void verifyConvertWorks1() throws IOException, CQLException {
         String json = readResourceFile("classpath:databag/0c681199-06cd-435c-9468-be6998799b1f.json");
         StacCollectionModel model = objectMapper.readValue(json, StacCollectionModel.class);
         StacToCollectionsImpl impl = new StacToCollectionsImpl();
 
-        Converter.Param param = Converter.Param.builder()
-                .coordinationSystem(CQLCrsType.EPSG4326)
-                .filter("score>=1.5 AND INTERSECTS(geometry,POLYGON ((104 -43, 163 -43, 163 -8, 104 -8, 104 -43)))")
+        CQLToStacFilterFactory factory = CQLToStacFilterFactory.builder()
+                .cqlCrsType(CQLCrsType.EPSG4326)
                 .build();
 
         ElasticSearch.SearchResult result = new ElasticSearch.SearchResult();
         result.setCollections(List.of(model));
 
         // Should not throw any exception
-        impl.convert(result, param);
+        impl.convert(
+                result,
+                CompilerUtil.parseFilter(Language.CQL, "score>=1.5 AND INTERSECTS(geometry,POLYGON ((104 -43, 163 -43, 163 -8, 104 -8, 104 -43)))",factory)
+        );
     }
 }
