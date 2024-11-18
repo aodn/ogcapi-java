@@ -63,7 +63,7 @@ public class ElasticSearchTestConfig {
      * @return
      */
     @Bean
-    public RestClientTransport testRestClientTransport() {
+    public RestClient testRestClient() {
         final CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
         credentialsProvider.setCredentials(
@@ -74,7 +74,7 @@ public class ElasticSearchTestConfig {
                 )
         );
 
-        RestClient client = RestClient
+        return RestClient
                 .builder(HttpHost.create("https://" + container.getHttpHostAddress()))
                 .setHttpClientConfigCallback(httpClientBuilder -> {
                     httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider);
@@ -82,8 +82,5 @@ public class ElasticSearchTestConfig {
                     return httpClientBuilder;
                 })
                 .build();
-
-        // Create the transport with a Jackson mapper
-        return new RestClientTransport(client, new JacksonJsonpMapper());
     }
 }

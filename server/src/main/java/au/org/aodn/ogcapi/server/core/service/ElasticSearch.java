@@ -60,7 +60,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     private final int DATASET_ENTRY_MAX = 2000;
 
-    public ElasticSearch(ElasticsearchClient client,
+    public ElasticSearch(Client client,
                          ObjectMapper mapper,
                          String indexName,
                          Integer pageSize,

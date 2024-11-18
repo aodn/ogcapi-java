@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
-import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
-import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.ogcapi.server.core.service.*;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
@@ -29,17 +28,20 @@ public class ElasticSearchConfig {
     private String apiKey;
 
     @Bean
-    @ConditionalOnMissingBean(RestClientTransport.class)
-    public RestClientTransport restClientTransport() {
+    @ConditionalOnMissingBean(RestClient.class)
+    public RestClient createRestClient() {
         // Create the low-level client
-        RestClient restClient = RestClient
+        return RestClient
                 .builder(HttpHost.create(serverUrl))
                 .setCompressionEnabled(true)
                 .setDefaultHeaders(new Header[]{
                         new BasicHeader("Authorization", "ApiKey " + apiKey)
                 })
                 .build();
+    }
 
+    @Bean
+    public RestClientTransport restClientTransport(RestClient restClient) {
         // Create the transport with a Jackson mapper
         return new RestClientTransport(restClient, new JacksonJsonpMapper());
     }
@@ -49,8 +51,18 @@ public class ElasticSearchConfig {
         return new ElasticsearchClient(transport);
     }
 
+//    @Bean
+//    public Client createElasticBinaryClient(RestClient restClient, ElasticsearchClient elasticsearchClient, ObjectMapper objectMapper) {
+//        return new ElasticBinaryClient(restClient, elasticsearchClient, objectMapper);
+//    }
+
     @Bean
-    public Search createElasticSearch(ElasticsearchClient client,
+    public Client createElasticJsonClient(ElasticsearchClient elasticsearchClient) {
+        return new ElasticJsonClient(elasticsearchClient);
+    }
+
+    @Bean
+    public Search createElasticSearch(Client client,
                                       ObjectMapper mapper,
                                       @Value("${elasticsearch.index.name}") String indexName,
                                       @Value("${elasticsearch.index.pageSize:2000}") Integer pageSize,

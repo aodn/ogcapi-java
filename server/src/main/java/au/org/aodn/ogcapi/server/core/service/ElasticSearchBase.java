@@ -37,7 +37,7 @@ abstract class ElasticSearchBase {
     protected Integer searchAsYouTypeSize;
     protected String indexName;
     protected Integer pageSize;
-    protected ElasticsearchClient esClient;
+    protected Client esClient;
     protected ObjectMapper mapper;
 
     @Getter
