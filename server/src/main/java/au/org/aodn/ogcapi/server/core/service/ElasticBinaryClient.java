@@ -18,19 +18,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.dataformat.cbor.CBORFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.InputStreamEntity;
 import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.Request;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.core.ResolvableType;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.time.ZonedDateTime;
 import java.util.Map;
 
+/**
+ * This is a test implement on using cbor type on w
+ */
+@Slf4j
 public class ElasticBinaryClient implements Client {
 
     // Create CBOR mapper
@@ -49,7 +53,7 @@ public class ElasticBinaryClient implements Client {
 
     @Override
     public <T> SearchResponse<T> search(SearchRequest request, Class<T> classOfT) throws IOException {
-
+        log.info("Start load {}", ZonedDateTime.now());
         String[] rString = request.toString().split(" ", 4);
 
         Map<?, ?> queryMap = jsonMapper.readValue(rString[3], Map.class);
@@ -73,6 +77,8 @@ public class ElasticBinaryClient implements Client {
         // Create a JsonpMapper (Jackson-based for this example)
         JsonpMapper jsonpMapper = new JacksonJsonpMapper()
                 .withAttribute("co.elastic.clients:Deserializer:_global.search.TDocument", deserializer);
+
+        log.info("End load {}", ZonedDateTime.now());
 
         // Deserialize the binary data into a SearchResponse<MyDocument>
         return (SearchResponse<T>)(SearchResponse._DESERIALIZER.deserialize(
