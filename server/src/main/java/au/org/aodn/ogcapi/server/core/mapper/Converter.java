@@ -6,26 +6,19 @@ import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
-import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
-import org.geotools.filter.text.commons.CompilerUtil;
-import org.geotools.filter.text.commons.Language;
-import org.geotools.filter.text.cql2.CQLException;
-import org.geotools.geojson.geom.GeometryJSON;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryCollection;
 import org.opengis.filter.Filter;
-import org.opengis.filter.expression.Expression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
-import java.lang.Exception;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static au.org.aodn.ogcapi.server.core.util.GeometryUtils.createCentroid;
@@ -45,7 +38,7 @@ public interface Converter<F, T> {
         String filter;
     }
 
-    T convert(F from, Param param);
+    T convert(F from, Filter param);
 
     default au.org.aodn.ogcapi.features.model.Link getSelfCollectionLink(String hostname, String id) {
         au.org.aodn.ogcapi.features.model.Link self = new au.org.aodn.ogcapi.features.model.Link();
@@ -141,8 +134,9 @@ public interface Converter<F, T> {
         }
 
         if(m.getSummaries() != null ) {
-            if (m.getSummaries().getGeometryNoLand() != null) {
-                GeometryUtils.readGeometry(m.getSummaries().getGeometryNoLand())
+            Map<?, ?> noLand = m.getSummaries().getGeometryNoLand();
+            if (noLand != null) {
+                GeometryUtils.readGeometry(noLand)
                         .ifPresent(input -> {
                             Geometry g = filter != null ? (Geometry)filter.accept(visitor, input) : input;
                             collection.getProperties().put(

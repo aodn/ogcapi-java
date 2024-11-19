@@ -3,10 +3,9 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import org.mapstruct.Mapper;
+import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
 
 @Service
 @Mapper(componentModel = "spring")
@@ -16,7 +15,7 @@ public abstract class StacToCollection implements Converter<StacCollectionModel,
     protected String hostname;
 
     @Override
-    public Collection convert(StacCollectionModel model, Param param) {
+    public Collection convert(StacCollectionModel model, Filter param) {
         return getCollection(model, null, hostname);
     }
 }

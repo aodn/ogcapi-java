@@ -6,10 +6,9 @@ import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.tile.model.TileSet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mapstruct.Mapper;
+import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @Service
 @Mapper(componentModel = "spring")
@@ -18,7 +17,7 @@ public abstract class StacToTileSetWmWGS84Q implements Converter<ElasticSearch.S
     @Value("${api.host}")
     protected String hostname;
 
-    protected class TileSetWorldMercatorWGS84Quad extends TileSet {
+    protected static class TileSetWorldMercatorWGS84Quad extends TileSet {
 
         @JsonProperty("dataType")
         public String getDataType2() { return "vector"; }
@@ -28,7 +27,7 @@ public abstract class StacToTileSetWmWGS84Q implements Converter<ElasticSearch.S
     }
 
     @Override
-    public TileSet convert(ElasticSearch.SearchResult from, Param noUse) {
+    public TileSet convert(ElasticSearch.SearchResult from, Filter noUse) {
         TileSetWorldMercatorWGS84Quad tileSet = new TileSetWorldMercatorWGS84Quad();
 
         tileSet.setTileMatrixSetURI("http://www.opengis.net/def/tilematrixset/OGC/1.0/WorldMercatorWGS84Quad");

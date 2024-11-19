@@ -20,6 +20,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
@@ -102,7 +103,6 @@ abstract class ElasticSearchBase {
      * @param filters - The Query coming from CQL parser
      * @param properties - The fields you want to return in the search, you can search a field but not include in the return
      * @return - The search result from Elastic query and format in StacCollectionModel
-     * @throws IOException
      */
     protected SearchResult searchCollectionBy(final List<Query> queries,
                                                            final List<Query> should,
@@ -183,6 +183,8 @@ abstract class ElasticSearchBase {
         };
 
         try {
+            double random = Math.random();
+            log.info("Start search {} {}", ZonedDateTime.now(), random);
             Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
 
             SearchResult result = new SearchResult();
@@ -196,6 +198,7 @@ abstract class ElasticSearchBase {
                     lastSortValue = i.sort();
                 }
             }
+            log.info("End search {} {}", ZonedDateTime.now(), random);
             // Return the last sort value if exist
             if(lastSortValue != null && !lastSortValue.isEmpty()) {
                 List<Object> values = new ArrayList<>();
