@@ -1,15 +1,16 @@
 package au.org.aodn.ogcapi.server.core.model;
 
-import au.org.aodn.ogcapi.features.model.*;
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
+import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
-import lombok.Getter;
+import au.org.aodn.ogcapi.server.core.util.DatasetSummarizer;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-@Getter
 public class DatasetSearchResult {
 
     private final FeatureCollectionGeoJSON dataset;
@@ -22,6 +23,12 @@ public class DatasetSearchResult {
     private void initDataset() {
         dataset.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
         dataset.setFeatures(new ArrayList<>());
+    }
+
+    public FeatureCollectionGeoJSON getSummarizedDataset() {
+        var summarizer = new DatasetSummarizer(dataset);
+        summarizer.summarizeDataset();
+        return summarizer.getSummarizedDataset();
     }
 
     public void addDatum(DatumModel datum) {

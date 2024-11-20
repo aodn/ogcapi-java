@@ -41,7 +41,7 @@ public class RestServices extends OGCApiService {
         }
     }
 
-    public ResponseEntity<FeatureCollectionGeoJSON> getDataset(
+    public ResponseEntity<FeatureCollectionGeoJSON> getSummarizedDataset(
             String collectionId,
             String startDate,
             String endDate
@@ -49,7 +49,7 @@ public class RestServices extends OGCApiService {
         try {
             var result = search.searchDataset(collectionId, startDate, endDate);
             return ResponseEntity.ok()
-                    .body(result.getDataset());
+                    .body(result.getSummarizedDataset());
         } catch (Exception e) {
             log.error("Error while getting dataset", e);
             return ResponseEntity.internalServerError().build();

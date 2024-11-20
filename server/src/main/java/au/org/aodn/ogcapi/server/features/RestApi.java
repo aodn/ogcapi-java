@@ -40,9 +40,12 @@ public class RestApi implements CollectionsApi {
 
             @PathVariable("collectionId") String collectionId,
             @RequestParam(value = "start_datetime", required = false) String startDate,
-            @RequestParam(value = "end_datetime", required = false) String endDate
+            @RequestParam(value = "end_datetime", required = false) String endDate,
+            // keep these two parameters for future usage
+            @RequestParam(value= "zoom", required = false) Double zoomLevel,
+            @RequestParam(value="bbox", required = false) List<BigDecimal> bbox
     ) {
-        return  featuresService.getDataset(collectionId, startDate, endDate);
+        return  featuresService.getSummarizedDataset(collectionId, startDate, endDate);
     }
 
 
