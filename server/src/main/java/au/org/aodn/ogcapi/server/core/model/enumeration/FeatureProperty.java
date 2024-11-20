@@ -7,7 +7,10 @@ public enum FeatureProperty {
     TIME("time"),
     DEPTH("depth"),
     COUNT("count"),
-    UUID("uuid")
+    UUID("uuid"),
+    START_TIME("startTime"),
+    END_TIME("endTime"),
+    COORDINATE_ACCURACY("coordinateAccuracy"),
     ;
 
     private final String value;

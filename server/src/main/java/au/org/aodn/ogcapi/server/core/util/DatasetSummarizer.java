@@ -6,7 +6,7 @@ import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
 import lombok.Getter;
 
-import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -50,12 +50,12 @@ public class DatasetSummarizer {
             var existingProperties = (Map<String, Object>) existingFeature.getProperties();
 
             var newTimeStr = getTime(featureToAdd);
-            existingProperties = updateTimeRange(existingProperties, newTimeStr);
+            var timeUpdatedProperties = updateTimeRange(existingProperties, newTimeStr);
 
-            var newCount = (Long) getPropertyFromFeature(featureToAdd, FeatureProperty.COUNT);
-            existingProperties = updateCount(existingProperties, newCount);
+            var newCount = getCount(featureToAdd);
+            var timeAndCountUpdatedProperties = updateCount(timeUpdatedProperties, newCount);
 
-            aggregatedFeature.setProperties(existingProperties);
+            aggregatedFeature.setProperties(timeAndCountUpdatedProperties);
         } catch (ClassCastException e) {
             throw new RuntimeException("Feature properties is not a map", e);
         }
@@ -77,9 +77,9 @@ public class DatasetSummarizer {
         var updatedProperties = new HashMap<>(existingProperties);
         updatedProperties.remove(FeatureProperty.TIME.getValue());
         if (newTimeStr != null) {
-            var newTime = LocalDate.parse(newTimeStr);
-            var startTime = LocalDate.parse(startTimeStr);
-            var endTime = LocalDate.parse(endTimeStr);
+            var newTime = YearMonth.parse(newTimeStr);
+            var startTime = YearMonth.parse(startTimeStr);
+            var endTime = YearMonth.parse(endTimeStr);
             if (newTime.isBefore(startTime)) {
                 startTimeStr = newTimeStr;
             } else if (newTime.isAfter(endTime)) {
@@ -126,6 +126,22 @@ public class DatasetSummarizer {
         }
     }
 
+    private Long getCount(FeatureGeoJSON feature) {
+        try {
+            return (Long) getPropertyFromFeature(feature, FeatureProperty.COUNT);
+        } catch (Exception e) {
+            throw new RuntimeException("failed to get count from feature", e);
+        }
+    }
+
+    private String getTime(FeatureGeoJSON feature) {
+        try {
+            return (String) getPropertyFromFeature(feature, FeatureProperty.TIME);
+        } catch (Exception e) {
+            throw new RuntimeException("failed to get time from feature", e);
+        }
+    }
+
 
     private FeatureGeoJSON getSameLocationFeature(FeatureGeoJSON feature) {
         for (var f : summarizedDataset.getFeatures()) {
@@ -142,14 +158,7 @@ public class DatasetSummarizer {
         return null;
     }
 
-    @SuppressWarnings("unchecked")
-    private String getTime(FeatureGeoJSON feature) {
-        if (feature.getProperties() instanceof Map) {
-            var properties = (Map<String, Object>) feature.getProperties();
-            return (String) properties.get(FeatureProperty.TIME.getValue());
-        }
-        return null;
-    }
+
 }
 
 // following are values from experience. can change
