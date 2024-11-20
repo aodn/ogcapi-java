@@ -1,0 +1,668 @@
+{
+  "title": "Southern Surveyor Voyage SS 09/2003 ADCP Data",
+  "description": "This dataset contains the Acoustic Doppler Current Profiler (ADCP) data collected on Southern Surveyor voyage SS 09/2003. The voyage took place between Cape Leeuwin and the Abrolhos islands off the West Australian coast during October and November 2003. This dataset has been processed and archived within the CSIRO Marine and Atmospheric Research Data Centre in Hobart. Additional information regarding this dataset is contained in the cruise report for this voyage and/or the data processing report (as available).",
+  "extent": {
+    "bbox": [
+      [
+        112,
+        -36,
+        116,
+        -27
+      ],
+      [
+        112,
+        -36,
+        116,
+        -27
+      ]
+    ],
+    "temporal": [
+      [
+        "2003-10-23T13:00:00Z",
+        "2003-11-08T12:59:59Z"
+      ],
+      [
+        "2003-10-23T13:00:00Z",
+        "2003-11-08T12:59:59Z"
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 86,
+    "status": "completed",
+    "credits": [
+      "ADCP data processed by Bernadette Heaney"
+    ],
+    "statement": "Data source: original field data  the 3 min ensemble files returned from the ship were processed in the usual way.<BR> Data processing and quality control: according to current CMR Data Centre ADCP data processing manual.   For full details, refer to documentation.",
+    "revision": "2004-04-16T15:44:25",
+    "dataset_group": "csiro oceans and atmosphere",
+    "update_frequency": "completed",
+    "proj:geometry": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                116,
+                -36
+              ],
+              [
+                116,
+                -27
+              ],
+              [
+                112,
+                -27
+              ],
+              [
+                112,
+                -36
+              ],
+              [
+                116,
+                -36
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "proj:geometry_noland": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                116,
+                -34.84004284124928
+              ],
+              [
+                115.97852623800009,
+                -34.83562590899993
+              ],
+              [
+                115.91578209700003,
+                -34.70191822699991
+              ],
+              [
+                115.61231530000009,
+                -34.44589609199994
+              ],
+              [
+                115.29078209700003,
+                -34.301853122999944
+              ],
+              [
+                115.11882571700005,
+                -34.36337655999995
+              ],
+              [
+                115.01042728000004,
+                -34.24504973799992
+              ],
+              [
+                114.98853600400003,
+                -33.52109140399995
+              ],
+              [
+                115.19467207100001,
+                -33.64462655999995
+              ],
+              [
+                115.36719811300009,
+                -33.63128020599993
+              ],
+              [
+                115.71013431100005,
+                -33.27068450299993
+              ],
+              [
+                115.69792728000004,
+                -33.1931291649999
+              ],
+              [
+                115.66684004000001,
+                -33.28769296699994
+              ],
+              [
+                115.60092207100001,
+                -32.66171640399995
+              ],
+              [
+                115.70093834700003,
+                -32.51295338299991
+              ],
+              [
+                115.63965905000009,
+                -32.656914971999925
+              ],
+              [
+                115.71412194100003,
+                -32.78045012799993
+              ],
+              [
+                115.65886478000004,
+                -32.62851327899995
+              ],
+              [
+                115.76929772200003,
+                -32.60230885199991
+              ],
+              [
+                115.71452884200005,
+                -32.537041924999926
+              ],
+              [
+                115.73585045700008,
+                -32.33318450299993
+              ],
+              [
+                115.67367597700002,
+                -32.273370049999926
+              ],
+              [
+                115.75684655000009,
+                -32.18564218499995
+              ],
+              [
+                115.72152754000001,
+                -31.772637627999927
+              ],
+              [
+                115.06080162900003,
+                -30.52239348799992
+              ],
+              [
+                114.94263756600003,
+                -30.031019789999903
+              ],
+              [
+                114.97877037900003,
+                -29.479913018999923
+              ],
+              [
+                114.84245853000004,
+                -29.108575127999927
+              ],
+              [
+                114.60377037900003,
+                -28.838555596999925
+              ],
+              [
+                114.53109785200002,
+                -28.52239348799992
+              ],
+              [
+                114.16602623800009,
+                -28.10670338299991
+              ],
+              [
+                114.09791100400003,
+                -27.862725518999923
+              ],
+              [
+                114.14389082100001,
+                -27.687758070999905
+              ],
+              [
+                114.01254316500001,
+                -27.31536223799992
+              ],
+              [
+                113.78063324619302,
+                -27
+              ],
+              [
+                112,
+                -27
+              ],
+              [
+                112,
+                -36
+              ],
+              [
+                116,
+                -36
+              ],
+              [
+                116,
+                -34.84004284124928
+              ]
+            ],
+            [
+              [
+                115.49210733500001,
+                -31.99564901299993
+              ],
+              [
+                115.55219218900004,
+                -32.00620348499996
+              ],
+              [
+                115.44014224400006,
+                -32.021833949999916
+              ],
+              [
+                115.49210733500001,
+                -31.99564901299993
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "temporal": [
+      {
+        "start": "2003-10-23T13:00:00Z",
+        "end": "2003-11-08T12:59:59Z"
+      }
+    ],
+    "parameter_vocabs": [
+      "current"
+    ],
+    "platform_vocabs": [
+      "research vessel"
+    ]
+  },
+  "contacts": [
+    {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "CSIRO Oceans & Atmosphere - Hobart",
+      "name": "CSIRO O&A, Information & Data Centre",
+      "position": "Data Requests",
+      "emails": [],
+      "addresses": [],
+      "phones": [],
+      "links": []
+    },
+    {
+      "roles": [
+        "pointOfContact",
+        "metadata"
+      ],
+      "organization": "CSIRO Oceans & Atmosphere - Hobart",
+      "name": "CSIRO O&A, Information & Data Centre",
+      "position": "Data Requests",
+      "emails": [],
+      "addresses": [],
+      "phones": [],
+      "links": []
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27SS200309%27",
+      "rel": "wms",
+      "type": "",
+      "title": "mnf:adcp_public_data"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/download.cfm?file_id=1",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Graphics Link"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/dataset.cfm?survey=SS200309&data_type=adcp",
+      "rel": "related",
+      "type": "",
+      "title": "Data Link"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/download.cfm?file_id=2",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Data Link"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/survey_list.cfm?source_id=8",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Data Link"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/download.cfm?file_id=3",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "href": "https://mnf.csiro.au/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/download.cfm?file_id=4",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "href": "https://creativecommons.org/licenses/by/4.0/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "href": "http://www.marine.csiro.au/~dunn/cars2009/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "href": "https://geonetwork-edge.edge.aodn.org.au:443/geonetwork/images/logos/58d5af30-fbc6-42dc-8971-5468df74e9ee.png",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://www.cmar.csiro.au/data/trawler/dataset_mapfile.cfm?survey=SS200309&data_type=adcp&img_type=tn",
+      "rel": "preview",
+      "type": "image"
+    }
+  ],
+  "license": "Data is made available under a Creative Commons Attribution 4.0 International Licence, please see link. Data is supplied 'as is' without any warranty or guarantee except as required by law to be given to you. The data may not be free of error, comprehensive, current or appropriate for your particular purpose. You accept all risk and responsibility for its use. ATTRIBUTION STATEMENT: The dataset [Insert-dataset-name-here] downloaded on [Insert-DD-Mmm-YYYY-here] was collected on voyage [Insert-voyage-name-here] by the Marine National Facility.",
+  "providers": [
+    {
+      "name": "CSIRO Oceans & Atmosphere - Hobart",
+      "roles": [
+        "pointOfContact"
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Earth Science | Oceans | Ocean Circulation | Ocean Currents",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/510c5f78-e19e-4ce4-b59a-8937aeb84631"
+        }
+      ],
+      "scheme": "theme",
+      "description": "Olsen, L.M., G. Major, K. Shein, J. Scialdone, S. Ritz, T. Stevens, M. Morahan, A. Aleman, R. Vogel, S. Leicester, H. Weir, M. Meaux, S. Grebas, C.Solomon, M. Holland, T. Northcutt, R. A. Restrepo, R. Bilodeau, 2013. NASA/Global Change Master Directory (GCMD) Earth Science Keywords. Version 8.0.0.0.0",
+      "title": "GCMD Keywords"
+    },
+    {
+      "concepts": [
+        {
+          "id": "ADCP (Acoustic Doppler Current Profiler)",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:2"
+        }
+      ],
+      "scheme": "equipment",
+      "description": "",
+      "title": "CSIRO Equipment"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Coastal Waters (Australia) | West Australia Coast West, WA",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:1018"
+        },
+        {
+          "id": "Global / Oceans | Indian Ocean",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:4"
+        }
+      ],
+      "scheme": "place",
+      "description": "AODN GEN",
+      "title": "AODN Geographic Extent Names"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine National Facility",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:cmarAOI&id=urn:marlin.csiro.au:keywords:cmarAOI:concept:3208"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "Marlin Areas of Interest Thesaurus",
+      "title": "CSIRO Areas Of Interest"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Research Voyage: SS 09/2003",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.survey.urn:marlin.csiro.au:surveyregister&id=urn:marlin.csiro.au:surveyregister:concept:1244"
+        }
+      ],
+      "scheme": "survey",
+      "description": "MarLIN Survey Register",
+      "title": "CSIRO Survey List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "National Facility External Users: C. Pattiaratchi (University of WA) 2000-",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.project.urn:marlin.csiro.au:projectregister&id=urn:marlin.csiro.au:projectregister:concept:1510"
+        }
+      ],
+      "scheme": "project",
+      "description": "MarLIN Project Register",
+      "title": "CSIRO Project List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Vessel Data: ADCP",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3510"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "MarLIN Standard Datatypes Thesaurus",
+      "title": "CSIRO Standard Data Types"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Ship: Southern Surveyor",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.dataSource.urn:marlin.csiro.au:sourceregister&id=urn:marlin.csiro.au:sourceregister:concept:8"
+        }
+      ],
+      "scheme": "dataSource",
+      "description": "MarLIN Source Register",
+      "title": "CSIRO Source List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Current direction in the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/LCDAZZ01"
+        },
+        {
+          "id": "Current speed in the water body",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/383"
+        },
+        {
+          "id": "Eastward current velocity in the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/LCEWZZ01"
+        },
+        {
+          "id": "Northward current velocity in the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/LCNSZZ01"
+        },
+        {
+          "id": "Upward current velocity in the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/LRZAZZZZ"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": "Keywords (DataParameter)"
+    },
+    {
+      "concepts": [
+        {
+          "id": "current profilers",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/115"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": "Keywords (Instrument)"
+    },
+    {
+      "concepts": [
+        {
+          "id": "research vessel",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/31"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": "Keywords (Platform)"
+    }
+  ],
+  "id": "00462296-be7a-452f-afaf-36c809cd51f8",
+  "search_suggestions": {
+    "abstract_phrases": [
+      "been",
+      "data processing report",
+      "during october",
+      "adcp data",
+      "collected",
+      "during",
+      "australian coast during",
+      "atmospheric research data",
+      "leeuwin",
+      "acoustic doppler current",
+      "has been",
+      "voyage took",
+      "hobart additional information",
+      "acoustic doppler",
+      "additional information",
+      "between",
+      "surveyor",
+      "atmospheric research data centre",
+      "coast",
+      "contains",
+      "abrolhos",
+      "hobart additional information regarding",
+      "islands",
+      "processing",
+      "australian coast",
+      "doppler current profiler adcp",
+      "southern",
+      "west australian coast during",
+      "surveyor voyage ss",
+      "dataset has",
+      "current profiler adcp",
+      "place between cape",
+      "australian",
+      "between cape",
+      "marine",
+      "archived",
+      "current",
+      "took place between cape",
+      "doppler current profiler",
+      "archived within",
+      "place",
+      "coast during october",
+      "voyage ss",
+      "csiro",
+      "ss",
+      "place between",
+      "abrolhos islands",
+      "within",
+      "surveyor voyage",
+      "hobart additional",
+      "data processing",
+      "centre",
+      "off",
+      "acoustic doppler current profiler",
+      "report",
+      "information",
+      "southern surveyor voyage",
+      "voyage took place between",
+      "dataset has been processed",
+      "processing report",
+      "dataset",
+      "november",
+      "coast during",
+      "data",
+      "west australian coast",
+      "available",
+      "dataset contains",
+      "hobart",
+      "research",
+      "current profiler",
+      "place between cape leeuwin",
+      "west",
+      "australian coast during october",
+      "additional information regarding",
+      "has",
+      "profiler adcp",
+      "dataset has been",
+      "took",
+      "acoustic",
+      "voyage took place",
+      "profiler",
+      "regarding",
+      "voyage",
+      "abrolhos islands off",
+      "data collected",
+      "cruise",
+      "october",
+      "been processed",
+      "information regarding",
+      "islands off",
+      "research data",
+      "additional",
+      "cruise report",
+      "atmospheric research",
+      "csiro marine",
+      "atmospheric",
+      "has been processed",
+      "southern surveyor",
+      "took place between",
+      "doppler",
+      "profiler adcp data collected",
+      "cape leeuwin",
+      "west australian",
+      "data centre",
+      "doppler current",
+      "southern surveyor voyage ss",
+      "processed",
+      "research data centre",
+      "contained",
+      "current profiler adcp data",
+      "between cape leeuwin",
+      "took place",
+      "adcp data collected",
+      "profiler adcp data",
+      "adcp",
+      "cape"
+    ],
+    "parameter_vocabs_sayt": [
+      "current"
+    ],
+    "platform_vocabs_sayt": [
+      "research vessel"
+    ]
+  },
+  "sci:citation": "{\"suggestedCitation\":null,\"useLimitations\":null,\"otherConstraints\":[\"Data is made available under a Creative Commons Attribution 4.0 International Licence, please see link. Data is supplied 'as is' without any warranty or guarantee except as required by law to be given to you. The data may not be free of error, comprehensive, current or appropriate for your particular purpose. You accept all risk and responsibility for its use. ATTRIBUTION STATEMENT: The dataset [Insert-dataset-name-here] downloaded on [Insert-DD-Mmm-YYYY-here] was collected on voyage [Insert-voyage-name-here] by the Marine National Facility.\"]}",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"
+  ],
+  "type": "Collection"
+}

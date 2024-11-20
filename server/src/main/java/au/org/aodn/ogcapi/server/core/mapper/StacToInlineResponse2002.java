@@ -1,12 +1,11 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import au.org.aodn.ogcapi.tile.model.TileSetItem;
 import org.mapstruct.Mapper;
+import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -21,7 +20,7 @@ public abstract class StacToInlineResponse2002 implements Converter<ElasticSearc
     protected String hostname;
 
     @Override
-    public InlineResponse2002 convert(ElasticSearch.SearchResult model) {
+    public InlineResponse2002 convert(ElasticSearch.SearchResult model, Filter noUse) {
         List<TileSetItem> items = model.getCollections().stream()
                 .map(m -> {
                     TileSetItem item = new TileSetItem();

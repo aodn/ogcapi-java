@@ -1,36 +1,35 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import org.opengis.filter.And;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterVisitor;
+import org.opengis.filter.Or;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class AndImpl extends QueryHandler implements And {
+public class OrImpl extends QueryHandler implements Or {
 
     protected List<Filter> children = new ArrayList<>();
 
-    public AndImpl(Filter filter1, Filter filter2) {
+    public OrImpl(Filter filter1, Filter filter2) {
 
         if(filter1 instanceof ElasticSetting && filter2 instanceof QueryHandler elasticFilter2) {
-            this.query = elasticFilter2.getQuery();
             this.addErrors(elasticFilter2.getErrors());
+            throw new IllegalArgumentException("Or combine with query setting do not make sense");
         }
         else if(filter2 instanceof ElasticSetting && filter1 instanceof QueryHandler elasticFilter1){
-            this.query = elasticFilter1.getQuery();
             this.addErrors(elasticFilter1.getErrors());
+            throw new IllegalArgumentException("Or combine with query setting do not make sense");
         }
         else if(filter1 instanceof QueryHandler elasticFilter1 && filter2 instanceof QueryHandler elasticFilter2) {
             // If the CQL contains ElasticSetting then the query will be null, this check is used to make sure
             // we ignore those null query
             if(elasticFilter1.query != null && elasticFilter2.query != null) {
                 this.query = BoolQuery.of(f -> f
-                        .filter(elasticFilter1.query, elasticFilter2.query)
+                        .should(elasticFilter1.query, elasticFilter2.query)
                 )._toQuery();
             }
             else if(elasticFilter1.query != null) {
@@ -39,29 +38,30 @@ public class AndImpl extends QueryHandler implements And {
             else {
                 this.query = elasticFilter2.query;
             }
+
+            children.add(filter1);
+            children.add(filter2);
+
             // Remember to copy the error from child
             this.addErrors(elasticFilter1.getErrors());
             this.addErrors(elasticFilter2.getErrors());
         }
-        children.add(filter1);
-        children.add(filter2);
     }
 
-    public AndImpl(List<Filter> filters) {
+    public OrImpl(List<Filter> filters) {
         // Extract query object in the filters, it must be an ElasitcFilter
         List<QueryHandler> elasticFilters = filters.stream()
-                .filter(Objects::nonNull)
                 .filter(f -> f instanceof QueryHandler)
                 .map(m -> (QueryHandler)m)
-                .toList();
+                .collect(Collectors.toList());
 
         List<Query> queries = elasticFilters.stream()
                 .map(m -> m.query)
                 .collect(Collectors.toList());
 
         this.query = BoolQuery.of(f -> f
-                .filter(queries)
-        )._toQuery();
+                .should(queries))
+                ._toQuery();
 
         children.addAll(filters);
 

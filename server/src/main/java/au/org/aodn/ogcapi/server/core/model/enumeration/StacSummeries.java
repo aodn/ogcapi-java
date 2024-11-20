@@ -3,9 +3,9 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 import java.util.List;
 
 public enum StacSummeries {
-    Centroid("summaries.centroid","summaries.centroid"),
     Score("summaries.score", "summaries.score", "summaries.score", null),
     Geometry("summaries.proj:geometry","extent.bbox"),
+    GeometryNoLand("summaries.proj:geometry_noland","summaries.proj:geometry_noland"),
     TemporalStart("summaries.temporal.start", ""),
     TemporalEnd("summaries.temporal.end", ""),
     Temporal("summaries.temporal", "extent.temporal", "summaries.temporal", List.of(TemporalStart, TemporalEnd)),

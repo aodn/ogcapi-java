@@ -2,8 +2,11 @@ package au.org.aodn.ogcapi.server.core.model;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.locationtech.jts.geom.GeometryCollection;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -11,6 +14,8 @@ import java.util.Map;
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class SummariesModel {
     // Do not create constructor, it will create by lombook, you can use builder() to create object.
@@ -19,10 +24,12 @@ public class SummariesModel {
     protected List<String> credits;
     protected String creation;
     protected String revision;
-    protected List<List<BigDecimal>> centroid;
 
     @JsonProperty("proj:geometry")
     protected Map<?,?> geometry;
+
+    @JsonProperty("proj:geometry_noland")
+    protected Map<?,?> geometryNoLand;
 
     @JsonProperty("temporal")
     protected List<Map<String, String>> temporal;

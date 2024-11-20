@@ -5,13 +5,14 @@ import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.tile.model.TileMatrixSets;
+import org.opengis.filter.Filter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 @Service("TileRestService")
 public class RestService extends OGCApiService {
@@ -21,14 +22,22 @@ public class RestService extends OGCApiService {
         return List.of("http://www.opengis.net/spec/ogcapi-tiles-1/1.0");
     }
 
-    public <T, R> ResponseEntity<?> getVectorTileOfCollection(TileMatrixSets coordinateSystem, List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol, Function<T, R> converter) {
+    @SuppressWarnings("unchecked")
+    public <T, R> ResponseEntity<?> getVectorTileOfCollection(
+            TileMatrixSets coordinateSystem,
+            List<String> ids,
+            Integer tileMatrix,
+            Integer tileRow,
+            Integer tileCol,
+            BiFunction<T, Filter, R> converter) {
+
         // TODO: Implements additional filters
         try {
             switch (coordinateSystem) {
                 case WEBMERCATORQUAD -> {
                     return ResponseEntity.ok()
                             .contentType(OGCMediaTypeMapper.mapbox.getMediaType())
-                            .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol)));
+                            .body(converter.apply((T) search.searchCollectionVectorTile(ids, tileMatrix, tileRow, tileCol), null));
                 }
                 default -> {
                     // We support WEBMERCATORQUAD at the moment, so if it isn't return empty set.
@@ -41,7 +50,8 @@ public class RestService extends OGCApiService {
         }
     }
 
-    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f, Function<ElasticSearch.SearchResult, R> converter) {
+    public <R> ResponseEntity<R> getTileSetsListOfCollection(List<String> id, String sortBy, OGCMediaTypeMapper f,
+                                                             BiFunction<ElasticSearch.SearchResult, Filter, R> converter) {
         try {
             switch (f) {
                 case json -> {
@@ -50,20 +60,17 @@ public class RestService extends OGCApiService {
                             search.searchCollectionWithGeometry(id, sortBy);
 
                     return ResponseEntity.ok()
-                            .body(converter.apply(result));
+                            .body(converter.apply(result, null));
                 }
                 default -> {
-                    /**
+                    /*
                      * https://opengeospatial.github.io/ogcna-auto-review/19-072.html
-                     *
                      * The OGC API — Common Standard does not mandate a specific encoding or format for
                      * representations of resources. However, both HTML and JSON are commonly used encodings for spatial
                      * data on the web. The HTML and JSON requirements classes specify the encoding of resource
                      * representations using:
-                     *
                      *     HTML
                      *     JSON
-                     *
                      * Neither of these encodings is mandatory. An implementer of the API-Common Standard may decide
                      * to implement other encodings instead of, or in addition to, these two.
                      */

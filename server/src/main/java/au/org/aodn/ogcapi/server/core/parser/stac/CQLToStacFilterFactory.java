@@ -1,9 +1,10 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.stac;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.IllegalFilterException;
 import org.geotools.filter.LiteralExpressionImpl;
@@ -19,98 +20,26 @@ import org.opengis.filter.expression.*;
 import org.opengis.filter.identity.*;
 import org.opengis.filter.sort.SortBy;
 import org.opengis.filter.sort.SortOrder;
-import org.opengis.filter.spatial.BBOX;
-import org.opengis.filter.spatial.BBOX3D;
-import org.opengis.filter.spatial.Beyond;
-import org.opengis.filter.spatial.Contains;
-import org.opengis.filter.spatial.Crosses;
-import org.opengis.filter.spatial.Intersects;
-import org.opengis.filter.spatial.Equals;
-import org.opengis.filter.spatial.Disjoint;
-import org.opengis.filter.spatial.DWithin;
-import org.opengis.filter.spatial.Within;
-import org.opengis.filter.spatial.Overlaps;
-import org.opengis.filter.spatial.Touches;
-
+import org.opengis.filter.spatial.*;
 import org.opengis.filter.temporal.*;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.geometry.BoundingBox3D;
+import org.opengis.geometry.Geometry;
 import org.opengis.parameter.Parameter;
 import org.opengis.util.InternationalString;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.*;
-
 import org.xml.sax.helpers.NamespaceSupport;
 
-/**
- * Here we use the CQL parser from org.geotools, but the default CQL parser do not fit our purpose. So we need to implement
- * FilterFactory2 and add the needed items for our purpose. Some call is copy from FilterFactoryImpl, those with
- * Elastic Query are customized function.
- * Not thread-safe, please create factory each time before compile
- * TODO: Need to implement all functions later, right now only a small amount of functions is done.
- */
-public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> implements FilterFactory2 {
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
 
-    protected Logger logger = LoggerFactory.getLogger(CQLToElasticFilterFactory.class);
+@Setter
+@Getter
+@Builder
+@Slf4j
+public class CQLToStacFilterFactory implements FilterFactory2 {
 
-    protected Class<T> collectionFieldType;
-
-    protected CQLCrsType cqlCoorSystem;
-
-    @Getter
-    protected Map<CQLElasticSetting, String> querySetting;
-
-    public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass) {
-        this(cqlCoorSystem, tClass, new HashMap<>());
-    }
-
-    public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass, Map<CQLElasticSetting, String> overrideQuerySetting) {
-        this.cqlCoorSystem = cqlCoorSystem;
-        this.collectionFieldType = tClass;
-        this.querySetting = getDefaultSetting();
-
-        // Some hardcode default values you can always override it with constructor
-        this.querySetting.putAll(overrideQuerySetting);
-    }
-
-    public static Map<CQLElasticSetting, String> getDefaultSetting() {
-        Map<CQLElasticSetting, String> defaultSetting = new HashMap<>();
-        defaultSetting.put(CQLElasticSetting.score, null);
-        defaultSetting.put(CQLElasticSetting.page_size, null);
-        defaultSetting.put(CQLElasticSetting.search_after, null);
-        return defaultSetting;
-    }
-    /**
-     * Expect statement like this:
-     * INTERSECTS(geometry,
-     *  POLYGON(
-     *      (1379213.867288 3610774.164192,1379233.837424 3610769.696029,1379246.149564 3610812.389132,1379226.494235 3610816.884823,1379213.867288 3610774.164192)
-     *  )
-     * )
-     *
-     * @param geometry1 - The attribute value, it will be mapped by the type T enum to the real field name in Elastic
-     * @param geometry2 - The Polygon and will convert to GeoJson
-     * @return
-     */
-    @Override
-    public Intersects intersects(Expression geometry1, Expression geometry2) {
-        logger.debug("INTERSECTS {}, {}", geometry1, geometry2);
-        return new IntersectsImpl<>(geometry1, geometry2, collectionFieldType, cqlCoorSystem);
-    }
-
-    @Override
-    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry) {
-        logger.debug("INTERSECTS {}, {}", s, geometry);
-        return null;
-    }
-
-    @Override
-    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
-        logger.debug("INTERSECTS {}, {} {}", s, geometry, matchAction);
-        return null;
-    }
+    protected CQLCrsType cqlCrsType;
 
     @Override
     public <T> Parameter<T> parameter(String name, Class<T> type, InternationalString title, InternationalString description, boolean required, int minOccurs, int maxOccurs, T defaultValue) {
@@ -143,21 +72,18 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
-    public PropertyName property(String name) {
-        logger.debug("property string name {}", name);
-        return new AttributeExpressionImpl(name);
+    public PropertyName property(String s) {
+        return new AttributeExpressionImpl(s);
     }
 
     @Override
     public PropertyName property(Name name) {
-        logger.debug("property name {}", name);
         return new AttributeExpressionImpl(name);
     }
 
     @Override
-    public PropertyName property(String name, NamespaceSupport namespaceContext) {
-        logger.debug("property name namespace {}, {}", name, namespaceContext);
-        return (namespaceContext == null ? this.property(name) : new AttributeExpressionImpl(name, namespaceContext));
+    public PropertyName property(String name, NamespaceSupport namespaceSupport) {
+        return (namespaceSupport == null ? this.property(name) : new AttributeExpressionImpl(name, namespaceSupport));
     }
 
     @Override
@@ -187,48 +113,36 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public And and(Filter filter1, Filter filter2) {
-        logger.debug("AND {}, {}", filter1, filter2);
         return new AndImpl(filter1, filter2);
     }
 
     @Override
     public And and(List<Filter> list) {
-        logger.debug("AND {}", list);
         return new AndImpl(list);
     }
 
     @Override
-    public Or or(Filter filter1, Filter filter2) {
-        logger.debug("OR {}, {}", filter1, filter2);
-        return new OrImpl(filter1, filter2);
+    public Or or(Filter filter, Filter filter1) {
+        return null;
     }
 
     @Override
     public Or or(List<Filter> list) {
-        logger.debug("OR {}", list);
-        return new OrImpl(list);
+        return null;
     }
 
     @Override
     public Not not(Filter filter) {
-        logger.debug("NOT {}", filter);
-        if(filter instanceof QueryHandler elasticFilter) {
-            return new NotImpl(elasticFilter);
-        }
-        else {
-            return null;
-        }
+        return null;
     }
 
     @Override
     public Id id(Set<? extends Identifier> set) {
-        logger.debug("id {}", set);
         return null;
     }
 
     @Override
     public PropertyIsBetween between(Expression expression, Expression expression1, Expression expression2) {
-        logger.debug("BETWEEN {} {}, {}", expression, expression1, expression2);
         return null;
     }
 
@@ -239,46 +153,31 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public PropertyIsEqualTo equals(Expression expression, Expression expression1) {
-        logger.debug("PropertyIsEqualTo {} {}", expression, expression1);
-        return equal(expression, expression1, false);
+        return null;
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b) {
-        logger.debug("PropertyIsEqualTo {} {}, {}", expression, expression1, b);
-        return equal(expression, expression1, b, null);
+        return null;
     }
 
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
-        logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
-
-        // This is special handle as score or some field is not part or the query in elastic search but a setting in the query.
-        // but we want to include it in the cql
-        PropertyIsEqualToElasticSettingImpl setting = new PropertyIsEqualToElasticSettingImpl(expression, expression1);
-        if(setting.isValid()) {
-            querySetting.put(setting.getElasticSettingName(), setting.getElasticSettingValue());
-            return setting;
-        }
-
-        return new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
+        return null;
     }
 
     @Override
     public PropertyIsNotEqualTo notEqual(Expression expression, Expression expression1) {
-        logger.debug("PropertyIsNotEqualTo {} {}", expression, expression1);
         return null;
     }
 
     @Override
     public PropertyIsNotEqualTo notEqual(Expression expression, Expression expression1, boolean b) {
-        logger.debug("PropertyIsNotEqualTo {} {}, {}", expression, expression1, b);
         return null;
     }
 
     @Override
     public PropertyIsNotEqualTo notEqual(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
-        logger.debug("PropertyIsNotEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
         return null;
     }
 
@@ -299,7 +198,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public PropertyIsGreaterThanOrEqualTo greaterOrEqual(Expression expression, Expression expression1) {
-        return greaterOrEqual(expression, expression1, false, null);
+        return greaterOrEqual(expression, expression1, true);
     }
 
     @Override
@@ -309,15 +208,8 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public PropertyIsGreaterThanOrEqualTo greaterOrEqual(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
-
-        logger.debug("PropertyIsGreaterThanOrEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
-
-        PropertyIsGreaterThanOrEqualToElasticSettingImpl setting = new PropertyIsGreaterThanOrEqualToElasticSettingImpl(expression, expression1);
-        if(setting.isValid()) {
-            querySetting.put(setting.getElasticSettingName(), setting.getElasticSettingValue());
-            return setting;
-        }
-        return new PropertyIsGreaterThanOrEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
+        log.debug("PropertyIsGreaterThanOrEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
+        return null;
     }
 
     @Override
@@ -352,51 +244,31 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public PropertyIsLike like(Expression expression, String s) {
-        logger.debug("PropertyIsLike {} {}", expression, s);
-        return new LikeImpl<>(expression,s, collectionFieldType);
+        return null;
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar, String escapeChar) {
-        logger.debug("PropertyIsLike {} {} {} {} {}",
-                expression, literal, wildCardChar, singleChar, escapeChar);
-
-        LikeImpl<?> i = new LikeImpl<>(expression,literal, collectionFieldType);
-        i.setEscapeChar(escapeChar);
-        i.setSingleChar(singleChar);
-        i.setWildcard(wildCardChar);
-
-        return i;
+    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3) {
+        return null;
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar,
-                               String escapeChar, boolean matchingCase) {
-
-        logger.debug("PropertyIsLike {} {} {} {} {} {}, but matchingCase is ignore on purpose",
-                expression, literal, wildCardChar, singleChar, escapeChar, matchingCase);
-
-        return this.like(expression,literal,wildCardChar,singleChar,escapeChar);
+    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3, boolean b) {
+        return null;
     }
 
     @Override
-    public PropertyIsLike like(Expression expression, String literal, String wildCardChar, String singleChar,
-                               String escapeChar, boolean matchingCase, MultiValuedFilter.MatchAction matchAction) {
-        logger.debug("PropertyIsLike {} {} {} {} {} {}, {}",
-                expression, literal, wildCardChar, singleChar, escapeChar, matchingCase, matchAction);
-
-        return this.like(expression,literal,wildCardChar,singleChar,escapeChar,matchingCase);
+    public PropertyIsLike like(Expression expression, String s, String s1, String s2, String s3, boolean b, MultiValuedFilter.MatchAction matchAction) {
+        return null;
     }
 
     @Override
     public PropertyIsNull isNull(Expression expression) {
-        logger.debug("PropertyIsNull {}", expression);
-        return new IsNullImpl<>(expression, collectionFieldType);
+        return null;
     }
 
     @Override
     public PropertyIsNil isNil(Expression expression, Object o) {
-        logger.debug("PropertyIsNil {} {}", expression, o);
         return null;
     }
 
@@ -431,98 +303,109 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
-    public Beyond beyond(String s, org.opengis.geometry.Geometry geometry, double v, String s1) {
+    public Beyond beyond(String s, Geometry geometry, double v, String s1) {
         return null;
     }
 
     @Override
-    public Beyond beyond(String s, org.opengis.geometry.Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
+    public Beyond beyond(String s, Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Contains contains(String s, org.opengis.geometry.Geometry geometry) {
+    public Contains contains(String s, Geometry geometry) {
         return null;
     }
 
     @Override
-    public Contains contains(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Contains contains(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Crosses crosses(String s, org.opengis.geometry.Geometry geometry) {
+    public Crosses crosses(String s, Geometry geometry) {
         return null;
     }
 
     @Override
-    public Crosses crosses(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Crosses crosses(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Disjoint disjoint(String s, org.opengis.geometry.Geometry geometry) {
+    public Disjoint disjoint(String s, Geometry geometry) {
         return null;
     }
 
     @Override
-    public Disjoint disjoint(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Disjoint disjoint(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public DWithin dwithin(String s, org.opengis.geometry.Geometry geometry, double v, String s1) {
+    public DWithin dwithin(String s, Geometry geometry, double v, String s1) {
         return null;
     }
 
     @Override
-    public DWithin dwithin(String s, org.opengis.geometry.Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
+    public DWithin dwithin(String s, Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Equals equals(String s, org.opengis.geometry.Geometry geometry) {
+    public Equals equals(String s, Geometry geometry) {
         return null;
     }
 
     @Override
-    public Equals equals(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Equals equals(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Overlaps overlaps(String s, org.opengis.geometry.Geometry geometry) {
+    public Intersects intersects(String s, Geometry geometry) {
+        return this.intersects(s, geometry, null);
+    }
+
+    @Override
+    public Intersects intersects(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+        log.debug("INTERSECTS {}, {} {}", s, geometry, matchAction);
         return null;
     }
 
     @Override
-    public Overlaps overlaps(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Overlaps overlaps(String s, Geometry geometry) {
         return null;
     }
 
     @Override
-    public Touches touches(String s, org.opengis.geometry.Geometry geometry) {
+    public Overlaps overlaps(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Touches touches(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Touches touches(String s, Geometry geometry) {
         return null;
     }
 
     @Override
-    public Within within(String s, org.opengis.geometry.Geometry geometry) {
+    public Touches touches(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Within within(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Within within(String s, Geometry geometry) {
+        return null;
+    }
+
+    @Override
+    public Within within(String s, Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
     public After after(Expression expression, Expression expression1) {
-        return new AfterImpl<>(expression, expression1, collectionFieldType);
+        return null;
     }
 
     @Override
@@ -542,7 +425,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public Before before(Expression expression, Expression expression1) {
-        return new BeforeImpl<>(expression, expression1, collectionFieldType);
+        return null;
     }
 
     @Override
@@ -572,7 +455,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public During during(Expression expression, Expression expression1) {
-        return new DuringImpl<>(expression, expression1, collectionFieldType);
+        return null;
     }
 
     @Override
@@ -651,7 +534,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
-    public TEquals tequals(Expression expression1, Expression expression2) {
+    public TEquals tequals(Expression expression, Expression expression1) {
         return null;
     }
 
@@ -696,7 +579,6 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
             return new LiteralExpressionImpl(obj);
         }
         catch (IllegalFilterException var3) {
-            (new IllegalArgumentException()).initCause(var3);
             return null;
         }
     }
@@ -707,8 +589,8 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
-    public Literal literal(short s) {
-        return new LiteralExpressionImpl(s);
+    public Literal literal(short i) {
+        return new LiteralExpressionImpl(i);
     }
 
     @Override
@@ -722,13 +604,13 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
-    public Literal literal(float f) {
-        return new LiteralExpressionImpl((double)f);
+    public Literal literal(float v) {
+        return new LiteralExpressionImpl(v);
     }
 
     @Override
-    public Literal literal(double d) {
-        return new LiteralExpressionImpl(d);
+    public Literal literal(double v) {
+        return new LiteralExpressionImpl(v);
     }
 
     @Override
@@ -738,14 +620,9 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public Literal literal(boolean b) {
-        return b ? new LiteralExpressionImpl(Boolean.TRUE) : new LiteralExpressionImpl(Boolean.FALSE);
+        return new LiteralExpressionImpl(b);
     }
-    /**
-     * The jj parse have not setup anything related to sort, so this is not use, manual parse needed.
-     * @param s
-     * @param sortOrder
-     * @return
-     */
+
     @Override
     public SortBy sort(String s, SortOrder sortOrder) {
         return null;
@@ -917,8 +794,13 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
+    public Intersects intersects(Expression expression, Expression expression1) {
+        return new IntersectsImpl<>(expression, expression1, cqlCrsType);
+    }
+
+    @Override
     public Intersects intersects(Expression expression, Expression expression1, MultiValuedFilter.MatchAction matchAction) {
-        return null;
+        return new IntersectsImpl<>(expression, expression1, cqlCrsType);
     }
 
     @Override

@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import lombok.Setter;

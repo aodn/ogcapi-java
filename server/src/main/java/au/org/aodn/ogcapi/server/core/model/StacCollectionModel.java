@@ -1,9 +1,7 @@
 package au.org.aodn.ogcapi.server.core.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.Builder;
-import lombok.Data;
-import lombok.Getter;
+import lombok.*;
 
 import java.util.List;
 
@@ -12,6 +10,8 @@ import java.util.List;
  */
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class StacCollectionModel {
 
     protected String description;
@@ -22,6 +22,7 @@ public class StacCollectionModel {
     protected List<ContactModel> contacts;
     protected List<ThemeModel> themes;
     protected String license;
+
     @JsonProperty("sci:citation")
     protected String citation;
 

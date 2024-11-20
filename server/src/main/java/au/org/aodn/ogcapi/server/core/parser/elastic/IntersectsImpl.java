@@ -1,7 +1,8 @@
-package au.org.aodn.ogcapi.server.core.parser;
+package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.locationtech.jts.io.ParseException;
@@ -28,7 +29,7 @@ public class IntersectsImpl<T extends Enum<T> & CQLFieldsInterface> extends Quer
 
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
-                String geojson = convertToGeoJson(literal, cqlCrsType);
+                String geojson = GeometryUtils.convertToGeoJson(literal, cqlCrsType);
                 // Create elastic query here
                 T v = Enum.valueOf(enumType, attribute.toString().toLowerCase());
                 this.query = v.getIntersectsQuery(geojson);
@@ -42,12 +43,12 @@ public class IntersectsImpl<T extends Enum<T> & CQLFieldsInterface> extends Quer
 
     @Override
     public Expression getExpression1() {
-        return null;
+        return expression1;
     }
 
     @Override
     public Expression getExpression2() {
-        return null;
+        return expression2;
     }
 
     @Override

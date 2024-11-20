@@ -25,6 +25,8 @@ import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -238,5 +240,10 @@ public class BaseTestClass {
     protected void assertClusterHealthResponse() throws IOException {
         Response response = getClusterHealth();
         assertEquals(200, response.getStatusLine().getStatusCode(), "Elastic 200 response");
+    }
+
+    public static String readResourceFile(String path) throws IOException {
+        File f = ResourceUtils.getFile(path);
+        return Files.readString(f.toPath(), StandardCharsets.UTF_8);
     }
 }
