@@ -136,6 +136,7 @@ public interface Converter<F, T> {
         if(m.getSummaries() != null ) {
             Map<?, ?> noLand = m.getSummaries().getGeometryNoLand();
             if (noLand != null) {
+                // Geometry from elastic search always store in EPSG4326
                 GeometryUtils.readGeometry(noLand)
                         .ifPresent(input -> {
                             Geometry g = filter != null ? (Geometry)filter.accept(visitor, input) : input;

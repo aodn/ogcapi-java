@@ -48,12 +48,20 @@ public class ElasticSearchConfig {
     public ElasticsearchClient geoNetworkElasticsearchClient(RestClientTransport transport) {
         return new ElasticsearchClient(transport);
     }
-
+    /**
+     * The elastic search client to do the query
+     * @param client - The elastic search client
+     * @param mapper - Object mapper for string to object transformation
+     * @param indexName - The elastic index name that store the STAC from es-indexer
+     * @param pageSize - Do not set this value too high, say 5000 will crash elastic search
+     * @param searchAsYouTypeSize - The number of search result return for search as you type
+     * @return
+     */
     @Bean
     public Search createElasticSearch(ElasticsearchClient client,
                                       ObjectMapper mapper,
                                       @Value("${elasticsearch.index.name}") String indexName,
-                                      @Value("${elasticsearch.index.pageSize:5000}") Integer pageSize,
+                                      @Value("${elasticsearch.index.pageSize:2500}") Integer pageSize,
                                       @Value("${elasticsearch.search_as_you_type.size:10}") Integer searchAsYouTypeSize) {
 
         return new ElasticSearch(client, mapper, indexName, pageSize, searchAsYouTypeSize);
