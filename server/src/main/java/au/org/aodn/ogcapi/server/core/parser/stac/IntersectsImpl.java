@@ -8,9 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.GeometryCollection;
-import org.locationtech.jts.geom.prep.PreparedGeometry;
-import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
 import org.opengis.filter.spatial.Intersects;
@@ -28,7 +25,7 @@ public class IntersectsImpl<T extends Enum<T> & CQLFieldsInterface> implements I
     protected Expression expression2;
 
     @Getter
-    protected Optional<PreparedGeometry> preparedGeometry = Optional.empty();
+    protected Optional<Geometry> geometry = Optional.empty();
 
     public IntersectsImpl(Expression expression1, Expression expression2, CQLCrsType cqlCrsType) {
         if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
@@ -37,7 +34,9 @@ public class IntersectsImpl<T extends Enum<T> & CQLFieldsInterface> implements I
 
             try {
                 String geojson = GeometryUtils.convertToGeoJson(literal, cqlCrsType);
-                preparedGeometry = GeometryUtils.readGeometry(geojson).map(g -> PreparedGeometryFactory.prepare(g));
+                geometry = GeometryUtils
+                        .readGeometry(geojson)
+                        .map(g -> GeometryUtils.normalizePolygon(g));
             }
             catch(Exception ex) {
                 logger.warn("Exception in parsing, query result will be wrong", ex);

@@ -132,6 +132,11 @@
 				<artifactId>mockserver-client-java</artifactId>
 				<version>5.15.0</version>
 			</dependency>
+			<dependency>
+				<groupId>org.locationtech.spatial4j</groupId>
+				<artifactId>spatial4j</artifactId>
+				<version>0.8</version>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<distributionManagement>

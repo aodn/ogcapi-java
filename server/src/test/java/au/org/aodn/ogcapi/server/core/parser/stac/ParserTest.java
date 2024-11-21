@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.filter.Filter;
 import org.opengis.referencing.FactoryException;
@@ -54,7 +55,7 @@ public class ParserTest {
      * @throws ParseException - Will not throw
      */
     @Test
-    public void verifyIntersectionWorks() throws CQLException, IOException, FactoryException, TransformException, ParseException {
+    public void verifyIntersectionWorks1() throws CQLException, IOException, FactoryException, TransformException, ParseException {
         // Assume we have the following CQL
         Converter.Param param = Converter.Param.builder()
                 .coordinationSystem(CQLCrsType.EPSG4326)
@@ -84,5 +85,44 @@ public class ParserTest {
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
         Assertions.assertTrue(expected.isPresent(), "Expected parse correct");
         Assertions.assertEquals(g, expected.get(), "They are equals");
+    }
+
+    /**
+     * Test case where POLYGON cross the -180 line, we should be able to handle it correctly.
+     * the parser will split the polygon into two and then apply the intersection with the noloand in json sample
+     * it will result in a single polygon and therefore we can calculate the centroid
+     *
+     * @throws CQLException - Will not throw
+     * @throws IOException - Will not throw
+     * @throws FactoryException - Will not throw
+     * @throws TransformException - Will not throw
+     * @throws ParseException - Will not throw
+     */
+    @Test
+    public void verifyIntersectionWorks2() throws CQLException, IOException, FactoryException, TransformException, ParseException {
+
+        // Parse the json and get the noland section
+        String json = BaseTestClass.readResourceFile("classpath:databag/0015db7e-e684-7548-e053-08114f8cd4ad.json");
+        StacCollectionModel model = mapper.readValue(json, StacCollectionModel.class);
+
+        Filter filter = CompilerUtil.parseFilter(
+                Language.CQL,
+                "score>=1.5 AND INTERSECTS(geometry,POLYGON ((-203.16603491348164 -60.248194404495756, -86.85117538227594 -60.248194404495756, -86.85117538227594 15.902738674628525, -203.16603491348164 15.902738674628525, -203.16603491348164 -60.248194404495756)))",
+                factory);
+
+        Optional<Geometry> geo = GeometryUtils.readGeometry(model.getSummaries().getGeometryNoLand());
+
+        Assertions.assertTrue(geo.isPresent(), "Parse no land correct");
+        GeometryVisitor visitor = GeometryVisitor.builder()
+                .build();
+
+        // return value are geo applied the CQL, and in this case only INTERSECTS
+        Geometry g = (Geometry)filter.accept(visitor, geo.get());
+
+        Assertions.assertFalse(g.isEmpty());
+        Assertions.assertTrue(g instanceof Polygon);
+
+        Assertions.assertEquals(g.getCentroid().getX(), 168.30090846621448, "getX()");
+        Assertions.assertEquals(g.getCentroid().getY(), -33.95984804960966, "getY()");
     }
 }

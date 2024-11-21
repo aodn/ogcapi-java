@@ -39,8 +39,6 @@ public enum CQLCrsType {
 
     public static Geometry transformGeometry(Geometry geometry, CQLCrsType source, CQLCrsType target) throws FactoryException, TransformException {
 
-        GeometryFactory factory = JTSFactoryFinder.getGeometryFactory();
-
         CoordinateReferenceSystem sourceCRS = CRS.decode(source.code);
         CoordinateReferenceSystem targetCRS = CRS.decode(target.code);
 

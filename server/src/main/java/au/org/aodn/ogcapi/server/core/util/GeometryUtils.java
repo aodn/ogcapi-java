@@ -10,6 +10,8 @@ import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
+import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
+import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
@@ -25,7 +27,6 @@ import java.util.concurrent.*;
 public class GeometryUtils {
 
     protected static final int PRECISION = 15;
-
     protected static GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
     protected static ObjectMapper mapper = new ObjectMapper();
@@ -207,5 +208,16 @@ public class GeometryUtils {
         catch (IOException e) {
             return Optional.empty();
         }
+    }
+    /**
+     * Normalize a polygon by adjusting longitudes to the range [-180, 180], and return both parts as a GeometryCollection.
+     *
+     * @param polygon  The input polygon.
+     * @return A polygon / multi-polygon unwrap at dateline.
+     */
+    public static Geometry normalizePolygon(Geometry polygon) {
+        // Set dateline 180 check to true to unwrap a polygon across -180 line
+        JtsGeometry jtsGeometry = new JtsGeometry(polygon, JtsSpatialContext.GEO, true, false);
+        return jtsGeometry.getGeom();
     }
 }
