@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.visitor.DefaultFilterVisitor;
 import org.locationtech.jts.geom.*;
+import org.opengis.filter.spatial.BBOX;
 import org.opengis.filter.spatial.Intersects;
 
 @Slf4j
@@ -22,6 +23,19 @@ public class GeometryVisitor extends DefaultFilterVisitor {
                 else  {
                     return data;
                 }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public Object visit(BBOX filter, Object data) {
+        if(filter instanceof BBoxImpl<?> impl) {
+            if(impl.getBounds() != null && data instanceof Polygon || data instanceof GeometryCollection) {
+                return impl.getGeometry().intersection(((Geometry) data).buffer(0.0));
+            }
+            else {
+                return data;
             }
         }
         return null;

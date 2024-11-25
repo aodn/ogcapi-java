@@ -24,10 +24,10 @@ import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.NoSuchAuthorityCodeException;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import java.util.List;
-
 /**
- * This class support both 2D or 3D query, but now we just implement 2D
+ * This class support both 2D or 3D query, but now we just implement 2D and support very limited operation for CQL
+ * which is sufficient for init run.
+ * example: BBOX(geometry, 105.08984375000037, -45.407201919778046, 163.91015625000117, -5.592798080220254)
  * @param <T>
  */
 public class BBoxImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements BBOX {
@@ -40,14 +40,13 @@ public class BBoxImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandl
     public BBoxImpl(Expression geometry,
                     BoundingBox bounds,
                     MultiValuedFilter.MatchAction matchAction,
-                    Class<T> enumType,
-                    CQLCrsType cqlCrsType) {
+                    Class<T> enumType) {
 
         if(bounds instanceof BoundingBox3D box3D) {
             this.create3DCQL(geometry, box3D, matchAction);
         }
         else {
-            this.create2DCQL(geometry, bounds, matchAction, enumType, cqlCrsType);
+            this.create2DCQL(geometry, bounds, matchAction, enumType);
         }
     }
 
@@ -88,7 +87,7 @@ public class BBoxImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandl
                 crs = null;
             }
             this.bounds = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
-            this.create2DCQL(e, bounds , matchAction, enumType, cqlCrsType);
+            this.create2DCQL(e, bounds , matchAction, enumType);
 
         } catch (FactoryException fe) {
             throw new RuntimeException("Failed to setup bbox SRS", fe);
@@ -100,8 +99,7 @@ public class BBoxImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandl
             Expression geometry,
             BoundingBox bounds,
             MultiValuedFilter.MatchAction matchAction,
-            Class<T> enumType,
-            CQLCrsType cqlCrsType) {
+            Class<T> enumType) {
 
         this.matchAction = matchAction;
         this.geometry = geometry;

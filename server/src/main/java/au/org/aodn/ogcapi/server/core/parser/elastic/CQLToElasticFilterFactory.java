@@ -36,7 +36,6 @@ import org.opengis.filter.temporal.*;
 import org.opengis.geometry.BoundingBox;
 import org.opengis.geometry.BoundingBox3D;
 import org.opengis.parameter.Parameter;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.util.InternationalString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -414,7 +413,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public BBOX bbox(Expression geometry, Expression bounds) {
-        return new BBoxImpl<>(geometry, bounds, MultiValuedFilter.MatchAction.ANY);
+        return this.bbox(geometry, bounds, MultiValuedFilter.MatchAction.ANY);
     }
 
     @Override
@@ -440,12 +439,12 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public BBOX bbox(Expression geometry, BoundingBox bounds) {
-        return new BBoxImpl<>(geometry, bounds, MultiValuedFilter.MatchAction.ANY, collectionFieldType, cqlCoorSystem);
+        return this.bbox(geometry, bounds, MultiValuedFilter.MatchAction.ANY);
     }
 
     @Override
     public BBOX bbox(Expression geometry, BoundingBox bounds, MultiValuedFilter.MatchAction matchAction) {
-        return new BBoxImpl<>(geometry, bounds, matchAction, collectionFieldType, cqlCoorSystem);
+        return new BBoxImpl<>(geometry, bounds, matchAction, collectionFieldType);
     }
 
     @Override
