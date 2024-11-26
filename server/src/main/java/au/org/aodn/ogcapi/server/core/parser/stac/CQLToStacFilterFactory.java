@@ -273,17 +273,54 @@ public class CQLToStacFilterFactory implements FilterFactory2 {
     }
 
     @Override
-    public BBOX bbox(String s, double v, double v1, double v2, double v3, String s1) {
+    public BBOX bbox(String propertyName, double minx, double miny, double maxx, double maxy, String srs) {
+        PropertyName name = this.property(propertyName);
+        return this.bbox(name, minx, miny, maxx, maxy, srs);
+    }
+
+    @Override
+    public BBOX bbox(Expression geometry, Expression bounds) {
+        return this.bbox(geometry, bounds, MultiValuedFilter.MatchAction.ANY);
+    }
+
+    @Override
+    public BBOX bbox(Expression geometry, Expression bounds, MultiValuedFilter.MatchAction matchAction) {
+        return new BBoxImpl<>(geometry, bounds, matchAction);
+    }
+
+    @Override
+    public BBOX bbox(String propertyName, double minx, double miny, double maxx, double maxy, String srs, MultiValuedFilter.MatchAction matchAction) {
+        PropertyName name = this.property(propertyName);
+        return this.bbox(name,  minx, miny, maxx, maxy, srs, matchAction);
+    }
+
+    @Override
+    public BBOX bbox(Expression expression, double minx, double miny, double maxx, double maxy, String srs) {
+        return this.bbox(expression, minx, miny, maxx, maxy, srs, MultiValuedFilter.MatchAction.ANY);
+    }
+
+    @Override
+    public BBOX bbox(Expression expression, double minx, double miny, double maxx, double maxy, String srs, MultiValuedFilter.MatchAction matchAction) {
+        return new BBoxImpl<>(expression, minx, miny, maxx, maxy, srs, matchAction);
+    }
+
+    @Override
+    public BBOX bbox(Expression expression, BoundingBox boundingBox) {
         return null;
     }
 
     @Override
-    public BBOX bbox(Expression expression, Expression expression1) {
+    public BBOX bbox(Expression expression, BoundingBox boundingBox, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public BBOX bbox(Expression expression, Expression expression1, MultiValuedFilter.MatchAction matchAction) {
+    public BBOX3D bbox(Expression expression, BoundingBox3D boundingBox3D) {
+        return null;
+    }
+
+    @Override
+    public BBOX3D bbox(Expression expression, BoundingBox3D boundingBox3D, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
@@ -294,11 +331,6 @@ public class CQLToStacFilterFactory implements FilterFactory2 {
 
     @Override
     public BBOX3D bbox(String s, BoundingBox3D boundingBox3D, MultiValuedFilter.MatchAction matchAction) {
-        return null;
-    }
-
-    @Override
-    public BBOX bbox(String s, double v, double v1, double v2, double v3, String s1, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
@@ -700,36 +732,6 @@ public class CQLToStacFilterFactory implements FilterFactory2 {
 
     @Override
     public FilterCapabilities capabilities(String s, ScalarCapabilities scalarCapabilities, SpatialCapabilities spatialCapabilities, IdCapabilities idCapabilities, TemporalCapabilities temporalCapabilities) {
-        return null;
-    }
-
-    @Override
-    public BBOX bbox(Expression expression, double v, double v1, double v2, double v3, String s) {
-        return null;
-    }
-
-    @Override
-    public BBOX bbox(Expression expression, double v, double v1, double v2, double v3, String s, MultiValuedFilter.MatchAction matchAction) {
-        return null;
-    }
-
-    @Override
-    public BBOX3D bbox(Expression expression, BoundingBox3D boundingBox3D) {
-        return null;
-    }
-
-    @Override
-    public BBOX3D bbox(Expression expression, BoundingBox3D boundingBox3D, MultiValuedFilter.MatchAction matchAction) {
-        return null;
-    }
-
-    @Override
-    public BBOX bbox(Expression expression, BoundingBox boundingBox) {
-        return null;
-    }
-
-    @Override
-    public BBOX bbox(Expression expression, BoundingBox boundingBox, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 

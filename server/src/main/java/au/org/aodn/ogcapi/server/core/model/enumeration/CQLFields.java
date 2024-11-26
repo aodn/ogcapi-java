@@ -263,6 +263,15 @@ public enum CQLFields implements CQLFieldsInterface {
     }
 
     @Override
+    public Query getBoundingBoxQuery(TopLeftBottomRightGeoBounds tlbr) {
+        return new GeoBoundingBoxQuery.Builder()
+                .field(this.searchField)
+                .boundingBox(builder -> builder.tlbr(tlbr))
+                .build()
+                ._toQuery();
+    }
+
+    @Override
     public Query getIsNullQuery() {
         Query fieldExist = ExistsQuery.of(f -> f
                         .field(this.searchField))._toQuery();
