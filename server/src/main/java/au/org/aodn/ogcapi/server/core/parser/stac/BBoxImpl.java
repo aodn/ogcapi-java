@@ -61,7 +61,7 @@ public class BBoxImpl <T extends Enum<T> & CQLFieldsInterface> implements BBOX {
                 crs = null;
             }
             this.bounds = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
-            this.geometry = GeometryUtils.createPolygon(minx, maxx, miny, maxy);
+            this.geometry = GeometryUtils.normalizePolygon(GeometryUtils.createPolygon(minx, maxx, miny, maxy));
 
         } catch (FactoryException fe) {
             throw new RuntimeException("Failed to setup bbox SRS", fe);
