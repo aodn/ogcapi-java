@@ -1,0 +1,996 @@
+{
+  "title": "Franklin Voyage FR 06/2001 Underway Data",
+  "description": "This dataset contains the Underway (UWY) data collected on Franklin voyage FR 06/2001. The voyage took place in the Pacific Ocean and the Coral sea between Western Samoa and Brisbane during July 2001. This dataset has been processed and archived within the CSIRO Marine and Atmospheric Research Data Centre in Hobart. Additional information regarding this dataset is contained in the cruise report for this voyage and/or the data processing report (as available). The standard Underway (=continuously recorded) dataset from a research voyage includes Navigation (NAV), Sounder, Thermosalinograph (TSG) and Meteorological (MET) data. NAV data includes GPS (Global Positioning System) measurements of latitude, longitude, ship's direction and speed. MET data includes atmospheric temperature, humidity and pressure, wind speed and direction, and incident radiation intensity. Data are recorded at or averaged over 5 minute intervals.",
+  "extent": {
+    "bbox": [
+      [
+        -170,
+        -27,
+        153,
+        -12
+      ],
+      [
+        -170,
+        -27,
+        153,
+        -12
+      ]
+    ],
+    "temporal": [
+      [
+        "2001-07-07T14:00:00Z",
+        "2001-07-22T13:59:59Z"
+      ],
+      [
+        "2001-07-07T14:00:00Z",
+        "2001-07-22T13:59:59Z"
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 90,
+    "status": "completed",
+    "credits": [
+      "All Underway data sets processed by Bernadette Heaney"
+    ],
+    "statement": "Data source: original field data  Data processing and quality control: according to current CMR Data Centre Underway processing manual  GPS: The standard 1 minute positions have been archived and will be subsequently available in the underway file.<BR> 10 second values of latitude and longitude derived directly from the nmea strings will also be available in a netcdf file.<BR> MET:  For full details, refer to documentation.",
+    "revision": "2009-11-26T11:07:59",
+    "dataset_group": "csiro oceans and atmosphere",
+    "update_frequency": "completed",
+    "proj:geometry": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                153,
+                -27
+              ],
+              [
+                153,
+                -12
+              ],
+              [
+                -170,
+                -12
+              ],
+              [
+                -170,
+                -27
+              ],
+              [
+                153,
+                -27
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "proj:geometry_noland": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                32.5,
+                -27
+              ],
+              [
+                113.5,
+                -27
+              ],
+              [
+                113.25,
+                -26.25
+              ],
+              [
+                113.75,
+                -26.5
+              ],
+              [
+                113.5,
+                -25.5
+              ],
+              [
+                114.25,
+                -26.25
+              ],
+              [
+                113.5,
+                -24.5
+              ],
+              [
+                113.75,
+                -22.5
+              ],
+              [
+                116.75,
+                -20.5
+              ],
+              [
+                121.25,
+                -19.5
+              ],
+              [
+                123,
+                -16.5
+              ],
+              [
+                123.5,
+                -17.5
+              ],
+              [
+                123.5,
+                -16.25
+              ],
+              [
+                125,
+                -16.5
+              ],
+              [
+                124.5,
+                -15.5
+              ],
+              [
+                125.25,
+                -15.5
+              ],
+              [
+                126,
+                -14
+              ],
+              [
+                127.5,
+                -14
+              ],
+              [
+                128,
+                -15.5
+              ],
+              [
+                128.5,
+                -14.75
+              ],
+              [
+                129.75,
+                -15.25
+              ],
+              [
+                129.25,
+                -14.25
+              ],
+              [
+                130.5,
+                -12.5
+              ],
+              [
+                132.75,
+                -12.25
+              ],
+              [
+                132.5,
+                -12
+              ],
+              [
+                131,
+                -12
+              ],
+              [
+                49.25,
+                -12
+              ],
+              [
+                40.5,
+                -12
+              ],
+              [
+                40.5,
+                -15.5
+              ],
+              [
+                34.5,
+                -19.5
+              ],
+              [
+                35.5,
+                -24
+              ],
+              [
+                32.5,
+                -26
+              ],
+              [
+                32.5,
+                -27
+              ]
+            ],
+            [
+              [
+                48.75,
+                -13.5
+              ],
+              [
+                49.25,
+                -12
+              ],
+              [
+                50.5,
+                -15.5
+              ],
+              [
+                49.75,
+                -15.5
+              ],
+              [
+                49.75,
+                -16.75
+              ],
+              [
+                47,
+                -25
+              ],
+              [
+                45.25,
+                -25.5
+              ],
+              [
+                44,
+                -25
+              ],
+              [
+                43.25,
+                -22.25
+              ],
+              [
+                44.25,
+                -20.5
+              ],
+              [
+                44.5,
+                -16.25
+              ],
+              [
+                46.5,
+                -16
+              ],
+              [
+                48,
+                -14.75
+              ],
+              [
+                48,
+                -13.5
+              ],
+              [
+                48.75,
+                -13.5
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -48.75,
+                -27
+              ],
+              [
+                15.25,
+                -27
+              ],
+              [
+                15,
+                -26.75
+              ],
+              [
+                14.5,
+                -22.5
+              ],
+              [
+                11.75,
+                -18
+              ],
+              [
+                11.75,
+                -15.75
+              ],
+              [
+                13.25,
+                -12
+              ],
+              [
+                -37.75,
+                -12
+              ],
+              [
+                -38.25,
+                -12.75
+              ],
+              [
+                -39,
+                -12.75
+              ],
+              [
+                -39.25,
+                -17.75
+              ],
+              [
+                -41,
+                -22
+              ],
+              [
+                -48.75,
+                -25.25
+              ],
+              [
+                -48.75,
+                -27
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -170,
+                -27
+              ],
+              [
+                -70.75,
+                -27
+              ],
+              [
+                -70,
+                -20
+              ],
+              [
+                -70.25,
+                -18.5
+              ],
+              [
+                -71.5,
+                -17.25
+              ],
+              [
+                -76,
+                -14.75
+              ],
+              [
+                -77.25,
+                -12
+              ],
+              [
+                -170,
+                -12
+              ],
+              [
+                -170,
+                -27
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                135.75,
+                -12
+              ],
+              [
+                134.5,
+                -12
+              ],
+              [
+                135.25,
+                -12.25
+              ],
+              [
+                135.75,
+                -12
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                136.5,
+                -12
+              ],
+              [
+                136,
+                -12
+              ],
+              [
+                136,
+                -12.5
+              ],
+              [
+                136.5,
+                -12
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                142.25,
+                -12
+              ],
+              [
+                136.5,
+                -12
+              ],
+              [
+                137,
+                -12.25
+              ],
+              [
+                135.5,
+                -15
+              ],
+              [
+                140.5,
+                -17.75
+              ],
+              [
+                142.25,
+                -12
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                153,
+                -12
+              ],
+              [
+                143,
+                -12
+              ],
+              [
+                143.75,
+                -14.5
+              ],
+              [
+                145.25,
+                -15
+              ],
+              [
+                146.25,
+                -19
+              ],
+              [
+                148.75,
+                -20.25
+              ],
+              [
+                149.75,
+                -22.5
+              ],
+              [
+                150.75,
+                -22.25
+              ],
+              [
+                150.75,
+                -23.5
+              ],
+              [
+                153,
+                -25.25
+              ],
+              [
+                153,
+                -12
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "temporal": [
+      {
+        "start": "2001-07-07T14:00:00Z",
+        "end": "2001-07-22T13:59:59Z"
+      }
+    ],
+    "parameter_vocabs": [
+      "salinity",
+      "depth",
+      "air pressure",
+      "temperature",
+      "humidity",
+      "air temperature",
+      "air-sea fluxes"
+    ],
+    "platform_vocabs": [
+      "research vessel"
+    ]
+  },
+  "contacts": [
+    {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "CSIRO Oceans & Atmosphere - Hobart",
+      "name": "CSIRO O&A, Information & Data Centre",
+      "position": "Data Requests",
+      "emails": [],
+      "addresses": [],
+      "phones": [],
+      "links": []
+    },
+    {
+      "roles": [
+        "pointOfContact",
+        "metadata"
+      ],
+      "organization": "CSIRO Oceans & Atmosphere - Hobart",
+      "name": "CSIRO O&A, Information & Data Centre",
+      "position": "Data Requests",
+      "emails": [],
+      "addresses": [],
+      "phones": [],
+      "links": []
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27FR200106%27",
+      "rel": "wms",
+      "type": "",
+      "title": "mnf:SHIPTRACK_GEOMETRY"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/dataset.cfm?survey=FR200106&data_type=uwy",
+      "rel": "related",
+      "type": "",
+      "title": "Data Link"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/download.cfm?file_id=2566",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Data Link"
+    },
+    {
+      "href": "https://www.marine.csiro.au/data/trawler/download.cfm?file_id=2567",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "href": "https://creativecommons.org/licenses/by/4.0/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Documentation Link"
+    },
+    {
+      "href": "https://geonetwork-edge.edge.aodn.org.au:443/geonetwork/images/logos/58d5af30-fbc6-42dc-8971-5468df74e9ee.png",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://www.cmar.csiro.au/data/trawler/dataset_mapfile.cfm?survey=FR200106&data_type=uwy&img_type=tn",
+      "rel": "preview",
+      "type": "image"
+    }
+  ],
+  "license": "Data is made available under a Creative Commons Attribution 4.0 International Licence, please see link. Data is supplied 'as is' without any warranty or guarantee except as required by law to be given to you. The data may not be free of error, comprehensive, current or appropriate for your particular purpose. You accept all risk and responsibility for its use. ATTRIBUTION STATEMENT: The dataset [Insert-dataset-name-here] downloaded on [Insert-DD-Mmm-YYYY-here] was collected on voyage [Insert-voyage-name-here] by the Marine National Facility.",
+  "providers": [
+    {
+      "name": "CSIRO Oceans & Atmosphere - Hobart",
+      "roles": [
+        "pointOfContact"
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Pressure | Atmospheric Pressure Measurements",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/9efbc088-ba8c-4c9c-a458-ad6ad63f4188"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Radiation | Solar Radiation",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/a0f3474e-9a54-4a82-97c4-43864b48df4c"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Temperature | Air Temperature",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/f634ab55-de40-4d0b-93bc-691bf5408ccb"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Water Vapor | Humidity",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/427e5121-a142-41cb-a8e9-a70b7f98eb6a"
+        },
+        {
+          "id": "Earth Science | Atmosphere | Atmospheric Winds | Surface Winds",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/10685919-bc01-43e7-901a-b62ac44627f3"
+        },
+        {
+          "id": "Earth Science | Oceans | Bathymetry/Seafloor Topography | Water Depth",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/ca477721-473b-40d7-a72b-4ffa963e48fb"
+        },
+        {
+          "id": "Earth Science | Oceans | Ocean Temperature | Sea Surface Temperature",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/bd24a9a9-7d52-4c29-b2a0-6cefd216ae78"
+        },
+        {
+          "id": "Earth Science | Oceans | Salinity/Density | Salinity",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=external.theme.gcmd_keywords&id=http://gcmdservices.gsfc.nasa.gov/kms/concept/7e95b5fc-1d58-431a-af36-948b29fa870d"
+        }
+      ],
+      "scheme": "theme",
+      "description": "Olsen, L.M., G. Major, K. Shein, J. Scialdone, S. Ritz, T. Stevens, M. Morahan, A. Aleman, R. Vogel, S. Leicester, H. Weir, M. Meaux, S. Grebas, C.Solomon, M. Holland, T. Northcutt, R. A. Restrepo, R. Bilodeau, 2013. NASA/Global Change Master Directory (GCMD) Earth Science Keywords. Version 8.0.0.0.0",
+      "title": "GCMD Keywords"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Meteorological Instruments",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:61"
+        },
+        {
+          "id": "Thermosalinographs",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.equipment.urn:marlin.csiro.au:Equipment&id=urn:marlin.csiro.au:Equipment:concept:101"
+        }
+      ],
+      "scheme": "equipment",
+      "description": "",
+      "title": "CSIRO Equipment"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Global / Oceans | Pacific Ocean",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:5"
+        },
+        {
+          "id": "Regional Seas | Coral Sea",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.place.urn:aodn.org.au:geographicextents&id=urn:aodn.org.au:geographicextents:concept:13"
+        }
+      ],
+      "scheme": "place",
+      "description": "AODN GEN",
+      "title": "AODN Geographic Extent Names"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Marine National Facility",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:cmarAOI&id=urn:marlin.csiro.au:keywords:cmarAOI:concept:3208"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "Marlin Areas of Interest Thesaurus",
+      "title": "CSIRO Areas Of Interest"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Research Voyage: FR 06/2001",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.survey.urn:marlin.csiro.au:surveyregister&id=urn:marlin.csiro.au:surveyregister:concept:1175"
+        }
+      ],
+      "scheme": "survey",
+      "description": "MarLIN Survey Register",
+      "title": "CSIRO Survey List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Vessel Data: Underway",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.discipline.urn:marlin.csiro.au:keywords:standardDataType&id=urn:marlin.csiro.au:keywords:standardDataType:concept:3514"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "MarLIN Standard Datatypes Thesaurus",
+      "title": "CSIRO Standard Data Types"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Ship: Franklin",
+          "url": "https://marlin.csiro.au/geonetwork/srv/eng/xml.keyword.get?thesaurus=register.dataSource.urn:marlin.csiro.au:sourceregister&id=urn:marlin.csiro.au:sourceregister:concept:5"
+        }
+      ],
+      "scheme": "dataSource",
+      "description": "MarLIN Source Register",
+      "title": "CSIRO Source List"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Practical salinity of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/PSLTZZ01"
+        },
+        {
+          "id": "Temperature of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/TEMPPR01"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": "Keywords (DataParameter)"
+    },
+    {
+      "concepts": [
+        {
+          "id": "thermosalinographs",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/133"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": "Keywords (Instrument)"
+    },
+    {
+      "concepts": [
+        {
+          "id": "research vessel",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/31"
+        }
+      ],
+      "scheme": "",
+      "description": "",
+      "title": "Keywords (Platform)"
+    }
+  ],
+  "id": "c9055fe9-921b-44cd-b4f9-a00a1c93e8ac",
+  "search_suggestions": {
+    "abstract_phrases": [
+      "been",
+      "averaged over",
+      "speed met data includes",
+      "includes gps global positioning",
+      "navigation nav sounder",
+      "radiation intensity data",
+      "global positioning system measurements",
+      "atmospheric research data",
+      "positioning system measurements",
+      "intensity data",
+      "uwy",
+      "voyage took",
+      "humidity",
+      "additional information",
+      "system measurements",
+      "wind speed",
+      "met data nav data",
+      "includes gps",
+      "july",
+      "pressure wind",
+      "atmospheric research data centre",
+      "contains",
+      "voyage fr",
+      "hobart additional information regarding",
+      "processing",
+      "underway continuously recorded",
+      "underway uwy",
+      "wind",
+      "atmospheric temperature humidity",
+      "dataset has",
+      "latitude",
+      "includes navigation nav sounder",
+      "global",
+      "sea",
+      "marine",
+      "continuously recorded",
+      "research voyage includes navigation",
+      "brisbane during",
+      "met data nav",
+      "archived",
+      "includes gps global",
+      "underway",
+      "coral sea between western",
+      "includes navigation",
+      "temperature",
+      "archived within",
+      "csiro",
+      "measurements",
+      "sounder thermosalinograph",
+      "data includes",
+      "pacific ocean",
+      "hobart additional",
+      "minute intervals",
+      "dataset from",
+      "information",
+      "dataset has been processed",
+      "dataset",
+      "standard",
+      "speed met",
+      "sounder",
+      "available",
+      "dataset contains",
+      "nav data includes gps",
+      "research",
+      "meteorological met data nav",
+      "incident radiation",
+      "nav sounder thermosalinograph",
+      "data includes gps global",
+      "has",
+      "positioning system",
+      "uwy data collected",
+      "latitude longitude",
+      "radiation intensity",
+      "sea between western",
+      "voyage took place",
+      "gps",
+      "regarding",
+      "standard underway",
+      "data collected",
+      "ocean",
+      "western",
+      "nav sounder",
+      "information regarding",
+      "coral sea between",
+      "research data",
+      "additional",
+      "coral sea",
+      "cruise report",
+      "fr",
+      "speed",
+      "voyage includes navigation",
+      "atmospheric research",
+      "csiro marine",
+      "brisbane",
+      "thermosalinograph tsg",
+      "averaged",
+      "between western samoa",
+      "voyage includes",
+      "continuously recorded dataset",
+      "over",
+      "data centre",
+      "recorded",
+      "underway uwy data collected",
+      "western samoa",
+      "data nav data",
+      "research data centre",
+      "gps global positioning",
+      "met data",
+      "sounder thermosalinograph tsg",
+      "data includes atmospheric temperature",
+      "data processing report",
+      "includes atmospheric temperature",
+      "collected",
+      "during",
+      "navigation nav",
+      "navigation",
+      "has been",
+      "hobart additional information",
+      "data nav data includes",
+      "between",
+      "nav",
+      "includes navigation nav",
+      "data nav",
+      "between western",
+      "research voyage includes",
+      "system",
+      "speed met data",
+      "meteorological met",
+      "temperature humidity",
+      "meteorological met data",
+      "nav data includes",
+      "underway uwy data",
+      "uwy data",
+      "underway continuously",
+      "meteorological",
+      "continuously recorded dataset from",
+      "sea between western samoa",
+      "place",
+      "nav sounder thermosalinograph tsg",
+      "recorded dataset",
+      "within",
+      "data processing",
+      "centre",
+      "continuously",
+      "pacific",
+      "global positioning system",
+      "samoa",
+      "report",
+      "met data includes atmospheric",
+      "processing report",
+      "thermosalinograph",
+      "standard underway continuously recorded",
+      "data",
+      "atmospheric temperature",
+      "includes atmospheric temperature humidity",
+      "hobart",
+      "incident radiation intensity data",
+      "gps global",
+      "incident radiation intensity",
+      "voyage includes navigation nav",
+      "coral",
+      "additional information regarding",
+      "from",
+      "dataset has been",
+      "longitude",
+      "data includes atmospheric",
+      "took",
+      "brisbane during july",
+      "franklin voyage",
+      "research voyage",
+      "includes",
+      "pressure",
+      "voyage",
+      "recorded dataset from",
+      "intervals",
+      "franklin voyage fr",
+      "gps global positioning system",
+      "cruise",
+      "franklin",
+      "been processed",
+      "tsg",
+      "nav data",
+      "atmospheric",
+      "has been processed",
+      "positioning",
+      "sea between",
+      "met data includes",
+      "met",
+      "direction",
+      "pressure wind speed",
+      "includes atmospheric",
+      "minute",
+      "standard underway continuously",
+      "intensity",
+      "processed",
+      "global positioning",
+      "contained",
+      "underway continuously recorded dataset",
+      "navigation nav sounder thermosalinograph",
+      "radiation",
+      "took place",
+      "during july",
+      "incident",
+      "data includes gps"
+    ],
+    "parameter_vocabs_sayt": [
+      "temperature",
+      "salinity"
+    ],
+    "platform_vocabs_sayt": [
+      "research vessel"
+    ]
+  },
+  "sci:citation": "{\"suggestedCitation\":null,\"useLimitations\":null,\"otherConstraints\":[\"Data is made available under a Creative Commons Attribution 4.0 International Licence, please see link. Data is supplied 'as is' without any warranty or guarantee except as required by law to be given to you. The data may not be free of error, comprehensive, current or appropriate for your particular purpose. You accept all risk and responsibility for its use. ATTRIBUTION STATEMENT: The dataset [Insert-dataset-name-here] downloaded on [Insert-DD-Mmm-YYYY-here] was collected on voyage [Insert-voyage-name-here] by the Marine National Facility.\"]}",
+  "type": "Collection",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"
+  ]
+}

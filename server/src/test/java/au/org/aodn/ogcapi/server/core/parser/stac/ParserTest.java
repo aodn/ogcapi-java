@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.filter.Filter;
@@ -140,7 +141,7 @@ public class ParserTest {
      * @throws ParseException - Will not throw
      */
     @Test
-    public void verifyIntersectionWorks2() throws CQLException, IOException, FactoryException, TransformException, ParseException {
+    public void verifyIntersectionWorks2() throws CQLException, IOException {
 
         // Parse the json and get the noland section
         String json = BaseTestClass.readResourceFile("classpath:databag/0015db7e-e684-7548-e053-08114f8cd4ad.json");
@@ -177,7 +178,7 @@ public class ParserTest {
      * @throws ParseException - Will not throw
      */
     @Test
-    public void verifyBBoxWorks2() throws CQLException, IOException, FactoryException, TransformException, ParseException {
+    public void verifyBBoxWorks2() throws CQLException, IOException {
 
         // Parse the json and get the noland section
         String json = BaseTestClass.readResourceFile("classpath:databag/0015db7e-e684-7548-e053-08114f8cd4ad.json");
@@ -202,5 +203,47 @@ public class ParserTest {
 
         Assertions.assertEquals(g.getCentroid().getX(), 168.30090846621448, 0.0000001, "getX()");
         Assertions.assertEquals(g.getCentroid().getY(), -33.95984804960966, 0.0000001, "getY()");
+    }
+    /**
+     * Similar test as verifyBBoxWorks2, the BBOX not only cross meridian but the sample json have spatial extents
+     * near equator and span across the whole world
+     *
+     * @throws CQLException - Will not throw
+     * @throws IOException - Will not throw
+     * @throws FactoryException - Will not throw
+     * @throws TransformException - Will not throw
+     * @throws ParseException - Will not throw
+     */
+    @Test
+    public void verifyBBoxWorks3() throws CQLException, IOException {
+
+        // Parse the json and get the noland section
+        String json = BaseTestClass.readResourceFile("classpath:databag/c9055fe9-921b-44cd-b4f9-a00a1c93e8ac.json");
+        StacCollectionModel model = mapper.readValue(json, StacCollectionModel.class);
+
+        Filter filter = CompilerUtil.parseFilter(
+                Language.CQL,
+                "score>=1.5 AND BBOX(geometry,-209.8851491167079,-45.44715475181477,-149.06483661670887,-5.632766095762394)",
+                factory);
+
+        Optional<Geometry> geo = GeometryUtils.readGeometry(model.getSummaries().getGeometryNoLand());
+
+        Assertions.assertTrue(geo.isPresent(), "Parse no land correct");
+        GeometryVisitor visitor = GeometryVisitor.builder()
+                .build();
+
+        // return value are geo applied the CQL, and in this case only BBOX intersected
+        Geometry g = (Geometry)filter.accept(visitor, geo.get());
+
+        Assertions.assertTrue(g instanceof MultiPolygon);
+
+        MultiPolygon mp = (MultiPolygon)g;
+        Assertions.assertEquals(mp.getNumGeometries(), 2, "Geometries correct");
+
+        Assertions.assertEquals(mp.getGeometryN(0).getCentroid().getX(), -159.53241830835444, 0.0000001, "getX() for 0");
+        Assertions.assertEquals(mp.getGeometryN(0).getCentroid().getY(), -19.5, 0.0000001, "getY() for 0");
+
+        Assertions.assertEquals(mp.getGeometryN(1).getCentroid().getX(), 151.62121416760516, 0.0000001, "getX() for 1");
+        Assertions.assertEquals(mp.getGeometryN(1).getCentroid().getY(), -18.000822620336752, 0.0000001, "getY() for 1");
     }
 }

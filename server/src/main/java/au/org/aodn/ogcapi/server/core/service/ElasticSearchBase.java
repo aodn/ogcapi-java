@@ -183,8 +183,7 @@ abstract class ElasticSearchBase {
         };
 
         try {
-            double random = Math.random();
-            log.info("Start search {} {}", ZonedDateTime.now(), random);
+            log.info("Start search {} {}", ZonedDateTime.now(), Thread.currentThread().getName());
             Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
 
             SearchResult result = new SearchResult();
@@ -198,7 +197,7 @@ abstract class ElasticSearchBase {
                     lastSortValue = i.sort();
                 }
             }
-            log.info("End search {} {}", ZonedDateTime.now(), random);
+            log.info("End search {} {}", ZonedDateTime.now(), Thread.currentThread().getName());
             // Return the last sort value if exist
             if(lastSortValue != null && !lastSortValue.isEmpty()) {
                 List<Object> values = new ArrayList<>();
@@ -318,7 +317,7 @@ abstract class ElasticSearchBase {
     protected StacCollectionModel formatResult(ObjectNode nodes) {
         try {
             if(nodes != null) {
-                String json = nodes.toPrettyString();
+                String json = nodes.toString();
                 return mapper.readValue(json, StacCollectionModel.class);
             }
             else {
