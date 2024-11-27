@@ -7,12 +7,14 @@ import lombok.Setter;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.jts.JTSFactoryFinder;
+import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -235,5 +237,38 @@ public class GeometryUtils {
 
         // Create the polygon (no holes)
         return factory.createPolygon(shell, null);
+    }
+
+    public static List<ReferencedEnvelope> toReferencedEnvelope(Geometry geometry, CoordinateReferenceSystem crs) {
+        List<ReferencedEnvelope> result = new ArrayList<>();
+        if(geometry instanceof MultiPolygon mp) {
+            for(int i = 0; i < mp.getNumGeometries(); i++) {
+                if(mp.getGeometryN(i) instanceof Polygon lr) {
+                    Coordinate[] coordinates = lr.getCoordinates();
+                    result.add(toReferencedEnvelope(coordinates, crs));
+                }
+            }
+        }
+        else if(geometry instanceof Polygon p) {
+            result.add(toReferencedEnvelope(p.getCoordinates(), crs));
+        }
+        return result;
+    }
+
+    public static ReferencedEnvelope toReferencedEnvelope(Coordinate[] coordinates, CoordinateReferenceSystem crs) {
+        // Initialize bounds
+        double minx = Double.POSITIVE_INFINITY;
+        double maxx = Double.NEGATIVE_INFINITY;
+        double miny = Double.POSITIVE_INFINITY;
+        double maxy = Double.NEGATIVE_INFINITY;
+
+        // Compute bounds
+        for (Coordinate coord : coordinates) {
+            minx = Math.min(minx, coord.x);
+            maxx = Math.max(maxx, coord.x);
+            miny = Math.min(miny, coord.y);
+            maxy = Math.max(maxy, coord.y);
+        }
+        return new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
     }
 }

@@ -61,7 +61,7 @@ public class ElasticSearchConfig {
     public Search createElasticSearch(ElasticsearchClient client,
                                       ObjectMapper mapper,
                                       @Value("${elasticsearch.index.name}") String indexName,
-                                      @Value("${elasticsearch.index.pageSize:2500}") Integer pageSize,
+                                      @Value("${elasticsearch.index.pageSize:2200}") Integer pageSize,
                                       @Value("${elasticsearch.search_as_you_type.size:10}") Integer searchAsYouTypeSize) {
 
         return new ElasticSearch(client, mapper, indexName, pageSize, searchAsYouTypeSize);
