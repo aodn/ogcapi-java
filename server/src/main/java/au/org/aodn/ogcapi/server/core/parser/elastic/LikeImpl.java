@@ -23,12 +23,11 @@ public class LikeImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandl
 
     public LikeImpl(Expression expression, String literal, Class<T> enumType) {
         if(expression instanceof AttributeExpressionImpl attribute) {
-            this.expression = expression;
+            this.expression = attribute;
             this.literal = literal;
 
             // Use function comes from geotools, but this required class to implement method below
             this.pattern = (new LikeToRegexConverter(this)).getPattern();
-
             /*
              * Given the field do set with default in most case hence the indexer lower case for all value, therefore
              * if we want to match CAP letter search, we need to set caseInsensitive true

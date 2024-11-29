@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
@@ -16,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -28,7 +30,7 @@ public abstract class OGCApiService {
     protected Search search;
 
     /**
-     * You can find conformance id here https://docs.ogc.org/is/19-072/19-072.html#ats_core
+     * You can find conformance id here '<a href="https://docs.ogc.org/is/19-072/19-072.html#ats_core">...</a>'
      * @return List of string contains conformance
      */
     public abstract List<String> getConformanceDeclaration();
@@ -87,13 +89,38 @@ public abstract class OGCApiService {
         }
     }
     /**
+     * Rewrite the filter parameter based on the query string, for example q=temperature means user want to search
+     * dataset title/description/vocab/organization/parameter contains temperature. vocab/organization/parameter
+     * can be query using the CQL, so all we need is to rewrite the filter and add the vocab/organziation/parameter
+     * search to the CQL.
+     * @param q - The query string parameter
+     * @param filter - The current pass in parameter
+     * @return - The updated filter
+     */
+    public static String processQueryParameter(List<String> q, String filter) {
+        if(q != null && !q.isEmpty()) {
+            // %% is used to escape %
+            String cql = q.stream()
+                .map(v -> String.format("%s LIKE '%%%s%%' OR %s IS NULL OR %s LIKE '%%%s%%' OR %s IS NULL OR %s LIKE '%%%s%%' OR %s IS NULL",
+                        CQLFields.organisation_vocabs,v,CQLFields.organisation_vocabs,
+                        CQLFields.parameter_vocabs,v,CQLFields.parameter_vocabs,
+                        CQLFields.platform_vocabs,v,CQLFields.platform_vocabs))
+                    .collect(Collectors.joining(" OR "));
+
+            return (filter == null) ? "(" + cql + ")" : String.join(" AND ", "(" + cql + ")", filter);
+        }
+        else {
+            return filter;
+        }
+    }
+    /**
      * Rewrite the datetime parameter to CQL filter as this can be handled by CQL directly.
      *
      * @param datetime - In come datetime parameter of ogcapi
      * @param filter - Any existing filter
      * @return - A combined filter with datetime rewrite.
      */
-    public String processDatetimeParameter(String datetime, String filter) {
+    public static String processDatetimeParameter(String datetime, String filter) {
 
         // TODO: How to handle this? e.g how to know if it is before or after if ?datetime=<timestamp instant>
 
@@ -117,19 +144,14 @@ public abstract class OGCApiService {
         }
 
         if(d != null) {
-            f = String.format("temporal %s %s", operator, d);
+            f = String.format("%s %s %s", CQLFields.temporal, operator, d);
         }
 
         if((filter == null || filter.isEmpty())) {
             return f;
         }
         else {
-            if(f == null) {
-                return filter;
-            }
-            else {
-                return String.join(" AND ", filter, f);
-            }
+            return (f == null) ? filter : String.join(" AND ", filter, f);
         }
     }
 }
