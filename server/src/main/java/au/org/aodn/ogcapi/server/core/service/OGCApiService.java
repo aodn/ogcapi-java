@@ -93,7 +93,7 @@ public abstract class OGCApiService {
      * @param filter - Any existing filter
      * @return - A combined filter with datetime rewrite.
      */
-    public String processDatetimeParameter(String datetime, String filter) {
+    public static String processDatetimeParameter(String datetime, String filter) {
 
         // TODO: How to handle this? e.g how to know if it is before or after if ?datetime=<timestamp instant>
 

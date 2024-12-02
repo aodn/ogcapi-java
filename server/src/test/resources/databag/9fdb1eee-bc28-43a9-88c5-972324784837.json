@@ -1,0 +1,788 @@
+{
+  "title": "IMOS - Deep Water Moorings - Southern Ocean Flux Station (SOFS) - Surface properties (real-time)",
+  "description": "This data collection consists of observations at the sea surface made by the Southern Ocean Flux Station (SOFS) mooring, including meteorological parameters, downwelling radiation, and sea water temperature and salinity. Hourly averages of each parameter are delivered in near real-time. SOFS is an observing platform in the Sub-Antarctic Zone, approximately 350 nautical miles south-west of Tasmania. It obtains frequent measurements of the surface and deep ocean properties that control the transfer of heat, moisture, energy and CO2 between the atmosphere and the upper ocean to improve understanding of climate and carbon processes. The mooring was first deployed at (46.7S, 142E) in March 2010.",
+  "extent": {
+    "bbox": [
+      [
+        141,
+        -48,
+        144,
+        -46
+      ],
+      [
+        141,
+        -48,
+        144,
+        -46
+      ]
+    ],
+    "temporal": [
+      [
+        "2010-03-16T13:00:00Z",
+        null
+      ],
+      [
+        "2010-03-16T13:00:00Z",
+        null
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 76,
+    "status": "onGoing",
+    "credits": [
+      "Australia's Integrated Marine Observing System (IMOS) is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS). It is operated by a consortium of institutions as an unincorporated joint venture, with the University of Tasmania as Lead Agent.",
+      "CSIRO Oceans and Atmosphere",
+      "Australian Bureau of Meteorology",
+      "University of Tasmania (UTAS)",
+      "Marine National Facility",
+      "Pacific Marine Environmental Laboratory (PMEL), National Oceanic and Atmospheric Administration (NOAA)"
+    ],
+    "scope": {
+      "code": "dataset",
+      "name": "IMOS Dataset level record"
+    },
+    "creation": "2020-07-15T10:25:48",
+    "revision": "2024-10-02T00:26:00",
+    "dataset_provider": "IMOS",
+    "update_frequency": "real-time",
+    "proj:geometry": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                141,
+                -48
+              ],
+              [
+                143,
+                -48
+              ],
+              [
+                143,
+                -47
+              ],
+              [
+                144,
+                -47
+              ],
+              [
+                144,
+                -46
+              ],
+              [
+                141,
+                -46
+              ],
+              [
+                141,
+                -48
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "proj:geometry_noland": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                141,
+                -46
+              ],
+              [
+                141,
+                -48
+              ],
+              [
+                143,
+                -48
+              ],
+              [
+                143,
+                -47
+              ],
+              [
+                144,
+                -47
+              ],
+              [
+                144,
+                -46
+              ],
+              [
+                141,
+                -46
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "temporal": [
+      {
+        "start": "2010-03-16T13:00:00Z",
+        "end": null
+      }
+    ],
+    "parameter_vocabs": [
+      "salinity",
+      "air pressure",
+      "temperature",
+      "humidity",
+      "water pressure",
+      "air temperature",
+      "precipitation and evaporation",
+      "air-sea fluxes",
+      "wind"
+    ],
+    "platform_vocabs": [
+      "mooring"
+    ],
+    "organisation_vocabs": [
+      "Southern Ocean Time Series Observatory Sub-Facility, Integrated Marine Observing System (IMOS)"
+    ]
+  },
+  "contacts": [
+    {
+      "roles": [
+        "principalInvestigator",
+        "about"
+      ],
+      "organization": "Australian Bureau of Meteorology",
+      "name": "Schulz, Eric",
+      "position": "",
+      "emails": [],
+      "addresses": [],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "+61 3 9669 4618"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "+61 3 9669 4660"
+        }
+      ],
+      "links": []
+    },
+    {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": "",
+      "position": "Data Officer",
+      "emails": [
+        "info@aodn.org.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "University of Tasmania",
+            "Private Bag 110"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "61 3 6226 7488"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "61 3 6226 2107"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://imos.org.au/aodn.html",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Australian Ocean Data Network (AODN)"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "distributor",
+        "metadata"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": "",
+      "position": "Data Officer",
+      "emails": [
+        "info@aodn.org.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "University of Tasmania",
+            "Private Bag 110"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "61 3 6226 7488"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "61 3 6226 2107"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://imos.org.au/aodn.html",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Australian Ocean Data Network (AODN)"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "resourceProvider",
+        "citation"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": null,
+      "position": null,
+      "emails": [
+        "imos@imos.org.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "Private Bag 110"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "61 3 6226 7549"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "61 3 62262107"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://www.imos.org.au/html",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Integrated Marine Observing System (IMOS)"
+        }
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "http://imos.org.au/sots.html",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Southern Ocean Time Series page on IMOS website"
+    },
+    {
+      "href": "http://thredds.aodn.org.au/thredds/catalog/IMOS/DWM/ASFS/SOFS/Surface_properties/Real-time/catalog.html",
+      "rel": "related",
+      "type": "text/html",
+      "title": "NetCDF files via THREDDS catalog"
+    },
+    {
+      "href": "https://portal.aodn.org.au/search?uuid=9fdb1eee-bc28-43a9-88c5-972324784837",
+      "rel": "related",
+      "type": "text/html",
+      "title": "View and download data though the AODN Portal"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/wms",
+      "rel": "wms",
+      "type": "",
+      "title": "imos:dwm_sofs_surfaceprop_rt_map"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ows",
+      "rel": "wfs",
+      "type": "",
+      "title": "dwm_sofs_surfaceprop_rt_data"
+    },
+    {
+      "href": "https://help.aodn.org.au/web-services/ogc-wfs/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "OGC WFS help documentation"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ows",
+      "rel": "related",
+      "type": "",
+      "title": "dwm_sofs_surfaceprop_rt_map#url"
+    },
+    {
+      "href": "https://help.aodn.org.au/web-services/ncurllist-service/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "ncUrlList help documentation"
+    },
+    {
+      "href": "https://geonetwork-edge.edge.aodn.org.au:443/geonetwork/images/harvesting/IMOS_colour_logo.gif",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://catalogue-imos.aodn.org.au:443/geonetwork/srv/api/records/9fdb1eee-bc28-43a9-88c5-972324784837",
+      "rel": "describedby",
+      "type": "text/html",
+      "title": "Full metadata link"
+    },
+    {
+      "href": "https://licensebuttons.net/l/by/4.0/88x31.png",
+      "rel": "license",
+      "type": "image/png"
+    },
+    {
+      "href": "http://creativecommons.org/licenses/by/4.0/",
+      "rel": "license",
+      "type": "text/html"
+    },
+    {
+      "href": "uuid:a46f1fe3-2a7c-4086-951e-7351192ec98b",
+      "rel": "parent",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS - Deep Water Moorings - Air Sea Flux Station (ASFS) Sub-Facility, Southern Ocean Flux Station (SOFS) Platform\",\"recordAbstract\":\"SOFS is an observing platform in the Sub-Antarctic Zone, approximately 350 nautical miles southwest of Tasmania. It obtains frequent measurements of the surface and deep ocean properties that control the transfer of heat, moisture, energy and CO2 between the atmosphere and the upper ocean to improve understanding of climate and carbon processes.\n\nThe mooring was first deployed at (46.7S, 142E) in March 2010 and recovered in April 2011. It was re-deployed in November 2011 at (46.8S, 142E) and recovered in July 2012, it was then re-deployed in August 2012 at (-46.7S, 142E) and recovered in January 2013, it was then re-deployed in May 2013 at (-46.8S, 142E) and recovered in October 2013. The mooring was redeployed in March 2015. \n\nThe SOFS is equiped with two identical ASIMET systems and telemetry to provide real time data to marine observers and researchers.\"}"
+    },
+    {
+      "href": "uuid:80ffbf9d-9547-41aa-8fa1-cf028c58556a",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS - Deep Water Moorings - Southern Ocean Flux Station (SOFS) - Surface fluxes (real-time)\",\"recordAbstract\":\"This data collection contains heat and mass fluxes at the sea surface computed from observations at the Southern Ocean Flux Station (SOFS) mooring. The observed meteorology, downwelling radiation, and sea water temperature and salinity at the surface are also included. Hourly averages of each parameter are delivered in near real-time. SOFS is an observing platform in the Sub-Antarctic Zone, approximately 350 nautical miles south-west of Tasmania. It obtains frequent measurements of the surface and deep ocean properties that control the transfer of heat, moisture, energy and CO2 between the atmosphere and the upper ocean to improve understanding of climate and carbon processes. The mooring was first deployed at (46.7S, 142E) in March 2010.\"}"
+    },
+    {
+      "href": "uuid:bbd0c85b-7218-4065-8180-421b1c1d6bbe",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS - Deep Water Moorings - Southern Ocean Flux Station (SOFS) - Surface properties (delayed mode)\",\"recordAbstract\":\"This data collection consists of observations at the sea surface made by the Southern Ocean Flux Station (SOFS) mooring, including meteorological parameters, downwelling radiation, and sea water temperature and salinity. One-minute averages of each parameter are provided after delayed-mode processing. SOFS is an observing platform in the Sub-Antarctic Zone, approximately 350 nautical miles south-west of Tasmania. It obtains frequent measurements of the surface and deep ocean properties that control the transfer of heat, moisture, energy and CO2 between the atmosphere and the upper ocean to improve understanding of climate and carbon processes. The mooring was first deployed at (46.7S, 142E) in March 2010.\"}"
+    },
+    {
+      "href": "uuid:b355a5a5-e6ec-45c7-8506-103cf160431a",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS - Deep Water Moorings - Southern Ocean Flux Station (SOFS) - Surface fluxes (delayed mode)\",\"recordAbstract\":\"This data collection contains heat and mass fluxes at the sea surface computed from observations at the Southern Ocean Flux Station (SOFS) mooring. The observed meteorology, downwelling radiation, and sea water temperature and salinity at the surface are also included. One-minute averages of each parameter are provided after delayed-mode processing. SOFS is an observing platform in the Sub-Antarctic Zone, approximately 350 nautical miles south-west of Tasmania. It obtains frequent measurements of the surface and deep ocean properties that control the transfer of heat, moisture, energy and CO2 between the atmosphere and the upper ocean to improve understanding of climate and carbon processes. The mooring was first deployed at (46.7S, 142E) in March 2010.\"}"
+    }
+  ],
+  "license": "Creative Commons Attribution 4.0 International License",
+  "providers": [
+    {
+      "name": "Integrated Marine Observing System (IMOS)",
+      "roles": [
+        "distributor"
+      ],
+      "url": "http://imos.org.au/aodn.html"
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Oceans | Salinity/density | Conductivity",
+          "url": null
+        },
+        {
+          "id": "Oceans | Salinity/density | Salinity",
+          "url": null
+        },
+        {
+          "id": "Oceans | Ocean Temperature | Water Temperature",
+          "url": null
+        },
+        {
+          "id": "Atmosphere | Atmospheric Winds | Surface Winds",
+          "url": null
+        },
+        {
+          "id": "Atmosphere | Atmospheric Pressure | Surface Pressure",
+          "url": null
+        },
+        {
+          "id": "Atmosphere | Atmospheric Temperature | Air Temperature",
+          "url": null
+        },
+        {
+          "id": "Atmosphere | Atmospheric Water Vapor | Humidity",
+          "url": null
+        },
+        {
+          "id": "Atmosphere | Radiation Budget | Shortwave Radiation",
+          "url": null
+        },
+        {
+          "id": "Atmosphere | Radiation Budget | Longwave Radiation",
+          "url": null
+        },
+        {
+          "id": "Atmosphere | Precipitation | Precipitation Amount",
+          "url": null
+        }
+      ],
+      "scheme": "theme",
+      "description": "GCMD",
+      "title": "NASA/Global Change Master Directory Earth Science Keywords Version 5.3.8"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Buoys | Moored Buoys",
+          "url": null
+        }
+      ],
+      "scheme": "",
+      "description": "MCP",
+      "title": "Marine Community Profile of ISO19115 v1.4 Collection Methods Vocabulary (Annex C.1.3)"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Global / Oceans | Southern Ocean",
+          "url": null
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Countries | Australia",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Tasmania",
+          "url": null
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "mooring",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/48"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Platform Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Eastward wind velocity in the atmosphere",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/ESEWZZXX"
+        },
+        {
+          "id": "Northward wind velocity in the atmosphere",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/ESNSZZXX"
+        },
+        {
+          "id": "Temperature of the atmosphere",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/CTMPZZ01"
+        },
+        {
+          "id": "Relative humidity of the atmosphere",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/CRELZZ01"
+        },
+        {
+          "id": "Pressure (measured variable) exerted by the atmosphere",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/CAPHZZ01"
+        },
+        {
+          "id": "Temperature of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/TEMPPR01"
+        },
+        {
+          "id": "Electrical conductivity of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/CNDCZZ01"
+        },
+        {
+          "id": "Thickness of precipitation amount (liquid water equivalent) in the atmosphere",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/386"
+        },
+        {
+          "id": "Wind to direction in the atmosphere",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/396"
+        },
+        {
+          "id": "Wind speed in the atmosphere",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/ESSAZZ01"
+        },
+        {
+          "id": "Practical salinity of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/PSLTZZ01"
+        },
+        {
+          "id": "Downwelling vector irradiance as energy (solar (300-3000nm) wavelengths) in the atmosphere",
+          "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/576"
+        },
+        {
+          "id": "Downwelling vector irradiance as energy (longwave) in the atmosphere",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/LWRDZZ01"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Discovery Parameter Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "anemometers",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/101"
+        },
+        {
+          "id": "meteorological packages",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/102"
+        },
+        {
+          "id": "water temperature sensor",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/134"
+        },
+        {
+          "id": "salinity sensor",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/350"
+        },
+        {
+          "id": "precipitation gauges",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/381"
+        },
+        {
+          "id": "radiometers",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/122"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Instrument Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Southern Ocean Time Series Observatory Sub-Facility, Integrated Marine Observing System (IMOS)",
+          "url": "http://vocab.aodn.org.au/def/organisation/entity/499"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "",
+      "title": "AODN Organisation Vocabulary"
+    }
+  ],
+  "id": "9fdb1eee-bc28-43a9-88c5-972324784837",
+  "search_suggestions": {
+    "abstract_phrases": [
+      "atmosphere",
+      "flux station sofs mooring",
+      "antarctic zone",
+      "flux station",
+      "sub antarctic",
+      "upper",
+      "water temperature",
+      "delivered",
+      "salinity hourly averages",
+      "meteorological parameters downwelling radiation",
+      "carbon",
+      "understanding",
+      "near",
+      "sofs",
+      "between",
+      "energy",
+      "sea water",
+      "data collection consists",
+      "surface",
+      "station sofs mooring including",
+      "each parameter",
+      "made",
+      "sofs mooring",
+      "meteorological parameters downwelling",
+      "frequent measurements",
+      "time sofs",
+      "sub antarctic zone approximately",
+      "each",
+      "downwelling",
+      "near real time",
+      "mooring including meteorological parameters",
+      "near real time sofs",
+      "meteorological parameters",
+      "southern",
+      "sub",
+      "south",
+      "mooring including",
+      "parameters downwelling radiation",
+      "collection consists",
+      "sea",
+      "mooring including meteorological",
+      "meteorological",
+      "zone approximately",
+      "nautical miles south",
+      "obtains frequent",
+      "temperature",
+      "observing platform",
+      "including meteorological",
+      "surface made",
+      "antarctic",
+      "measurements",
+      "southern ocean",
+      "sea water temperature",
+      "climate",
+      "nautical miles",
+      "near real",
+      "ocean properties",
+      "march",
+      "nautical",
+      "nautical miles south west",
+      "south west",
+      "first",
+      "mooring",
+      "downwelling radiation",
+      "obtains frequent measurements",
+      "data",
+      "ocean flux station sofs",
+      "hourly averages",
+      "including meteorological parameters",
+      "including meteorological parameters downwelling",
+      "sea surface",
+      "southern ocean flux",
+      "sub antarctic zone",
+      "deep ocean properties",
+      "flux station sofs",
+      "zone",
+      "ocean flux station",
+      "west",
+      "southern ocean flux station",
+      "station sofs mooring",
+      "miles south west",
+      "sofs mooring including meteorological",
+      "including",
+      "tasmania",
+      "sofs mooring including",
+      "antarctic zone approximately",
+      "collection",
+      "real",
+      "moisture",
+      "water",
+      "sea surface made",
+      "transfer",
+      "ocean",
+      "station sofs",
+      "improve",
+      "hourly",
+      "parameters",
+      "real time sofs",
+      "heat",
+      "ocean flux",
+      "salinity hourly",
+      "deep",
+      "parameters downwelling",
+      "averages",
+      "frequent",
+      "heat moisture",
+      "deployed",
+      "heat moisture energy",
+      "platform",
+      "miles",
+      "observations",
+      "parameter",
+      "station",
+      "flux",
+      "upper ocean",
+      "carbon processes",
+      "real time",
+      "salinity",
+      "processes",
+      "control",
+      "moisture energy",
+      "deep ocean",
+      "data collection",
+      "improve understanding",
+      "miles south",
+      "first deployed",
+      "obtains",
+      "approximately",
+      "radiation",
+      "consists",
+      "observing",
+      "time",
+      "properties"
+    ],
+    "parameter_vocabs_sayt": [
+      "air pressure",
+      "air-sea fluxes",
+      "wind",
+      "air temperature",
+      "humidity",
+      "precipitation and evaporation",
+      "water pressure",
+      "temperature",
+      "salinity"
+    ],
+    "platform_vocabs_sayt": [
+      "mooring"
+    ]
+  },
+  "sci:citation": "{\"suggestedCitation\":\"The citation in a list of references is: \"IMOS [year-of-data-download], [Title], [data-access-URL], accessed [date-of-access].\"\",\"useLimitations\":[\"Data, products and services from IMOS are provided \"as is\" without any warranty as to fitness for a particular purpose.\"],\"otherConstraints\":[\"Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: \"Data was sourced from Australia?s Integrated Marine Observing System (IMOS) ? IMOS is enabled by the National Collaborative Research Infrastructure strategy (NCRIS).\" If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).\"]}",
+  "type": "Collection",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"
+  ]
+}
