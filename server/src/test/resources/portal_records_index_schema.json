@@ -88,9 +88,6 @@
           "organisation_vocabs_sayt": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
         }
       },
-      "parameter_vocabs": { "type": "keyword" },
-      "platform_vocabs": { "type": "keyword" },
-      "organisation_vocabs": { "type": "keyword" },
       "keywords": {
         "type": "nested",
         "properties": {
@@ -148,6 +145,9 @@
           "dataset_group": { "type": "text" },
           "creation" : { "type": "date" },
           "revision" : { "type": "date" },
+          "proj:geometry_noland": {
+            "type": "geo_shape"
+          },
           "proj:geometry": {
             "type": "geo_shape"
           },
@@ -162,6 +162,9 @@
               }
             }
           },
+          "parameter_vocabs": { "type": "keyword" },
+          "platform_vocabs": { "type": "keyword" },
+          "organisation_vocabs": { "type": "keyword" },
           "statement": { "type": "text" }
         }
       },

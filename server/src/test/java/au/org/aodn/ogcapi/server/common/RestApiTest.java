@@ -59,11 +59,11 @@ public class RestApiTest extends BaseTestClass {
         super.assertClusterHealthResponse();
     }
     /**
-     * The search is a fuzzy search based on title and description. So you expect 1 hit only
+     * The search is a fuzzy search based on title and description and few param field. So you expect 1 hit only
      * @throws IOException - IO Exception
      */
     @Test
-    public void verifyApiCollectionsQueryOnText() throws IOException {
+    public void verifyApiCollectionsQueryOnText1() throws IOException {
         super.insertJsonToElasticIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
@@ -95,6 +95,36 @@ public class RestApiTest extends BaseTestClass {
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e",
                 collections.getBody().getCollections().get(1).getId(),
                 "Correct UUID - 7709f541-fc0c-4318-b5b9-9053aa474e0e");
+    }
+    /**
+     * The search is a fuzzy search based on title and description and few param field. This test add one more text
+     * which should hit the organization, paramter or vocab field
+     * 516811d7-cd1e-207a-e0440003ba8c79dd - Have repoduction
+     * 073fde5a-bff3-1c1f-e053-08114f8c5588 - Nothing match (although the word 'and' will match, but we use AND operator in fuzzy match so it will not count)
+     * 9fdb1eee-bc28-43a9-88c5-972324784837 - Contains 'precipitation and evaporation' in parameter_vocabs
+     *
+     * @throws IOException - IO Exception
+     */
+    @Test
+    public void verifyApiCollectionsQueryOnText2() throws IOException {
+        super.insertJsonToElasticIndex(
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "073fde5a-bff3-1c1f-e053-08114f8c5588.json",
+                "9fdb1eee-bc28-43a9-88c5-972324784837.json"
+        );
+
+        // Call rest api directly and get query result
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=reproduction,precipitation and evaporation", Collections.class);
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Only 2 hit");
+        assertEquals(
+                "516811d7-cd1e-207a-e0440003ba8c79dd",
+                collections.getBody().getCollections().get(0).getId(),
+                "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
+
+        assertEquals(
+                "9fdb1eee-bc28-43a9-88c5-972324784837",
+                collections.getBody().getCollections().get(1).getId(),
+                "Correct UUID - 9fdb1eee-bc28-43a9-88c5-972324784837");
     }
     /**
      * The datetime field after xxx/.. xxx/ etc. It uses CQL internally so no need to test Before After During in CQL
@@ -466,11 +496,10 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(error.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
         assertEquals(Objects.requireNonNull(error.getBody()).getMessage(), "Or combine with query setting do not make sense", "correct error");
 
-        // Lower score rate make more match
+        // Lower score but the fuzzy is now with operator AND, therefore it will try to match all words 'dataset' and 'includes' with fuzzy
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=1", Collections.class);
-        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2, with score 1");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 3");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
-        assertEquals("7709f541-fc0c-4318-b5b9-9053aa474e0e", Objects.requireNonNull(collections.getBody()).getCollections().get(1).getId(), "7709f541-fc0c-4318-b5b9-9053aa474e0e");
 
         // Increase score will drop one record
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=3", Collections.class);
