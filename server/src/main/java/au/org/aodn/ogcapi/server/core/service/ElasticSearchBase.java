@@ -8,6 +8,8 @@ import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
+import co.elastic.clients.elasticsearch.core.CountRequest;
+import co.elastic.clients.elasticsearch.core.CountResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -224,16 +226,22 @@ abstract class ElasticSearchBase {
     }
     /**
      * Count the total number hit. There are two ways to get the total, one is use search but set the size to 0,
-     * then it will fill the size with total.
+     * then it will fill the size with total, but due to paging it will only return the max of search return say 10000
+     * will be the max, even you have more then 1000 records, hence we need to use count request
      *
      * @param requestBuilder - A query builder, this make the function general count given a query
      * @return - The number of record that matches the requestBuilder
      */
     protected Long countRecordsHit(Supplier<SearchRequest.Builder> requestBuilder) {
         try {
-            SearchRequest sr = requestBuilder.get().size(0).build();
-            SearchResponse<ObjectNode> response = esClient.search(sr, ObjectNode.class);
-            return  (response.hits().total() != null) ? response.hits().total().value() : null;
+            // The query need to be the same as the content, otherwise the total count report will be off.
+            CountRequest cr = CountRequest.of(f -> f
+                    .query(requestBuilder.get().build().query())
+                    .index(indexName)
+            );
+            log.debug("Elastic search payload for count {}", cr.toString());
+            CountResponse response = esClient.count(cr);
+            return  (response != null) ? response.count() : null;
         }
         catch (IOException e) {
             return null;

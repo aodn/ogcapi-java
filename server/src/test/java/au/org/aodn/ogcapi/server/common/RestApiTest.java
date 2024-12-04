@@ -59,7 +59,8 @@ public class RestApiTest extends BaseTestClass {
         super.assertClusterHealthResponse();
     }
     /**
-     * The search is a fuzzy search based on title and description and few param field. So you expect 1 hit only
+     * The search is a fuzzy search based on title and description and few param field. So you expect 1 hit only,
+     * we check via getTotal() which is value from another elastic search.
      * @throws IOException - IO Exception
      */
     @Test
@@ -70,23 +71,23 @@ public class RestApiTest extends BaseTestClass {
         );
 
         // Call rest api directly and get query result
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=reproduction", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Only 1 hit");
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=reproduction", ExtendedCollections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getTotal(), "Only 1 hit");
         assertEquals(
                 "516811d7-cd1e-207a-e0440003ba8c79dd",
                 collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - 516811d7-cd1e-207a-e0440003ba8c79dd");
 
         // This time we make a typo but we should still get the result back as Fuzzy search
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=temperatura", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Only 1 hit");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=temperatura", ExtendedCollections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getTotal(), "Only 1 hit");
         assertEquals(
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e",
                 collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - 7709f541-fc0c-4318-b5b9-9053aa474e0e");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=temperatura,reproduction", Collections.class);
-        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2");
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=temperatura,reproduction", ExtendedCollections.class);
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getTotal(), "hit 2");
         assertEquals(
                 "516811d7-cd1e-207a-e0440003ba8c79dd",
                 collections.getBody().getCollections().get(0).getId(),
@@ -98,7 +99,8 @@ public class RestApiTest extends BaseTestClass {
     }
     /**
      * The search is a fuzzy search based on title and description and few param field. This test add one more text
-     * which should hit the organization, paramter or vocab field
+     * which should hit the organization, paramter or vocab field. We use getTotal() instead of count the collection list
+     * therefore we can verify this function call too. The getTotal() value comes from elastic count CountRequest.
      * 516811d7-cd1e-207a-e0440003ba8c79dd - Have repoduction
      * 073fde5a-bff3-1c1f-e053-08114f8c5588 - Nothing match (although the word 'and' will match, but we use AND operator in fuzzy match so it will not count)
      * 9fdb1eee-bc28-43a9-88c5-972324784837 - Contains 'precipitation and evaporation' in parameter_vocabs
@@ -114,8 +116,8 @@ public class RestApiTest extends BaseTestClass {
         );
 
         // Call rest api directly and get query result
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=reproduction,precipitation and evaporation", Collections.class);
-        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "Only 2 hit");
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=reproduction,precipitation and evaporation", ExtendedCollections.class);
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getTotal(), "Only 2 hit");
         assertEquals(
                 "516811d7-cd1e-207a-e0440003ba8c79dd",
                 collections.getBody().getCollections().get(0).getId(),
@@ -137,7 +139,7 @@ public class RestApiTest extends BaseTestClass {
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json"
         );
 
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1994-02-16T13:00:00Z/..", Collections.class);
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1994-02-16T13:00:00Z/..", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1 because 1 document do not have start date");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
@@ -145,7 +147,7 @@ public class RestApiTest extends BaseTestClass {
                 "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
 
         // The syntax slightly diff but they are the same / = /.. the time is slightly off with one of the record so still get 1
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T15:10:44Z/", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T15:10:44Z/", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1 because 1 document do not have start date");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
@@ -153,7 +155,7 @@ public class RestApiTest extends BaseTestClass {
                 "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
 
         // The syntax slightly diff but they are the same / = /.. the time is slightly off with one of the record so still get 1
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T14:10:44Z/", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T14:10:44Z/", ExtendedCollections.class);
         assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
