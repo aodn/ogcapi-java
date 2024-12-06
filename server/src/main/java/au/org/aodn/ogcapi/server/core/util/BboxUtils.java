@@ -4,12 +4,8 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
-import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
-import org.locationtech.spatial4j.shape.jts.JtsGeometry;
-
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Utility for BBox operation only, it assumes the incoming is a bounding box
@@ -17,18 +13,18 @@ import java.util.Map;
 public class BboxUtils {
     /**
      * Normalize a bbox by adjusting longitudes to the range [-180, 180], and then split it into two if it
-     * is cross meridian.
+     * is cross meridian. We need this because Bbox is assumed to work within this range only.
      * @param minx - left
      * @param maxx - right
      * @param miny - top
      * @param maxy - bottom
-     * @return
+     * @return - Geometry which is bounded [-180, 180]
      */
     public static Geometry normalizeBbox(double minx, double maxx, double miny, double maxy) {
         // Bounding check, if greater than 360 already cover whole world, so adjust the maxx to something
         // meaningful, noted that minx and maxx is not normalized yet so can be anything even beyond 180
         if((maxx - minx) >= 360) {
-            // Value does not matter, it cover whole world which is equal to
+            // Value does not matter, it covered whole world which is equal to
             minx = -180;
             maxx = 180;
         }

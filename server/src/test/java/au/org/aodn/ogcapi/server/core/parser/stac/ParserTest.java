@@ -136,9 +136,6 @@ public class ParserTest {
      *
      * @throws CQLException - Will not throw
      * @throws IOException - Will not throw
-     * @throws FactoryException - Will not throw
-     * @throws TransformException - Will not throw
-     * @throws ParseException - Will not throw
      */
     @Test
     public void verifyIntersectionWorks2() throws CQLException, IOException {
@@ -162,10 +159,10 @@ public class ParserTest {
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
 
         Assertions.assertFalse(g.isEmpty());
-        Assertions.assertTrue(g instanceof Polygon);
+        Assertions.assertInstanceOf(Polygon.class, g);
 
-        Assertions.assertEquals(g.getCentroid().getX(), 168.30090846621448, "getX()");
-        Assertions.assertEquals(g.getCentroid().getY(), -33.95984804960966, "getY()");
+        Assertions.assertEquals(168.30090846621448, g.getCentroid().getX(), "getX()");
+        Assertions.assertEquals(-33.95984804960966, g.getCentroid().getY(), "getY()");
     }
     /**
      * Test almost the same as the verifyIntersectionWorks2, since verifyIntersectionWorks1 create a polygon same as box
@@ -173,9 +170,6 @@ public class ParserTest {
      *
      * @throws CQLException - Will not throw
      * @throws IOException - Will not throw
-     * @throws FactoryException - Will not throw
-     * @throws TransformException - Will not throw
-     * @throws ParseException - Will not throw
      */
     @Test
     public void verifyBBoxWorks2() throws CQLException, IOException {
@@ -199,10 +193,10 @@ public class ParserTest {
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
 
         Assertions.assertFalse(g.isEmpty());
-        Assertions.assertTrue(g instanceof Polygon);
+        Assertions.assertInstanceOf(Polygon.class, g);
 
-        Assertions.assertEquals(g.getCentroid().getX(), 168.30090846621448, 0.0000001, "getX()");
-        Assertions.assertEquals(g.getCentroid().getY(), -33.95984804960966, 0.0000001, "getY()");
+        Assertions.assertEquals(168.30090846621448, g.getCentroid().getX(), 0.0000001, "getX()");
+        Assertions.assertEquals(-33.95984804960966, g.getCentroid().getY(), 0.0000001, "getY()");
     }
     /**
      * Similar test as verifyBBoxWorks2, the BBOX not only cross meridian but the sample json have spatial extents
@@ -210,9 +204,6 @@ public class ParserTest {
      *
      * @throws CQLException - Will not throw
      * @throws IOException - Will not throw
-     * @throws FactoryException - Will not throw
-     * @throws TransformException - Will not throw
-     * @throws ParseException - Will not throw
      */
     @Test
     public void verifyBBoxWorks3() throws CQLException, IOException {
@@ -235,15 +226,15 @@ public class ParserTest {
         // return value are geo applied the CQL, and in this case only BBOX intersected
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
 
-        Assertions.assertTrue(g instanceof MultiPolygon);
+        Assertions.assertInstanceOf(MultiPolygon.class, g);
 
         MultiPolygon mp = (MultiPolygon)g;
-        Assertions.assertEquals(mp.getNumGeometries(), 2, "Geometries correct");
+        Assertions.assertEquals(2, mp.getNumGeometries(), "Geometries correct");
 
-        Assertions.assertEquals(mp.getGeometryN(0).getCentroid().getX(), -159.53241830835444, 0.0000001, "getX() for 0");
-        Assertions.assertEquals(mp.getGeometryN(0).getCentroid().getY(), -19.5, 0.0000001, "getY() for 0");
+        Assertions.assertEquals(-159.53241830835444, mp.getGeometryN(1).getCentroid().getX(), 0.0000001, "getX() for 0");
+        Assertions.assertEquals(-19.5, mp.getGeometryN(1).getCentroid().getY(), 0.0000001, "getY() for 0");
 
-        Assertions.assertEquals(mp.getGeometryN(1).getCentroid().getX(), 151.62121416760516, 0.0000001, "getX() for 1");
-        Assertions.assertEquals(mp.getGeometryN(1).getCentroid().getY(), -18.000822620336752, 0.0000001, "getY() for 1");
+        Assertions.assertEquals(151.62121416760516, mp.getGeometryN(0).getCentroid().getX(), 0.0000001, "getX() for 1");
+        Assertions.assertEquals(-18.000822620336752, mp.getGeometryN(0).getCentroid().getY(),  0.0000001, "getY() for 1");
     }
 }
