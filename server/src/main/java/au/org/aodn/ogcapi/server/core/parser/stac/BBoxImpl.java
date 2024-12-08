@@ -2,7 +2,7 @@ package au.org.aodn.ogcapi.server.core.parser.stac;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
-import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
+import au.org.aodn.ogcapi.server.core.util.BboxUtils;
 import lombok.Getter;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.geotools.referencing.CRS;
@@ -61,7 +61,7 @@ public class BBoxImpl <T extends Enum<T> & CQLFieldsInterface> implements BBOX {
                 crs = null;
             }
             this.bounds = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
-            this.geometry = GeometryUtils.normalizePolygon(GeometryUtils.createPolygon(minx, maxx, miny, maxy));
+            this.geometry = BboxUtils.normalizeBbox(minx, maxx, miny, maxy);
 
         } catch (FactoryException fe) {
             throw new RuntimeException("Failed to setup bbox SRS", fe);
