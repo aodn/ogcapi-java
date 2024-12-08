@@ -1,9 +1,7 @@
 package au.org.aodn.ogcapi.server.core.util;
 
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.LinearRing;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -20,7 +18,7 @@ public class BboxUtils {
      * @param maxy - bottom
      * @return - Geometry which is bounded [-180, 180]
      */
-    public static Geometry normalizeBbox(double minx, double maxx, double miny, double maxy) {
+    public static MultiPolygon normalizeBbox(double minx, double maxx, double miny, double maxy) {
         // Bounding check, if greater than 360 already cover whole world, so adjust the maxx to something
         // meaningful, noted that minx and maxx is not normalized yet so can be anything even beyond 180
         if((maxx - minx) >= 360) {
@@ -30,7 +28,6 @@ public class BboxUtils {
         }
         minx = (minx < -180) ? 180 - Math.abs(180 + minx) : minx;
         maxx = (maxx > 180) ? -(maxx - 180) : maxx;
-
         // Normalized the box, so it is within [-180, 180]
         List<Polygon> polygons = new ArrayList<>();
         if(maxx >= 0 && maxx <= 180) {
@@ -44,15 +41,15 @@ public class BboxUtils {
         return GeometryUtils.getFactory().createMultiPolygon(polygons.toArray(new Polygon[0]));
     }
 
-    protected static Geometry createBoxPolygon(double minx, double maxx, double miny, double maxy) {
+    protected static Geometry createBoxPolygon(double startX, double endX, double startY, double endY) {
         // If the longitude range crosses the anti-meridian (e.g., maxx > 180)
         // Normal case have not cross dateline
         Coordinate[] coordinates = new Coordinate[] {
-                new Coordinate(minx, miny),   // Bottom-left corner
-                new Coordinate(maxx, miny),   // Bottom-right corner
-                new Coordinate(maxx, maxy),   // Top-right corner
-                new Coordinate(minx, maxy),   // Top-left corner
-                new Coordinate(minx, miny)    // Closing the loop (bottom-left corner)
+                new Coordinate(startX, startY),   // Bottom-left corner
+                new Coordinate(endX, startY),   // Bottom-right corner
+                new Coordinate(endX, endY),   // Top-right corner
+                new Coordinate(startX, endY),   // Top-left corner
+                new Coordinate(startX, startY)    // Closing the loop (bottom-left corner)
         };
 
         // Create a LinearRing for the boundary of the Polygon
