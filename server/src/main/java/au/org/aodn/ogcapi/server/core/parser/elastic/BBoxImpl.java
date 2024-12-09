@@ -2,10 +2,10 @@ package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
+import au.org.aodn.ogcapi.server.core.util.BboxUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import co.elastic.clients.elasticsearch._types.TopLeftBottomRightGeoBounds;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import org.geotools.filter.spatial.BBOXImpl;
 import org.geotools.geometry.jts.JTS;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
@@ -13,7 +13,6 @@ import org.geotools.geometry.jts.ReferencedEnvelope3D;
 import org.geotools.referencing.CRS;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.MultiLineString;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.MultiValuedFilter;
 import org.opengis.filter.expression.Expression;
@@ -94,8 +93,8 @@ public class BBoxImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandl
             this.bounds = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
 
             // We need to handle anti-meridian, we normalize the polygon and may split into two polygon to cover
-            // two area due to crossing -180 <> 180 line
-            Geometry g = GeometryUtils.normalizePolygon(GeometryUtils.createPolygon(minx, maxx, miny, maxy));
+            // two area due to crossing -180 <> 180 line, this is because elastic geo_bounding_box assume [180, -180]
+            Geometry g = BboxUtils.normalizeBbox(minx, maxx, miny, maxy);
             this.create2DCQL(e, GeometryUtils.toReferencedEnvelope(g,crs) , matchAction, enumType);
 
         } catch (FactoryException fe) {

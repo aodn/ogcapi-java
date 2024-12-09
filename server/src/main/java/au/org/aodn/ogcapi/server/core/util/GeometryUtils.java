@@ -29,6 +29,8 @@ import java.util.concurrent.*;
 public class GeometryUtils {
 
     protected static final int PRECISION = 15;
+
+    @Getter
     protected static GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
     protected static ObjectMapper mapper = new ObjectMapper();
@@ -221,22 +223,6 @@ public class GeometryUtils {
         // Set dateline 180 check to true to unwrap a polygon across -180 line
         JtsGeometry jtsGeometry = new JtsGeometry(polygon, JtsSpatialContext.GEO, true, false);
         return jtsGeometry.getGeom();
-    }
-
-    public static Geometry createPolygon(double minx, double maxx, double miny, double maxy) {
-        // Define the corners of the bounding box
-        Coordinate[] coordinates = new Coordinate[] {
-                new Coordinate(minx, maxy), // Top-Left
-                new Coordinate(maxx, maxy), // Top-Right
-                new Coordinate(maxx, miny), // Bottom-Right
-                new Coordinate(minx, miny), // Bottom-Left
-                new Coordinate(minx, maxy)  // Closing the polygon (back to Top-Left)
-        };
-        // Create a LinearRing (boundary of the polygon)
-        LinearRing shell = factory.createLinearRing(coordinates);
-
-        // Create the polygon (no holes)
-        return factory.createPolygon(shell, null);
     }
 
     public static List<ReferencedEnvelope> toReferencedEnvelope(Geometry geometry, CoordinateReferenceSystem crs) {
