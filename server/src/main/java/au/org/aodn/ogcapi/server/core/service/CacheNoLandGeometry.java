@@ -28,6 +28,11 @@ public class CacheNoLandGeometry {
     @Lazy
     private CacheNoLandGeometry self;
 
+    /**
+     * Init cache after 1 second but then never call again due to Long.MAX_VALUE
+     * @return A Map include the uuid and the noloand geometry
+     */
+    @Scheduled(initialDelay = 1000, fixedDelay = Long.MAX_VALUE)
     @Cacheable("all_noland_geometry")
     public Map<String, StacCollectionModel> getAllNoLandGeometry() {
         ElasticSearchBase.SearchResult result = elasticSearch.searchCollectionBy(
@@ -47,7 +52,7 @@ public class CacheNoLandGeometry {
     /**
      *  Refresh every 24 hrs
      */
-    @Scheduled(initialDelay = 1000, fixedDelay = 86400000)
+    @Scheduled(initialDelay = 86400000, fixedDelay = 86400000)
     @CacheEvict(value = "all_noland_geometry", allEntries = true)
     protected void refreshAllCache() {
         // Refresh on Evict
