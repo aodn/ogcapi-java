@@ -42,6 +42,7 @@ abstract class ElasticSearchBase {
     protected Integer pageSize;
     protected ElasticsearchClient esClient;
     protected ObjectMapper mapper;
+    protected CacheNoLandGeometry cacheNoLandGeometry;
 
     @Getter
     @Setter
@@ -88,7 +89,7 @@ abstract class ElasticSearchBase {
             List<Query> searchAsYouTypeQueries,
             List<Query> filters) {
 
-        // By default it is limited to 10 even not specify, we want to use a variable so that we can change it later if needed.
+        // By default, it is limited to 10 even not specify, we want to use a variable so that we can change it later if needed.
         return new SearchRequest.Builder()
                 .size(searchAsYouTypeSize)
                 .index(indexName)
@@ -166,6 +167,8 @@ abstract class ElasticSearchBase {
                     // Convert the income field name to the real field name in STAC
                     List<String> fs = properties
                             .stream()
+                            // Centroid point is cached, so no need to set it in the query but need to back-fill it
+                            .filter(f -> !f.equalsIgnoreCase(CQLFields.centroid.name()))
                             .flatMap(v -> CQLFields.valueOf(v).getDisplayField().stream())
                             .filter(Objects::nonNull)
                             .toList();
@@ -195,7 +198,20 @@ abstract class ElasticSearchBase {
             List<FieldValue> lastSortValue = null;
             for(Hit<ObjectNode> i : response) {
                 if(i != null) {
-                    result.collections.add(this.formatResult(i.source()));
+                    StacCollectionModel model = this.formatResult(i.source());
+                    // Use cache value of noland_geometry if user request centroid
+                    if(properties != null && properties.contains(CQLFields.centroid.name())) {
+                        StacCollectionModel cache = cacheNoLandGeometry.getAllNoLandGeometry().get(model.getUuid());
+                        if(cache.getSummaries() != null) {
+                            if(model.getSummaries() == null) {
+                                model.setSummaries(cache.getSummaries());
+                            }
+                            else {
+                                model.getSummaries().setGeometryNoLand(cache.getSummaries().getGeometryNoLand());
+                            }
+                        }
+                    }
+                    result.collections.add(model);
                     lastSortValue = i.sort();
                 }
             }

@@ -55,6 +55,12 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    centroid_nocache(
+            StacSummeries.GeometryNoLand.searchField,
+            StacSummeries.GeometryNoLand.displayField,
+            null,
+            null
+    ),
     temporal(
             StacSummeries.Temporal.searchField,
             StacSummeries.Temporal.displayField,
