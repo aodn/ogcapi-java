@@ -301,6 +301,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 // Nothing to do as except null as default
             }
             // Get the score after parsing
+            // TODO: !! It is not good to set score due to fact that the text search include match on filter
+            // in case of text where filter is the only match, the score will become null (only fuzzy match have score)
+            // then if you set a score, you have nothing match. In the future, this score should be removed if we
+            // do not encounter a good use case. !!
             Double score = null;
             try {
                 if (setting.get(CQLElasticSetting.score) != null &&
