@@ -59,6 +59,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     protected String searchAfterSplitRegex;
 
     public ElasticSearch(ElasticsearchClient client,
+                         CacheNoLandGeometry cacheNoLandGeometry,
                          ObjectMapper mapper,
                          String indexName,
                          Integer pageSize,
@@ -69,6 +70,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         this.setIndexName(indexName);
         this.setPageSize(pageSize);
         this.setSearchAsYouTypeSize(searchAsYouTypeSize);
+        this.setCacheNoLandGeometry(cacheNoLandGeometry);
         this.defaultElasticSetting = CQLToElasticFilterFactory.getDefaultSetting();
     }
 
