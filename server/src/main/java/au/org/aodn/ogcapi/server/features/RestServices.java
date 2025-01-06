@@ -47,7 +47,7 @@ public class RestServices extends OGCApiService {
             String endDate
     ) {
         try {
-            var result = search.searchDataset(collectionId, startDate, endDate);
+            var result = search.searchDatasetData(collectionId, startDate, endDate);
             return ResponseEntity.ok()
                     .body(result.getSummarizedDataset());
         } catch (Exception e) {

@@ -438,7 +438,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     @Override
-    public DatasetSearchResult searchDataset(
+    public DatasetSearchResult searchDatasetData(
             String collectionId,
             String startDate,
             String endDate

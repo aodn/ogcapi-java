@@ -15,7 +15,7 @@ public interface Search {
 
     ElasticSearchBase.SearchResult searchCollections(List<String> ids, String sortBy);
     ElasticSearchBase.SearchResult searchAllCollections(String sortBy) throws Exception;
-    DatasetSearchResult searchDataset(String collectionId, String startDate, String endDate) throws Exception;
+    DatasetSearchResult searchDatasetData(String collectionId, String startDate, String endDate) throws Exception;
 
     ElasticSearchBase.SearchResult searchByParameters(
             List<String> targets,

@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -130,6 +131,23 @@ public abstract class OGCApiService {
             else {
                 return String.join(" AND ", filter, f);
             }
+        }
+    }
+    /**
+     * Convert the bbox parameter to CQL
+     * @param bbox
+     * @param filter
+     * @return
+     */
+    public static String processBBoxParameter(List<BigDecimal> bbox, String filter) {
+        String f = null;
+        if(bbox.size() == 4) {
+            // 2D
+            f = String.format("BBOX(%s,%s,%s,%s)", bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3));
+        }
+        else if(bbox.size() == 6) {
+            // 3D
+            f = String.format("BBOX(%s,%s,%%,%s,%s,%s)", bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3), bbox.get(4), bbox.get(5));
         }
     }
 }
