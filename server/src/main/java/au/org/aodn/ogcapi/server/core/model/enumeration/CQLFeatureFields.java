@@ -17,10 +17,10 @@ import java.util.stream.Collectors;
 public enum CQLFeatureFields implements CQLFieldsInterface {
 
     id(
-            "id",
-            "id",
+            StacBasicField.UUID.searchField,
+            StacBasicField.UUID.displayField,
             null,
-            (order) -> new SortOptions.Builder().field(f -> f.field("id.keyword").order(order))
+            (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.UUID.sortField).order(order))
     ),
     collection(
             "collection",

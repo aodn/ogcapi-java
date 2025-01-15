@@ -16,7 +16,6 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
-import co.elastic.clients.util.NamedValue;
 import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -30,6 +29,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -230,7 +230,7 @@ abstract class ElasticSearchBase {
 
         try {
             log.info("Start search {} {}", ZonedDateTime.now(), Thread.currentThread().getName());
-            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
+            Iterable<Hit<ObjectNode>> response = pageableSearch(builderSupplier, ObjectNode.class, maxSize);
 
             SearchResult<StacCollectionModel> result = new SearchResult<>();
             result.collections = new ArrayList<>();
@@ -313,7 +313,7 @@ abstract class ElasticSearchBase {
      * @return - The items that matches the query mentioned in the requestBuilder
      * @param <T> A generic type for Elastic query
      */
-    protected <T> Iterable<Hit<T>> pagableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
+    protected <T> Iterable<Hit<T>> pageableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
         try {
             SearchRequest sr = requestBuilder.get().build();
             log.debug("Final elastic search payload {}", sr.toString());
@@ -387,12 +387,12 @@ abstract class ElasticSearchBase {
      * @return - The items that matches the query mentioned in the requestBuilder
      * @param <T> A generic type for Elastic query
      */
-    protected <T extends TermsBucketBase> Iterable<T> pagableAggregation(
-            Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
+    protected <T extends MultiBucketBase> Iterable<T> pageableAggregation(
+            Function<Map<String, FieldValue>, SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
         try {
-            SearchRequest sr = requestBuilder.get().build();
+            SearchRequest sr = requestBuilder.apply(null).build();
             String aggKey = sr.aggregations().keySet().stream().findFirst().orElse("");
-            log.debug("Final elastic aggregation payload {}", sr.toString());
+            log.debug("Final elastic aggregation payload {}", sr);
 
             final AtomicLong count = new AtomicLong(0);
             final AtomicReference<SearchResponse<T>> response = new AtomicReference<>(
@@ -410,7 +410,7 @@ abstract class ElasticSearchBase {
                     }
 
                     Aggregate ags = response.get().aggregations().get(aggKey);
-                    Buckets<? extends TermsBucketBase> stb = ags.sterms().buckets();
+                    Buckets<? extends MultiBucketBase> stb = ags.composite().buckets();
 
                     // If we hit the end, that means we have iterated to end of page.
                     if (index < stb.array().size()) {
@@ -423,18 +423,8 @@ abstract class ElasticSearchBase {
                         // Load next batch
                         try {
                             // Get the last sorted value from the last batch
-                            List<FieldValue> sortedValues = stb.array()
-                                    .get(index - 1)
-                                    .aggregations()
-                                    .get(aggKey)
-                                    .topHits()
-                                    .hits()
-                                    .hits()
-                                    .get(0)
-                                    .sort();
-
                             // Use the last builder and append the searchAfter values
-                            SearchRequest request = requestBuilder.get().searchAfter(sortedValues).build();
+                            SearchRequest request = requestBuilder.apply(ags.composite().afterKey()).build();
                             log.debug("Final elastic aggregation payload {}", request.toString());
 
                             response.set(esClient.search(request, clazz));
@@ -453,7 +443,7 @@ abstract class ElasticSearchBase {
                     count.incrementAndGet();
 
                     Aggregate ags = response.get().aggregations().get(aggKey);
-                    Buckets<? extends TermsBucketBase> stb = ags.sterms().buckets();
+                    Buckets<? extends MultiBucketBase> stb = ags.composite().buckets();
 
                     if(index < stb.array().size()) {
                         return clazz.cast(stb.array().get(index++));

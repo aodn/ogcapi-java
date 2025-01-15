@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.DataSearchResult;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
@@ -9,8 +8,6 @@ import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch._types.aggregations.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
@@ -20,11 +17,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.json.JsonData;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
-import co.elastic.clients.util.ObjectBuilder;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import jakarta.json.JsonValue;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
@@ -36,7 +29,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Supplier;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -406,6 +399,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     /**
      * We will need to create a aggregation for each of the feature query, this one target the summary feature
      * which create a summary of the indexed count group by geometry and date range for the cloud optimized data.
+     * Example:
+     * {"aggregations":{"coordinates":{"aggregations":{"min_time":{"min":{"field":"properties.time"}},"coordinates":{"top_hits":{"size":1,"sort":[{"id.keyword":{"order":"asc"}}],"_source":{"includes":["geometry.geometry.coordinates"]}}},"total_count":{"sum":{"field":"properties.count"}},"max_time":{"max":{"field":"properties.time"}}},"composite":{"size":2200,"sources":[{"coordinates":{"terms":{"script":{"lang":"painless","source":"doc['geometry.geometry.coordinates'].value.toString()"}}}},{"id":{"terms":{"field":"id.keyword"}}}]}}},"size":0}
+     *
      * @param collectionId - The metadata set id
      * @param properties - The field you want to return
      * @param filter - Any filter applied to the summary operation
@@ -419,17 +415,31 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         final String MIN_TIME = "min_time";
         final String MAX_TIME = "max_time";
 
-        Supplier<SearchRequest.Builder> builderSupplier = () -> {
+        Function<Map<String, FieldValue>, SearchRequest.Builder> builderSupplier = (afterKey) -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
 
-            // Group by operation
-            TermsAggregation groupBy = TermsAggregation.of(term -> term
+            CompositeAggregationSource coordinate = CompositeAggregationSource.of(c -> c.terms(t -> t
                     .script(script -> script.inline(s -> s
                             .lang("painless")
                             .source("doc['geometry.geometry.coordinates'].value.toString()"))
-                    )
-                    .size(pageSize)
-            );
+                    )));
+
+            CompositeAggregationSource id = CompositeAggregationSource.of(c -> c.terms(t -> t
+                            .field(StacBasicField.UUID.sortField)));
+
+            Aggregation groupBy = afterKey == null ?
+                    new Aggregation.Builder().composite(c -> c
+                                .sources(List.of(Map.of(COORDINATES, coordinate), Map.of("id", id)))
+                                .size(pageSize)
+                            ).build()
+                    :
+                    new Aggregation.Builder().composite(c -> c
+                                .sources(List.of(Map.of(COORDINATES, coordinate), Map.of("id", id)))
+                                .size(pageSize)
+                                .after(afterKey)
+                            ).build();
+
+
             // Sum of count
             Aggregation sum = SumAggregation.of(s -> s.field(CQLFeatureFields.count.searchField))._toAggregation();
 
@@ -448,7 +458,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     .build();
 
             Aggregation aggregation = new Aggregation.Builder()
-                    .terms(groupBy)
+                    .composite(groupBy.composite())
                     .aggregations(Map.of(
                             TOTAL_COUNT, sum,
                             MIN_TIME, min,
@@ -468,9 +478,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             ElasticSearchBase.SearchResult<StacItemModel> result = new ElasticSearchBase.SearchResult<>();
             result.setCollections(new ArrayList<>());
 
-            Iterable<StringTermsBucket> response = pagableAggregation(builderSupplier, StringTermsBucket.class, null);
+            Iterable<CompositeBucket> response = pageableAggregation(builderSupplier, CompositeBucket.class, null);
 
-            for (StringTermsBucket node : response) {
+            for (CompositeBucket node : response) {
                 if (node != null) {
                     StacItemModel. StacItemModelBuilder model = StacItemModel.builder();
 
