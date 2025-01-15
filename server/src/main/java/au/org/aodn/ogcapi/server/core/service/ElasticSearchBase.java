@@ -316,7 +316,7 @@ abstract class ElasticSearchBase {
     protected <T> Iterable<Hit<T>> pageableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
         try {
             SearchRequest sr = requestBuilder.get().build();
-            log.debug("Final elastic search payload {}", sr.toString());
+            log.debug("Final elastic search payload {}", sr);
 
             final AtomicLong count = new AtomicLong(0);
             final AtomicReference<SearchResponse<T>> response = new AtomicReference<>(
