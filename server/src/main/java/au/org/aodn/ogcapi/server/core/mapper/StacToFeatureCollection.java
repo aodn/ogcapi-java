@@ -41,6 +41,7 @@ public abstract class StacToFeatureCollection implements Converter<ElasticSearch
 
                     return feature;
                 })
+                .filter(i -> i.getGeometry() != null)
                 .toList();
 
         f.setFeatures(features);
