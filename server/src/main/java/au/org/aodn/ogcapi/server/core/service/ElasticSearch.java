@@ -399,8 +399,67 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     /**
      * We will need to create a aggregation for each of the feature query, this one target the summary feature
      * which create a summary of the indexed count group by geometry and date range for the cloud optimized data.
-     * Example:
-     * {"aggregations":{"coordinates":{"aggregations":{"min_time":{"min":{"field":"properties.time"}},"coordinates":{"top_hits":{"size":1,"sort":[{"id.keyword":{"order":"asc"}}],"_source":{"includes":["geometry.geometry.coordinates"]}}},"total_count":{"sum":{"field":"properties.count"}},"max_time":{"max":{"field":"properties.time"}}},"composite":{"size":2200,"sources":[{"coordinates":{"terms":{"script":{"lang":"painless","source":"doc['geometry.geometry.coordinates'].value.toString()"}}}},{"id":{"terms":{"field":"id.keyword"}}}]}}},"size":0}
+     * Below code equals this:
+     * {
+     *   "aggregations": {
+     *     "coordinates": {
+     *       "aggregations": {
+     *         "total_count": {
+     *           "sum": {
+     *             "field": "properties.count"
+     *           }
+     *         },
+     *         "max_time": {
+     *           "max": {
+     *             "field": "properties.time"
+     *           }
+     *         },
+     *         "min_time": {
+     *           "min": {
+     *             "field": "properties.time"
+     *           }
+     *         },
+     *         "coordinates": {
+     *           "top_hits": {
+     *             "size": 1,
+     *             "sort": [
+     *               {
+     *                 "collection.keyword": {
+     *                   "order": "asc"
+     *                 }
+     *               },
+     *               {
+     *                 "geometry.geometry.coordinates": {
+     *                   "order": "asc"
+     *                 }
+     *               },
+     *             ]
+     *           }
+     *         }
+     *       },
+     *       "composite": {
+     *         "size": 2200,
+     *         "sources": [
+     *           {
+     *             "collection": {
+     *               "terms": {
+     *                 "field": "collection.keyword"
+     *               }
+     *             }
+     *           },
+     *           {
+     *             "coordinates": {
+     *               "terms": {
+     *                 "field": "geometry.geometry.coordinates"
+     *               }
+     *             }
+     *           }
+     *         ]
+     *       }
+     *     }
+     *   },
+     *   "size": 0
+     * }
      *
      * @param collectionId - The metadata set id
      * @param properties - The field you want to return
@@ -417,24 +476,28 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         Function<Map<String, FieldValue>, SearchRequest.Builder> builderSupplier = (afterKey) -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
-
+            // Group by coordinates
             CompositeAggregationSource coordinate = CompositeAggregationSource.of(c -> c.terms(t -> t
-                    .script(script -> script.inline(s -> s
-                            .lang("painless")
-                            .source("doc['geometry.geometry.coordinates'].value.toString()"))
-                    )));
-
+                    .field("geometry.geometry.coordinates")));
+            // Group by id
             CompositeAggregationSource id = CompositeAggregationSource.of(c -> c.terms(t -> t
-                            .field(StacBasicField.UUID.sortField)));
+                            .field(StacBasicField.Collection.sortField)));
 
+            // Use t page to another batch of records if exist
             Aggregation groupBy = afterKey == null ?
                     new Aggregation.Builder().composite(c -> c
-                                .sources(List.of(Map.of(COORDINATES, coordinate), Map.of("id", id)))
+                                .sources(List.of(
+                                        Map.of(StacBasicField.Collection.displayField, id),
+                                        Map.of(COORDINATES, coordinate))
+                                )
                                 .size(pageSize)
                             ).build()
                     :
                     new Aggregation.Builder().composite(c -> c
-                                .sources(List.of(Map.of(COORDINATES, coordinate), Map.of("id", id)))
+                                .sources(List.of(
+                                        Map.of(StacBasicField.Collection.displayField, id),
+                                        Map.of(COORDINATES, coordinate))
+                                )
                                 .size(pageSize)
                                 .after(afterKey)
                             ).build();
@@ -449,12 +512,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             // Max value of field
             Aggregation max = MaxAggregation.of(s -> s.field(CQLFeatureFields.temporal.searchField))._toAggregation();
 
-            // Field value of the group by
+            // Field value to return, think of it as select part of SQL
             Aggregation field = new Aggregation.Builder().topHits(th -> th.size(1)
-                            .source(src -> src.filter(f -> f
-                                    .includes("geometry.geometry.coordinates"))
-                            )
-                            .sort(createSortOptions(CQLFeatureFields.id.name(), CQLFeatureFields.class)))
+                            .sort(createSortOptions(
+                                    String.format("%s,%s", CQLFeatureFields.collection.name(), CQLFeatureFields.geometry.name()),
+                                    CQLFeatureFields.class)))
                     .build();
 
             Aggregation aggregation = new Aggregation.Builder()

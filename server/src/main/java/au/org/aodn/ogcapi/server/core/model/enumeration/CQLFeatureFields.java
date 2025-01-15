@@ -23,10 +23,10 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
             (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.UUID.sortField).order(order))
     ),
     collection(
-            "collection",
-            "collection",
+            StacBasicField.Collection.searchField,
+            StacBasicField.Collection.displayField,
             null,
-            null
+            (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.Collection.sortField).order(order))
     ),
     temporal(
             "properties.time",
@@ -44,7 +44,7 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
             "geometry",
             "geometry",
             null,
-            null
+            (order) -> new SortOptions.Builder().field(f -> f.field("geometry.geometry.coordinates").order(order))
     );
 
     // Field that use to do sort, elastic search treat FieldData (searchField) differently, a searchField is not
