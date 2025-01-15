@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.ogcapi.server.core.mapper.StacToFeatureCollection;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
@@ -32,6 +33,9 @@ public class RestApi implements CollectionsApi {
 
     @Autowired
     protected RestServices featuresService;
+
+    @Autowired
+    protected StacToFeatureCollection stacToFeatureCollection;
 
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
@@ -99,7 +103,13 @@ public class RestApi implements CollectionsApi {
 
         try {
             FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
-            return featuresService.getFeature(collectionId, fid, properties, filter != null ? "filter=" + filter : null);
+            return featuresService.getFeature(
+                    collectionId,
+                    fid,
+                    properties,
+                    filter != null ? "filter=" + filter : null,
+                    stacToFeatureCollection::convert
+            );
         }
         catch(java.lang.Exception e) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();

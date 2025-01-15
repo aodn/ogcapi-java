@@ -1,6 +1,9 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
@@ -29,10 +32,29 @@ public abstract class OGCApiService {
     protected Search search;
 
     /**
-     * You can find conformance id here https://docs.ogc.org/is/19-072/19-072.html#ats_core
+     * You can find conformance id
+     * <a href="https://docs.ogc.org/is/19-072/19-072.html#ats_core">here</a>
      * @return List of string contains conformance
      */
     public abstract List<String> getConformanceDeclaration();
+
+    public <R> ResponseEntity<R> getFeature(String collectionId,
+                                        FeatureId fid,
+                                        List<String> properties,
+                                        String filter,
+                                        BiFunction<ElasticSearchBase.SearchResult<StacItemModel>, Filter, R> converter) throws Exception {
+        switch(fid) {
+            case summary -> {
+                ElasticSearch.SearchResult<StacItemModel> result = search.searchFeatureSummary(collectionId, properties, filter);
+                return ResponseEntity.ok()
+                        .body(converter.apply(result, null));
+            }
+            default -> {
+                // Individual item
+                return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+            }
+        }
+    }
 
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
                                                    String filter,
@@ -40,11 +62,11 @@ public abstract class OGCApiService {
                                                    String sortBy,
                                                    OGCMediaTypeMapper f,
                                                    CQLCrsType coor,
-                                                   BiFunction<ElasticSearchBase.SearchResult, Filter, R> converter) {
+                                                   BiFunction<ElasticSearchBase.SearchResult<StacCollectionModel>, Filter, R> converter) {
         try {
             switch (f) {
                 case json -> {
-                    ElasticSearchBase.SearchResult result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
+                    ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
 
                     CQLToStacFilterFactory factory = CQLToStacFilterFactory.builder()
                             .cqlCrsType(coor)
