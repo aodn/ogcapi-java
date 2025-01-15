@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.DatasetSearchResult;
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import org.springframework.http.ResponseEntity;
@@ -10,14 +11,14 @@ import java.util.List;
 import java.util.Map;
 
 public interface Search {
-    ElasticSearchBase.SearchResult searchCollectionWithGeometry(List<String> ids, String sortBy) throws Exception;
-    ElasticSearchBase.SearchResult searchAllCollectionsWithGeometry(String sortBy) throws Exception;
+    ElasticSearchBase.SearchResult<StacCollectionModel> searchCollectionWithGeometry(List<String> ids, String sortBy) throws Exception;
+    ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollectionsWithGeometry(String sortBy) throws Exception;
 
-    ElasticSearchBase.SearchResult searchCollections(List<String> ids, String sortBy);
-    ElasticSearchBase.SearchResult searchAllCollections(String sortBy) throws Exception;
-    DatasetSearchResult searchDatasetData(String collectionId, String startDate, String endDate) throws Exception;
+    ElasticSearchBase.SearchResult<StacCollectionModel> searchCollections(List<String> ids, String sortBy);
+    ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollections(String sortBy) throws Exception;
+    ElasticSearchBase.SearchResult<StacItemModel> searchFeatureSummary(String collectionId, List<String> properties, String filter) throws Exception;
 
-    ElasticSearchBase.SearchResult searchByParameters(
+    ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(
             List<String> targets,
             String filter,
             List<String> properties,

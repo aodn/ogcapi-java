@@ -3,10 +3,15 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
+import au.org.aodn.ogcapi.server.core.model.DataSearchResult;
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.StacItemModel;
+import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +31,7 @@ public class RestServices extends OGCApiService {
     }
 
     public ResponseEntity<Collection> getCollection(String id, String sortBy) throws NoSuchElementException {
-        ElasticSearch.SearchResult model = search.searchCollections(List.of(id), sortBy);
+        ElasticSearch.SearchResult<StacCollectionModel> model = search.searchCollections(List.of(id), sortBy);
 
         if (!model.getCollections().isEmpty()) {
             if(model.getCollections().size() > 1) {
@@ -41,18 +46,22 @@ public class RestServices extends OGCApiService {
         }
     }
 
-    public ResponseEntity<FeatureCollectionGeoJSON> getSummarizedDataset(
-            String collectionId,
-            String startDate,
-            String endDate
-    ) {
-        try {
-            var result = search.searchDatasetData(collectionId, startDate, endDate);
-            return ResponseEntity.ok()
-                    .body(result.getSummarizedDataset());
-        } catch (Exception e) {
-            log.error("Error while getting dataset", e);
-            return ResponseEntity.internalServerError().build();
+    public ResponseEntity<?> getFeature(String collectionId,
+                                                               FeatureId fid,
+                                                               List<String> properties,
+                                                               String filter) throws Exception {
+        switch(fid) {
+            case summary -> {
+                ElasticSearch.SearchResult<StacItemModel> result = search.searchFeatureSummary(collectionId, properties, filter);
+                return ResponseEntity.ok()
+                        .body(result.getCollections());
+            }
+            default -> {
+                // Individual item
+                return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+            }
         }
     }
+
+
 }

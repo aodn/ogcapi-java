@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Mapper(componentModel = "spring")
-public abstract class StacToTileSetWmWGS84Q implements Converter<ElasticSearch.SearchResult, TileSet> {
+public abstract class StacToTileSetWmWGS84Q implements Converter<ElasticSearch.SearchResult<StacCollectionModel>, TileSet> {
 
     @Value("${api.host}")
     protected String hostname;
@@ -27,7 +27,7 @@ public abstract class StacToTileSetWmWGS84Q implements Converter<ElasticSearch.S
     }
 
     @Override
-    public TileSet convert(ElasticSearch.SearchResult from, Filter noUse) {
+    public TileSet convert(ElasticSearch.SearchResult<StacCollectionModel> from, Filter noUse) {
         TileSetWorldMercatorWGS84Quad tileSet = new TileSetWorldMercatorWGS84Quad();
 
         tileSet.setTileMatrixSetURI("http://www.opengis.net/def/tilematrixset/OGC/1.0/WorldMercatorWGS84Quad");

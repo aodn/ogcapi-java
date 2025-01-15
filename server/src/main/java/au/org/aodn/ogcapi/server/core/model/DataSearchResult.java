@@ -9,13 +9,16 @@ import au.org.aodn.ogcapi.server.core.util.DatasetSummarizer;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class DatasetSearchResult {
+import static au.org.aodn.ogcapi.server.core.util.CommonUtils.safeGet;
+
+public class DataSearchResult {
 
     private final FeatureCollectionGeoJSON dataset;
 
-    public DatasetSearchResult() {
+    public DataSearchResult() {
         this.dataset = new FeatureCollectionGeoJSON();
         initDataset();
     }
@@ -31,31 +34,48 @@ public class DatasetSearchResult {
         return summarizer.getSummarizedDataset();
     }
 
-    public void addDatum(DatumModel datum) {
+    public void addDatum(StacItemModel datum) {
 
         if (datum == null) {
             throw new IllegalArgumentException("Datum cannot be null");
         }
 
-        var feature = new FeatureGeoJSON();
+        FeatureGeoJSON feature = new FeatureGeoJSON();
         feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+
         var geometry = new PointGeoJSON();
         geometry.setType(PointGeoJSON.TypeEnum.POINT);
-        var coordinates = new ArrayList<BigDecimal>();
+
+        List<BigDecimal> coordinates = new ArrayList<>();
 
         // Don't use null checks here because it is a list and even if it is null,
         // it still needs "null" to occupy the space
-        coordinates.add(datum.getLongitude());
-        coordinates.add(datum.getLatitude());
+        safeGet(() -> ((Map<?,?>)datum.getGeometry().get("geometry")).get("coordinates"))
+                .filter(item -> item instanceof List)
+                .map(item -> (List<?>)item)
+                .ifPresent(item -> {
+                    if(item.size() == 2) {
+                        coordinates.add(new BigDecimal(item.get(0).toString()));
+                        coordinates.add(new BigDecimal(item.get(1).toString()));
+                    }
+                });
+
 
         geometry.setCoordinates(coordinates);
         feature.setGeometry(geometry);
 
         // Please add more properties if needed
         Map<String, Object> properties = new HashMap<>();
-        properties.put(FeatureProperty.TIME.getValue(), datum.getTime());
-        properties.put(FeatureProperty.DEPTH.getValue(), datum.getDepth());
-        properties.put(FeatureProperty.COUNT.getValue(), datum.getCount());
+
+        safeGet(() -> ((Map<?,?>)datum.getGeometry().get("properties")).get("depth"))
+                .ifPresent(val -> properties.put(FeatureProperty.DEPTH.getValue(), val));
+
+        safeGet(() -> (datum.getProperties().get("time")))
+                .ifPresent(val -> properties.put(FeatureProperty.TIME.getValue(), val));
+
+        safeGet(() -> (datum.getProperties().get("count")))
+                .ifPresent(val -> properties.put(FeatureProperty.COUNT.getValue(), val));
+
 
         feature.setProperties(properties);
         dataset.getFeatures().add(feature);

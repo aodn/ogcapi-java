@@ -94,7 +94,7 @@ public abstract class OGCApiService {
      * @param filter - Any existing filter
      * @return - A combined filter with datetime rewrite.
      */
-    public static String processDatetimeParameter(String datetime, String filter) {
+    public static String processDatetimeParameter(String fieldName, String datetime, String filter) {
 
         // TODO: How to handle this? e.g how to know if it is before or after if ?datetime=<timestamp instant>
 
@@ -118,7 +118,7 @@ public abstract class OGCApiService {
         }
 
         if(d != null) {
-            f = String.format("temporal %s %s", operator, d);
+            f = String.format("%s %s %s", fieldName, operator, d);
         }
 
         if((filter == null || filter.isEmpty())) {
@@ -139,15 +139,22 @@ public abstract class OGCApiService {
      * @param filter
      * @return
      */
-    public static String processBBoxParameter(List<BigDecimal> bbox, String filter) {
+    public static String processBBoxParameter(String fieldName, List<BigDecimal> bbox, String filter) {
         String f = null;
         if(bbox.size() == 4) {
             // 2D
-            f = String.format("BBOX(%s,%s,%s,%s)", bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3));
+            f = String.format("BBOX(%s,%s,%s,%s,%s)", fieldName, bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3));
         }
         else if(bbox.size() == 6) {
             // 3D
-            f = String.format("BBOX(%s,%s,%%,%s,%s,%s)", bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3), bbox.get(4), bbox.get(5));
+            f = String.format("BBOX(%s,%s,%s,%s,%s,%s,%s)", fieldName, bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3), bbox.get(4), bbox.get(5));
+        }
+
+        if(f == null) {
+            return filter;
+        }
+        else {
+            return String.join(" AND ", filter, f);
         }
     }
 }
