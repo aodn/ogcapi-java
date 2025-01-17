@@ -24,17 +24,17 @@ import static org.junit.jupiter.api.Assertions.*;
 public class RestExtApiTest extends BaseTestClass {
 
     @BeforeAll
-    public void beforeClass() throws IOException {
+    public void beforeClass() {
         super.createElasticIndex();
     }
 
     @AfterAll
-    public void clear() throws IOException {
+    public void clear() {
         super.clearElasticIndex();
     }
 
     @BeforeEach
-    public void afterTest() throws IOException {
+    public void afterTest() {
         super.clearElasticIndex();
     }
 
@@ -48,11 +48,11 @@ public class RestExtApiTest extends BaseTestClass {
 
     /**
      *
-     * @throws IOException
+     * @throws IOException - not expect to throw
      */
     @Test
     public void verifyApiResponseOnIncompleteInput() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
@@ -69,11 +69,11 @@ public class RestExtApiTest extends BaseTestClass {
 
     /**
      *
-     * @throws IOException
+     * @throws IOException - not expect to throw
      */
     @Test
     public void verifyApiResponseOnCompleteInput() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
@@ -89,11 +89,11 @@ public class RestExtApiTest extends BaseTestClass {
 
     /**
      *
-     * @throws IOException
+     * @throws IOException - not expect to throw
      */
     @Test
     public void verifyApiResponseOnTypoInputNoParameterVocabsFilter() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -110,7 +110,7 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyApiResponseOnTypoInputSingleParameterVocabsFilter() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -129,7 +129,7 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyApiResponseOnTypoInputMultipleParameterVocabsFilter() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -148,7 +148,7 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyApiResponseOnTypoInputMultipleParameterVocabsFilterNoResults() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -165,7 +165,7 @@ public class RestExtApiTest extends BaseTestClass {
     public void verifyApiResponseOnParameterVocabSuggestions() throws IOException {
         super.insertTestVocabs();
 
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
             "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
         );
@@ -192,7 +192,7 @@ public class RestExtApiTest extends BaseTestClass {
     public void verifyApiResponseOnPlatformVocabSuggestions() throws IOException {
         super.insertTestVocabs();
 
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "record_with_parameter_platform_organisation_vocabs.json"
         );
 
@@ -238,7 +238,7 @@ public class RestExtApiTest extends BaseTestClass {
     public void verifyApiResponseOnOrganisationVocabSuggestions() throws IOException {
         super.insertTestVocabs();
 
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "record_with_parameter_platform_organisation_vocabs.json"
         );
 

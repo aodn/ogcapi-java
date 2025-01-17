@@ -1,8 +1,12 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
+import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
+import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -33,12 +37,12 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @AfterAll
-    public void clear() throws IOException {
+    public void clear() {
         super.clearElasticIndex();
     }
 
     @BeforeEach
-    public void afterTest() throws IOException {
+    public void afterTest() {
         super.clearElasticIndex();
     }
 
@@ -57,7 +61,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
@@ -99,7 +103,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
@@ -187,7 +191,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
@@ -288,7 +292,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
@@ -358,7 +362,7 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyGetSingleCollection() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
         );
@@ -377,7 +381,7 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyBBoxCorrect() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "ae86e2f5-eaaf-459e-a405-e654d85adb9c.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
         );
@@ -430,5 +434,129 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(154.0, bbox.get(0).get(2).doubleValue(), "Overall bounding box coor 3");
         assertEquals(-9.0, bbox.get(0).get(3).doubleValue(), "Overall bounding box coor 4");
     }
+    /**
+     * Verify the function correctly sum up the values for feature id summary
+     * @throws IOException - Not expect to throw
+     */
+    @Test
+    public void verifyAggregationFeatureSummaryCorrect() throws IOException {
+        super.insertJsonToElasticCODataIndex(
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.1.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.2.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample2.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.1.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.2.json"
+        );
 
+        // Call rest api directly and get query result
+        ResponseEntity<FeatureCollectionGeoJSON> collection = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/35234913-aa3c-48ec-b9a4-77f822f66ef8/items/summary",
+                FeatureCollectionGeoJSON.class);
+
+        assertNotNull(collection.getBody(), "Body not null");
+
+        FeatureCollectionGeoJSON json = collection.getBody();
+        assertEquals(3, json.getFeatures().size(), "Features correct");
+
+        // Sort make sure compare always same order
+        List<FeatureGeoJSON> sf = json.getFeatures().stream()
+                        .sorted((a,b) -> b.getGeometry().hashCode() - a.getGeometry().hashCode())
+                .toList();
+        // Sample1
+        FeatureGeoJSON featureGeoJSON1 = new FeatureGeoJSON();
+        featureGeoJSON1.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        featureGeoJSON1.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(159.26), BigDecimal.valueOf(-24.72))));
+        featureGeoJSON1.setProperties(Map.of(
+                FeatureProperty.COUNT.getValue(), 42.0,
+                FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
+                FeatureProperty.END_TIME.getValue(), "2023-02-01T00:00:00.000Z"
+
+        ));
+        assertEquals(featureGeoJSON1, sf.get(0), "featureGeoJSON1");
+
+        // Sample3
+        FeatureGeoJSON featureGeoJSON2 = new FeatureGeoJSON();
+        featureGeoJSON2.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        featureGeoJSON2.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(154.81), BigDecimal.valueOf(-26.2))));
+        featureGeoJSON2.setProperties(Map.of(
+                FeatureProperty.COUNT.getValue(), 48.0,
+                FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
+                FeatureProperty.END_TIME.getValue(), "2024-03-01T00:00:00.000Z"
+
+        ));
+        assertEquals(featureGeoJSON2, sf.get(1), "featureGeoJSON2");
+
+        FeatureGeoJSON featureGeoJSON3 = new FeatureGeoJSON();
+        featureGeoJSON3.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        featureGeoJSON3.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(153.56), BigDecimal.valueOf(-26.59))));
+        featureGeoJSON3.setProperties(Map.of(
+                FeatureProperty.COUNT.getValue(), 14.0,
+                FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
+                FeatureProperty.END_TIME.getValue(), "2023-02-01T00:00:00.000Z"
+
+        ));
+        assertEquals(featureGeoJSON3, sf.get(2), "featureGeoJSON3");
+    }
+    /**
+     * We add more sample data and will trigger page load.
+     * @throws IOException - Not expect to throw
+     */
+    @Test
+    public void verifyAggregationFeatureSummaryWithPageCorrect() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        super.insertJsonToElasticCODataIndex(
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.1.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.2.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample2.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.1.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.2.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample4.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample5.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample5.1.json"
+        );
+
+        // Call rest api directly and get query result
+        ResponseEntity<FeatureCollectionGeoJSON> collection = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/35234913-aa3c-48ec-b9a4-77f822f66ef8/items/summary",
+                FeatureCollectionGeoJSON.class);
+
+        assertNotNull(collection.getBody(), "Body not null");
+
+        FeatureCollectionGeoJSON json = collection.getBody();
+        assertEquals(5, json.getFeatures().size(), "Features correct");
+
+        // Sort make sure compare always same order
+        List<FeatureGeoJSON> sf = json.getFeatures().stream()
+                .sorted((a,b) -> b.getGeometry().hashCode() - a.getGeometry().hashCode())
+                .toList();
+
+        // Sample1
+        FeatureGeoJSON featureGeoJSON1 = new FeatureGeoJSON();
+        featureGeoJSON1.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        featureGeoJSON1.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-26.59))));
+        featureGeoJSON1.setProperties(Map.of(
+                FeatureProperty.COUNT.getValue(), 14.0,
+                FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
+                FeatureProperty.END_TIME.getValue(), "2023-02-01T00:00:00.000Z"
+
+        ));
+        assertEquals(featureGeoJSON1, sf.get(0), "featureGeoJSON1");
+
+        // Sample5
+        FeatureGeoJSON featureGeoJSON2 = new FeatureGeoJSON();
+        featureGeoJSON2.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        featureGeoJSON2.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-126.59))));
+        featureGeoJSON2.setProperties(Map.of(
+                FeatureProperty.COUNT.getValue(), 20.0,
+                FeatureProperty.START_TIME.getValue(), "2022-12-01T00:00:00.000Z",
+                FeatureProperty.END_TIME.getValue(), "2023-02-01T00:00:00.000Z"
+
+        ));
+        assertEquals(featureGeoJSON2, sf.get(1), "featureGeoJSON2");
+    }
 }

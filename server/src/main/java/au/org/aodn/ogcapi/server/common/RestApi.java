@@ -9,6 +9,7 @@ import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollections;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFilterType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
@@ -154,7 +155,10 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
         // TODO: Support other CRS.
         if (CQLFilterType.convert(filterLang) == CQLFilterType.CQL && CQLCrsType.convertFromUrl(crs) == CQLCrsType.EPSG4326) {
             if (datetime != null) {
-                filter = OGCApiService.processDatetimeParameter(datetime, filter);
+                filter = OGCApiService.processDatetimeParameter(CQLFields.temporal.name(), datetime, filter);
+            }
+            if (bbox != null) {
+                filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), bbox, filter);
             }
             return commonService.getCollectionList(
                     q,

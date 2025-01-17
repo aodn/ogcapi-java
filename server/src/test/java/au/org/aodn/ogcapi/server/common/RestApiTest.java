@@ -30,12 +30,12 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @AfterAll
-    public void clear() throws IOException {
+    public void clear() {
         super.clearElasticIndex();
     }
 
     @BeforeEach
-    public void afterTest() throws IOException {
+    public void afterTest() {
         super.clearElasticIndex();
     }
 
@@ -44,13 +44,13 @@ public class RestApiTest extends BaseTestClass {
         RestApi api = new RestApi();
         ResponseEntity<Void> response = api.apiGet(OGCMediaTypeMapper.json.toString());
 
-        assertEquals(response.getStatusCode(), HttpStatus.TEMPORARY_REDIRECT, "Incorrect redirect");
-        assertEquals(Objects.requireNonNull(response.getHeaders().getLocation()).getPath() , "/api/v1/ogc/api-docs/v3", "Incorrect path");
+        assertEquals(HttpStatus.TEMPORARY_REDIRECT, response.getStatusCode(), "Incorrect redirect");
+        assertEquals("/api/v1/ogc/api-docs/v3", Objects.requireNonNull(response.getHeaders().getLocation()).getPath(), "Incorrect path");
 
         response = api.apiGet(OGCMediaTypeMapper.html.toString());
 
-        assertEquals(response.getStatusCode(), HttpStatus.TEMPORARY_REDIRECT, "Incorrect redirect");
-        assertEquals(Objects.requireNonNull(response.getHeaders().getLocation()).getPath(), "/api/v1/ogc/swagger-ui/index.html", "Incorrect path");
+        assertEquals(HttpStatus.TEMPORARY_REDIRECT, response.getStatusCode(), "Incorrect redirect");
+        assertEquals("/api/v1/ogc/swagger-ui/index.html", Objects.requireNonNull(response.getHeaders().getLocation()).getPath(), "Incorrect path");
     }
 
     @Test
@@ -65,7 +65,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyApiCollectionsQueryOnText1() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
         );
@@ -109,7 +109,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyApiCollectionsQueryOnText2() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "073fde5a-bff3-1c1f-e053-08114f8c5588.json",
                 "9fdb1eee-bc28-43a9-88c5-972324784837.json"
@@ -133,7 +133,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyDateTimeAfterBounds() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json"
@@ -171,7 +171,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyDateTimeBeforeBounds() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json"
@@ -197,7 +197,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyDateTimeBetweenBounds() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json"
@@ -231,7 +231,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyDateTimeBoundsWithDiscreteTime() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "caf7220a-19e0-4a7f-9af6-eade6c79a47a.json"     // This one have two start/end
@@ -272,7 +272,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyPropertiesParameter() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json"
         );
 
@@ -292,7 +292,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLPropertyIsNullIsNotNull() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",    // Provider null
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider not null
         );
@@ -317,7 +317,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLPropertyEqualsOperation() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
         );
@@ -336,7 +336,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLPropertyAndOperation() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
         );
@@ -363,7 +363,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyParameterTextSearchMatch() throws IOException  {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
         );
@@ -380,7 +380,7 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyParameterParameterVocabsSearchMatch() throws IOException  {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -408,7 +408,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLPropertyOrOperation() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",   // Provider null
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
         );
@@ -437,7 +437,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLPropertyIntersectOperation() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc.json"
         );
         // Intersect with this polygon
@@ -465,7 +465,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLPropertyDatasetGroup() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",   // Provider null
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
         );
@@ -484,7 +484,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLPropertyScore() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -495,8 +495,8 @@ public class RestApiTest extends BaseTestClass {
 
         // Make sure OR not work as it didn't make sense to use or with setting
         ResponseEntity<ErrorResponse> error = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR parameter_vocabs='wave'", ErrorResponse.class);
-        assertEquals(error.getStatusCode(), HttpStatus.INTERNAL_SERVER_ERROR);
-        assertEquals(Objects.requireNonNull(error.getBody()).getMessage(), "Or combine with query setting do not make sense", "correct error");
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, error.getStatusCode());
+        assertEquals("Or combine with query setting do not make sense", Objects.requireNonNull(error.getBody()).getMessage(), "correct error");
 
         // Lower score but the fuzzy is now with operator AND, therefore it will try to match all words 'dataset' and 'includes' with fuzzy
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=1", Collections.class);
@@ -514,7 +514,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyCQLFuzzyKey() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -548,7 +548,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifySortBy() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
@@ -585,7 +585,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifySortByTemporalCorrect() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "073fde5a-bff3-1c1f-e053-08114f8c5588.json",
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",

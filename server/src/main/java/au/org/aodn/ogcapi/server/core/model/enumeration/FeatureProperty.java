@@ -8,10 +8,10 @@ public enum FeatureProperty {
     DEPTH("depth"),
     COUNT("count"),
     UUID("uuid"),
+    GEOMETRY("geometry"),
     START_TIME("startTime"),
     END_TIME("endTime"),
-    COORDINATE_ACCURACY("coordinateAccuracy"),
-    ;
+    COORDINATE_ACCURACY("coordinateAccuracy");
 
     private final String value;
 

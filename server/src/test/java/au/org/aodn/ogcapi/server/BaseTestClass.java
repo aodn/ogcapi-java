@@ -11,6 +11,8 @@ import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
+import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 
@@ -33,6 +35,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@Slf4j
 public class BaseTestClass {
 
     @LocalServerPort
@@ -53,8 +56,14 @@ public class BaseTestClass {
     @Value("${elasticsearch.index.name}")
     protected String record_index_name;
 
+    @Value("${elasticsearch.cloud_optimized_index.name}")
+    protected String co_data_index_name;
+
     @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabs_index_name;
+
+    @Value("${elasticsearch.cloud_optimized_index.name}")
+    protected String data_index_name;
 
     protected Logger logger = LoggerFactory.getLogger(BaseTestClass.class);
 
@@ -66,12 +75,18 @@ public class BaseTestClass {
         return "http://localhost:" + port + "/api/v1/ogc/ext";
     }
 
-    protected void clearElasticIndex() throws IOException {
+    protected List<Map<String, String>> schemas;
 
-        List<Map<String, String>> schemas = List.of(
+    @PostConstruct
+    public void initSchemas() {
+        schemas = List.of(
+                Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json"),
                 Map.of("name", vocabs_index_name, "mapping", "vocabs_index_schema.json"),
-                Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json")
+                Map.of("name", data_index_name, "mapping", "data_index_schema.json")
         );
+    }
+
+    protected void clearElasticIndex() {
 
         logger.debug("Clear elastic index");
         try {
@@ -99,11 +114,6 @@ public class BaseTestClass {
 
     protected void createElasticIndex() {
 
-        List<Map<String, String>> schemas = List.of(
-                Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json"),
-                Map.of("name", vocabs_index_name, "mapping", "vocabs_index_schema.json")
-        );
-
         schemas.forEach(schema -> {
             try {
                 // TODO: This file should come from indexer jar when CodeArtifact in place
@@ -119,7 +129,7 @@ public class BaseTestClass {
                     // Ignore it, happens when index already created
                 }
             } catch (IOException e) {
-                e.printStackTrace();
+                log.error("Error", e);
             }
         });
     }
@@ -201,14 +211,14 @@ public class BaseTestClass {
         }
     }
 
-    protected void insertJsonToElasticIndex(String... filenames) throws IOException {
+    protected void insertJsonToElasticIndex(String index, String[] filenames) throws IOException {
         // Now insert json to index
         for(String filename : filenames) {
             File j = ResourceUtils.getFile("classpath:databag/" + filename);
 
             try(Reader reader = new FileReader(j)) {
                 IndexResponse indexResponse = client.index(i -> i
-                        .index(record_index_name)
+                        .index(index)
                         .withJson(reader));
 
                 logger.info("Sample file {}, indexed with response : {}", filename, indexResponse);
@@ -221,7 +231,7 @@ public class BaseTestClass {
 
         // Check the number of doc store inside the ES instance is correct
         SearchRequest.Builder b = new SearchRequest.Builder()
-            .index(record_index_name)
+                .index(index)
                 .query(QueryBuilders.matchAll().build()._toQuery());
 
         SearchRequest request = b.build();
@@ -231,6 +241,14 @@ public class BaseTestClass {
         logger.debug(response.toString());
 
         assertEquals(filenames.length, response.hits().hits().size(), "Number of docs stored is correct");
+    }
+
+    protected void insertJsonToElasticRecordIndex(String... filenames) throws IOException {
+        this.insertJsonToElasticIndex(record_index_name, filenames);
+    }
+
+    protected void insertJsonToElasticCODataIndex(String... filenames) throws IOException {
+        this.insertJsonToElasticIndex(co_data_index_name, filenames);
     }
 
     protected Response getClusterHealth() throws IOException {
