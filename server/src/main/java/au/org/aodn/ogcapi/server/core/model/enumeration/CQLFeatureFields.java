@@ -45,6 +45,18 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
             "geometry",
             null,
             (order) -> new SortOptions.Builder().field(f -> f.field("geometry.geometry.coordinates").order(order))
+    ),
+    lat(
+            "properties.lat",
+            "properties.lat",
+            null,
+            (order) -> new SortOptions.Builder().field(f -> f.field("properties.lat").order(order))
+    ),
+    lng(
+            "properties.lng",
+            "properties.lng",
+            null,
+            (order) -> new SortOptions.Builder().field(f -> f.field("properties.lng").order(order))
     );
 
     // Field that use to do sort, elastic search treat FieldData (searchField) differently, a searchField is not

@@ -29,7 +29,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 /**
@@ -388,10 +388,12 @@ abstract class ElasticSearchBase {
      * @param <T> A generic type for Elastic query
      */
     protected <T extends MultiBucketBase> Iterable<T> pageableAggregation(
-            Function<Map<String, FieldValue>, SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
+            BiFunction<Map<String, FieldValue>, Map<String, FieldValue>, SearchRequest.Builder> requestBuilder,
+            Class<T> clazz,
+            Map<String, FieldValue> arguments,
+            Long maxSize) {
         try {
-            SearchRequest sr = requestBuilder.apply(null).build();
-            String aggKey = sr.aggregations().keySet().stream().findFirst().orElse("");
+            SearchRequest sr = requestBuilder.apply(arguments, null).build();
             log.debug("Final elastic aggregation payload {}", sr);
 
             final AtomicLong count = new AtomicLong(0);
@@ -409,7 +411,13 @@ abstract class ElasticSearchBase {
                         return count.get() < maxSize;
                     }
 
-                    Aggregate ags = response.get().aggregations().get(aggKey);
+                    Aggregate ags = response.get()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue())
+                            .nested()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue());
+
                     Buckets<? extends MultiBucketBase> stb = ags.composite().buckets();
 
                     // If we hit the end, that means we have iterated to end of page.
@@ -424,13 +432,23 @@ abstract class ElasticSearchBase {
                         try {
                             // Get the last sorted value from the last batch
                             // Use the last builder and append the searchAfter values
-                            SearchRequest request = requestBuilder.apply(ags.composite().afterKey()).build();
+                            SearchRequest request = requestBuilder.apply(arguments, ags.composite().afterKey()).build();
                             log.debug("Final elastic aggregation payload {}", request.toString());
 
                             response.set(esClient.search(request, clazz));
                             // Reset counter from start
                             index = 0;
-                            return index < response.get().hits().hits().size();
+
+                            ags = response.get()
+                                    .aggregations()
+                                    .get(arguments.get("aggKey").stringValue())
+                                    .nested()
+                                    .aggregations()
+                                    .get(arguments.get("aggKey").stringValue());
+
+                            stb = ags.composite().buckets();
+
+                            return index < stb.array().size();
                         }
                         catch(IOException ieo) {
                             throw new RuntimeException(ieo);
@@ -442,7 +460,13 @@ abstract class ElasticSearchBase {
                 public T next() {
                     count.incrementAndGet();
 
-                    Aggregate ags = response.get().aggregations().get(aggKey);
+                    Aggregate ags = response.get()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue())
+                            .nested()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue());
+
                     Buckets<? extends MultiBucketBase> stb = ags.composite().buckets();
 
                     if(index < stb.array().size()) {
@@ -454,7 +478,7 @@ abstract class ElasticSearchBase {
                 }
             };
         }
-        catch(IOException e) {
+        catch(Exception e) {
             log.error("Fail to fetch record", e);
         }
         return Collections.emptySet();

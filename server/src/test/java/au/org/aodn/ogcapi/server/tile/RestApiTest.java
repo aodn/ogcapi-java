@@ -9,9 +9,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.io.IOException;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -19,17 +16,17 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class RestApiTest extends BaseTestClass {
 
     @BeforeAll
-    public void beforeClass() throws IOException {
+    public void beforeClass() {
         super.createElasticIndex();
     }
 
     @AfterAll
-    public void clear() throws IOException {
+    public void clear() {
         super.clearElasticIndex();
     }
 
     @BeforeEach
-    public void afterTest() throws IOException {
+    public void afterTest() {
         super.clearElasticIndex();
     }
 
@@ -43,7 +40,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyTiles() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
         );
@@ -53,16 +50,18 @@ public class RestApiTest extends BaseTestClass {
                 InlineResponse2002.class
         );
 
-        assertEquals(2, tiles.getBody().getTilesets().size(), "Count is correct");
-        assertEquals("Impacts of stress on coral reproduction.", tiles.getBody().getTilesets().get(0).getTitle(), "Title matched 1");
-        assertEquals("Ocean acidification historical reconstruction", tiles.getBody().getTilesets().get(1).getTitle(), "Title matched 2");
+        Assertions.assertNotNull(tiles.getBody(), "Body not null");
+        Assertions.assertNotNull(tiles.getBody().getTilesets(), "Tilesets not null");
+        Assertions.assertEquals(2, tiles.getBody().getTilesets().size(), "Count is correct");
+        Assertions.assertEquals("Impacts of stress on coral reproduction.", tiles.getBody().getTilesets().get(0).getTitle(), "Title matched 1");
+        Assertions.assertEquals("Ocean acidification historical reconstruction", tiles.getBody().getTilesets().get(1).getTitle(), "Title matched 2");
     }
     /**
      * Verify api call /collections/{collectionId}/tiles
      */
     @Test
     public void verifyCollectionTiles() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
         );
@@ -72,8 +71,10 @@ public class RestApiTest extends BaseTestClass {
                 InlineResponse2002.class
         );
 
-        assertEquals(1, tiles.getBody().getTilesets().size(), "Count is correct");
-        assertEquals("Impacts of stress on coral reproduction.", tiles.getBody().getTilesets().get(0).getTitle(), "Title matched 1");
+        Assertions.assertNotNull(tiles.getBody(), "Body not null");
+        Assertions.assertNotNull(tiles.getBody().getTilesets(), "Tilesets not null");
+        Assertions.assertEquals(1, tiles.getBody().getTilesets().size(), "Count is correct");
+        Assertions.assertEquals("Impacts of stress on coral reproduction.", tiles.getBody().getTilesets().get(0).getTitle(), "Title matched 1");
     }
     /**
      * Verify api call /tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}, this call will return the bounding
@@ -82,7 +83,7 @@ public class RestApiTest extends BaseTestClass {
      */
     @Test
     public void verifyTilesMatrixSetXYZ() throws IOException {
-        super.insertJsonToElasticIndex(
+        super.insertJsonToElasticRecordIndex(
                 "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc.json"
         );
 

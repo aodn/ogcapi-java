@@ -28,8 +28,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -450,7 +451,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
      *           {
      *             "coordinates": {
      *               "terms": {
-     *                 "field": "geometry.geometry.coordinates"
+     *                 "script": {
+     *                      "source": "doc['geometry.geometry.coordinates'].value.toString()",
+     *                      "lang": "painless"
+     *                 }
      *               }
      *             }
      *           }
@@ -474,29 +478,40 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         final String MIN_TIME = "min_time";
         final String MAX_TIME = "max_time";
 
-        Function<Map<String, FieldValue>, SearchRequest.Builder> builderSupplier = (afterKey) -> {
-            SearchRequest.Builder builder = new SearchRequest.Builder();
-            // Group by coordinates
-            CompositeAggregationSource coordinate = CompositeAggregationSource.of(c -> c.terms(t -> t
-                    .field("geometry.geometry.coordinates")));
-            // Group by id
-            CompositeAggregationSource id = CompositeAggregationSource.of(c -> c.terms(t -> t
-                            .field(StacBasicField.Collection.sortField)));
+        BiFunction<Map<String, FieldValue>, Map<String, FieldValue>, SearchRequest.Builder> builderSupplier = (
+                arguments, afterKey) -> {
 
-            // Use t page to another batch of records if exist
-            Aggregation groupBy = afterKey == null ?
+            SearchRequest.Builder builder = new SearchRequest.Builder();
+
+            builder.query(q -> q
+                            .term(t -> t
+                                    .field(CQLFeatureFields.collection.searchField)
+                                    .value(arguments.get("collectionId"))
+                            )
+                    );
+
+            // Group by lng
+            CompositeAggregationSource lng = CompositeAggregationSource.of(c -> c.terms(t -> t
+                    .field(CQLFeatureFields.lng.searchField)));
+
+            // Group by lat
+            CompositeAggregationSource lat = CompositeAggregationSource.of(c -> c.terms(t -> t
+                    .field(CQLFeatureFields.lat.searchField)));
+
+            // Use afterKey to page to another batch of records if exist
+            Aggregation compose = afterKey == null ?
                     new Aggregation.Builder().composite(c -> c
                                 .sources(List.of(
-                                        Map.of(StacBasicField.Collection.displayField, id),
-                                        Map.of(COORDINATES, coordinate))
+                                        Map.of(CQLFeatureFields.lng.name(), lng),
+                                        Map.of(CQLFeatureFields.lat.name(), lat))
                                 )
                                 .size(pageSize)
                             ).build()
                     :
                     new Aggregation.Builder().composite(c -> c
                                 .sources(List.of(
-                                        Map.of(StacBasicField.Collection.displayField, id),
-                                        Map.of(COORDINATES, coordinate))
+                                        Map.of(CQLFeatureFields.lng.name(), lng),
+                                        Map.of(CQLFeatureFields.lat.name(), lat))
                                 )
                                 .size(pageSize)
                                 .after(afterKey)
@@ -515,12 +530,12 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             // Field value to return, think of it as select part of SQL
             Aggregation field = new Aggregation.Builder().topHits(th -> th.size(1)
                             .sort(createSortOptions(
-                                    String.format("%s,%s", CQLFeatureFields.collection.name(), CQLFeatureFields.geometry.name()),
+                                    String.format("%s,%s", CQLFeatureFields.lng.name(), CQLFeatureFields.lat.name()),
                                     CQLFeatureFields.class)))
                     .build();
 
             Aggregation aggregation = new Aggregation.Builder()
-                    .composite(groupBy.composite())
+                    .composite(compose.composite())
                     .aggregations(Map.of(
                             TOTAL_COUNT, sum,
                             MIN_TIME, min,
@@ -529,9 +544,17 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     ))
                     .build();
 
+            // There is a limitation that all sort field, assume to be inside the properties
+            Aggregation nested = new Aggregation.Builder().nested(n -> n
+                            .path("properties")
+                    )
+                    .aggregations(COORDINATES, aggregation)
+                    .build();
+
+
             builder.index(dataIndexName)
                     .size(0)    // Do not return hits, only aggregations, that is the hits().hit() section will be empty
-                    .aggregations(COORDINATES, aggregation);
+                    .aggregations(COORDINATES, nested);
 
             return builder;
         };
@@ -540,7 +563,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             ElasticSearchBase.SearchResult<StacItemModel> result = new ElasticSearchBase.SearchResult<>();
             result.setCollections(new ArrayList<>());
 
-            Iterable<CompositeBucket> response = pageableAggregation(builderSupplier, CompositeBucket.class, null);
+            Map<String, FieldValue> arguments = Map.of(
+                    "collectionId", FieldValue.of(collectionId),
+                    "aggKey", FieldValue.of(COORDINATES)
+            );
+            Iterable<CompositeBucket> response = pageableAggregation(builderSupplier, CompositeBucket.class, arguments, null);
 
             for (CompositeBucket node : response) {
                 if (node != null) {
@@ -554,7 +581,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     JsonData jd = th.hits().hits().get(0).source();
                     if(jd != null) {
                         Map<?, ?> map = jd.to(Map.class);
-                        model.geometry((Map<?, ?>) map.get(FeatureProperty.GEOMETRY.getValue()));
+                        BigDecimal lng = BigDecimal.valueOf((double)map.get("lng"));
+                        BigDecimal lat = BigDecimal.valueOf((double)map.get("lat"));
+                        model.geometry(Map.of("geometry", Map.of(
+                                "coordinates", List.of(lng, lat)
+                        )));
                     }
 
                     SumAggregate sa = node.aggregations().get(TOTAL_COUNT).sum();
