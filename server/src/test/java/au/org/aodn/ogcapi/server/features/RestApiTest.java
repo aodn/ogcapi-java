@@ -499,4 +499,64 @@ public class RestApiTest extends BaseTestClass {
         ));
         assertEquals(featureGeoJSON3, sf.get(2), "featureGeoJSON3");
     }
+    /**
+     * We add more sample data and will trigger page load.
+     * @throws IOException - Not expect to throw
+     */
+    @Test
+    public void verifyAggregationFeatureSummaryWithPageCorrect() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        super.insertJsonToElasticCODataIndex(
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.1.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample1.2.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample2.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.1.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample3.2.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample4.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample5.0.json",
+                "cloudoptimized/35234913-aa3c-48ec-b9a4-77f822f66ef8/sample5.1.json"
+        );
+
+        // Call rest api directly and get query result
+        ResponseEntity<FeatureCollectionGeoJSON> collection = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/35234913-aa3c-48ec-b9a4-77f822f66ef8/items/summary",
+                FeatureCollectionGeoJSON.class);
+
+        assertNotNull(collection.getBody(), "Body not null");
+
+        FeatureCollectionGeoJSON json = collection.getBody();
+        assertEquals(5, json.getFeatures().size(), "Features correct");
+
+        // Sort make sure compare always same order
+        List<FeatureGeoJSON> sf = json.getFeatures().stream()
+                .sorted((a,b) -> b.getGeometry().hashCode() - a.getGeometry().hashCode())
+                .toList();
+
+        // Sample1
+        FeatureGeoJSON featureGeoJSON1 = new FeatureGeoJSON();
+        featureGeoJSON1.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        featureGeoJSON1.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-26.59))));
+        featureGeoJSON1.setProperties(Map.of(
+                FeatureProperty.COUNT.getValue(), 14.0,
+                FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
+                FeatureProperty.END_TIME.getValue(), "2023-02-01T00:00:00.000Z"
+
+        ));
+        assertEquals(featureGeoJSON1, sf.get(0), "featureGeoJSON1");
+
+        // Sample5
+        FeatureGeoJSON featureGeoJSON2 = new FeatureGeoJSON();
+        featureGeoJSON2.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+        featureGeoJSON2.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-126.59))));
+        featureGeoJSON2.setProperties(Map.of(
+                FeatureProperty.COUNT.getValue(), 20.0,
+                FeatureProperty.START_TIME.getValue(), "2022-12-01T00:00:00.000Z",
+                FeatureProperty.END_TIME.getValue(), "2023-02-01T00:00:00.000Z"
+
+        ));
+        assertEquals(featureGeoJSON2, sf.get(1), "featureGeoJSON2");
+    }
 }
