@@ -22,7 +22,7 @@ public abstract class StacToFeatureCollection implements Converter<ElasticSearch
         FeatureCollectionGeoJSON f = new FeatureCollectionGeoJSON();
         f.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
 
-        List<FeatureGeoJSON> features = model.getCollections().stream()
+        List<FeatureGeoJSON> features = model.getCollections().parallelStream()
                 .map(i -> {
                     FeatureGeoJSON feature = new FeatureGeoJSON();
                     feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
@@ -34,7 +34,7 @@ public abstract class StacToFeatureCollection implements Converter<ElasticSearch
                                     .map(item -> (BigDecimal)item)
                                     .toList();
 
-                            feature.setGeometry(new PointGeoJSON().coordinates(c));
+                            feature.setGeometry(new PointGeoJSON().type(PointGeoJSON.TypeEnum.POINT).coordinates(c));
                         }
                     }
                     feature.setProperties(i.getProperties());
