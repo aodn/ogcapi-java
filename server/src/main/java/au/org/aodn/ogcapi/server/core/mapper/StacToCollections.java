@@ -23,7 +23,7 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
     @Override
     public Collections convert(ElasticSearch.SearchResult<StacCollectionModel> model, Filter filter) {
 
-        List<Collection> collections = model.getCollections().stream()
+        List<Collection> collections = model.getCollections().parallelStream()
                 .map(m -> getCollection(m, filter, hostname))
                 .collect(Collectors.toList());
 

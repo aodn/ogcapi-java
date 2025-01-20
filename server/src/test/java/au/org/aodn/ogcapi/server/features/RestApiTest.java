@@ -467,7 +467,10 @@ public class RestApiTest extends BaseTestClass {
         // Sample1
         FeatureGeoJSON featureGeoJSON1 = new FeatureGeoJSON();
         featureGeoJSON1.setType(FeatureGeoJSON.TypeEnum.FEATURE);
-        featureGeoJSON1.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(159.26), BigDecimal.valueOf(-24.72))));
+        featureGeoJSON1.setGeometry(new PointGeoJSON()
+                .type(PointGeoJSON.TypeEnum.POINT)
+                .coordinates(List.of(BigDecimal.valueOf(159.26), BigDecimal.valueOf(-24.72)))
+        );
         featureGeoJSON1.setProperties(Map.of(
                 FeatureProperty.COUNT.getValue(), 42.0,
                 FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
@@ -479,7 +482,10 @@ public class RestApiTest extends BaseTestClass {
         // Sample3
         FeatureGeoJSON featureGeoJSON2 = new FeatureGeoJSON();
         featureGeoJSON2.setType(FeatureGeoJSON.TypeEnum.FEATURE);
-        featureGeoJSON2.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(154.81), BigDecimal.valueOf(-26.2))));
+        featureGeoJSON2.setGeometry(new PointGeoJSON()
+                .type(PointGeoJSON.TypeEnum.POINT)
+                .coordinates(List.of(BigDecimal.valueOf(154.81), BigDecimal.valueOf(-26.2)))
+        );
         featureGeoJSON2.setProperties(Map.of(
                 FeatureProperty.COUNT.getValue(), 48.0,
                 FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
@@ -490,7 +496,10 @@ public class RestApiTest extends BaseTestClass {
 
         FeatureGeoJSON featureGeoJSON3 = new FeatureGeoJSON();
         featureGeoJSON3.setType(FeatureGeoJSON.TypeEnum.FEATURE);
-        featureGeoJSON3.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(153.56), BigDecimal.valueOf(-26.59))));
+        featureGeoJSON3.setGeometry(new PointGeoJSON()
+                .type(PointGeoJSON.TypeEnum.POINT)
+                .coordinates(List.of(BigDecimal.valueOf(153.56), BigDecimal.valueOf(-26.59)))
+        );
         featureGeoJSON3.setProperties(Map.of(
                 FeatureProperty.COUNT.getValue(), 14.0,
                 FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
@@ -538,7 +547,10 @@ public class RestApiTest extends BaseTestClass {
         // Sample1
         FeatureGeoJSON featureGeoJSON1 = new FeatureGeoJSON();
         featureGeoJSON1.setType(FeatureGeoJSON.TypeEnum.FEATURE);
-        featureGeoJSON1.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-26.59))));
+        featureGeoJSON1.setGeometry(new PointGeoJSON()
+                .type(PointGeoJSON.TypeEnum.POINT)
+                .coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-26.59)))
+        );
         featureGeoJSON1.setProperties(Map.of(
                 FeatureProperty.COUNT.getValue(), 14.0,
                 FeatureProperty.START_TIME.getValue(), "2023-02-01T00:00:00.000Z",
@@ -550,7 +562,10 @@ public class RestApiTest extends BaseTestClass {
         // Sample5
         FeatureGeoJSON featureGeoJSON2 = new FeatureGeoJSON();
         featureGeoJSON2.setType(FeatureGeoJSON.TypeEnum.FEATURE);
-        featureGeoJSON2.setGeometry(new PointGeoJSON().coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-126.59))));
+        featureGeoJSON2.setGeometry(new PointGeoJSON()
+                .type(PointGeoJSON.TypeEnum.POINT)
+                .coordinates(List.of(BigDecimal.valueOf(163.56), BigDecimal.valueOf(-126.59)))
+        );
         featureGeoJSON2.setProperties(Map.of(
                 FeatureProperty.COUNT.getValue(), 20.0,
                 FeatureProperty.START_TIME.getValue(), "2022-12-01T00:00:00.000Z",
