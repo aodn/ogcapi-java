@@ -35,10 +35,10 @@ public class RestApi  {
             System.out.println("AWS_SECRET_ACCESS_KEY: " + System.getenv("AWS_SECRET_ACCESS_KEY"));
 
             Map<String, String> parameters = new HashMap<>();
-            parameters.put("collectionId", collectionId);
-            parameters.put("startDate", startDate);
-            parameters.put("endDate", endDate);
-            parameters.put("bbox", bbox);
+            parameters.put("COLLECTION_ID", collectionId);
+            parameters.put("START_DATE", startDate);
+            parameters.put("END_DATE", endDate);
+            parameters.put("BBOX", bbox);
             String jobId = awsBatchService.submitJob(
                     "test-downloading-job",
                     "test-downloading-job-queue",
