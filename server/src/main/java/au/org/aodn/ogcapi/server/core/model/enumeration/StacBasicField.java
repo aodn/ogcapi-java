@@ -22,6 +22,7 @@ public enum StacBasicField {
     ),
     Links("links", "links"),
     Collection("collection", "collection", "collection.keyword"),
+    AssetsSummary("assets.summary", "assets.summary")
     ;
 
     // Field that use to do sort, elastic search treat FieldData (searchField) differently, a searchField is not

@@ -616,4 +616,34 @@ public class RestApiTest extends BaseTestClass {
         assertEquals("bb3599d5-ab12-4278-a68b-42cac8e7a746", Objects.requireNonNull(collections.getBody()).getCollections().get(6).getId(), "bb3599d5-ab12-4278-a68b-42cac8e7a746");
         assertEquals("5c418118-2581-4936-b6fd-d6bedfe74f62", Objects.requireNonNull(collections.getBody()).getCollections().get(7).getId(), "5c418118-2581-4936-b6fd-d6bedfe74f62");
     }
+    /**
+     * If this field exist, then
+     */
+    @Test
+    public void verifyAssetSummarySearchWorks() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "073fde5a-bff3-1c1f-e053-08114f8c5588.json",
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "35234913-aa3c-48ec-b9a4-77f822f66ef8.json" // This one have cloud optimized index, that is assets.summary value
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=(assets_summary IS NULL)&sortby=-temporal",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(4, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 4");
+
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=(assets_summary IS NOT NULL)&sortby=-temporal",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        assertEquals("35234913-aa3c-48ec-b9a4-77f822f66ef8", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "asset.summary exist 35234913-aa3c-48ec-b9a4-77f822f66ef8");
+    }
 }

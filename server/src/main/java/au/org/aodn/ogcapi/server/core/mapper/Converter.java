@@ -132,24 +132,35 @@ public interface Converter<F, T> {
             collection.setExtent(extent);
         }
 
-        if(m.getLinks() != null) {
+        if(m.getLinks() != null || (m.getUuid() != null && uuidToNotebookName.containsKey(m.getUuid())) || m.getAssets() != null) {
             collection.setLinks(new ArrayList<>());
 
             // Convert object type.
-            collection.getLinks().addAll(
-                    m.getLinks()
-                            .stream()
-                            .map(l -> new Link()
-                                    .href(l.getHref())
-                                    .type(l.getType())
-                                    .rel(l.getRel())
-                                    .title(l.getTitle())
-                            )
-                            .toList()
-            );
+            if(m.getLinks() != null) {
+                collection.getLinks().addAll(
+                        m.getLinks()
+                                .stream()
+                                .map(l -> new Link()
+                                        .href(l.getHref())
+                                        .type(l.getType())
+                                        .rel(l.getRel())
+                                        .title(l.getTitle())
+                                )
+                                .toList()
+                );
+            }
+
+            if(m.getAssets() != null) {
+                m.getAssets().values().forEach(i -> collection.getLinks().add(new Link()
+                        .title(i.getTitle())
+                        .href(host + "/api/v1/ogc" + i.getHref())
+                        .type(i.getType())
+                        .rel(i.getRole().toString().toLowerCase())
+                ));
+            }
 
             // TODO: This is temp workaround for demo purpose, we need a way to map the notebook name to uuid
-            if(uuidToNotebookName.containsKey(m.getUuid())) {
+            if(m.getUuid() != null) {
                 collection.getLinks().add(new Link()
                         .href("https://github.com/aodn/aodn_cloud_optimised/blob/main/notebooks/" + uuidToNotebookName.get(m.getUuid()))
                         .type(MediaType.APPLICATION_JSON_VALUE)

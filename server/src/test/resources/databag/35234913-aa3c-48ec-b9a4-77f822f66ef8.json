@@ -1,0 +1,1799 @@
+{
+  "title": "IMOS - SOOP Expendable Bathythermographs (XBT) Research Group - XBT real-time data",
+  "description": "XBT real-time data is available through the IMOS portal. Data is acquired by technicians who ride the ships of opportunity in order to perform high density sampling along well established transit lines. The data acquisition system used is the Quoll developed by Turo Technology. Data collected and is stored in netcdf files, with real-time data messages (JJVV bathy messages) created on the ship and sent to shore by iridium sbd. This is inserted onto the GTS by our colleagues at the Australian Bureau of Meteorology. The full resolution data is collected from the ship and returned for processing to scientists at CSIRO in Hobart. It undergoes a full scientific QC process which identifies both bad data and oceanic features such as eddies, fronts and temperature inversions. Finally, the data is distributed to the GTSPP global data acquisition centre in Washington DC where it is made freely available to all. This SOOP dataset covers waters around Australia and across to New Zealand.",
+  "extent": {
+    "bbox": [
+      [
+        128,
+        -68,
+        180,
+        -8
+      ],
+      [
+        130,
+        -10,
+        132,
+        -8
+      ],
+      [
+        148,
+        -40,
+        150,
+        -38
+      ],
+      [
+        150,
+        -42,
+        180,
+        -16
+      ],
+      [
+        128,
+        -68,
+        160,
+        -42
+      ]
+    ],
+    "temporal": [
+      [
+        "2010-03-08T20:53:00Z",
+        null
+      ],
+      [
+        "2010-03-08T20:53:00Z",
+        null
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 90,
+    "status": "onGoing",
+    "credits": [
+      "Australia's Integrated Marine Observing System (IMOS) is enabled by the National Collaborative Research Infrastructure Strategy (NCRIS). It is operated by a consortium of institutions as an unincorporated joint venture, with the University of Tasmania as Lead Agent.",
+      "CSIRO Oceans & Atmosphere",
+      "Australian Bureau of Meteorology (BOM)",
+      "Royal Australian Navy (RAN)",
+      "Scripps Institution of Oceanography",
+      "National Oceanic and Atmospheric Administration (NOAA)",
+      "Atlantic Oceanographic and Meteorological Laboratory (AOML)"
+    ],
+    "scope": {
+      "code": "dataset",
+      "name": "IMOS Dataset level record"
+    },
+    "statement": "XBT real-time data contains only RAW data. The data has not been quality controlled.",
+    "creation": "2019-12-15T05:00:19",
+    "revision": "2024-06-23T20:35:52",
+    "dataset_group": "imos",
+    "dataset_provider": "IMOS",
+    "update_frequency": "real-time",
+    "proj:geometry": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                130,
+                -10
+              ],
+              [
+                132,
+                -10
+              ],
+              [
+                132,
+                -8
+              ],
+              [
+                130,
+                -8
+              ],
+              [
+                130,
+                -10
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                148,
+                -40
+              ],
+              [
+                150,
+                -40
+              ],
+              [
+                150,
+                -38
+              ],
+              [
+                148,
+                -38
+              ],
+              [
+                148,
+                -40
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                170,
+                -42
+              ],
+              [
+                174,
+                -42
+              ],
+              [
+                174,
+                -38
+              ],
+              [
+                172,
+                -38
+              ],
+              [
+                172,
+                -36
+              ],
+              [
+                176,
+                -36
+              ],
+              [
+                176,
+                -32
+              ],
+              [
+                178,
+                -32
+              ],
+              [
+                178,
+                -22
+              ],
+              [
+                180,
+                -22
+              ],
+              [
+                180,
+                -16
+              ],
+              [
+                174,
+                -16
+              ],
+              [
+                174,
+                -18
+              ],
+              [
+                172,
+                -18
+              ],
+              [
+                172,
+                -20
+              ],
+              [
+                168,
+                -20
+              ],
+              [
+                168,
+                -22
+              ],
+              [
+                160,
+                -22
+              ],
+              [
+                160,
+                -24
+              ],
+              [
+                152,
+                -24
+              ],
+              [
+                152,
+                -28
+              ],
+              [
+                156,
+                -28
+              ],
+              [
+                156,
+                -30
+              ],
+              [
+                154,
+                -30
+              ],
+              [
+                154,
+                -32
+              ],
+              [
+                150,
+                -32
+              ],
+              [
+                150,
+                -36
+              ],
+              [
+                156,
+                -36
+              ],
+              [
+                156,
+                -38
+              ],
+              [
+                162,
+                -38
+              ],
+              [
+                162,
+                -40
+              ],
+              [
+                170,
+                -40
+              ],
+              [
+                170,
+                -42
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                146,
+                -66
+              ],
+              [
+                150,
+                -66
+              ],
+              [
+                150,
+                -62
+              ],
+              [
+                152,
+                -62
+              ],
+              [
+                152,
+                -66
+              ],
+              [
+                160,
+                -66
+              ],
+              [
+                160,
+                -64
+              ],
+              [
+                158,
+                -64
+              ],
+              [
+                158,
+                -62
+              ],
+              [
+                156,
+                -62
+              ],
+              [
+                156,
+                -60
+              ],
+              [
+                158,
+                -60
+              ],
+              [
+                158,
+                -56
+              ],
+              [
+                160,
+                -56
+              ],
+              [
+                160,
+                -52
+              ],
+              [
+                158,
+                -52
+              ],
+              [
+                158,
+                -50
+              ],
+              [
+                156,
+                -50
+              ],
+              [
+                156,
+                -48
+              ],
+              [
+                154,
+                -48
+              ],
+              [
+                154,
+                -46
+              ],
+              [
+                152,
+                -46
+              ],
+              [
+                152,
+                -44
+              ],
+              [
+                150,
+                -44
+              ],
+              [
+                150,
+                -42
+              ],
+              [
+                146,
+                -42
+              ],
+              [
+                146,
+                -44
+              ],
+              [
+                144,
+                -44
+              ],
+              [
+                144,
+                -46
+              ],
+              [
+                140,
+                -46
+              ],
+              [
+                140,
+                -48
+              ],
+              [
+                138,
+                -48
+              ],
+              [
+                138,
+                -50
+              ],
+              [
+                134,
+                -50
+              ],
+              [
+                134,
+                -52
+              ],
+              [
+                132,
+                -52
+              ],
+              [
+                132,
+                -56
+              ],
+              [
+                130,
+                -56
+              ],
+              [
+                130,
+                -58
+              ],
+              [
+                128,
+                -58
+              ],
+              [
+                128,
+                -60
+              ],
+              [
+                130,
+                -60
+              ],
+              [
+                130,
+                -62
+              ],
+              [
+                134,
+                -62
+              ],
+              [
+                134,
+                -64
+              ],
+              [
+                136,
+                -64
+              ],
+              [
+                136,
+                -66
+              ],
+              [
+                138,
+                -66
+              ],
+              [
+                138,
+                -68
+              ],
+              [
+                146,
+                -68
+              ],
+              [
+                146,
+                -66
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "proj:geometry_noland": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                130,
+                -8
+              ],
+              [
+                130,
+                -10
+              ],
+              [
+                132,
+                -10
+              ],
+              [
+                132,
+                -8
+              ],
+              [
+                130,
+                -8
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                148,
+                -38.5
+              ],
+              [
+                148,
+                -40
+              ],
+              [
+                150,
+                -40
+              ],
+              [
+                150,
+                -38
+              ],
+              [
+                149,
+                -38
+              ],
+              [
+                148,
+                -38.5
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                170,
+                -40
+              ],
+              [
+                170,
+                -42
+              ],
+              [
+                171,
+                -42
+              ],
+              [
+                172.75,
+                -40.5
+              ],
+              [
+                173,
+                -41.25
+              ],
+              [
+                174,
+                -41.25
+              ],
+              [
+                174,
+                -39.5
+              ],
+              [
+                173.75,
+                -39.25
+              ],
+              [
+                174,
+                -39
+              ],
+              [
+                174,
+                -38
+              ],
+              [
+                172,
+                -38
+              ],
+              [
+                172,
+                -36
+              ],
+              [
+                174,
+                -36
+              ],
+              [
+                172.75,
+                -34.5
+              ],
+              [
+                174.25,
+                -35.25
+              ],
+              [
+                174.5,
+                -36
+              ],
+              [
+                176,
+                -36
+              ],
+              [
+                176,
+                -32
+              ],
+              [
+                178,
+                -32
+              ],
+              [
+                178,
+                -22
+              ],
+              [
+                180,
+                -22
+              ],
+              [
+                180,
+                -16.75
+              ],
+              [
+                178.5,
+                -16.75
+              ],
+              [
+                180,
+                -16.25
+              ],
+              [
+                180,
+                -16
+              ],
+              [
+                174,
+                -16
+              ],
+              [
+                174,
+                -18
+              ],
+              [
+                172,
+                -18
+              ],
+              [
+                172,
+                -20
+              ],
+              [
+                168,
+                -20
+              ],
+              [
+                168,
+                -22
+              ],
+              [
+                160,
+                -22
+              ],
+              [
+                160,
+                -24
+              ],
+              [
+                152,
+                -24
+              ],
+              [
+                152,
+                -24.5
+              ],
+              [
+                153,
+                -25.25
+              ],
+              [
+                153.5,
+                -28
+              ],
+              [
+                156,
+                -28
+              ],
+              [
+                156,
+                -30
+              ],
+              [
+                154,
+                -30
+              ],
+              [
+                154,
+                -32
+              ],
+              [
+                152.5,
+                -32
+              ],
+              [
+                151.25,
+                -33.5
+              ],
+              [
+                150.5,
+                -36
+              ],
+              [
+                156,
+                -36
+              ],
+              [
+                156,
+                -38
+              ],
+              [
+                162,
+                -38
+              ],
+              [
+                162,
+                -40
+              ],
+              [
+                170,
+                -40
+              ]
+            ],
+            [
+              [
+                178.75,
+                -18
+              ],
+              [
+                177.25,
+                -18
+              ],
+              [
+                178.25,
+                -17.25
+              ],
+              [
+                178.75,
+                -18
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                174,
+                -42
+              ],
+              [
+                174,
+                -41.5
+              ],
+              [
+                173.75,
+                -42
+              ],
+              [
+                174,
+                -42
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                146,
+                -67.5
+              ],
+              [
+                146,
+                -66
+              ],
+              [
+                150,
+                -66
+              ],
+              [
+                150,
+                -62
+              ],
+              [
+                152,
+                -62
+              ],
+              [
+                152,
+                -66
+              ],
+              [
+                160,
+                -66
+              ],
+              [
+                160,
+                -64
+              ],
+              [
+                158,
+                -64
+              ],
+              [
+                158,
+                -62
+              ],
+              [
+                156,
+                -62
+              ],
+              [
+                156,
+                -60
+              ],
+              [
+                158,
+                -60
+              ],
+              [
+                158,
+                -56
+              ],
+              [
+                160,
+                -56
+              ],
+              [
+                160,
+                -52
+              ],
+              [
+                158,
+                -52
+              ],
+              [
+                158,
+                -50
+              ],
+              [
+                156,
+                -50
+              ],
+              [
+                156,
+                -48
+              ],
+              [
+                154,
+                -48
+              ],
+              [
+                154,
+                -46
+              ],
+              [
+                152,
+                -46
+              ],
+              [
+                152,
+                -44
+              ],
+              [
+                150,
+                -44
+              ],
+              [
+                150,
+                -42
+              ],
+              [
+                148.25,
+                -42
+              ],
+              [
+                148,
+                -43.25
+              ],
+              [
+                147.25,
+                -42.75
+              ],
+              [
+                147,
+                -43.5
+              ],
+              [
+                146,
+                -43.5
+              ],
+              [
+                146,
+                -44
+              ],
+              [
+                144,
+                -44
+              ],
+              [
+                144,
+                -46
+              ],
+              [
+                140,
+                -46
+              ],
+              [
+                140,
+                -48
+              ],
+              [
+                138,
+                -48
+              ],
+              [
+                138,
+                -50
+              ],
+              [
+                134,
+                -50
+              ],
+              [
+                134,
+                -52
+              ],
+              [
+                132,
+                -52
+              ],
+              [
+                132,
+                -56
+              ],
+              [
+                130,
+                -56
+              ],
+              [
+                130,
+                -58
+              ],
+              [
+                128,
+                -58
+              ],
+              [
+                128,
+                -60
+              ],
+              [
+                130,
+                -60
+              ],
+              [
+                130,
+                -62
+              ],
+              [
+                134,
+                -62
+              ],
+              [
+                134,
+                -64
+              ],
+              [
+                136,
+                -64
+              ],
+              [
+                136,
+                -66
+              ],
+              [
+                138,
+                -66
+              ],
+              [
+                138,
+                -66.25
+              ],
+              [
+                143.5,
+                -66.75
+              ],
+              [
+                144.75,
+                -67
+              ],
+              [
+                144,
+                -68
+              ],
+              [
+                146,
+                -67.5
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "temporal": [
+      {
+        "start": "2010-03-08T20:53:00Z",
+        "end": null
+      }
+    ],
+    "parameter_vocabs": [
+      "temperature"
+    ],
+    "platform_vocabs": [
+      "research vessel",
+      "vessel of opportunity"
+    ],
+    "organisation_vocabs": [
+      "Expendable Bathythermograph Sub-Facility, Integrated Marine Observing System (IMOS)"
+    ]
+  },
+  "contacts": [
+    {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": "",
+      "position": "Data Officer",
+      "emails": [
+        "info@aodn.org.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "University of Tasmania",
+            "Private Bag 110"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "61 3 6226 7488"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "61 3 6226 2107"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://imos.org.au/aodn.html",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Australian Ocean Data Network (AODN)"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "processor",
+        "about"
+      ],
+      "organization": "CSIRO Oceans and Atmosphere - Hobart",
+      "name": "Cowley, Rebecca",
+      "position": "",
+      "emails": [
+        "Rebecca.Cowley@csiro.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "GPO Box 1538"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7005",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [],
+      "links": []
+    },
+    {
+      "roles": [
+        "distributor",
+        "metadata"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": "",
+      "position": "Data Officer",
+      "emails": [
+        "info@aodn.org.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "University of Tasmania",
+            "Private Bag 110"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "61 3 6226 7488"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "61 3 6226 2107"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://imos.org.au/aodn.html",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Australian Ocean Data Network (AODN)"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "resourceProvider",
+        "citation"
+      ],
+      "organization": "Integrated Marine Observing System (IMOS)",
+      "name": null,
+      "position": null,
+      "emails": [
+        "imos@imos.org.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "Private Bag 110"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "61 3 6226 7549"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "61 3 6226 2107"
+        }
+      ],
+      "links": [
+        {
+          "href": "http://www.imos.org.au/html",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "Website of the Integrated Marine Observing System (IMOS)"
+        }
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "http://imos.org.au/expendablebathythermograph.html",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Link to Expendable Bathythermograph page on IMOS website"
+    },
+    {
+      "href": "https://catalogue-imos.aodn.org.au:443/geonetwork/srv/api/records/35234913-aa3c-48ec-b9a4-77f822f66ef8/attachments/Devil_Data_Formats.pdf",
+      "rel": "related",
+      "type": "",
+      "title": "Devil_Data_Formats.pdf"
+    },
+    {
+      "href": "http://content.aodn.org.au/Documents/IMOS/Facilities/ships_of_opportunity/IMOS_XBT_realtime_data_delivery_GTS.pdf",
+      "rel": "related",
+      "type": "text/html",
+      "title": "PDF document describing the delivery of XBT data in realtime to the AODN and the GTS"
+    },
+    {
+      "href": "http://data.aodn.org.au/?prefix=IMOS/SOOP/SOOP-XBT/REALTIME/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "Files via Amazon Web Services S3 storage"
+    },
+    {
+      "href": "https://portal.aodn.org.au/search?uuid=35234913-aa3c-48ec-b9a4-77f822f66ef8",
+      "rel": "related",
+      "type": "text/html",
+      "title": "View and download data though the AODN Portal"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/wms",
+      "rel": "wms",
+      "type": "",
+      "title": "imos:soop_xbt_nrt_profiles_map"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ows",
+      "rel": "wfs",
+      "type": "",
+      "title": "soop_xbt_nrt_profiles_data"
+    },
+    {
+      "href": "https://help.aodn.org.au/web-services/ogc-wfs/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "OGC WFS help documentation"
+    },
+    {
+      "href": "http://geoserver-123.aodn.org.au/geoserver/ows",
+      "rel": "related",
+      "type": "",
+      "title": "soop_xbt_nrt_profiles_map#url"
+    },
+    {
+      "href": "https://help.aodn.org.au/web-services/ncurllist-service/",
+      "rel": "related",
+      "type": "text/html",
+      "title": "ncUrlList help documentation"
+    },
+    {
+      "href": "https://geonetwork-edge.edge.aodn.org.au:443/geonetwork/images/harvesting/IMOS_colour_logo.gif",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://catalogue-imos.aodn.org.au:443/geonetwork/srv/api/records/35234913-aa3c-48ec-b9a4-77f822f66ef8",
+      "rel": "describedby",
+      "type": "text/html",
+      "title": "Full metadata link"
+    },
+    {
+      "href": "https://licensebuttons.net/l/by/4.0/88x31.png",
+      "rel": "license",
+      "type": "image/png"
+    },
+    {
+      "href": "http://creativecommons.org/licenses/by/4.0/",
+      "rel": "license",
+      "type": "text/html"
+    },
+    {
+      "href": "uuid:911f6b96-fa33-4621-9d8c-4d1cc14d94d0",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS - SOOP Expendable Bathythermographs (XBT) Research Group - XBT delayed mode data\",\"recordAbstract\":\"IMOS Ship of Opportunity Underway Expendable Bathythermographs (XBT) group is a research and data collection project working within the IMOS Ship of Opportunity Multi-Disciplinary Underway Network sub-facility. Five major (HRX) high-resolution XBT lines provide boundary to boundary profiling and closely spaced sampling to resolve mesoscale eddies, fronts and boundary currents. The lines are repeated 4 times per year by an on-board technician. The routes sample each major boundary current system using available commercial vessel traffic. All of the transects transmit data in real-time. The data represented by this record are presented in delayed mode. This SOOP dataset covers the Indian Ocean, Southern Ocean and Pacific Oceans.\"}"
+    },
+    {
+      "href": "uuid:8be275bb-6951-45cd-9dd1-0c5adffd1ec6",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line IX22-PX11 (Port Hedland - Japan)\",\"recordAbstract\":\"Temperature data from the TOGA/WOCE transect IX22/PX11 from Port Hedland to Japan has been collected since 1983 and are ongoing. The transect is repeated approximately 12 times a year with profiles obtained approximately every 50-100 Km. \nThe data are obtained from XBTs (expendable bathythermographs) deployed vie marchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).\"}"
+    },
+    {
+      "href": "uuid:937111f2-21e8-45e8-81d5-032a7c8b0c81",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the high density line PX34 (Sydney-Wellington)\",\"recordAbstract\":\"Temperature data from the TOGA/WOCE transect PX34 across the Tasman Sea has been collected since 1991 and are ongoing. The transect is repeated approximately 4 times a year, with profiles obtained approximately every 10-50 Km. \nThe data are obtained from XBTs (expendable bathythermographs) deployed via merchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).\"}"
+    },
+    {
+      "href": "uuid:82bf07d2-6a6f-412e-b02e-1b96c204a009",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected during a cruise between Sydney and Noumea (New Caledonia)\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed during a cruise between Sydney and Noumea (New Caledonia).\"}"
+    },
+    {
+      "href": "uuid:9b462449-329b-4d0b-8af6-af1c35959869",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line PX57 (Brisbane - Wellington)\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed by vessels during different cruises between Brisbane (Australia) and Wellington (New Zealand).\n\nExpendable Bathythermographs (XBTs) have been used for many years by oceanographers to measure the temperature of the upper ocean. These instruments are simple devices which are designed to be deployed from moving vessels, enabling broad scale coverage of the world's oceans.\"}"
+    },
+    {
+      "href": "uuid:b4f241f5-a5d8-4365-8b69-41dc48879c6c",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line IX8 (Mauritius - Bombay)\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed by vessels during different cruises between Mauritius and Bombay (India).\n\nExpendable Bathythermographs (XBTs) have been used for many years by oceanographers to measure the temperature of the upper ocean. These instruments are simple devices which are designed to be deployed from moving vessels, enabling broad scale coverage of the world's oceans.\"}"
+    },
+    {
+      "href": "uuid:c1ec90fe-c89f-429c-a897-1c1583b22394",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line IX12 (Fremantle-Red Sea)\",\"recordAbstract\":\"Temperature data from the TOGA/WOCE transect IX12 from Fremantle to the Red Sea has been collected since 1983 and are ongoing. The transect is repeated approximately 12-15 times a year with profiles obtained approximately every 50-100 Km. \nThe data are obtained from XBTs (expendable bathythermographs) deployed vie marchant vessels, and are managed by the Joint Australian Facility for Ocean Observing Systems (JAFOOS), a collaborative venture between CSIRO Marine Research and the Bureau of Meteorology Research Centre (BMRC).\"}"
+    },
+    {
+      "href": "uuid:b36e91b1-7cdf-491d-8685-1e91312b94c8",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line IX21-IX06 (Cape of Good Hope - Mauritius - Malacca Strait)\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed by vessels during different cruises between the Cape of Good Hope (South Africa), Mauritius and the Malacca Strait.\n\nExpendable Bathythermographs (XBTs) have been used for many years by oceanographers to measure the temperature of the upper ocean. These instruments are simple devices which are designed to be deployed from moving vessels, enabling broad scale coverage of the world's oceans.\"}"
+    },
+    {
+      "href": "uuid:fb42c8b8-1006-4ec6-b347-1a36e80c1f5a",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected in the Southern Ocean\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed by vessels during different cruises in the Southern Ocean.\n\nExpendable Bathythermographs (XBTs) have been used for many years by oceanographers to measure the temperature of the upper ocean. These instruments are simple devices which are designed to be deployed from moving vessels, enabling broad scale coverage of the world's oceans.\"}"
+    },
+    {
+      "href": "uuid:5c0aa127-40d7-4c1a-a936-a80d624f8bf0",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line PX5 (Brisbane - Japan and New Zealand- Japan)\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed by vessels during different cruises between Brisbane (Australia) and Japan AND between New Zealand and Japan.\n\nExpendable Bathythermographs (XBTs) have been used for many years by oceanographers to measure the temperature of the upper ocean. These instruments are simple devices which are designed to be deployed from moving vessels, enabling broad scale coverage of the world's oceans.\"}"
+    },
+    {
+      "href": "uuid:40248cb4-09a5-41de-8790-504a1ed8e997",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line IX15-IX31 (Mauritius - Fremantle - Melbourne)\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed by vessels during different cruises between Mauritius, Fremantle (Australia) and Melbourne (Australia).\n\nExpendable Bathythermographs (XBTs) have been used for many years by oceanographers to measure the temperature of the upper ocean. These instruments are simple devices which are designed to be deployed from moving vessels, enabling broad scale coverage of the world's oceans.\"}"
+    },
+    {
+      "href": "uuid:486d8463-36b3-47b1-a8d5-f73139cbdd16",
+      "rel": "sibling",
+      "type": "application/json",
+      "title": "{\"title\":\"IMOS SOOP-XBT Upper Ocean Thermal Data collected on the line PX13 (New Zealand- California)\",\"recordAbstract\":\"This dataset contains temperature data obtained from XBTs (expendable bathythermographs) deployed by vessels during different cruises between New Zealand and California (USA).\n\nExpendable Bathythermographs (XBTs) have been used for many years by oceanographers to measure the temperature of the upper ocean. These instruments are simple devices which are designed to be deployed from moving vessels, enabling broad scale coverage of the world's oceans.\"}"
+    }
+  ],
+  "license": "Creative Commons Attribution 4.0 International License",
+  "providers": [
+    {
+      "name": "Integrated Marine Observing System (IMOS)",
+      "roles": [
+        "distributor"
+      ],
+      "url": "http://imos.org.au/aodn.html"
+    }
+  ],
+  "assets": {
+    "summary": {
+      "href": "/collections/35234913-aa3c-48ec-b9a4-77f822f66ef8/items/summary",
+      "title": "Summary",
+      "description": "Summary of cloud optimized data points",
+      "type": "application/json",
+      "role": "SUMMARY"
+    }
+  },
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Oceans | Ocean Temperature | Water Temperature",
+          "url": null
+        }
+      ],
+      "scheme": "theme",
+      "description": "GCMD",
+      "title": "NASA/Global Change Master Directory Earth Science Keywords Version 5.3.8"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Bathythermographs | Expendable Bathythermographs (XBT)",
+          "url": null
+        }
+      ],
+      "scheme": "theme",
+      "description": "MCP",
+      "title": "Marine Community Profile of ISO19115 v1.4 Collection Methods Vocabulary (Annex C.1.3)"
+    },
+    {
+      "concepts": [
+        {
+          "id": "IMOS Node | Bluewater and Climate",
+          "url": null
+        }
+      ],
+      "scheme": "theme",
+      "description": "IMOS",
+      "title": "IMOS Keywords Thesaurus"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Global / Oceans | Southern Ocean",
+          "url": null
+        },
+        {
+          "id": "Global / Oceans | Pacific Ocean",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Coral Sea",
+          "url": null
+        },
+        {
+          "id": "Regional Seas | Tasman Sea",
+          "url": null
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Continents | Antarctica",
+          "url": null
+        },
+        {
+          "id": "Countries | Australia",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Tasmania",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Victoria",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | New South Wales",
+          "url": null
+        },
+        {
+          "id": "States, Territories (Australia) | Queensland",
+          "url": null
+        },
+        {
+          "id": "Countries | New Zealand",
+          "url": null
+        },
+        {
+          "id": "Countries | New Caledonia",
+          "url": null
+        },
+        {
+          "id": "Countries | Fiji",
+          "url": null
+        },
+        {
+          "id": "Offshore Islands (Australia) | Macquarie Island",
+          "url": null
+        }
+      ],
+      "scheme": "place",
+      "description": "",
+      "title": "AODN Geographic Extents Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "vessel of opportunity",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/32"
+        },
+        {
+          "id": "research vessel",
+          "url": "http://vocab.nerc.ac.uk/collection/L06/current/31"
+        },
+        {
+          "id": "L'Astrolabe {FASB}",
+          "url": "http://vocab.nerc.ac.uk/collection/C17/current/35O7"
+        },
+        {
+          "id": "L'Astrolabe {FHZI}",
+          "url": "http://vocab.nerc.ac.uk/collection/C17/current/353L"
+        },
+        {
+          "id": "Aurora Australis",
+          "url": "http://vocab.nerc.ac.uk/collection/C17/current/09AR"
+        },
+        {
+          "id": "Investigator",
+          "url": "http://vocab.nerc.ac.uk/collection/C17/current/096U"
+        },
+        {
+          "id": "Southern Surveyor",
+          "url": "http://vocab.nerc.ac.uk/collection/C17/current/09SS"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Platform Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Temperature of the water body",
+          "url": "http://vocab.nerc.ac.uk/collection/P01/current/TEMPPR01"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Discovery Parameter Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "bathythermographs",
+          "url": "http://vocab.nerc.ac.uk/collection/L05/current/132"
+        }
+      ],
+      "scheme": "theme",
+      "description": "",
+      "title": "AODN Instrument Vocabulary"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Expendable Bathythermograph Sub-Facility, Integrated Marine Observing System (IMOS)",
+          "url": "http://vocab.aodn.org.au/def/organisation/entity/517"
+        }
+      ],
+      "scheme": "discipline",
+      "description": "",
+      "title": "AODN Organisation Vocabulary"
+    }
+  ],
+  "id": "35234913-aa3c-48ec-b9a4-77f822f66ef8",
+  "search_suggestions": {
+    "abstract_phrases": [
+      "bad",
+      "real time data",
+      "system used",
+      "perform high",
+      "ship",
+      "turo technology data collected",
+      "resolution",
+      "netcdf",
+      "qc",
+      "high density sampling",
+      "oceanic",
+      "zealand",
+      "freely available",
+      "acquisition system used",
+      "sampling",
+      "opportunity",
+      "data messages jjvv",
+      "process which identifies both",
+      "australia",
+      "jjvv",
+      "dataset covers waters",
+      "real time data messages",
+      "acquisition centre",
+      "xbt real time",
+      "imos",
+      "processing",
+      "identifies both",
+      "waters around australia",
+      "acquisition system",
+      "gtspp",
+      "turo",
+      "global",
+      "well established transit lines",
+      "sampling along well",
+      "dc where",
+      "which identifies",
+      "technicians who ride",
+      "temperature",
+      "where",
+      "acquisition",
+      "covers waters",
+      "csiro",
+      "scientific qc",
+      "global data",
+      "resolution data",
+      "density",
+      "gtspp global data",
+      "high density",
+      "washington dc",
+      "bathy",
+      "density sampling along",
+      "returned",
+      "freely",
+      "dataset",
+      "dc",
+      "through",
+      "bathy messages created",
+      "available",
+      "who ride",
+      "developed",
+      "features",
+      "imos portal",
+      "acquired",
+      "both bad data",
+      "covers waters around",
+      "which",
+      "waters",
+      "finally",
+      "soop dataset covers waters",
+      "soop dataset covers",
+      "undergoes",
+      "xbt real",
+      "onto",
+      "along well",
+      "data collected",
+      "colleagues",
+      "washington",
+      "global data acquisition",
+      "full",
+      "washington dc where",
+      "oceanic features",
+      "process which",
+      "full resolution data",
+      "xbt",
+      "ride",
+      "time data messages",
+      "iridium",
+      "lines",
+      "full scientific",
+      "covers",
+      "turo technology data",
+      "bad data",
+      "perform",
+      "shore",
+      "technology",
+      "qc process",
+      "data messages",
+      "data acquisition centre",
+      "well",
+      "time",
+      "perform high density sampling",
+      "data acquisition system",
+      "dataset covers waters around",
+      "which identifies both bad",
+      "soop",
+      "established transit",
+      "collected",
+      "waters around",
+      "temperature inversions",
+      "jjvv bathy",
+      "identifies both bad",
+      "established transit lines",
+      "inserted onto",
+      "eddies",
+      "portal",
+      "order",
+      "messages jjvv bathy",
+      "identifies",
+      "both bad",
+      "well established",
+      "full scientific qc process",
+      "made",
+      "gts",
+      "density sampling",
+      "distributed",
+      "our colleagues",
+      "global data acquisition centre",
+      "ships",
+      "system",
+      "messages",
+      "eddies fronts",
+      "dataset covers",
+      "xbt real time data",
+      "iridium sbd",
+      "identifies both bad data",
+      "portal data",
+      "well established transit",
+      "technology data collected",
+      "made freely available",
+      "turo technology",
+      "australian",
+      "sampling along well established",
+      "our",
+      "along well established",
+      "technology data",
+      "across",
+      "available through",
+      "inserted",
+      "full scientific qc",
+      "data acquisition",
+      "which identifies both",
+      "australian bureau",
+      "established",
+      "gtspp global",
+      "around australia",
+      "sampling along",
+      "jjvv bathy messages created",
+      "centre",
+      "scientific qc process",
+      "made freely",
+      "stored",
+      "density sampling along well",
+      "messages jjvv",
+      "qc process which",
+      "soop dataset",
+      "time data messages jjvv",
+      "gtspp global data acquisition",
+      "data",
+      "temperature inversions finally",
+      "hobart",
+      "used",
+      "along well established transit",
+      "high",
+      "imos portal data",
+      "from",
+      "bureau",
+      "all",
+      "new",
+      "meteorology",
+      "created",
+      "qc process which identifies",
+      "transit lines",
+      "real",
+      "time data",
+      "sent",
+      "both",
+      "data acquisition system used",
+      "quoll developed",
+      "scientists",
+      "transit",
+      "covers waters around australia",
+      "messages jjvv bathy messages",
+      "files",
+      "perform high density",
+      "messages created",
+      "who",
+      "technicians",
+      "collected from",
+      "scientific",
+      "data messages jjvv bathy",
+      "around",
+      "new zealand",
+      "along",
+      "netcdf files",
+      "scientific qc process which",
+      "real time",
+      "high density sampling along",
+      "process",
+      "fronts",
+      "quoll",
+      "full resolution",
+      "bathy messages",
+      "process which identifies",
+      "jjvv bathy messages",
+      "sbd",
+      "inversions",
+      "technicians who",
+      "inversions finally"
+    ],
+    "parameter_vocabs_sayt": [
+      "temperature"
+    ],
+    "platform_vocabs_sayt": [
+      "research vessel",
+      "vessel of opportunity"
+    ]
+  },
+  "sci:citation": "{\"suggestedCitation\":\"The citation in a list of references is: \"IMOS [year-of-data-download], [Title], [data-access-URL], accessed [date-of-access].\",\"useLimitations\":[\"Data, products and services from IMOS are provided \"as is\" without any warranty as to fitness for a particular purpose.\"],\"otherConstraints\":[\"Any users of IMOS data are required to clearly acknowledge the source of the material derived from IMOS in the format: \"Data was sourced from Australia?s Integrated Marine Observing System (IMOS) ? IMOS is enabled by the National Collaborative Research Infrastructure strategy (NCRIS).\" If relevant, also credit other organisations involved in collection of this particular datastream (as listed in 'credit' in the metadata record).\"]}",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"
+  ],
+  "type": "Collection"
+}
+
