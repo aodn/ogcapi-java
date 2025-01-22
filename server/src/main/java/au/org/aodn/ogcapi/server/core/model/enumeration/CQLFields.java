@@ -203,6 +203,13 @@ public enum CQLFields implements CQLFieldsInterface {
                     .query(literal))._toQuery(),
             null
     ),
+    // Contains cloud-optimized data
+    assets_summary(
+            StacBasicField.AssetsSummary.searchField,
+            StacBasicField.AssetsSummary.displayField,
+            null,
+            null
+    ),
     ;
     private final String searchField;
 
