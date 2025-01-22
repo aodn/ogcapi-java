@@ -243,7 +243,7 @@ abstract class ElasticSearchBase {
                     // Use cache value of noland_geometry if user request centroid
                     if(properties != null && properties.contains(CQLFields.centroid.name())) {
                         StacCollectionModel cache = cacheNoLandGeometry.getAllNoLandGeometry().get(model.getUuid());
-                        if(cache.getSummaries() != null) {
+                        if(cache != null && cache.getSummaries() != null) {
                             if(model.getSummaries() == null) {
                                 model.setSummaries(cache.getSummaries());
                             }
