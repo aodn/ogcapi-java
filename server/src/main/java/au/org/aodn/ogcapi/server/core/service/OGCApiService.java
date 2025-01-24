@@ -1,6 +1,9 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.function.BiFunction;
 
@@ -28,10 +32,29 @@ public abstract class OGCApiService {
     protected Search search;
 
     /**
-     * You can find conformance id here https://docs.ogc.org/is/19-072/19-072.html#ats_core
+     * You can find conformance id
+     * <a href="https://docs.ogc.org/is/19-072/19-072.html#ats_core">here</a>
      * @return List of string contains conformance
      */
     public abstract List<String> getConformanceDeclaration();
+
+    public <R> ResponseEntity<R> getFeature(String collectionId,
+                                        FeatureId fid,
+                                        List<String> properties,
+                                        String filter,
+                                        BiFunction<ElasticSearchBase.SearchResult<StacItemModel>, Filter, R> converter) throws Exception {
+        switch(fid) {
+            case summary -> {
+                ElasticSearch.SearchResult<StacItemModel> result = search.searchFeatureSummary(collectionId, properties, filter);
+                return ResponseEntity.ok()
+                        .body(converter.apply(result, null));
+            }
+            default -> {
+                // Individual item
+                return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
+            }
+        }
+    }
 
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
                                                    String filter,
@@ -39,11 +62,11 @@ public abstract class OGCApiService {
                                                    String sortBy,
                                                    OGCMediaTypeMapper f,
                                                    CQLCrsType coor,
-                                                   BiFunction<ElasticSearchBase.SearchResult, Filter, R> converter) {
+                                                   BiFunction<ElasticSearchBase.SearchResult<StacCollectionModel>, Filter, R> converter) {
         try {
             switch (f) {
                 case json -> {
-                    ElasticSearchBase.SearchResult result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
+                    ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
 
                     CQLToStacFilterFactory factory = CQLToStacFilterFactory.builder()
                             .cqlCrsType(coor)
@@ -93,7 +116,7 @@ public abstract class OGCApiService {
      * @param filter - Any existing filter
      * @return - A combined filter with datetime rewrite.
      */
-    public static String processDatetimeParameter(String datetime, String filter) {
+    public static String processDatetimeParameter(String fieldName, String datetime, String filter) {
 
         // TODO: How to handle this? e.g how to know if it is before or after if ?datetime=<timestamp instant>
 
@@ -117,7 +140,7 @@ public abstract class OGCApiService {
         }
 
         if(d != null) {
-            f = String.format("temporal %s %s", operator, d);
+            f = String.format("%s %s %s", fieldName, operator, d);
         }
 
         if((filter == null || filter.isEmpty())) {
@@ -130,6 +153,30 @@ public abstract class OGCApiService {
             else {
                 return String.join(" AND ", filter, f);
             }
+        }
+    }
+    /**
+     * Convert the bbox parameter to CQL
+     * @param bbox
+     * @param filter
+     * @return
+     */
+    public static String processBBoxParameter(String fieldName, List<BigDecimal> bbox, String filter) {
+        String f = null;
+        if(bbox.size() == 4) {
+            // 2D
+            f = String.format("BBOX(%s,%s,%s,%s,%s)", fieldName, bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3));
+        }
+        else if(bbox.size() == 6) {
+            // 3D
+            f = String.format("BBOX(%s,%s,%s,%s,%s,%s,%s)", fieldName, bbox.get(0), bbox.get(1), bbox.get(2), bbox.get(3), bbox.get(4), bbox.get(5));
+        }
+
+        if(f == null) {
+            return filter;
+        }
+        else {
+            return String.join(" AND ", filter, f);
         }
     }
 }

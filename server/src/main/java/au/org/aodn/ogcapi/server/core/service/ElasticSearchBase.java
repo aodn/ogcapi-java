@@ -2,9 +2,11 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.*;
+import co.elastic.clients.elasticsearch._types.aggregations.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
@@ -14,6 +16,7 @@ import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
+import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -26,6 +29,7 @@ import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 /**
@@ -46,12 +50,49 @@ abstract class ElasticSearchBase {
 
     @Getter
     @Setter
-    public static class SearchResult {
-        Long total;
+    public static class SearchResult<T> {
+        Long total = 0L;
         List<Object> sortValues;
-        List<StacCollectionModel> collections;
+        List<T> collections;
     }
+    /**
+     * Parse and create a sort option
+     * <a href="https://github.com/opengeospatial/ogcapi-features/blob/0c508be34aaca0d9cf5e05722276a0ee10585d61/extensions/sorting/standard/clause_7_sorting.adoc#L32">...</a>
+     *
+     * @param sortBy - Must be of pattern +<property> | -<property>, + mean asc, - mean desc
+     * @return List of sort options
+     */
+    protected <E extends Enum<E> & CQLFieldsInterface> List<SortOptions> createSortOptions(String sortBy, Class<E> enumClass) {
+        if(sortBy == null || sortBy.isEmpty()) return null;
 
+        String[] args = sortBy.split(",");
+        List<SortOptions> sos = new ArrayList<>();
+
+        for(String arg: args) {
+            arg = arg.trim();
+            if (arg.startsWith("-")) {
+                CQLFields field = Enum.valueOf(CQLFields.class, arg.substring(1).toLowerCase());
+
+                if(field.getSortBuilder() != null) {
+                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Desc);
+                    sos.add(sb.build());
+                }
+            }
+            else {
+                // Default is +, there is a catch the + will be replaced as space in the property as + means space in url, by taking
+                // default is ASC we work around the problem, the trim removed the space
+                E field = arg.startsWith("+") ?
+                        Enum.valueOf(enumClass, arg.substring(1).toLowerCase()) :
+                        Enum.valueOf(enumClass, arg.toLowerCase());
+
+                if(field.getSortBuilder() != null) {
+                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Asc);
+                    sos.add(sb.build());
+                }
+            }
+        }
+        return sos;
+    }
     /**
      * Construct the skeleton of in the elastic query and fill in values
      * @param must - The must portion of Elastic query
@@ -107,7 +148,7 @@ abstract class ElasticSearchBase {
      * @param properties - The fields you want to return in the search, you can search a field but not include in the return
      * @return - The search result from Elastic query and format in StacCollectionModel
      */
-    protected SearchResult searchCollectionBy(final List<Query> queries,
+    protected SearchResult<StacCollectionModel> searchCollectionBy(final List<Query> queries,
                                                            final List<Query> should,
                                                            final List<Query> filters,
                                                            final List<String> properties,
@@ -189,9 +230,9 @@ abstract class ElasticSearchBase {
 
         try {
             log.info("Start search {} {}", ZonedDateTime.now(), Thread.currentThread().getName());
-            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, maxSize);
+            Iterable<Hit<ObjectNode>> response = pageableSearch(builderSupplier, ObjectNode.class, maxSize);
 
-            SearchResult result = new SearchResult();
+            SearchResult<StacCollectionModel> result = new SearchResult<>();
             result.collections = new ArrayList<>();
             result.total = countRecordsHit(builderSupplier);
 
@@ -202,7 +243,7 @@ abstract class ElasticSearchBase {
                     // Use cache value of noland_geometry if user request centroid
                     if(properties != null && properties.contains(CQLFields.centroid.name())) {
                         StacCollectionModel cache = cacheNoLandGeometry.getAllNoLandGeometry().get(model.getUuid());
-                        if(cache.getSummaries() != null) {
+                        if(cache != null && cache.getSummaries() != null) {
                             if(model.getSummaries() == null) {
                                 model.setSummaries(cache.getSummaries());
                             }
@@ -272,10 +313,10 @@ abstract class ElasticSearchBase {
      * @return - The items that matches the query mentioned in the requestBuilder
      * @param <T> A generic type for Elastic query
      */
-    protected <T> Iterable<Hit<T>> pagableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
+    protected <T> Iterable<Hit<T>> pageableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
         try {
             SearchRequest sr = requestBuilder.get().build();
-            log.debug("Final elastic search payload {}", sr.toString());
+            log.debug("Final elastic search payload {}", sr);
 
             final AtomicLong count = new AtomicLong(0);
             final AtomicReference<SearchResponse<T>> response = new AtomicReference<>(
@@ -333,6 +374,111 @@ abstract class ElasticSearchBase {
             };
         }
         catch(IOException e) {
+            log.error("Fail to fetch record", e);
+        }
+        return Collections.emptySet();
+    }
+    /**
+     * There is a limit of how many record a query can return, this mean the record return may not be full set, you
+     * need to keep loading until you reach the end of records
+     *
+     * @param requestBuilder, assume it is sorted with order, what order isn't important, as long as it is sorted
+     * @param clazz - The type
+     * @return - The items that matches the query mentioned in the requestBuilder
+     * @param <T> A generic type for Elastic query
+     */
+    protected <T extends MultiBucketBase> Iterable<T> pageableAggregation(
+            BiFunction<Map<String, FieldValue>, Map<String, FieldValue>, SearchRequest.Builder> requestBuilder,
+            Class<T> clazz,
+            Map<String, FieldValue> arguments,
+            Long maxSize) {
+        try {
+            SearchRequest sr = requestBuilder.apply(arguments, null).build();
+            log.debug("Final elastic aggregation payload {}", sr);
+
+            final AtomicLong count = new AtomicLong(0);
+            final AtomicReference<SearchResponse<T>> response = new AtomicReference<>(
+                    esClient.search(sr, clazz)
+            );
+
+            return () -> new Iterator<>() {
+                private int index = 0;
+
+                @Override
+                public boolean hasNext() {
+                    // No need continue if we already hit the end
+                    if(maxSize != null) {
+                        return count.get() < maxSize;
+                    }
+
+                    Aggregate ags = response.get()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue())
+                            .nested()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue());
+
+                    Buckets<? extends MultiBucketBase> stb = ags.composite().buckets();
+
+                    // If we hit the end, that means we have iterated to end of page.
+                    if (index < stb.array().size()) {
+                        return true;
+                    }
+                    else {
+                        // If last index is zero that mean nothing found already, so no need to look more
+                        if (index == 0) return false;
+
+                        // Load next batch
+                        try {
+                            // Get the last sorted value from the last batch
+                            // Use the last builder and append the searchAfter values
+                            SearchRequest request = requestBuilder.apply(arguments, ags.composite().afterKey()).build();
+                            log.debug("Final elastic aggregation payload {}", request.toString());
+
+                            response.set(esClient.search(request, clazz));
+                            // Reset counter from start
+                            index = 0;
+
+                            ags = response.get()
+                                    .aggregations()
+                                    .get(arguments.get("aggKey").stringValue())
+                                    .nested()
+                                    .aggregations()
+                                    .get(arguments.get("aggKey").stringValue());
+
+                            stb = ags.composite().buckets();
+
+                            return index < stb.array().size();
+                        }
+                        catch(IOException ieo) {
+                            throw new RuntimeException(ieo);
+                        }
+                    }
+                }
+
+                @Override
+                public T next() {
+                    count.incrementAndGet();
+
+                    Aggregate ags = response.get()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue())
+                            .nested()
+                            .aggregations()
+                            .get(arguments.get("aggKey").stringValue());
+
+                    Buckets<? extends MultiBucketBase> stb = ags.composite().buckets();
+
+                    if(index < stb.array().size()) {
+                        return clazz.cast(stb.array().get(index++));
+                    }
+                    else {
+                        return null;
+                    }
+                }
+            };
+        }
+        catch(Exception e) {
             log.error("Fail to fetch record", e);
         }
         return Collections.emptySet();

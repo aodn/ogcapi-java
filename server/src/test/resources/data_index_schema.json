@@ -1,0 +1,46 @@
+{
+  "mappings": {
+    "properties": {
+      "id": {
+        "type": "keyword"
+      },
+      "stac_version": { "type": "text" },
+      "stac_extensions": { "type": "text" },
+      "type": { "type": "text" },
+      "collection": {
+        "type": "keyword"
+      },
+      "geometry": {
+        "type": "geo_shape"
+      },
+      "bbox" : {
+        "type": "double"
+      },
+      "properties" : {
+        "type": "nested",
+        "properties" : {
+          "lng": { "type": "double" },
+          "lat": { "type": "double" },
+          "depth": { "type": "double" },
+          "count": { "type": "double" },
+          "time": { "type": "date" }
+        }
+      },
+      "links": {
+        "type": "nested",
+        "properties": {
+          "link" : {
+            "type": "nested",
+            "properties": {
+              "href": { "type": "text" },
+              "rel": { "type": "text" },
+              "type": { "type": "text" },
+              "title": { "type": "text" },
+              "description": { "type": "text" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

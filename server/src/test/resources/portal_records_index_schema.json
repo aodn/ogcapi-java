@@ -1,11 +1,11 @@
 {
-  "settings":{
-    "analysis":{
-      "analyzer":{
-        "custom_analyser":{
-          "type":"custom",
-          "tokenizer":"standard",
-          "filter":[
+  "settings": {
+    "analysis": {
+      "analyzer": {
+        "custom_analyser": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": [
             "lowercase",
             "english_stop"
           ]
@@ -24,10 +24,10 @@
           ]
         }
       },
-      "filter":{
-        "english_stop":{
-          "type":"stop",
-          "stopwords":"_english_"
+      "filter": {
+        "english_stop": {
+          "type": "stop",
+          "stopwords": "_english_"
         },
         "shingle_filter": {
           "type": "shingle",
@@ -62,18 +62,22 @@
     "properties": {
       "id": {
         "type": "text",
-        "fields" : {
+        "fields": {
           "keyword": {
             "type": "keyword"
           }
         },
         "analyzer": "keyword"
       },
-      "stac_version": { "type": "text" },
-      "type": { "type": "text" },
+      "stac_version": {
+        "type": "text"
+      },
+      "type": {
+        "type": "text"
+      },
       "title": {
         "type": "text",
-        "fields" : {
+        "fields": {
           "keyword": {
             "type": "keyword"
           }
@@ -82,11 +86,32 @@
       "search_suggestions": {
         "type": "nested",
         "properties": {
-          "abstract_phrases": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
-          "parameter_vocabs_sayt": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
-          "platform_vocabs_sayt": { "type": "search_as_you_type", "analyzer": "custom_analyser" },
-          "organisation_vocabs_sayt": { "type": "search_as_you_type", "analyzer": "custom_analyser" }
+          "abstract_phrases": {
+            "type": "search_as_you_type",
+            "analyzer": "custom_analyser"
+          },
+          "parameter_vocabs_sayt": {
+            "type": "search_as_you_type",
+            "analyzer": "custom_analyser"
+          },
+          "platform_vocabs_sayt": {
+            "type": "search_as_you_type",
+            "analyzer": "custom_analyser"
+          },
+          "organisation_vocabs_sayt": {
+            "type": "search_as_you_type",
+            "analyzer": "custom_analyser"
+          }
         }
+      },
+      "parameter_vocabs": {
+        "type": "keyword"
+      },
+      "platform_vocabs": {
+        "type": "keyword"
+      },
+      "organisation_vocabs": {
+        "type": "keyword"
       },
       "keywords": {
         "type": "nested",
@@ -107,65 +132,125 @@
           }
         }
       },
-      "description": { "type": "text" },
-      "license": { "type": "text" },
+      "description": {
+        "type": "text"
+      },
+      "license": {
+        "type": "text"
+      },
       "links": {
         "type": "nested",
         "properties": {
-          "link" : {
+          "link": {
             "type": "nested",
             "properties": {
-              "href": { "type": "text" },
-              "rel": { "type": "text" },
-              "type": { "type": "text" },
-              "title": { "type": "text" },
-              "description": { "type": "text" }
+              "href": {
+                "type": "text"
+              },
+              "rel": {
+                "type": "text"
+              },
+              "type": {
+                "type": "text"
+              },
+              "title": {
+                "type": "text"
+              },
+              "description": {
+                "type": "text"
+              }
             }
           }
         }
       },
-      "sci:citation": { "type": "text" },
+      "assets": {
+        "type": "object",
+        "properties": {
+          "href": {
+            "type": "text",
+            "index": false
+          },
+          "title": {
+            "type": "text",
+            "fields": {
+              "keyword": {
+                "type": "keyword",
+                "ignore_above": 256
+              }
+            }
+          },
+          "type": {
+            "type": "keyword"
+          },
+          "roles": {
+            "type": "keyword"
+          },
+          "description": {
+            "type": "text"
+          },
+          "extra_fields": {
+            "type": "object",
+            "enabled": true
+          }
+        }
+      },
+      "sci:citation": {
+        "type": "text"
+      },
       "summaries": {
-        "properties" : {
-          "score": { "type": "long" },
-          "status": { "type": "text" },
-          "credits": { "type": "text" },
-          "scope" : {
+        "properties": {
+          "score": {
+            "type": "long"
+          },
+          "status": {
+            "type": "text"
+          },
+          "credits": {
+            "type": "text"
+          },
+          "scope": {
             "type": "nested",
-            "properties" : {
-              "code" : {
+            "properties": {
+              "code": {
                 "type": "text"
               },
-              "name" : {
+              "name": {
                 "type": "text"
               }
             }
           },
-          "dataset_provider": { "type": "text" },
-          "dataset_group": { "type": "text" },
-          "creation" : { "type": "date" },
-          "revision" : { "type": "date" },
+          "dataset_provider": {
+            "type": "text"
+          },
+          "dataset_group": {
+            "type": "text"
+          },
+          "creation": {
+            "type": "date"
+          },
+          "revision": {
+            "type": "date"
+          },
           "proj:geometry_noland": {
             "type": "geo_shape"
           },
           "proj:geometry": {
             "type": "geo_shape"
           },
-          "temporal" : {
+          "temporal": {
             "type": "nested",
-            "properties" : {
-              "start" : {
+            "properties": {
+              "start": {
                 "type": "date"
               },
-              "end" : {
+              "end": {
                 "type": "date"
               }
             }
           },
-          "parameter_vocabs": { "type": "keyword" },
-          "platform_vocabs": { "type": "keyword" },
-          "organisation_vocabs": { "type": "keyword" },
-          "statement": { "type": "text" }
+          "statement": {
+            "type": "text"
+          }
         }
       },
       "contacts": {
@@ -174,49 +259,85 @@
           "contact": {
             "type": "nested",
             "properties": {
-              "name": { "type": "text" },
-              "organization": { "type": "text" },
-              "position": { "type": "text" },
+              "name": {
+                "type": "text"
+              },
+              "organization": {
+                "type": "text"
+              },
+              "position": {
+                "type": "text"
+              },
               "phones": {
                 "type": "nested",
                 "properties": {
-                  "value": { "type": "text" },
-                  "roles": { "type": "text" }
+                  "value": {
+                    "type": "text"
+                  },
+                  "roles": {
+                    "type": "text"
+                  }
                 }
               },
               "emails": {
                 "type": "nested",
                 "properties": {
-                  "value": { "type": "text" },
-                  "roles": { "type": "text" }
+                  "value": {
+                    "type": "text"
+                  },
+                  "roles": {
+                    "type": "text"
+                  }
                 }
               },
               "addresses": {
                 "type": "nested",
                 "properties": {
-                  "delivery_point": { "type": "text" },
-                  "city": { "type": "text" },
-                  "administrative_area": { "type": "text" },
-                  "postal_code": { "type": "text" },
-                  "country": { "type": "text" }
+                  "delivery_point": {
+                    "type": "text"
+                  },
+                  "city": {
+                    "type": "text"
+                  },
+                  "administrative_area": {
+                    "type": "text"
+                  },
+                  "postal_code": {
+                    "type": "text"
+                  },
+                  "country": {
+                    "type": "text"
+                  }
                 }
               },
               "links": {
                 "type": "nested",
                 "properties": {
-                  "link" : {
+                  "link": {
                     "type": "nested",
                     "properties": {
-                      "href": { "type": "text" },
-                      "rel": { "type": "text" },
-                      "type": { "type": "text" },
-                      "title": { "type": "text" },
-                      "description": { "type": "text" }
+                      "href": {
+                        "type": "text"
+                      },
+                      "rel": {
+                        "type": "text"
+                      },
+                      "type": {
+                        "type": "text"
+                      },
+                      "title": {
+                        "type": "text"
+                      },
+                      "description": {
+                        "type": "text"
+                      }
                     }
                   }
                 }
               },
-              "roles": { "type": "text" }
+              "roles": {
+                "type": "text"
+              }
             }
           }
         }

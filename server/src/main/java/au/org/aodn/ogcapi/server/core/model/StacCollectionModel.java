@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * This is used to map the json from Elastic search to object
@@ -22,6 +23,7 @@ public class StacCollectionModel {
     protected List<ContactModel> contacts;
     protected List<ThemeModel> themes;
     protected String license;
+    protected Map<String, AssetModel> assets;
 
     @JsonProperty("sci:citation")
     protected String citation;

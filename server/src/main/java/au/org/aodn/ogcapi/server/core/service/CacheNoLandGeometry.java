@@ -35,7 +35,7 @@ public class CacheNoLandGeometry {
     @Scheduled(initialDelay = 1000, fixedDelay = Long.MAX_VALUE)
     @Cacheable("all_noland_geometry")
     public Map<String, StacCollectionModel> getAllNoLandGeometry() {
-        ElasticSearchBase.SearchResult result = elasticSearch.searchCollectionBy(
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = elasticSearch.searchCollectionBy(
                 null,
                 null,
                 null,

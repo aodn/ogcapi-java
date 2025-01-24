@@ -1,25 +1,23 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.DatasetModel;
-import au.org.aodn.ogcapi.server.core.model.DatasetSearchResult;
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.SortOptions;
-import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch._types.aggregations.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
+import co.elastic.clients.json.JsonData;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
-import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
@@ -30,8 +28,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.Supplier;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,8 +51,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabsIndexName;
 
-    @Value("${elasticsearch.dataset_index.name}")
-    protected String datasetIndexName;
+    @Value("${elasticsearch.cloud_optimized_index.name}")
+    protected String dataIndexName;
 
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
@@ -147,9 +146,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         Map<String, Set<String>> searchSuggestions = new HashMap<>();
-
+        List<Hit<SearchSuggestionsDto>> suggestion = this.getSuggestionsByField(input, cql, coor);
         // extract parameter vocab suggestions
-        Set<String> parameterVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
+        Set<String> parameterVocabSuggestions = suggestion
                 .stream()
                 .filter(item -> item.source() != null && item.source().getParameterVocabs() != null && !item.source().getParameterVocabs().isEmpty())
                 .flatMap(item -> item.source().getParameterVocabs().stream())
@@ -157,7 +156,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .collect(Collectors.toSet());
         searchSuggestions.put("suggested_parameter_vocabs", parameterVocabSuggestions);
 
-        Set<String> platformVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
+        Set<String> platformVocabSuggestions = suggestion
                 .stream()
                 .filter(item -> item.source() != null && item.source().getPlatformVocabs() != null && !item.source().getPlatformVocabs().isEmpty())
                 .flatMap(item -> item.source().getPlatformVocabs().stream())
@@ -165,7 +164,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .collect(Collectors.toSet());
         searchSuggestions.put("suggested_platform_vocabs", platformVocabSuggestions);
 
-        Set<String> organisationVocabSuggestions = this.getSuggestionsByField(input, cql, coor)
+        Set<String> organisationVocabSuggestions = suggestion
                 .stream()
                 .filter(item -> item.source() != null && item.source().getOrganisationVocabs() != null && !item.source().getOrganisationVocabs().isEmpty())
                 .flatMap(item -> item.source().getOrganisationVocabs().stream())
@@ -174,7 +173,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         searchSuggestions.put("suggested_organisation_vocabs", organisationVocabSuggestions);
 
         // extract abstract phrases suggestions
-        Set<String> abstractPhrases = this.getSuggestionsByField(input, cql, coor)
+        Set<String> abstractPhrases = suggestion
                 .stream()
                 .filter(item -> item.source() != null && item.source().getAbstractPhrases() != null && !item.source().getAbstractPhrases().isEmpty())
                 .flatMap(item -> item.source().getAbstractPhrases().stream())
@@ -185,7 +184,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return new ResponseEntity<>(searchSuggestions, HttpStatus.OK);
     }
 
-    protected ElasticSearchBase.SearchResult searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {
+    protected ElasticSearchBase.SearchResult<StacCollectionModel> searchCollectionsByIds(List<String> ids, Boolean isWithGeometry, String sortBy) {
 
         List<Query> queries = new ArrayList<>();
         queries.add(MatchQuery.of(m -> m
@@ -216,33 +215,33 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 filters,
                 null,
                 null,
-                createSortOptions(sortBy),
+                createSortOptions(sortBy, CQLFields.class),
                 null,
                 null);
     }
 
     @Override
-    public ElasticSearchBase.SearchResult searchCollectionWithGeometry(List<String> ids, String sortBy) {
+    public ElasticSearchBase.SearchResult<StacCollectionModel> searchCollectionWithGeometry(List<String> ids, String sortBy) {
         return searchCollectionsByIds(ids, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public ElasticSearchBase.SearchResult searchAllCollectionsWithGeometry(String sortBy) {
+    public ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollectionsWithGeometry(String sortBy) {
         return searchCollectionsByIds(null, Boolean.TRUE, sortBy);
     }
 
     @Override
-    public ElasticSearchBase.SearchResult searchCollections(List<String> ids, String sortBy) {
+    public ElasticSearchBase.SearchResult<StacCollectionModel> searchCollections(List<String> ids, String sortBy) {
         return searchCollectionsByIds(ids, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public ElasticSearchBase.SearchResult searchAllCollections(String sortBy) {
+    public ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollections(String sortBy) {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
     @Override
-    public ElasticSearchBase.SearchResult searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
+    public ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
         if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections(sortBy);
@@ -334,49 +333,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     filters,
                     properties,
                     searchAfter,
-                    createSortOptions(sortBy),
+                    createSortOptions(sortBy, CQLFields.class),
                     score,
                     maxSize
             );
         }
-    }
-    /**
-     * Parse and create a sort option
-     * <a href="https://github.com/opengeospatial/ogcapi-features/blob/0c508be34aaca0d9cf5e05722276a0ee10585d61/extensions/sorting/standard/clause_7_sorting.adoc#L32">...</a>
-     *
-     * @param sortBy - Must be of pattern +<property> | -<property>, + mean asc, - mean desc
-     * @return List of sort options
-     */
-    protected List<SortOptions> createSortOptions(String sortBy) {
-        if(sortBy == null || sortBy.isEmpty()) return null;
-
-        String[] args = sortBy.split(",");
-        List<SortOptions> sos = new ArrayList<>();
-
-        for(String arg: args) {
-            arg = arg.trim();
-            if (arg.startsWith("-")) {
-                CQLFields field = Enum.valueOf(CQLFields.class, arg.substring(1).toLowerCase());
-
-                if(field.getSortBuilder() != null) {
-                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Desc);
-                    sos.add(sb.build());
-                }
-            }
-            else {
-                // Default is +, there is a catch the + will be replaced as space in the property as + means space in url, by taking
-                // default is ASC we work around the problem, the trim removed the space
-                CQLFields field = arg.startsWith("+") ?
-                        Enum.valueOf(CQLFields.class, arg.substring(1).toLowerCase()) :
-                        Enum.valueOf(CQLFields.class, arg.toLowerCase());
-
-                if(field.getSortBuilder() != null) {
-                    ObjectBuilder<SortOptions> sb = field.getSortBuilder().apply(SortOrder.Asc);
-                    sos.add(sb.build());
-                }
-            }
-        }
-        return sos;
     }
 
     @Override
@@ -436,40 +397,213 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         // Assume it is string
         return FieldValue.of(s.trim());
     }
-
+    /**
+     * We will need to create a aggregation for each of the feature query, this one target the summary feature
+     * which create a summary of the indexed count group by geometry and date range for the cloud optimized data.
+     * Below code equals this:
+     * {
+     *   "aggregations": {
+     *     "coordinates": {
+     *       "aggregations": {
+     *         "total_count": {
+     *           "sum": {
+     *             "field": "properties.count"
+     *           }
+     *         },
+     *         "max_time": {
+     *           "max": {
+     *             "field": "properties.time"
+     *           }
+     *         },
+     *         "min_time": {
+     *           "min": {
+     *             "field": "properties.time"
+     *           }
+     *         },
+     *         "coordinates": {
+     *           "top_hits": {
+     *             "size": 1,
+     *             "sort": [
+     *               {
+     *                 "collection.keyword": {
+     *                   "order": "asc"
+     *                 }
+     *               },
+     *               {
+     *                 "geometry.geometry.coordinates": {
+     *                   "order": "asc"
+     *                 }
+     *               },
+     *             ]
+     *           }
+     *         }
+     *       },
+     *       "composite": {
+     *         "size": 2200,
+     *         "sources": [
+     *           {
+     *             "collection": {
+     *               "terms": {
+     *                 "field": "collection.keyword"
+     *               }
+     *             }
+     *           },
+     *           {
+     *             "coordinates": {
+     *               "terms": {
+     *                 "script": {
+     *                      "source": "doc['geometry.geometry.coordinates'].value.toString()",
+     *                      "lang": "painless"
+     *                 }
+     *               }
+     *             }
+     *           }
+     *         ]
+     *       }
+     *     }
+     *   },
+     *   "size": 0
+     * }
+     *
+     * @param collectionId - The metadata set id
+     * @param properties - The field you want to return
+     * @param filter - Any filter applied to the summary operation
+     * @return - Result
+     */
     @Override
-    public DatasetSearchResult searchDataset(
-            String collectionId,
-            String startDate,
-            String endDate
-    ) {
-        List<Query> queries = new ArrayList<>();
-        queries.add(MatchQuery.of(query -> query
-                .field("uuid")
-                .query(collectionId))._toQuery());
+    public ElasticSearchBase.SearchResult<StacItemModel> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
 
-        Supplier<SearchRequest.Builder> builderSupplier = () -> {
+        final String COORDINATES = "coordinates";
+        final String TOTAL_COUNT = "total_count";
+        final String MIN_TIME = "min_time";
+        final String MAX_TIME = "max_time";
+
+        BiFunction<Map<String, FieldValue>, Map<String, FieldValue>, SearchRequest.Builder> builderSupplier = (
+                arguments, afterKey) -> {
+
             SearchRequest.Builder builder = new SearchRequest.Builder();
-            builder.index(datasetIndexName)
-                    .size(this.getPageSize())
-                    .query(query -> query.bool(createBoolQueryForProperties(queries, null, null)));
+
+            builder.query(q -> q
+                            .term(t -> t
+                                    .field(CQLFeatureFields.collection.searchField)
+                                    .value(arguments.get("collectionId"))
+                            )
+                    );
+
+            // Group by lng
+            CompositeAggregationSource lng = CompositeAggregationSource.of(c -> c.terms(t -> t
+                    .field(CQLFeatureFields.lng.searchField)));
+
+            // Group by lat
+            CompositeAggregationSource lat = CompositeAggregationSource.of(c -> c.terms(t -> t
+                    .field(CQLFeatureFields.lat.searchField)));
+
+            // Use afterKey to page to another batch of records if exist
+            Aggregation compose = afterKey == null ?
+                    new Aggregation.Builder().composite(c -> c
+                                .sources(List.of(
+                                        Map.of(CQLFeatureFields.lng.name(), lng),
+                                        Map.of(CQLFeatureFields.lat.name(), lat))
+                                )
+                                .size(pageSize)
+                            ).build()
+                    :
+                    new Aggregation.Builder().composite(c -> c
+                                .sources(List.of(
+                                        Map.of(CQLFeatureFields.lng.name(), lng),
+                                        Map.of(CQLFeatureFields.lat.name(), lat))
+                                )
+                                .size(pageSize)
+                                .after(afterKey)
+                            ).build();
+
+
+            // Sum of count
+            Aggregation sum = SumAggregation.of(s -> s.field(CQLFeatureFields.count.searchField))._toAggregation();
+
+            // Min value of field
+            Aggregation min = MinAggregation.of(s -> s.field(CQLFeatureFields.temporal.searchField))._toAggregation();
+
+            // Max value of field
+            Aggregation max = MaxAggregation.of(s -> s.field(CQLFeatureFields.temporal.searchField))._toAggregation();
+
+            // Field value to return, think of it as select part of SQL
+            Aggregation field = new Aggregation.Builder().topHits(th -> th.size(1)
+                            .sort(createSortOptions(
+                                    String.format("%s,%s", CQLFeatureFields.lng.name(), CQLFeatureFields.lat.name()),
+                                    CQLFeatureFields.class)))
+                    .build();
+
+            Aggregation aggregation = new Aggregation.Builder()
+                    .composite(compose.composite())
+                    .aggregations(Map.of(
+                            TOTAL_COUNT, sum,
+                            MIN_TIME, min,
+                            MAX_TIME, max,
+                            COORDINATES, field
+                    ))
+                    .build();
+
+            // There is a limitation that all sort field, assume to be inside the properties
+            Aggregation nested = new Aggregation.Builder().nested(n -> n
+                            .path("properties")
+                    )
+                    .aggregations(COORDINATES, aggregation)
+                    .build();
+
+
+            builder.index(dataIndexName)
+                    .size(0)    // Do not return hits, only aggregations, that is the hits().hit() section will be empty
+                    .aggregations(COORDINATES, nested);
 
             return builder;
         };
 
         try {
-            Iterable<Hit<ObjectNode>> response = pagableSearch(builderSupplier, ObjectNode.class, (long) this.getPageSize());
+            ElasticSearchBase.SearchResult<StacItemModel> result = new ElasticSearchBase.SearchResult<>();
+            result.setCollections(new ArrayList<>());
 
-            DatasetSearchResult result = new DatasetSearchResult();
+            Map<String, FieldValue> arguments = Map.of(
+                    "collectionId", FieldValue.of(collectionId),
+                    "aggKey", FieldValue.of(COORDINATES)
+            );
+            Iterable<CompositeBucket> response = pageableAggregation(builderSupplier, CompositeBucket.class, arguments, null);
 
-            for (var node : response) {
-                if (node != null && node.source() != null) {
-                    var monthlyData = mapper.readValue(node.source().toPrettyString(), DatasetModel.class);
-                    monthlyData.getData().forEach(result::addDatum);
+            for (CompositeBucket node : response) {
+                if (node != null) {
+                    StacItemModel. StacItemModelBuilder model = StacItemModel.builder();
+
+                    result.setTotal(result.getTotal() + node.docCount());
+
+                    TopHitsAggregate th = node.aggregations().get(COORDINATES).topHits();
+                    model.uuid(th.hits().hits().get(0).id());
+
+                    JsonData jd = th.hits().hits().get(0).source();
+                    if(jd != null) {
+                        Map<?, ?> map = jd.to(Map.class);
+                        BigDecimal lng = BigDecimal.valueOf((double)map.get("lng"));
+                        BigDecimal lat = BigDecimal.valueOf((double)map.get("lat"));
+                        model.geometry(Map.of("geometry", Map.of(
+                                "coordinates", List.of(lng, lat)
+                        )));
+                    }
+
+                    SumAggregate sa = node.aggregations().get(TOTAL_COUNT).sum();
+                    MinAggregate min = node.aggregations().get(MIN_TIME).min();
+                    MaxAggregate max = node.aggregations().get(MAX_TIME).max();
+
+                    model.properties(Map.of(
+                            FeatureProperty.COUNT.getValue(), sa.value(),
+                            FeatureProperty.START_TIME.getValue(), min.valueAsString() == null ? "" : min.valueAsString(),
+                            FeatureProperty.END_TIME.getValue(), max.valueAsString() == null ? "" : max.valueAsString()
+                    ));
+
+                    result.getCollections().add(model.build());
                 }
             }
             return result;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             log.error("Error while searching dataset.", e);
         }
         return null;
