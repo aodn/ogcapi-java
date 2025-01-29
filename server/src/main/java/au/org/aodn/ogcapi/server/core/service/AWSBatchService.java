@@ -60,6 +60,7 @@ public class AWSBatchService {
         return null;
     }
 
+    // TODO: implement the method later
     public boolean isJobQueueValid(String jobQueueName) throws IOException {
 
         var remoteJobQueue = getJobQueueBy(jobQueueName);
@@ -69,8 +70,8 @@ public class AWSBatchService {
         return remoteJobQueueConfig.equals(localJobQueueConfig);
     }
 
+    // TODO: implement the path later
     public String getLocalJobQueueConfigBy(String jobQueueName) throws IOException {
-        // TODO: implement the path later
         var configJsonPath = "";
         var jsonFile = new File(configJsonPath);
 
