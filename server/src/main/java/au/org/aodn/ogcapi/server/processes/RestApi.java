@@ -1,58 +1,91 @@
 package au.org.aodn.ogcapi.server.processes;
 
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestController("ProcessesRestApi")
 @RequestMapping(value = "/api/v1/ogc/processes")
-public class RestApi  {
+public class RestApi {
 
     @Autowired
     private AWSBatchService awsBatchService;
 
-    @PostMapping(path="/download/{collectionId}")
-    public ResponseEntity downloadData(
+    @PostMapping(path = "/download/{collectionId}")
+    public ResponseEntity<String> downloadData(
             @PathVariable("collectionId") String collectionId,
-            @Parameter(in = ParameterIn.QUERY, description = "start date") @Valid String startDate,
-            @Parameter(in = ParameterIn.QUERY, description = "end date") @Valid String endDate,
-            @Parameter(in = ParameterIn.QUERY, description = "bounding box") @Valid String bbox
-    ){
+            @Parameter(in = ParameterIn.QUERY, description = "start date")
+            @Valid
+            @RequestParam(name = "start_date")
+            String startDate,
+
+            @Parameter(in = ParameterIn.QUERY, description = "end date")
+            @Valid
+            @RequestParam(name = "end_date")
+            String endDate,
+
+            @Parameter(in = ParameterIn.QUERY, description = "minimum latitude")
+            @Valid
+            @RequestParam(name = "min_lat")
+            String minLat,
+
+            @Parameter(in = ParameterIn.QUERY, description = "minimum longitude")
+            @Valid
+            @RequestParam(name = "min_lon")
+            String minLon,
+
+            @Parameter(in = ParameterIn.QUERY, description = "maximum latitude")
+            @Valid
+            @RequestParam(name = "max_lat")
+            String maxLat,
+
+            @Parameter(in = ParameterIn.QUERY, description = "maximum longitude")
+            @Valid
+            @RequestParam(name = "max_lon")
+            String maxLon,
+
+            @Parameter(in = ParameterIn.QUERY, description = "recipient")
+            @Valid
+            @RequestParam(name = "recipient")
+            String recipient
+    ) {
         try {
 
-            System.out.println("AWS_ACCESS_KEY_ID: " + System.getenv("AWS_ACCESS_KEY_ID"));
-            System.out.println("AWS_SECRET_ACCESS_KEY: " + System.getenv("AWS_SECRET_ACCESS_KEY"));
-
             Map<String, String> parameters = new HashMap<>();
-            parameters.put("COLLECTION_ID", collectionId);
-            parameters.put("START_DATE", startDate);
-            parameters.put("END_DATE", endDate);
-            parameters.put("BBOX", bbox);
-            String jobId = awsBatchService.submitJob(
-                    "test-downloading-job",
-                    "test-downloading-job-queue",
-                    "test-download-job-definition",
-                    parameters);
+            parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), collectionId);
+            parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
+            parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
+            parameters.put(DatasetDownloadEnums.Condition.MIN_LATITUDE.getValue(), minLat);
+            parameters.put(DatasetDownloadEnums.Condition.MIN_LONGITUDE.getValue(), minLon);
+            parameters.put(DatasetDownloadEnums.Condition.MAX_LATITUDE.getValue(), maxLat);
+            parameters.put(DatasetDownloadEnums.Condition.MAX_LONGITUDE.getValue(), maxLon);
+            parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), recipient);
 
+
+            String jobId = awsBatchService.submitJob(
+                    "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
+                    DatasetDownloadEnums.JobQueue.GENERATING_CSV_DATA_FILE.getValue(),
+                    DatasetDownloadEnums.JobDefinition.GENERATE_CSV_DATA_FILE.getValue(),
+                    parameters);
+            log.info("Job submitted with ID: " + jobId);
             return ResponseEntity.ok("Job submitted with ID: " + jobId);
         } catch (Exception e) {
-            System.out.println("Error while getting dataset");
-            System.out.println(e.getMessage());
-            return ResponseEntity.badRequest().body("Invalid parameters");
+
+
+            log.error("Error while getting dataset");
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().body("Error while getting dataset");
         }
-
-
     }
-
 }
