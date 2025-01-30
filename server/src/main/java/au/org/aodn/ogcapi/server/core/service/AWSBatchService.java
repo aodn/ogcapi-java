@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.*;
 
@@ -11,7 +10,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-@Service("AWSBatchService")
 @Slf4j
 public class AWSBatchService {
 

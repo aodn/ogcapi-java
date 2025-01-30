@@ -19,6 +19,9 @@ elasticsearch:
       path: search_suggestions
       fields: abstract_phrases, parameter_vocabs_sayt, platform_vocabs_sayt, organisation_vocabs_sayt
 
+aws:
+  region: ap-southeast-2
+
 api:
   host: http://localhost:${server.port}
 
