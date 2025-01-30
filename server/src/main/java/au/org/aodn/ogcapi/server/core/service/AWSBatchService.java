@@ -18,12 +18,13 @@ public class AWSBatchService {
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
 
-    public AWSBatchService(BatchClient batchClient) {
+    public AWSBatchService(BatchClient batchClient, ObjectMapper objectMapper) {
         this.batchClient = batchClient;
-        this.objectMapper = new ObjectMapper();
+        this.objectMapper = objectMapper;
     }
 
     public String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {
+
         List<KeyValuePair> environmentVariables = parameters.entrySet().stream()
                 .map(entry ->
                         KeyValuePair
@@ -46,7 +47,18 @@ public class AWSBatchService {
         return submitJobResponse.jobId();
     }
 
-    public JobQueueDetail getJobQueueBy(String name) {
+
+
+    // TODO: This feature doesn't work yet. Will be implemented in the future as this one is not urgent
+    public boolean isJobQueueValid(String jobQueueName) throws IOException {
+
+        var remoteJobQueueDetail = getRemoteJobQueueBy(jobQueueName);
+        var localJobQueueDetail = getLocalJobQueueDetailBy(jobQueueName);
+
+        return remoteJobQueueDetail.equals(localJobQueueDetail);
+    }
+
+    public JobQueueDetail getRemoteJobQueueBy(String name) {
         var request = DescribeJobQueuesRequest
                 .builder()
                 .jobQueues(name)
@@ -60,22 +72,11 @@ public class AWSBatchService {
         return null;
     }
 
-    // TODO: implement the method later
-    public boolean isJobQueueValid(String jobQueueName) throws IOException {
-
-        var remoteJobQueue = getJobQueueBy(jobQueueName);
-        var remoteJobQueueConfig = objectMapper.writeValueAsString(remoteJobQueue);
-        var localJobQueueConfig = getLocalJobQueueConfigBy(jobQueueName);
-
-        return remoteJobQueueConfig.equals(localJobQueueConfig);
-    }
-
-    // TODO: implement the path later
-    public String getLocalJobQueueConfigBy(String jobQueueName) throws IOException {
-        var configJsonPath = "";
+    public JobQueueDetail getLocalJobQueueDetailBy(String jobQueueName) throws IOException {
+        var configJsonPath = "server/src/main/java/au/org/aodn/ogcapi/server/processes/config/" + jobQueueName + ".json";
         var jsonFile = new File(configJsonPath);
-
-        return objectMapper.writeValueAsString(objectMapper.readValue(jsonFile, Map.class));
+        var jsonStr = objectMapper.writeValueAsString(objectMapper.readValue(jsonFile, Object.class));
+        return objectMapper.readValue(jsonStr, JobQueueDetail.class);
     }
 
 }

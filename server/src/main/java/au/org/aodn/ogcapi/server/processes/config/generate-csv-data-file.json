@@ -1,0 +1,18 @@
+{
+  "jobQueueName": "generate-csv-data-file",
+  "jobQueueArn": "arn:aws:batch:ap-southeast-2:704910415367:job-queue/generate-csv-data-file",
+  "state": "ENABLED",
+  "status": "VALID",
+  "statusReason": "JobQueue Healthy",
+  "priority": 1,
+  "computeEnvironmentOrder": [
+    {
+      "order": 1,
+      "computeEnvironment": "arn:aws:batch:ap-southeast-2:704910415367:compute-environment/generate-csv-data-file"
+    }
+  ],
+  "serviceEnvironmentOrder": [],
+  "jobQueueType": "ECS_FARGATE",
+  "tags": {},
+  "jobStateTimeLimitActions": []
+}
