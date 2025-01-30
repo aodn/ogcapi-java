@@ -1,6 +1,10 @@
 package au.org.aodn.ogcapi.server.processes;
 
 
+import au.org.aodn.ogcapi.processes.api.ProcessesApi;
+import au.org.aodn.ogcapi.processes.model.Execute;
+import au.org.aodn.ogcapi.processes.model.InlineResponse200;
+import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -8,6 +12,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +22,7 @@ import java.util.Map;
 @Slf4j
 @RestController("ProcessesRestApi")
 @RequestMapping(value = "/api/v1/ogc/processes")
-public class RestApi {
+public class RestApi implements ProcessesApi {
 
     @Autowired
     private AWSBatchService awsBatchService;
@@ -87,5 +92,20 @@ public class RestApi {
             log.error(e.getMessage());
             return ResponseEntity.badRequest().body("Error while getting dataset");
         }
+    }
+
+    @Override
+    public ResponseEntity<InlineResponse200> execute(String processID, Execute body) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    public ResponseEntity<au.org.aodn.ogcapi.processes.model.Process> getProcessDescription(String processID) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    public ResponseEntity<ProcessList> getProcesses() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 }

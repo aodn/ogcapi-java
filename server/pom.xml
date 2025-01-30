@@ -82,6 +82,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>au.org.aodn.ogcapi</groupId>
+            <artifactId>ogcapi-processes-java</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>co.elastic.clients</groupId>
             <artifactId>elasticsearch-java</artifactId>
         </dependency>
