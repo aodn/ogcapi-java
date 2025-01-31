@@ -31,7 +31,7 @@ public class RestApi implements ProcessesApi {
     @Autowired
     private AWSBatchService awsBatchService;
 
-    public ResponseEntity<String> downloadData(
+    private ResponseEntity<String> downloadData(
             String id,
             String startDate,
             String endDate,
