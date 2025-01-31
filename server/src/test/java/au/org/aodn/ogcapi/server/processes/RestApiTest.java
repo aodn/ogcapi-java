@@ -5,7 +5,6 @@ import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
-import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,7 +24,7 @@ import static org.mockito.Mockito.when;
 public class RestApiTest {
 
     @Mock
-    private AWSBatchService awsBatchService;
+    private RestServices restServices;
 
     @InjectMocks
     private RestApi restApi;
@@ -49,7 +48,7 @@ public class RestApiTest {
 
     @Test
     public void testExecuteDownloadDatasetSuccess() {
-        when(awsBatchService.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+        when(restServices.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
                 .thenReturn(ResponseEntity.ok("Job submitted with ID: test-job-id"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
@@ -63,7 +62,7 @@ public class RestApiTest {
 
     @Test
     public void testExecuteDownloadDatasetError() {
-        when(awsBatchService.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+        when(restServices.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
                 .thenThrow(new RuntimeException("Error while getting dataset"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);

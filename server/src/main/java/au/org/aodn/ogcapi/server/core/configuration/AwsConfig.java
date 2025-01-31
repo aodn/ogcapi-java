@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
-import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
+import au.org.aodn.ogcapi.server.processes.RestServices;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +25,7 @@ public class AwsConfig {
     }
 
     @Bean
-    public AWSBatchService awsBatchService(BatchClient batchClient, ObjectMapper objectMapper) {
-        return new AWSBatchService(batchClient, objectMapper);
+    public RestServices awsBatchService(BatchClient batchClient, ObjectMapper objectMapper) {
+        return new RestServices(batchClient, objectMapper);
     }
 }

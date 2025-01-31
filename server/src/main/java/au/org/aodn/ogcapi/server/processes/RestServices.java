@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service;
+package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -14,12 +14,12 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public class AWSBatchService {
+public class RestServices {
 
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
 
-    public AWSBatchService(BatchClient batchClient, ObjectMapper objectMapper) {
+    public RestServices(BatchClient batchClient, ObjectMapper objectMapper) {
         this.batchClient = batchClient;
         this.objectMapper = objectMapper;
     }

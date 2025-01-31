@@ -8,7 +8,6 @@ import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
-import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -25,7 +24,7 @@ import org.springframework.web.bind.annotation.*;
 public class RestApi implements ProcessesApi {
 
     @Autowired
-    private AWSBatchService awsBatchService;
+    private RestServices restServices;
 
     @Override
     // because the produces value in the interface declaration includes "/_" which may
@@ -44,7 +43,7 @@ public class RestApi implements ProcessesApi {
 
         if (processID.equals(ProcessIdEnum.DOWNLOAD_DATASET.getValue())) {
             try {
-                var response = awsBatchService.downloadData(
+                var response = restServices.downloadData(
                         (String) body.getInputs().get("collectionId"),
                         (String) body.getInputs().get("start_date"),
                         (String) body.getInputs().get("end_date"),

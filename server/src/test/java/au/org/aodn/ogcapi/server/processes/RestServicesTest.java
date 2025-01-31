@@ -1,6 +1,5 @@
-package au.org.aodn.ogcapi.server.common;
+package au.org.aodn.ogcapi.server.processes;
 
-import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -15,13 +14,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class AWSBatchServiceTest {
+public class RestServicesTest {
 
     @Mock
     private BatchClient batchClient;
 
     @InjectMocks
-    private AWSBatchService awsBatchService;
+    private RestServices restServices;
 
     @BeforeEach
     public void setUp() {
@@ -36,7 +35,7 @@ public class AWSBatchServiceTest {
         when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(submitJobResponse);
 
         // Act
-        ResponseEntity<String> response = awsBatchService.downloadData(
+        ResponseEntity<String> response = restServices.downloadData(
                 "id", "2021-01-01", "2021-01-31", "10.0", "20.0", "30.0", "40.0", "recipient@example.com");
 
         // Assert
@@ -50,7 +49,7 @@ public class AWSBatchServiceTest {
         when(batchClient.submitJob(any(SubmitJobRequest.class))).thenThrow(new RuntimeException("AWS Batch error"));
 
         // Act
-        ResponseEntity<String> response = awsBatchService.downloadData(
+        ResponseEntity<String> response = restServices.downloadData(
                 "id", "2021-01-01", "2021-01-31", "10.0", "20.0", "30.0", "40.0", "recipient@example.com");
 
         // Assert
