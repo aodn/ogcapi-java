@@ -9,6 +9,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -95,9 +96,20 @@ public class RestApi implements ProcessesApi {
     }
 
     @Override
-    public ResponseEntity<InlineResponse200> execute(String processID, Execute body) {
+    @RequestMapping(value = "/processes/{processID}/execution",
+            produces = { "application/json", "text/html" },
+            consumes = { "application/json" },
+            method = RequestMethod.POST)
+    public ResponseEntity<InlineResponse200> execute(
+            @Parameter(in = ParameterIn.PATH, required=true, schema=@Schema())
+            @PathVariable("processID")
+            String processID,
+            @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required=true, schema=@Schema())
+            @Valid
+            @RequestBody Execute body){
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
+
 
     @Override
     public ResponseEntity<au.org.aodn.ogcapi.processes.model.Process> getProcessDescription(String processID) {
