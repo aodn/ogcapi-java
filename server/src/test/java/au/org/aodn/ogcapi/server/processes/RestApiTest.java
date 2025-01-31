@@ -1,6 +1,10 @@
 package au.org.aodn.ogcapi.server.processes;
 
-import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.processes.model.Execute;
+import au.org.aodn.ogcapi.processes.model.InlineResponse200;
+import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.server.core.model.InlineValue;
+import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,42 +31,46 @@ public class RestApiTest {
     @InjectMocks
     private RestApi restApi;
 
-    private Map<String, String> parameters;
+    private Execute executeRequest;
 
     @BeforeEach
     public void setUp() {
-        parameters = new HashMap<>();
-        parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), "collectionId");
-        parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), "2023-01-01");
-        parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), "2023-12-31");
-        parameters.put(DatasetDownloadEnums.Condition.MIN_LATITUDE.getValue(), "10.0");
-        parameters.put(DatasetDownloadEnums.Condition.MIN_LONGITUDE.getValue(), "20.0");
-        parameters.put(DatasetDownloadEnums.Condition.MAX_LATITUDE.getValue(), "30.0");
-        parameters.put(DatasetDownloadEnums.Condition.MAX_LONGITUDE.getValue(), "40.0");
-        parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), "test@example.com");
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put("collectionId", "collectionId");
+        inputs.put("start_date", "2023-01-01");
+        inputs.put("end_date", "2023-12-31");
+        inputs.put("min_lat", "10.0");
+        inputs.put("min_lon", "20.0");
+        inputs.put("max_lat", "30.0");
+        inputs.put("max_lon", "40.0");
+        inputs.put("recipient", "test@example.com");
+
+        executeRequest = new Execute();
+        executeRequest.setInputs(inputs);
     }
 
     @Test
-    public void testDownloadData_Success() {
+    public void testExecute() {
         when(awsBatchService.submitJob(any(), any(), any(), any())).thenReturn("jobId");
 
-        ResponseEntity<?> response = restApi.downloadData(
-                "collectionId", "2023-01-01", "2023-12-31", "10.0", "20.0", "30.0", "40.0", "test@example.com");
+        ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
 
-        assertTrue( response.getStatusCode().is2xxSuccessful());
-        assertEquals("Job submitted with ID: jobId", response.getBody());
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        Results results = (Results) response.getBody();
+        assert results != null;
+        InlineValue message = (InlineValue) results.get("message");
+        assertEquals("Job submitted with ID: jobId", message.message());
         verify(awsBatchService, times(1)).submitJob(any(), any(), any(), any());
     }
 
     @Test
-    public void testDownloadData_Error()  {
-        when(awsBatchService.submitJob(any(), any(), any(), any())).thenThrow(new RuntimeException("Error"));
+    public void testExecute_UnknownProcessId() {
+        ResponseEntity<InlineResponse200> response = restApi.execute("unknownProcessId", executeRequest);
 
-        ResponseEntity<?> response = restApi.downloadData(
-                "collectionId", "2023-01-01", "2023-12-31", "10.0", "20.0", "30.0", "40.0", "test@example.com");
-
-        assertTrue( response.getStatusCode().is4xxClientError());
-        assertEquals("Error while getting dataset", response.getBody());
-        verify(awsBatchService, times(1)).submitJob(any(), any(), any(), any());
+        assertTrue(response.getStatusCode().is4xxClientError());
+        Results results = (Results) response.getBody();
+        assert results != null;
+        InlineValue error = (InlineValue) results.get("error");
+        assertEquals("Unknown process ID: unknownProcessId", error.message());
     }
 }
