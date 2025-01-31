@@ -1,12 +1,15 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseEntity;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.*;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +24,45 @@ public class AWSBatchService {
         this.objectMapper = objectMapper;
     }
 
-    public String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {
+    public ResponseEntity<String> downloadData(
+            String id,
+            String startDate,
+            String endDate,
+            String minLat,
+            String minLon,
+            String maxLat,
+            String maxLon,
+            String recipient
+    ) {
+        try {
+
+            Map<String, String> parameters = new HashMap<>();
+            parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), id);
+            parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
+            parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
+            parameters.put(DatasetDownloadEnums.Condition.MIN_LATITUDE.getValue(), minLat);
+            parameters.put(DatasetDownloadEnums.Condition.MIN_LONGITUDE.getValue(), minLon);
+            parameters.put(DatasetDownloadEnums.Condition.MAX_LATITUDE.getValue(), maxLat);
+            parameters.put(DatasetDownloadEnums.Condition.MAX_LONGITUDE.getValue(), maxLon);
+            parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), recipient);
+
+
+            String jobId = submitJob(
+                    "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
+                    DatasetDownloadEnums.JobQueue.GENERATING_CSV_DATA_FILE.getValue(),
+                    DatasetDownloadEnums.JobDefinition.GENERATE_CSV_DATA_FILE.getValue(),
+                    parameters);
+            log.info("Job submitted with ID: " + jobId);
+            return ResponseEntity.ok("Job submitted with ID: " + jobId);
+        } catch (Exception e) {
+
+            log.error("Error while getting dataset");
+            log.error(e.getMessage());
+            return ResponseEntity.badRequest().body("Error while getting dataset");
+        }
+    }
+
+    private String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {
 
         List<KeyValuePair> environmentVariables = parameters.entrySet().stream()
                 .map(entry ->

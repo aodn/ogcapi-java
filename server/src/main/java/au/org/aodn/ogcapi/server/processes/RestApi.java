@@ -7,7 +7,6 @@ import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
-import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,9 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
-
 @Slf4j
 @RestController("ProcessesRestApi")
 @RequestMapping(value = "/api/v1/ogc")
@@ -31,45 +27,9 @@ public class RestApi implements ProcessesApi {
     @Autowired
     private AWSBatchService awsBatchService;
 
-    private ResponseEntity<String> downloadData(
-            String id,
-            String startDate,
-            String endDate,
-            String minLat,
-            String minLon,
-            String maxLat,
-            String maxLon,
-            String recipient
-    ) {
-        try {
-
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), id);
-            parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
-            parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
-            parameters.put(DatasetDownloadEnums.Condition.MIN_LATITUDE.getValue(), minLat);
-            parameters.put(DatasetDownloadEnums.Condition.MIN_LONGITUDE.getValue(), minLon);
-            parameters.put(DatasetDownloadEnums.Condition.MAX_LATITUDE.getValue(), maxLat);
-            parameters.put(DatasetDownloadEnums.Condition.MAX_LONGITUDE.getValue(), maxLon);
-            parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), recipient);
-
-
-            String jobId = awsBatchService.submitJob(
-                    "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
-                    DatasetDownloadEnums.JobQueue.GENERATING_CSV_DATA_FILE.getValue(),
-                    DatasetDownloadEnums.JobDefinition.GENERATE_CSV_DATA_FILE.getValue(),
-                    parameters);
-            log.info("Job submitted with ID: " + jobId);
-            return ResponseEntity.ok("Job submitted with ID: " + jobId);
-        } catch (Exception e) {
-
-            log.error("Error while getting dataset");
-            log.error(e.getMessage());
-            return ResponseEntity.badRequest().body("Error while getting dataset");
-        }
-    }
-
     @Override
+    // because the produces value in the interface declaration includes "/_" which may
+    // cause exception thrown sometimes. So i re-declared the produces value here
     @RequestMapping(value = "/processes/{processID}/execution",
             produces = { "application/json", "text/html" },
             consumes = { "application/json" },
@@ -84,7 +44,7 @@ public class RestApi implements ProcessesApi {
 
         if (processID.equals(ProcessIdEnum.DOWNLOAD_DATASET.getValue())) {
             try {
-                var response = downloadData(
+                var response = awsBatchService.downloadData(
                         (String) body.getInputs().get("collectionId"),
                         (String) body.getInputs().get("start_date"),
                         (String) body.getInputs().get("end_date"),

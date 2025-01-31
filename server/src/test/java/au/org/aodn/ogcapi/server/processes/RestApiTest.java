@@ -18,9 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class RestApiTest {
@@ -35,42 +34,52 @@ public class RestApiTest {
 
     @BeforeEach
     public void setUp() {
-        Map<String, Object> inputs = new HashMap<>();
-        inputs.put("collectionId", "collectionId");
-        inputs.put("start_date", "2023-01-01");
-        inputs.put("end_date", "2023-12-31");
-        inputs.put("min_lat", "10.0");
-        inputs.put("min_lon", "20.0");
-        inputs.put("max_lat", "30.0");
-        inputs.put("max_lon", "40.0");
-        inputs.put("recipient", "test@example.com");
-
         executeRequest = new Execute();
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put("collectionId", "test-collection-id");
+        inputs.put("start_date", "2023-01-01");
+        inputs.put("end_date", "2023-01-31");
+        inputs.put("min_lat", "-10.0");
+        inputs.put("min_lon", "110.0");
+        inputs.put("max_lat", "10.0");
+        inputs.put("max_lon", "150.0");
+        inputs.put("recipient", "test@example.com");
         executeRequest.setInputs(inputs);
     }
 
     @Test
-    public void testExecute() {
-        when(awsBatchService.submitJob(any(), any(), any(), any())).thenReturn("jobId");
+    public void testExecuteDownloadDatasetSuccess() {
+        when(awsBatchService.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(ResponseEntity.ok("Job submitted with ID: test-job-id"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
 
-        assertTrue(response.getStatusCode().is2xxSuccessful());
+        assertEquals(200, response.getStatusCode().value());
         Results results = (Results) response.getBody();
-        assert results != null;
         InlineValue message = (InlineValue) results.get("message");
-        assertEquals("Job submitted with ID: jobId", message.message());
-        verify(awsBatchService, times(1)).submitJob(any(), any(), any(), any());
+        assertEquals("Job submitted with ID: test-job-id", message.message());
     }
 
     @Test
-    public void testExecute_UnknownProcessId() {
-        ResponseEntity<InlineResponse200> response = restApi.execute("unknownProcessId", executeRequest);
+    public void testExecuteDownloadDatasetError() {
+        when(awsBatchService.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+                .thenThrow(new RuntimeException("Error while getting dataset"));
 
-        assertTrue(response.getStatusCode().is4xxClientError());
+        ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
+
+        assertEquals(400, response.getStatusCode().value());
         Results results = (Results) response.getBody();
-        assert results != null;
         InlineValue error = (InlineValue) results.get("error");
-        assertEquals("Unknown process ID: unknownProcessId", error.message());
+        assertEquals("Error while getting dataset", error.message());
+    }
+
+    @Test
+    public void testExecuteUnknownProcessId() {
+        ResponseEntity<InlineResponse200> response = restApi.execute("unknown-process-id", executeRequest);
+
+        assertEquals(400, response.getStatusCode().value());
+        Results results = (Results) response.getBody();
+        InlineValue error = (InlineValue) results.get("error");
+        assertEquals("Unknown process ID: unknown-process-id", error.message());
     }
 }

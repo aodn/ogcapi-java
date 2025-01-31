@@ -1,19 +1,20 @@
 package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
 import software.amazon.awssdk.services.batch.BatchClient;
-import software.amazon.awssdk.services.batch.model.*;
-
-import java.util.Collections;
+import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
+import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 public class AWSBatchServiceTest {
 
@@ -29,16 +30,32 @@ public class AWSBatchServiceTest {
     }
 
     @Test
-    public void testSubmitJob() {
+    public void testDownloadDataSuccess() {
         // Arrange
-        String jobId = "test-job-id";
+        String jobId = "12345";
         SubmitJobResponse submitJobResponse = SubmitJobResponse.builder().jobId(jobId).build();
         when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(submitJobResponse);
 
         // Act
-        String result = awsBatchService.submitJob("test-job", "test-queue", "test-job-def", Collections.singletonMap("param1", "value1"));
+        ResponseEntity<String> response = awsBatchService.downloadData(
+                "id", "2021-01-01", "2021-01-31", "10.0", "20.0", "30.0", "40.0", "recipient@example.com");
 
         // Assert
-        assertEquals(jobId, result);
+        assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
+        verify(batchClient, times(1)).submitJob(any(SubmitJobRequest.class));
+    }
+
+    @Test
+    public void testDownloadDataFailure() {
+        // Arrange
+        when(batchClient.submitJob(any(SubmitJobRequest.class))).thenThrow(new RuntimeException("AWS Batch error"));
+
+        // Act
+        ResponseEntity<String> response = awsBatchService.downloadData(
+                "id", "2021-01-01", "2021-01-31", "10.0", "20.0", "30.0", "40.0", "recipient@example.com");
+
+        // Assert
+        assertEquals(ResponseEntity.badRequest().body("Error while getting dataset"), response);
+        verify(batchClient, times(1)).submitJob(any(SubmitJobRequest.class));
     }
 }
