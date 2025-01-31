@@ -5,7 +5,10 @@ import au.org.aodn.ogcapi.processes.api.ProcessesApi;
 import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
+import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -22,54 +25,26 @@ import java.util.Map;
 
 @Slf4j
 @RestController("ProcessesRestApi")
-@RequestMapping(value = "/api/v1/ogc/processes")
+@RequestMapping(value = "/api/v1/ogc")
 public class RestApi implements ProcessesApi {
 
     @Autowired
     private AWSBatchService awsBatchService;
 
-    @PostMapping(path = "/download/{collectionId}")
     public ResponseEntity<String> downloadData(
-            @PathVariable("collectionId") String collectionId,
-            @Parameter(in = ParameterIn.QUERY, description = "start date")
-            @Valid
-            @RequestParam(name = "start_date")
+            String id,
             String startDate,
-
-            @Parameter(in = ParameterIn.QUERY, description = "end date")
-            @Valid
-            @RequestParam(name = "end_date")
             String endDate,
-
-            @Parameter(in = ParameterIn.QUERY, description = "minimum latitude")
-            @Valid
-            @RequestParam(name = "min_lat")
             String minLat,
-
-            @Parameter(in = ParameterIn.QUERY, description = "minimum longitude")
-            @Valid
-            @RequestParam(name = "min_lon")
             String minLon,
-
-            @Parameter(in = ParameterIn.QUERY, description = "maximum latitude")
-            @Valid
-            @RequestParam(name = "max_lat")
             String maxLat,
-
-            @Parameter(in = ParameterIn.QUERY, description = "maximum longitude")
-            @Valid
-            @RequestParam(name = "max_lon")
             String maxLon,
-
-            @Parameter(in = ParameterIn.QUERY, description = "recipient")
-            @Valid
-            @RequestParam(name = "recipient")
             String recipient
     ) {
         try {
 
             Map<String, String> parameters = new HashMap<>();
-            parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), collectionId);
+            parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), id);
             parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
             parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
             parameters.put(DatasetDownloadEnums.Condition.MIN_LATITUDE.getValue(), minLat);
@@ -87,7 +62,6 @@ public class RestApi implements ProcessesApi {
             log.info("Job submitted with ID: " + jobId);
             return ResponseEntity.ok("Job submitted with ID: " + jobId);
         } catch (Exception e) {
-
 
             log.error("Error while getting dataset");
             log.error(e.getMessage());
@@ -107,7 +81,41 @@ public class RestApi implements ProcessesApi {
             @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required=true, schema=@Schema())
             @Valid
             @RequestBody Execute body){
-        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+
+        if (processID.equals(ProcessIdEnum.DOWNLOAD_DATASET.getValue())) {
+            try {
+                var response = downloadData(
+                        (String) body.getInputs().get("collectionId"),
+                        (String) body.getInputs().get("start_date"),
+                        (String) body.getInputs().get("end_date"),
+                        (String) body.getInputs().get("min_lat"),
+                        (String) body.getInputs().get("min_lon"),
+                        (String) body.getInputs().get("max_lat"),
+                        (String) body.getInputs().get("max_lon"),
+                        (String) body.getInputs().get("recipient")
+                );
+
+                var value = new InlineValue(response.getBody());
+                var results = new Results();
+                results.put("message", value);
+
+                return ResponseEntity.ok(results);
+
+            } catch (Exception e) {
+                log.error(e.getMessage());
+                var response = new Results();
+                var value = new InlineValue("Error while getting dataset");
+                response.put("error", value);
+
+                return ResponseEntity.badRequest().body(response);
+            }
+        }
+
+        var response = new Results();
+        var value = new InlineValue("Unknown process ID: " + processID);
+        response.put("error", value);
+
+        return ResponseEntity.badRequest().body(response);
     }
 
 
