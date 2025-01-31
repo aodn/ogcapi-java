@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.common;
 
 import au.org.aodn.ogcapi.server.core.service.AWSBatchService;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;

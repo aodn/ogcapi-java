@@ -56,6 +56,7 @@ public class RestApiTest {
 
         assertEquals(200, response.getStatusCode().value());
         Results results = (Results) response.getBody();
+        assert results != null;
         InlineValue message = (InlineValue) results.get("message");
         assertEquals("Job submitted with ID: test-job-id", message.message());
     }
@@ -69,6 +70,7 @@ public class RestApiTest {
 
         assertEquals(400, response.getStatusCode().value());
         Results results = (Results) response.getBody();
+        assert results != null;
         InlineValue error = (InlineValue) results.get("error");
         assertEquals("Error while getting dataset", error.message());
     }
@@ -79,6 +81,7 @@ public class RestApiTest {
 
         assertEquals(400, response.getStatusCode().value());
         Results results = (Results) response.getBody();
+        assert results != null;
         InlineValue error = (InlineValue) results.get("error");
         assertEquals("Unknown process ID: unknown-process-id", error.message());
     }
