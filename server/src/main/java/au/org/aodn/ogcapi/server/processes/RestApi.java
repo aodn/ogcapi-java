@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
+import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -44,14 +45,11 @@ public class RestApi implements ProcessesApi {
         if (processID.equals(ProcessIdEnum.DOWNLOAD_DATASET.getValue())) {
             try {
                 var response = restServices.downloadData(
-                        (String) body.getInputs().get("collectionId"),
-                        (String) body.getInputs().get("start_date"),
-                        (String) body.getInputs().get("end_date"),
-                        (String) body.getInputs().get("min_lat"),
-                        (String) body.getInputs().get("min_lon"),
-                        (String) body.getInputs().get("max_lat"),
-                        (String) body.getInputs().get("max_lon"),
-                        (String) body.getInputs().get("recipient")
+                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.UUID.getValue()),
+                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.START_DATE.getValue()),
+                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.END_DATE.getValue()),
+                        body.getInputs().get(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue()),
+                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.RECIPIENT.getValue())
                 );
 
                 var value = new InlineValue(response.getBody());
@@ -61,6 +59,8 @@ public class RestApi implements ProcessesApi {
                 return ResponseEntity.ok(results);
 
             } catch (Exception e) {
+
+                // TODO: currently all the errors return badRequest. This should be changed to return the correct status code
                 log.error(e.getMessage());
                 var response = new Results();
                 var value = new InlineValue("Error while getting dataset");
