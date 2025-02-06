@@ -9,14 +9,15 @@ public class DatasetDownloadEnums {
 
     @Getter
     public enum Condition {
-        UUID("UUID"),
-        START_DATE("START_DATE"),
-        END_DATE("END_DATE"),
-        MIN_LATITUDE("MIN_LAT"),
-        MAX_LATITUDE("MAX_LAT"),
-        MIN_LONGITUDE("MIN_LON"),
-        MAX_LONGITUDE("MAX_LON"),
-        RECIPIENT("RECIPIENT");
+        UUID("uuid"),
+        START_DATE("start_date"),
+        END_DATE("end_date"),
+        MIN_LATITUDE("min_lat"),
+        MAX_LATITUDE("max_lat"),
+        MIN_LONGITUDE("min_lon"),
+        MAX_LONGITUDE("max_lon"),
+        MULTI_POLYGON("multi_polygon"),
+        RECIPIENT("recipient");
 
         private final String value;
 
