@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -28,22 +29,15 @@ public class RestServices {
             String id,
             String startDate,
             String endDate,
-            String minLat,
-            String minLon,
-            String maxLat,
-            String maxLon,
+            Object polygons,
             String recipient
-    ) {
-        try {
+    ) throws JsonProcessingException {
 
             Map<String, String> parameters = new HashMap<>();
             parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), id);
             parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
             parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
-            parameters.put(DatasetDownloadEnums.Condition.MIN_LATITUDE.getValue(), minLat);
-            parameters.put(DatasetDownloadEnums.Condition.MIN_LONGITUDE.getValue(), minLon);
-            parameters.put(DatasetDownloadEnums.Condition.MAX_LATITUDE.getValue(), maxLat);
-            parameters.put(DatasetDownloadEnums.Condition.MAX_LONGITUDE.getValue(), maxLon);
+            parameters.put(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
             parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), recipient);
 
 
@@ -54,12 +48,6 @@ public class RestServices {
                     parameters);
             log.info("Job submitted with ID: " + jobId);
             return ResponseEntity.ok("Job submitted with ID: " + jobId);
-        } catch (Exception e) {
-
-            log.error("Error while getting dataset");
-            log.error(e.getMessage());
-            return ResponseEntity.badRequest().body("Error while getting dataset");
-        }
     }
 
     private String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {
@@ -79,7 +67,6 @@ public class RestServices {
                 .jobQueue(jobQueue)
                 .jobDefinition(jobDefinition)
                 .parameters(parameters)
-                .containerOverrides(co -> co.environment(environmentVariables))
                 .build();
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);
