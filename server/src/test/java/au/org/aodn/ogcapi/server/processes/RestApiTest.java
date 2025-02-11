@@ -4,7 +4,9 @@ import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
+import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,7 +19,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -35,25 +38,23 @@ public class RestApiTest {
     public void setUp() {
         executeRequest = new Execute();
         Map<String, Object> inputs = new HashMap<>();
-        inputs.put("collectionId", "test-collection-id");
-        inputs.put("start_date", "2023-01-01");
-        inputs.put("end_date", "2023-01-31");
-        inputs.put("min_lat", "-10.0");
-        inputs.put("min_lon", "110.0");
-        inputs.put("max_lat", "10.0");
-        inputs.put("max_lon", "150.0");
-        inputs.put("recipient", "test@example.com");
+        inputs.put(DatasetDownloadEnums.Condition.UUID.getValue(), "test-uuid");
+        inputs.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), "2023-01-01");
+        inputs.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), "2023-01-31");
+        inputs.put(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue(), "test-multipolygon");
+        inputs.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), "test@example.com");
         executeRequest.setInputs(inputs);
     }
 
     @Test
-    public void testExecuteDownloadDatasetSuccess() {
-        when(restServices.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+    public void testExecuteDownloadDatasetSuccess() throws JsonProcessingException {
+        when(restServices.downloadData(any(), any(), any(), any(), any()))
                 .thenReturn(ResponseEntity.ok("Job submitted with ID: test-job-id"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
 
         assertEquals(200, response.getStatusCode().value());
+        assertInstanceOf(Results.class, response.getBody());
         Results results = (Results) response.getBody();
         assert results != null;
         InlineValue message = (InlineValue) results.get("message");
@@ -61,13 +62,14 @@ public class RestApiTest {
     }
 
     @Test
-    public void testExecuteDownloadDatasetError() {
-        when(restServices.downloadData(anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString(), anyString()))
+    public void testExecuteDownloadDatasetError() throws JsonProcessingException {
+        when(restServices.downloadData(any(), any(), any(), any(), any()))
                 .thenThrow(new RuntimeException("Error while getting dataset"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
 
         assertEquals(400, response.getStatusCode().value());
+        assertInstanceOf(Results.class, response.getBody());
         Results results = (Results) response.getBody();
         assert results != null;
         InlineValue error = (InlineValue) results.get("error");
@@ -79,6 +81,7 @@ public class RestApiTest {
         ResponseEntity<InlineResponse200> response = restApi.execute("unknown-process-id", executeRequest);
 
         assertEquals(400, response.getStatusCode().value());
+        assertInstanceOf(Results.class, response.getBody());
         Results results = (Results) response.getBody();
         assert results != null;
         InlineValue error = (InlineValue) results.get("error");

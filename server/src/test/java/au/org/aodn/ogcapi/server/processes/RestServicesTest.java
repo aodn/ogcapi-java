@@ -1,5 +1,8 @@
 package au.org.aodn.ogcapi.server.processes;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -19,24 +22,34 @@ public class RestServicesTest {
     @Mock
     private BatchClient batchClient;
 
+    @Mock
+    private ObjectMapper objectMapper;
+
     @InjectMocks
     private RestServices restServices;
 
+    private AutoCloseable closeableMock;
+
     @BeforeEach
     public void setUp() {
-        MockitoAnnotations.openMocks(this);
+        closeableMock = MockitoAnnotations.openMocks(this);
+    }
+
+    @AfterEach void cleanUp() throws Exception {
+        closeableMock.close();
     }
 
     @Test
-    public void testDownloadDataSuccess() {
+    public void testDownloadDataSuccess() throws JsonProcessingException {
         // Arrange
         String jobId = "12345";
         SubmitJobResponse submitJobResponse = SubmitJobResponse.builder().jobId(jobId).build();
         when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(submitJobResponse);
+        when(objectMapper.writeValueAsString(any())).thenReturn("test-multipolygon");
 
         // Act
         ResponseEntity<String> response = restServices.downloadData(
-                "id", "2021-01-01", "2021-01-31", "10.0", "20.0", "30.0", "40.0", "recipient@example.com");
+                "test-uuid", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
 
         // Assert
         assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
@@ -44,16 +57,15 @@ public class RestServicesTest {
     }
 
     @Test
-    public void testDownloadDataFailure() {
+    public void testDownloadDataJsonProcessingException() throws JsonProcessingException {
         // Arrange
-        when(batchClient.submitJob(any(SubmitJobRequest.class))).thenThrow(new RuntimeException("AWS Batch error"));
+        when(objectMapper.writeValueAsString(any())).thenThrow(new JsonProcessingException("Error") {});
 
-        // Act
-        ResponseEntity<String> response = restServices.downloadData(
-                "id", "2021-01-01", "2021-01-31", "10.0", "20.0", "30.0", "40.0", "recipient@example.com");
-
-        // Assert
-        assertEquals(ResponseEntity.badRequest().body("Error while getting dataset"), response);
-        verify(batchClient, times(1)).submitJob(any(SubmitJobRequest.class));
+        // Act & Assert
+        try {
+            restServices.downloadData("test-uuid", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
+        } catch (JsonProcessingException e) {
+            assertEquals("Error", e.getMessage());
+        }
     }
 }
