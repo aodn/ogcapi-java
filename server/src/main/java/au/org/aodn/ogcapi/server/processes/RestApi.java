@@ -53,8 +53,10 @@ public class RestApi implements ProcessesApi {
                 );
 
                 var value = new InlineValue(response.getBody());
+                var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
                 var results = new Results();
                 results.put("message", value);
+                results.put("status", status);
 
                 return ResponseEntity.ok(results);
 
@@ -63,18 +65,22 @@ public class RestApi implements ProcessesApi {
                 // TODO: currently all the errors return badRequest. This should be changed to return the correct status code
                 log.error(e.getMessage());
                 var response = new Results();
+                var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
                 var value = new InlineValue("Error while getting dataset");
-                response.put("error", value);
+                response.put("message", value);
+                response.put("status", status);
 
-                return ResponseEntity.badRequest().body(response);
+                return ResponseEntity.ok(response);
             }
         }
 
         var response = new Results();
-        var value = new InlineValue("Unknown process ID: " + processID);
-        response.put("error", value);
+        var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
+        var value = new InlineValue("Error while getting dataset");
+        response.put("message", value);
+        response.put("status", status);
 
-        return ResponseEntity.badRequest().body(response);
+        return ResponseEntity.ok(response);
     }
 
 
