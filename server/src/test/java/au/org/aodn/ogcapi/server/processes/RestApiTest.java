@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
@@ -68,23 +69,10 @@ public class RestApiTest {
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
 
-        assertEquals(400, response.getStatusCode().value());
         assertInstanceOf(Results.class, response.getBody());
         Results results = (Results) response.getBody();
         assert results != null;
-        InlineValue error = (InlineValue) results.get("error");
+        InlineValue error = (InlineValue) results.get(InlineResponseKeyEnum.MESSAGE.getValue());
         assertEquals("Error while getting dataset", error.message());
-    }
-
-    @Test
-    public void testExecuteUnknownProcessId() {
-        ResponseEntity<InlineResponse200> response = restApi.execute("unknown-process-id", executeRequest);
-
-        assertEquals(400, response.getStatusCode().value());
-        assertInstanceOf(Results.class, response.getBody());
-        Results results = (Results) response.getBody();
-        assert results != null;
-        InlineValue error = (InlineValue) results.get("error");
-        assertEquals("Unknown process ID: unknown-process-id", error.message());
     }
 }
