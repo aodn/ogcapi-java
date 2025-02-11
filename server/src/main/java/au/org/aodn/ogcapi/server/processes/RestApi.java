@@ -8,6 +8,7 @@ import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -53,8 +54,10 @@ public class RestApi implements ProcessesApi {
                 );
 
                 var value = new InlineValue(response.getBody());
+                var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
                 var results = new Results();
-                results.put("message", value);
+                results.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+                results.put(InlineResponseKeyEnum.STATUS.getValue(), status);
 
                 return ResponseEntity.ok(results);
 
@@ -63,18 +66,22 @@ public class RestApi implements ProcessesApi {
                 // TODO: currently all the errors return badRequest. This should be changed to return the correct status code
                 log.error(e.getMessage());
                 var response = new Results();
+                var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
                 var value = new InlineValue("Error while getting dataset");
-                response.put("error", value);
+                response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+                response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
 
-                return ResponseEntity.badRequest().body(response);
+                return ResponseEntity.ok(response);
             }
+        } else {
+            var response = new Results();
+            var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
+            var value = new InlineValue("Unknown process ID: unknown-process-id");
+            response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+            response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
+
+            return ResponseEntity.ok(response);
         }
-
-        var response = new Results();
-        var value = new InlineValue("Unknown process ID: " + processID);
-        response.put("error", value);
-
-        return ResponseEntity.badRequest().body(response);
     }
 
 
