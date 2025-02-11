@@ -8,6 +8,7 @@ import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -55,8 +56,8 @@ public class RestApi implements ProcessesApi {
                 var value = new InlineValue(response.getBody());
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
                 var results = new Results();
-                results.put("message", value);
-                results.put("status", status);
+                results.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+                results.put(InlineResponseKeyEnum.STATUS.getValue(), status);
 
                 return ResponseEntity.ok(results);
 
@@ -67,8 +68,8 @@ public class RestApi implements ProcessesApi {
                 var response = new Results();
                 var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
                 var value = new InlineValue("Error while getting dataset");
-                response.put("message", value);
-                response.put("status", status);
+                response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+                response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
 
                 return ResponseEntity.ok(response);
             }
@@ -77,8 +78,8 @@ public class RestApi implements ProcessesApi {
         var response = new Results();
         var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
         var value = new InlineValue("Error while getting dataset");
-        response.put("message", value);
-        response.put("status", status);
+        response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+        response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
 
         return ResponseEntity.ok(response);
     }
