@@ -12,10 +12,6 @@ public class DatasetDownloadEnums {
         UUID("uuid"),
         START_DATE("start_date"),
         END_DATE("end_date"),
-        MIN_LATITUDE("min_lat"),
-        MAX_LATITUDE("max_lat"),
-        MIN_LONGITUDE("min_lon"),
-        MAX_LONGITUDE("max_lon"),
         MULTI_POLYGON("multi_polygon"),
         RECIPIENT("recipient");
 
