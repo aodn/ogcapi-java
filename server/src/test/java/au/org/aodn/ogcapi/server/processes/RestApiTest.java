@@ -75,4 +75,15 @@ public class RestApiTest {
         InlineValue error = (InlineValue) results.get(InlineResponseKeyEnum.MESSAGE.getValue());
         assertEquals("Error while getting dataset", error.message());
     }
+
+    @Test
+    public void testExecuteUnknownProcessId() {
+        ResponseEntity<InlineResponse200> response = restApi.execute("unknown-process-id", executeRequest);
+
+        assertInstanceOf(Results.class, response.getBody());
+        Results results = (Results) response.getBody();
+        assert results != null;
+        InlineValue error = (InlineValue) results.get(InlineResponseKeyEnum.MESSAGE.getValue());
+        assertEquals("Unknown process ID: unknown-process-id", error.message());
+    }
 }

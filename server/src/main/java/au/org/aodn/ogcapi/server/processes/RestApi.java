@@ -73,15 +73,15 @@ public class RestApi implements ProcessesApi {
 
                 return ResponseEntity.ok(response);
             }
+        } else {
+            var response = new Results();
+            var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
+            var value = new InlineValue("Unknown process ID: unknown-process-id");
+            response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+            response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
+
+            return ResponseEntity.ok(response);
         }
-
-        var response = new Results();
-        var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
-        var value = new InlineValue("Error while getting dataset");
-        response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
-        response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
-
-        return ResponseEntity.ok(response);
     }
 
 
