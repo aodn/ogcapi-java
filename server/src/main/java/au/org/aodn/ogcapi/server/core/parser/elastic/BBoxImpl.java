@@ -90,6 +90,7 @@ public class BBoxImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandl
                 crs = null;
             }
             // This record the bounding box only, since the box may cross meridian, we need to split the polygon
+            // west -> minX, south -> minY, east -> maxX, north -> maxY
             this.bounds = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
 
             // We need to handle anti-meridian, we normalize the polygon and may split into two polygon to cover

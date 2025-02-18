@@ -4,28 +4,94 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.visitor.DefaultFilterVisitor;
 import org.locationtech.jts.geom.*;
-import org.opengis.filter.spatial.BBOX;
-import org.opengis.filter.spatial.Intersects;
+import org.opengis.filter.spatial.*;
 
 @Slf4j
 @Builder
 public class GeometryVisitor extends DefaultFilterVisitor {
-
+    /**
+     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
+     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
+     * here and therefore always return data
+     * @param filter - Intersect filter
+     * @param data - The income data
+     * @return - Return same data
+     */
     @Override
     public Object visit(Intersects filter, Object data) {
-        if(filter instanceof IntersectsImpl<?> impl) {
-            if(impl.getGeometry().isPresent()) {
-                if (data instanceof Polygon || data instanceof GeometryCollection) {
-                    // To handle minor precision issues, try applying a small buffer (like 0.0) to clean up
-                    // minor topology errors. This is a trick commonly used with JTS
-                    return impl.getGeometry().get().intersection(((Geometry) data).buffer(0.0));
-                }
-                else  {
-                    return data;
-                }
-            }
-        }
-        return null;
+        return data;
+    }
+    /**
+     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
+     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
+     * here and therefore always return data
+     * @param filter - Intersect filter
+     * @param data - The income data
+     * @return - Return same data
+     */
+    @Override
+    public Object visit(Within filter, Object data) {
+        return data;
+    }
+    /**
+     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
+     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
+     * here and therefore always return data
+     * @param filter - Intersect filter
+     * @param data - The income data
+     * @return - Return same data
+     */
+    @Override
+    public Object visit(Touches filter, Object data) {
+        return data;
+    }
+    /**
+     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
+     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
+     * here and therefore always return data
+     * @param filter - Intersect filter
+     * @param data - The income data
+     * @return - Return same data
+     */
+    @Override
+    public Object visit(Overlaps filter, Object data) {
+        return data;
+    }
+    /**
+     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
+     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
+     * here and therefore always return data
+     * @param filter - Intersect filter
+     * @param data - The income data
+     * @return - Return same data
+     */
+    @Override
+    public Object visit(Disjoint filter, Object data) {
+        return data;
+    }
+    /**
+     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
+     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
+     * here and therefore always return data
+     * @param filter - Intersect filter
+     * @param data - The income data
+     * @return - Return same data
+     */
+    @Override
+    public Object visit(Crosses filter, Object data) {
+        return data;
+    }
+    /**
+     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
+     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
+     * here and therefore always return data
+     * @param filter - Intersect filter
+     * @param data - The income data
+     * @return - Return same data
+     */
+    @Override
+    public Object visit(Beyond filter, Object data) {
+        return data;
     }
 
     @Override
