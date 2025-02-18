@@ -100,11 +100,20 @@ public class GeometryUtils {
     }
 
     protected static Point calculatePolygonCentroid(Geometry geometry) {
+        // Fast estimation
+        Envelope envelope = geometry.getEnvelopeInternal();
+        Coordinate center = new Coordinate(
+                (envelope.getMinX() + envelope.getMaxX()) / 2,
+                (envelope.getMinY() + envelope.getMaxY()) / 2
+        );
+
+        Point centroid = factory.createPoint(center);
+
         // Make sure the point will not fall out of the shape, for example a U shape will make
         // centroid fall out of the U, so we check if the centroid is out of the shape? if yes then use
         // interior point
-        return geometry.contains(geometry.getCentroid()) ?
-                geometry.getCentroid() :
+        return geometry.contains(centroid) ?
+                centroid :
                 geometry.getInteriorPoint();
     }
 
