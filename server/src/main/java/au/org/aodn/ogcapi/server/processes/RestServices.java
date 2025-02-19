@@ -25,7 +25,7 @@ public class RestServices {
         this.objectMapper = objectMapper;
     }
 
-    public ResponseEntity<String> notifyUser(String recipient, String uuid, String startDate, String endDate) {
+    public void notifyUser(String recipient, String uuid, String startDate, String endDate) {
 
         try(SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
@@ -43,11 +43,9 @@ public class RestServices {
                     .build();
 
             ses.sendEmail(request);
-            return ResponseEntity.ok("Email sent to " + recipient);
 
         } catch (SesException e) {
             log.error("Error sending email: {}", e.getMessage());
-            return ResponseEntity.badRequest().body("Error sending email: " + e.getMessage());
         }
     }
 
