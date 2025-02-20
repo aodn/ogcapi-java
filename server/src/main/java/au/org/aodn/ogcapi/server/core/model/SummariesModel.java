@@ -6,9 +6,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.locationtech.jts.geom.GeometryCollection;
-
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
@@ -33,6 +30,9 @@ public class SummariesModel {
 
     @JsonProperty("temporal")
     protected List<Map<String, String>> temporal;
+
+    @JsonProperty("update_frequency")
+    protected String updateFrequency;
 
     protected String statement;
 }

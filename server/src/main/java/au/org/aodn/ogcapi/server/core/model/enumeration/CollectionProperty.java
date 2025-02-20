@@ -19,6 +19,7 @@ public enum CollectionProperty {
     creation("creation"),
     revision("revision"),
     centroid("centroid"),
+    pace("pace")
     ;
 
     private final String value;
@@ -26,5 +27,4 @@ public enum CollectionProperty {
     CollectionProperty(String value) {
         this.value = value;
     }
-
 }
