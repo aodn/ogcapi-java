@@ -169,6 +169,10 @@ public interface Converter<F, T> {
                 collection.getProperties().put(CollectionProperty.credits, m.getSummaries().getCredits());
             }
 
+            if (m.getSummaries().getUpdateFrequency() != null) {
+                collection.getProperties().put(CollectionProperty.pace, m.getSummaries().getUpdateFrequency());
+            }
+
             if (m.getSummaries().getGeometry() != null) {
                 collection.getProperties().put(CollectionProperty.geometry, m.getSummaries().getGeometry());
             }
