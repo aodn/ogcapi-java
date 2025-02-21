@@ -26,6 +26,7 @@
 		<org.geotools.version>29.2</org.geotools.version>
 		<maven.deploy.skip>true</maven.deploy.skip>
 		<versioning.updatePom>true</versioning.updatePom>
+		<aws.sdk.version>2.29.52</aws.sdk.version>
 	</properties>
 	<repositories>
 		<repository>
@@ -136,6 +137,21 @@
 				<groupId>org.locationtech.spatial4j</groupId>
 				<artifactId>spatial4j</artifactId>
 				<version>0.8</version>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>batch</artifactId>
+				<version>${aws.sdk.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>auth</artifactId>
+				<version>${aws.sdk.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>software.amazon.awssdk</groupId>
+				<artifactId>ses</artifactId>
+				<version>${aws.sdk.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -8,6 +8,8 @@ import org.springframework.http.ResponseEntity;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
+import software.amazon.awssdk.services.ses.SesClient;
+import software.amazon.awssdk.services.ses.model.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +25,30 @@ public class RestServices {
         this.objectMapper = objectMapper;
     }
 
+    public void notifyUser(String recipient, String uuid, String startDate, String endDate) {
+
+        try(SesClient ses = SesClient.builder().build()) {
+            var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
+            var content = Content.builder().data(generateStartedEmailContent(startDate, endDate)).build();
+
+            var body = Body.builder().text(content).build();
+            var message = Message.builder()
+                    .subject(subject)
+                    .body(body)
+                    .build();
+
+            SendEmailRequest request = SendEmailRequest.builder()
+                    .message(message)
+                    .source(recipient)
+                    .build();
+
+            ses.sendEmail(request);
+
+        } catch (SesException e) {
+            log.error("Error sending email: {}", e.getMessage());
+        }
+    }
+
     public ResponseEntity<String> downloadData(
             String id,
             String startDate,
@@ -31,21 +57,21 @@ public class RestServices {
             String recipient
     ) throws JsonProcessingException {
 
-            Map<String, String> parameters = new HashMap<>();
-            parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), id);
-            parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
-            parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
-            parameters.put(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
-            parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), recipient);
+        Map<String, String> parameters = new HashMap<>();
+        parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), id);
+        parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
+        parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
+        parameters.put(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
+        parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), recipient);
 
 
-            String jobId = submitJob(
-                    "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
-                    DatasetDownloadEnums.JobQueue.GENERATING_CSV_DATA_FILE.getValue(),
-                    DatasetDownloadEnums.JobDefinition.GENERATE_CSV_DATA_FILE.getValue(),
-                    parameters);
-            log.info("Job submitted with ID: " + jobId);
-            return ResponseEntity.ok("Job submitted with ID: " + jobId);
+        String jobId = submitJob(
+                "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
+                DatasetDownloadEnums.JobQueue.GENERATING_CSV_DATA_FILE.getValue(),
+                DatasetDownloadEnums.JobDefinition.GENERATE_CSV_DATA_FILE.getValue(),
+                parameters);
+        log.info("Job submitted with ID: " + jobId);
+        return ResponseEntity.ok("Job submitted with ID: " + jobId);
     }
 
     private String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {
@@ -59,5 +85,12 @@ public class RestServices {
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);
         return submitJobResponse.jobId();
+    }
+
+    private String generateStartedEmailContent(String startDate, String endDate) {
+        return "Your request has been received. Date range: Start Date: " +
+                startDate + ", End Date: " + endDate + ". Please wait for the result. " +
+                "'After the process is completed, you will receive an email '" +
+                "with the download link.";
     }
 }

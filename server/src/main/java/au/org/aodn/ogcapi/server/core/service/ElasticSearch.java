@@ -26,6 +26,7 @@ import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StopWatch;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -560,6 +561,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         };
 
         try {
+            var queryTimer = new StopWatch();
+            queryTimer.start("query timer");
             ElasticSearchBase.SearchResult<StacItemModel> result = new ElasticSearchBase.SearchResult<>();
             result.setCollections(new ArrayList<>());
 
@@ -569,6 +572,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             );
             Iterable<CompositeBucket> response = pageableAggregation(builderSupplier, CompositeBucket.class, arguments, null);
 
+            queryTimer.stop();
+            log.info(queryTimer.prettyPrint());
+            var analyzingTimer = new StopWatch();
+            analyzingTimer.start("analyzing timer");
             for (CompositeBucket node : response) {
                 if (node != null) {
                     StacItemModel. StacItemModelBuilder model = StacItemModel.builder();
@@ -601,6 +608,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     result.getCollections().add(model.build());
                 }
             }
+            analyzingTimer.stop();
+            log.info(analyzingTimer.prettyPrint());
             return result;
         }
         catch (Exception e) {

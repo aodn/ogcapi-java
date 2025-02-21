@@ -32,26 +32,31 @@ public class RestApi implements ProcessesApi {
     // because the produces value in the interface declaration includes "/_" which may
     // cause exception thrown sometimes. So i re-declared the produces value here
     @RequestMapping(value = "/processes/{processID}/execution",
-            produces = { "application/json", "text/html" },
-            consumes = { "application/json" },
+            produces = {"application/json", "text/html"},
+            consumes = {"application/json"},
             method = RequestMethod.POST)
     public ResponseEntity<InlineResponse200> execute(
-            @Parameter(in = ParameterIn.PATH, required=true, schema=@Schema())
+            @Parameter(in = ParameterIn.PATH, required = true, schema = @Schema())
             @PathVariable("processID")
             String processID,
-            @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required=true, schema=@Schema())
+            @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required = true, schema = @Schema())
             @Valid
-            @RequestBody Execute body){
+            @RequestBody Execute body) {
 
         if (processID.equals(ProcessIdEnum.DOWNLOAD_DATASET.getValue())) {
+
             try {
-                var response = restServices.downloadData(
-                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.UUID.getValue()),
-                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.START_DATE.getValue()),
-                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.END_DATE.getValue()),
-                        body.getInputs().get(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue()),
-                        (String) body.getInputs().get(DatasetDownloadEnums.Condition.RECIPIENT.getValue())
-                );
+
+                var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Condition.UUID.getValue());
+                var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Condition.START_DATE.getValue());
+                var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Condition.END_DATE.getValue());
+                var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue());
+                var recipient = (String) body.getInputs().get(DatasetDownloadEnums.Condition.RECIPIENT.getValue());
+
+                // move the notify user email from data-access-service to here to make the first email faster
+                restServices.notifyUser(recipient, uuid, startDate, endDate);
+
+                var response = restServices.downloadData(uuid, startDate, endDate, multiPolygon, recipient);
 
                 var value = new InlineValue(response.getBody());
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
