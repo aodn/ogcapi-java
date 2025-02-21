@@ -26,6 +26,7 @@
 		<org.geotools.version>29.2</org.geotools.version>
 		<maven.deploy.skip>true</maven.deploy.skip>
 		<versioning.updatePom>true</versioning.updatePom>
+		<aws.sdk.version>2.29.52</aws.sdk.version>
 	</properties>
 	<repositories>
 		<repository>
@@ -140,17 +141,17 @@
 			<dependency>
 				<groupId>software.amazon.awssdk</groupId>
 				<artifactId>batch</artifactId>
-				<version>2.29.52</version>
+				<version>${aws.sdk.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>software.amazon.awssdk</groupId>
 				<artifactId>auth</artifactId>
-				<version>2.29.52</version>
+				<version>${aws.sdk.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>software.amazon.awssdk</groupId>
 				<artifactId>ses</artifactId>
-				<version>2.29.52</version>
+				<version>${aws.sdk.version}</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
