@@ -27,9 +27,12 @@ public class RestServices {
 
     public void notifyUser(String recipient, String uuid, String startDate, String endDate) {
 
+        String aodnInfoSender = "no.reply@aodn.org.au";
+
         try(SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
             var content = Content.builder().data(generateStartedEmailContent(startDate, endDate)).build();
+            var destination = Destination.builder().toAddresses(recipient).build();
 
             var body = Body.builder().text(content).build();
             var message = Message.builder()
@@ -39,7 +42,8 @@ public class RestServices {
 
             SendEmailRequest request = SendEmailRequest.builder()
                     .message(message)
-                    .source(recipient)
+                    .source(aodnInfoSender)
+                    .destination(destination)
                     .build();
 
             ses.sendEmail(request);
@@ -90,7 +94,7 @@ public class RestServices {
     private String generateStartedEmailContent(String startDate, String endDate) {
         return "Your request has been received. Date range: Start Date: " +
                 startDate + ", End Date: " + endDate + ". Please wait for the result. " +
-                "'After the process is completed, you will receive an email '" +
+                "After the process is completed, you will receive an email " +
                 "with the download link.";
     }
 }
