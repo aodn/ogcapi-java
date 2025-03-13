@@ -7,9 +7,9 @@ import lombok.Setter;
 import java.util.Map;
 @Getter
 @Setter
-public class EsFeatureTestModel {
+public class EsFeatureModel {
     protected String type;
-    protected EsPointTestModel geometry;
+    protected EsGeometryModel geometry;
     protected Map<String, Object> properties;
 
     public FeatureGeoJSON toFeatureGeoJSON() {

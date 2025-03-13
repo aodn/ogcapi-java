@@ -9,15 +9,15 @@ import java.util.Map;
 
 @Getter
 @Setter
-public class EsFeatureCollectionTestModel {
+public class EsFeatureCollectionModel {
     protected String type;
-    protected List<EsFeatureTestModel> features;
+    protected List<EsFeatureModel> features;
     protected Map<String, Object> properties;
 
     public FeatureCollectionGeoJSON toFeatureCollectionGeoJSON() {
         FeatureCollectionGeoJSON f = new FeatureCollectionGeoJSON();
         f.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
-        f.setFeatures(features.stream().map(EsFeatureTestModel::toFeatureGeoJSON).toList());
+        f.setFeatures(features.stream().map(EsFeatureModel::toFeatureGeoJSON).toList());
         return f;
     }
 }
