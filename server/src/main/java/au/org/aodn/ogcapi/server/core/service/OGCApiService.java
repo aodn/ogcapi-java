@@ -56,6 +56,15 @@ public abstract class OGCApiService {
         }
     }
 
+    public  ResponseEntity getFeature2(String collectionId,
+                                            FeatureId fid,
+                                            List<String> properties,
+                                            String filter) throws Exception {
+        var result = search.searchFeatureSummary2(collectionId, properties, filter);
+        return ResponseEntity.ok()
+                .body(result.getCollections().get(0));
+    }
+
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
                                                    String filter,
                                                    List<String> properties,
