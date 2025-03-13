@@ -1,5 +1,8 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
+import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
@@ -613,6 +616,45 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             return result;
         }
         catch (Exception e) {
+            log.error("Error while searching dataset.", e);
+        }
+        return null;
+    }
+
+    @Override
+    public SearchResult<FeatureCollectionGeoJSON> searchFeatureSummary2(String collectionId, List<String> properties, String filter) {
+        try {
+            SearchRequest searchRequest = new SearchRequest.Builder()
+                    .index(dataIndexName)
+                    .query(q -> q.term(t -> t
+                            .field("properties.collection.keyword")
+                            .value(collectionId)
+                    ))
+                    .size(1000)
+                    .build();
+
+            var response = esClient.search(searchRequest, EsFeatureCollectionModel.class);
+
+            SearchResult<FeatureCollectionGeoJSON> result = new SearchResult<>();
+            var featureCollection = new FeatureCollectionGeoJSON();
+            List<FeatureGeoJSON> features = new ArrayList<>();
+            for (var hit : response.hits().hits()) {
+                EsFeatureCollectionModel hitFeatureCollection = hit.source();
+                if (hitFeatureCollection != null && hitFeatureCollection.getFeatures() != null) {
+                    features.addAll(hitFeatureCollection.toFeatureCollectionGeoJSON().getFeatures());
+                }
+            }
+
+            log.info("feature size: {}", features.size());
+
+            featureCollection.setFeatures(features);
+            featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
+            result.setCollections(List.of(featureCollection));
+            result.setTotal(response.hits().total().value());
+
+            return result;
+
+        } catch (IOException e) {
             log.error("Error while searching dataset.", e);
         }
         return null;
