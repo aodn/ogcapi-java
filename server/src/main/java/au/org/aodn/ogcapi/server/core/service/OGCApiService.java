@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
@@ -37,15 +38,17 @@ public abstract class OGCApiService {
      */
     public abstract List<String> getConformanceDeclaration();
 
-    public ResponseEntity getFeature(String collectionId,
+    public ResponseEntity<FeatureCollectionGeoJSON> getFeature(String collectionId,
                                         FeatureId fid,
                                         List<String> properties,
                                         String filter) throws Exception {
         switch(fid) {
             case summary -> {
-                var result = search.searchFeatureSummary2(collectionId, properties, filter);
+                var result = search.searchFeatureSummary(collectionId, properties, filter);
+                var featureCollection = new FeatureCollectionGeoJSON();
+                featureCollection.setFeatures(result.getCollections());
                 return ResponseEntity.ok()
-                        .body(result.getCollections().get(0));
+                        .body(featureCollection);
             }
             default -> {
                 // Individual item
