@@ -622,7 +622,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 //    }
 
     @Override
-    public SearchResult<FeatureCollectionGeoJSON> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
+    public SearchResult<FeatureGeoJSON> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
         try {
             SearchRequest searchRequest = new SearchRequest.Builder()
                     .index(dataIndexName)
@@ -635,8 +635,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             var response = esClient.search(searchRequest, EsFeatureCollectionModel.class);
 
-            SearchResult<FeatureCollectionGeoJSON> result = new SearchResult<>();
-            var featureCollection = new FeatureCollectionGeoJSON();
+            SearchResult<FeatureGeoJSON> result = new SearchResult<>();
             List<FeatureGeoJSON> features = new ArrayList<>();
             for (var hit : response.hits().hits()) {
                 EsFeatureCollectionModel hitFeatureCollection = hit.source();
@@ -647,10 +646,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             log.info("feature size: {}", features.size());
 
-            featureCollection.setFeatures(features);
-            featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
-            result.setCollections(List.of(featureCollection));
-            result.setTotal(response.hits().total().value());
+            result.setCollections(features);
+            if (response.hits().total() != null) {
+                result.setTotal(response.hits().total().value());
+            }
 
             return result;
 
