@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import org.springframework.http.ResponseEntity;
@@ -17,8 +16,7 @@ public interface Search {
 
     ElasticSearchBase.SearchResult<StacCollectionModel> searchCollections(List<String> ids, String sortBy);
     ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollections(String sortBy) throws Exception;
-    ElasticSearchBase.SearchResult<StacItemModel> searchFeatureSummary(String collectionId, List<String> properties, String filter) throws Exception;
-    ElasticSearchBase.SearchResult<FeatureCollectionGeoJSON>searchFeatureSummary2(String collectionId, List<String> properties, String filter) throws Exception;
+    ElasticSearchBase.SearchResult<FeatureCollectionGeoJSON>searchFeatureSummary(String collectionId, List<String> properties, String filter) throws Exception;
 
     ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(
             List<String> targets,
