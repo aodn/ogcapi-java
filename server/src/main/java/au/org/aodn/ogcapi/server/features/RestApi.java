@@ -100,13 +100,6 @@ public class RestApi implements CollectionsApi {
 
         try {
             FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
-//            return featuresService.getFeature(
-//                    collectionId,
-//                    fid,
-//                    properties,
-//                    filter != null ? "filter=" + filter : null,
-//                    stacToFeatureCollection::convert
-//            );
 
             return featuresService.getFeature(
                     collectionId,
