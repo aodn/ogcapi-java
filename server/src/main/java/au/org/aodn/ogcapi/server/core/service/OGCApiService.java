@@ -1,11 +1,10 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -38,16 +37,15 @@ public abstract class OGCApiService {
      */
     public abstract List<String> getConformanceDeclaration();
 
-    public <R> ResponseEntity<R> getFeature(String collectionId,
+    public ResponseEntity getFeature(String collectionId,
                                         FeatureId fid,
                                         List<String> properties,
-                                        String filter,
-                                        BiFunction<ElasticSearchBase.SearchResult<StacItemModel>, Filter, R> converter) throws Exception {
+                                        String filter) throws Exception {
         switch(fid) {
             case summary -> {
-                ElasticSearch.SearchResult<StacItemModel> result = search.searchFeatureSummary(collectionId, properties, filter);
+                var result = search.searchFeatureSummary2(collectionId, properties, filter);
                 return ResponseEntity.ok()
-                        .body(converter.apply(result, null));
+                        .body(result.getCollections().get(0));
             }
             default -> {
                 // Individual item
@@ -56,14 +54,6 @@ public abstract class OGCApiService {
         }
     }
 
-    public  ResponseEntity getFeature2(String collectionId,
-                                            FeatureId fid,
-                                            List<String> properties,
-                                            String filter) throws Exception {
-        var result = search.searchFeatureSummary2(collectionId, properties, filter);
-        return ResponseEntity.ok()
-                .body(result.getCollections().get(0));
-    }
 
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
                                                    String filter,
