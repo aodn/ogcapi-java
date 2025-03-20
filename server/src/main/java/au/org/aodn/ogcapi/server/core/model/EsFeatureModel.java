@@ -9,7 +9,7 @@ import java.util.Map;
 @Setter
 public class EsFeatureModel {
     protected String type;
-    protected EsPointModel geometry;
+    protected EsPointModel point;
     protected Map<String, Object> properties;
 
     public FeatureGeoJSON toFeatureGeoJSON() {
@@ -18,7 +18,7 @@ public class EsFeatureModel {
 
         //TODO: when more geometry types are supported, functions should be
         // updated then.
-        f.setGeometry(geometry.toPointGeoJSON());
+        f.setGeometry(point.toPointGeoJSON());
         f.setProperties(properties);
         return f;
     }
