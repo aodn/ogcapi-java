@@ -46,6 +46,7 @@ public abstract class OGCApiService {
             case summary -> {
                 var result = search.searchFeatureSummary(collectionId, properties, filter);
                 var featureCollection = new FeatureCollectionGeoJSON();
+                featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
                 featureCollection.setFeatures(result.getCollections());
                 return ResponseEntity.ok()
                         .body(featureCollection);
