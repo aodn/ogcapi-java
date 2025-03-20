@@ -1,11 +1,8 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.api.CollectionsApi;
-import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.features.model.Collections;
+import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.features.model.Exception;
-import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
-import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.server.core.mapper.StacToFeatureCollection;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
@@ -111,7 +108,7 @@ public class RestApi implements CollectionsApi {
 //                    stacToFeatureCollection::convert
 //            );
 
-            return featuresService.getFeature2(
+            return featuresService.getFeature(
                     collectionId,
                     fid,
                     properties,
