@@ -1,11 +1,11 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
+import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -38,16 +38,18 @@ public abstract class OGCApiService {
      */
     public abstract List<String> getConformanceDeclaration();
 
-    public <R> ResponseEntity<R> getFeature(String collectionId,
+    public ResponseEntity<FeatureCollectionGeoJSON> getFeature(String collectionId,
                                         FeatureId fid,
                                         List<String> properties,
-                                        String filter,
-                                        BiFunction<ElasticSearchBase.SearchResult<StacItemModel>, Filter, R> converter) throws Exception {
+                                        String filter) throws Exception {
         switch(fid) {
             case summary -> {
-                ElasticSearch.SearchResult<StacItemModel> result = search.searchFeatureSummary(collectionId, properties, filter);
+                var result = search.searchFeatureSummary(collectionId, properties, filter);
+                var featureCollection = new FeatureCollectionGeoJSON();
+                featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
+                featureCollection.setFeatures(result.getCollections());
                 return ResponseEntity.ok()
-                        .body(converter.apply(result, null));
+                        .body(featureCollection);
             }
             default -> {
                 // Individual item
@@ -55,6 +57,7 @@ public abstract class OGCApiService {
             }
         }
     }
+
 
     public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
                                                    String filter,

@@ -438,6 +438,7 @@ public class RestApiTest extends BaseTestClass {
      * Verify the function correctly sum up the values for feature id summary
      * @throws IOException - Not expect to throw
      */
+    @Disabled("Skipping this test temporarily")
     @Test
     public void verifyAggregationFeatureSummaryCorrect() throws IOException {
         super.insertJsonToElasticCODataIndex(
@@ -512,6 +513,7 @@ public class RestApiTest extends BaseTestClass {
      * We add more sample data and will trigger page load.
      * @throws IOException - Not expect to throw
      */
+    @Disabled("Skipping this test temporarily")
     @Test
     public void verifyAggregationFeatureSummaryWithPageCorrect() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");

@@ -1,5 +1,8 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
+import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
@@ -471,148 +474,186 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
      * @param filter - Any filter applied to the summary operation
      * @return - Result
      */
+//    @Override
+//    public ElasticSearchBase.SearchResult<StacItemModel> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
+//
+//        final String COORDINATES = "coordinates";
+//        final String TOTAL_COUNT = "total_count";
+//        final String MIN_TIME = "min_time";
+//        final String MAX_TIME = "max_time";
+//
+//        BiFunction<Map<String, FieldValue>, Map<String, FieldValue>, SearchRequest.Builder> builderSupplier = (
+//                arguments, afterKey) -> {
+//
+//            SearchRequest.Builder builder = new SearchRequest.Builder();
+//
+//            builder.query(q -> q
+//                            .term(t -> t
+//                                    .field(CQLFeatureFields.collection.searchField)
+//                                    .value(arguments.get("collectionId"))
+//                            )
+//                    );
+//
+//            // Group by lng
+//            CompositeAggregationSource lng = CompositeAggregationSource.of(c -> c.terms(t -> t
+//                    .field(CQLFeatureFields.lng.searchField)));
+//
+//            // Group by lat
+//            CompositeAggregationSource lat = CompositeAggregationSource.of(c -> c.terms(t -> t
+//                    .field(CQLFeatureFields.lat.searchField)));
+//
+//            // Use afterKey to page to another batch of records if exist
+//            Aggregation compose = afterKey == null ?
+//                    new Aggregation.Builder().composite(c -> c
+//                                .sources(List.of(
+//                                        Map.of(CQLFeatureFields.lng.name(), lng),
+//                                        Map.of(CQLFeatureFields.lat.name(), lat))
+//                                )
+//                                .size(pageSize)
+//                            ).build()
+//                    :
+//                    new Aggregation.Builder().composite(c -> c
+//                                .sources(List.of(
+//                                        Map.of(CQLFeatureFields.lng.name(), lng),
+//                                        Map.of(CQLFeatureFields.lat.name(), lat))
+//                                )
+//                                .size(pageSize)
+//                                .after(afterKey)
+//                            ).build();
+//
+//
+//            // Sum of count
+//            Aggregation sum = SumAggregation.of(s -> s.field(CQLFeatureFields.count.searchField))._toAggregation();
+//
+//            // Min value of field
+//            Aggregation min = MinAggregation.of(s -> s.field(CQLFeatureFields.temporal.searchField))._toAggregation();
+//
+//            // Max value of field
+//            Aggregation max = MaxAggregation.of(s -> s.field(CQLFeatureFields.temporal.searchField))._toAggregation();
+//
+//            // Field value to return, think of it as select part of SQL
+//            Aggregation field = new Aggregation.Builder().topHits(th -> th.size(1)
+//                            .sort(createSortOptions(
+//                                    String.format("%s,%s", CQLFeatureFields.lng.name(), CQLFeatureFields.lat.name()),
+//                                    CQLFeatureFields.class)))
+//                    .build();
+//
+//            Aggregation aggregation = new Aggregation.Builder()
+//                    .composite(compose.composite())
+//                    .aggregations(Map.of(
+//                            TOTAL_COUNT, sum,
+//                            MIN_TIME, min,
+//                            MAX_TIME, max,
+//                            COORDINATES, field
+//                    ))
+//                    .build();
+//
+//            // There is a limitation that all sort field, assume to be inside the properties
+//            Aggregation nested = new Aggregation.Builder().nested(n -> n
+//                            .path("properties")
+//                    )
+//                    .aggregations(COORDINATES, aggregation)
+//                    .build();
+//
+//
+//            builder.index(dataIndexName)
+//                    .size(0)    // Do not return hits, only aggregations, that is the hits().hit() section will be empty
+//                    .aggregations(COORDINATES, nested);
+//
+//            return builder;
+//        };
+//
+//        try {
+//            var queryTimer = new StopWatch();
+//            queryTimer.start("query timer");
+//            ElasticSearchBase.SearchResult<StacItemModel> result = new ElasticSearchBase.SearchResult<>();
+//            result.setCollections(new ArrayList<>());
+//
+//            Map<String, FieldValue> arguments = Map.of(
+//                    "collectionId", FieldValue.of(collectionId),
+//                    "aggKey", FieldValue.of(COORDINATES)
+//            );
+//            Iterable<CompositeBucket> response = pageableAggregation(builderSupplier, CompositeBucket.class, arguments, null);
+//
+//            queryTimer.stop();
+//            log.info(queryTimer.prettyPrint());
+//            var analyzingTimer = new StopWatch();
+//            analyzingTimer.start("analyzing timer");
+//            for (CompositeBucket node : response) {
+//                if (node != null) {
+//                    StacItemModel. StacItemModelBuilder model = StacItemModel.builder();
+//
+//                    result.setTotal(result.getTotal() + node.docCount());
+//
+//                    TopHitsAggregate th = node.aggregations().get(COORDINATES).topHits();
+//                    model.uuid(th.hits().hits().get(0).id());
+//
+//                    JsonData jd = th.hits().hits().get(0).source();
+//                    if(jd != null) {
+//                        Map<?, ?> map = jd.to(Map.class);
+//                        BigDecimal lng = BigDecimal.valueOf((double)map.get("lng"));
+//                        BigDecimal lat = BigDecimal.valueOf((double)map.get("lat"));
+//                        model.geometry(Map.of("geometry", Map.of(
+//                                "coordinates", List.of(lng, lat)
+//                        )));
+//                    }
+//
+//                    SumAggregate sa = node.aggregations().get(TOTAL_COUNT).sum();
+//                    MinAggregate min = node.aggregations().get(MIN_TIME).min();
+//                    MaxAggregate max = node.aggregations().get(MAX_TIME).max();
+//
+//                    model.properties(Map.of(
+//                            FeatureProperty.COUNT.getValue(), sa.value(),
+//                            FeatureProperty.START_TIME.getValue(), min.valueAsString() == null ? "" : min.valueAsString(),
+//                            FeatureProperty.END_TIME.getValue(), max.valueAsString() == null ? "" : max.valueAsString()
+//                    ));
+//
+//                    result.getCollections().add(model.build());
+//                }
+//            }
+//            analyzingTimer.stop();
+//            log.info(analyzingTimer.prettyPrint());
+//            return result;
+//        }
+//        catch (Exception e) {
+//            log.error("Error while searching dataset.", e);
+//        }
+//        return null;
+//    }
+
     @Override
-    public ElasticSearchBase.SearchResult<StacItemModel> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
-
-        final String COORDINATES = "coordinates";
-        final String TOTAL_COUNT = "total_count";
-        final String MIN_TIME = "min_time";
-        final String MAX_TIME = "max_time";
-
-        BiFunction<Map<String, FieldValue>, Map<String, FieldValue>, SearchRequest.Builder> builderSupplier = (
-                arguments, afterKey) -> {
-
-            SearchRequest.Builder builder = new SearchRequest.Builder();
-
-            builder.query(q -> q
-                            .term(t -> t
-                                    .field(CQLFeatureFields.collection.searchField)
-                                    .value(arguments.get("collectionId"))
-                            )
-                    );
-
-            // Group by lng
-            CompositeAggregationSource lng = CompositeAggregationSource.of(c -> c.terms(t -> t
-                    .field(CQLFeatureFields.lng.searchField)));
-
-            // Group by lat
-            CompositeAggregationSource lat = CompositeAggregationSource.of(c -> c.terms(t -> t
-                    .field(CQLFeatureFields.lat.searchField)));
-
-            // Use afterKey to page to another batch of records if exist
-            Aggregation compose = afterKey == null ?
-                    new Aggregation.Builder().composite(c -> c
-                                .sources(List.of(
-                                        Map.of(CQLFeatureFields.lng.name(), lng),
-                                        Map.of(CQLFeatureFields.lat.name(), lat))
-                                )
-                                .size(pageSize)
-                            ).build()
-                    :
-                    new Aggregation.Builder().composite(c -> c
-                                .sources(List.of(
-                                        Map.of(CQLFeatureFields.lng.name(), lng),
-                                        Map.of(CQLFeatureFields.lat.name(), lat))
-                                )
-                                .size(pageSize)
-                                .after(afterKey)
-                            ).build();
-
-
-            // Sum of count
-            Aggregation sum = SumAggregation.of(s -> s.field(CQLFeatureFields.count.searchField))._toAggregation();
-
-            // Min value of field
-            Aggregation min = MinAggregation.of(s -> s.field(CQLFeatureFields.temporal.searchField))._toAggregation();
-
-            // Max value of field
-            Aggregation max = MaxAggregation.of(s -> s.field(CQLFeatureFields.temporal.searchField))._toAggregation();
-
-            // Field value to return, think of it as select part of SQL
-            Aggregation field = new Aggregation.Builder().topHits(th -> th.size(1)
-                            .sort(createSortOptions(
-                                    String.format("%s,%s", CQLFeatureFields.lng.name(), CQLFeatureFields.lat.name()),
-                                    CQLFeatureFields.class)))
-                    .build();
-
-            Aggregation aggregation = new Aggregation.Builder()
-                    .composite(compose.composite())
-                    .aggregations(Map.of(
-                            TOTAL_COUNT, sum,
-                            MIN_TIME, min,
-                            MAX_TIME, max,
-                            COORDINATES, field
-                    ))
-                    .build();
-
-            // There is a limitation that all sort field, assume to be inside the properties
-            Aggregation nested = new Aggregation.Builder().nested(n -> n
-                            .path("properties")
-                    )
-                    .aggregations(COORDINATES, aggregation)
-                    .build();
-
-
-            builder.index(dataIndexName)
-                    .size(0)    // Do not return hits, only aggregations, that is the hits().hit() section will be empty
-                    .aggregations(COORDINATES, nested);
-
-            return builder;
-        };
-
+    public SearchResult<FeatureGeoJSON> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
         try {
-            var queryTimer = new StopWatch();
-            queryTimer.start("query timer");
-            ElasticSearchBase.SearchResult<StacItemModel> result = new ElasticSearchBase.SearchResult<>();
-            result.setCollections(new ArrayList<>());
+            SearchRequest searchRequest = new SearchRequest.Builder()
+                    .index(dataIndexName)
+                    .query(q -> q.term(t -> t
+                            .field("properties.collection.keyword")
+                            .value(collectionId)
+                    ))
+                    .size(1000)
+                    .build();
 
-            Map<String, FieldValue> arguments = Map.of(
-                    "collectionId", FieldValue.of(collectionId),
-                    "aggKey", FieldValue.of(COORDINATES)
-            );
-            Iterable<CompositeBucket> response = pageableAggregation(builderSupplier, CompositeBucket.class, arguments, null);
+            var response = esClient.search(searchRequest, EsFeatureCollectionModel.class);
 
-            queryTimer.stop();
-            log.info(queryTimer.prettyPrint());
-            var analyzingTimer = new StopWatch();
-            analyzingTimer.start("analyzing timer");
-            for (CompositeBucket node : response) {
-                if (node != null) {
-                    StacItemModel. StacItemModelBuilder model = StacItemModel.builder();
-
-                    result.setTotal(result.getTotal() + node.docCount());
-
-                    TopHitsAggregate th = node.aggregations().get(COORDINATES).topHits();
-                    model.uuid(th.hits().hits().get(0).id());
-
-                    JsonData jd = th.hits().hits().get(0).source();
-                    if(jd != null) {
-                        Map<?, ?> map = jd.to(Map.class);
-                        BigDecimal lng = BigDecimal.valueOf((double)map.get("lng"));
-                        BigDecimal lat = BigDecimal.valueOf((double)map.get("lat"));
-                        model.geometry(Map.of("geometry", Map.of(
-                                "coordinates", List.of(lng, lat)
-                        )));
-                    }
-
-                    SumAggregate sa = node.aggregations().get(TOTAL_COUNT).sum();
-                    MinAggregate min = node.aggregations().get(MIN_TIME).min();
-                    MaxAggregate max = node.aggregations().get(MAX_TIME).max();
-
-                    model.properties(Map.of(
-                            FeatureProperty.COUNT.getValue(), sa.value(),
-                            FeatureProperty.START_TIME.getValue(), min.valueAsString() == null ? "" : min.valueAsString(),
-                            FeatureProperty.END_TIME.getValue(), max.valueAsString() == null ? "" : max.valueAsString()
-                    ));
-
-                    result.getCollections().add(model.build());
+            SearchResult<FeatureGeoJSON> result = new SearchResult<>();
+            List<FeatureGeoJSON> features = new ArrayList<>();
+            for (var hit : response.hits().hits()) {
+                EsFeatureCollectionModel hitFeatureCollection = hit.source();
+                if (hitFeatureCollection != null && hitFeatureCollection.getFeatures() != null) {
+                    features.addAll(hitFeatureCollection.toFeatureCollectionGeoJSON().getFeatures());
                 }
             }
-            analyzingTimer.stop();
-            log.info(analyzingTimer.prettyPrint());
+
+            log.info("feature size: {}", features.size());
+
+            result.setCollections(features);
+            if (response.hits().total() != null) {
+                result.setTotal(response.hits().total().value());
+            }
+
             return result;
-        }
-        catch (Exception e) {
+
+        } catch (IOException e) {
             log.error("Error while searching dataset.", e);
         }
         return null;
