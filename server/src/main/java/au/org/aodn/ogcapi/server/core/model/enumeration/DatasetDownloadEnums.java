@@ -8,16 +8,28 @@ import lombok.Getter;
 public class DatasetDownloadEnums {
 
     @Getter
-    public enum Condition {
+    public enum Parameter {
         UUID("uuid"),
         START_DATE("start_date"),
         END_DATE("end_date"),
         MULTI_POLYGON("multi_polygon"),
-        RECIPIENT("recipient");
+        RECIPIENT("recipient"),
+        TYPE("type"),
+        ;
 
         private final String value;
 
-        Condition(String value) {
+        Parameter(String value) {
+            this.value = value;
+        }
+    }
+
+    @Getter
+    public enum Type {
+        SUB_SETTING("sub_setting"),
+        ;
+        private final String value;
+        Type(String value) {
             this.value = value;
         }
     }

@@ -39,11 +39,11 @@ public class RestApiTest {
     public void setUp() {
         executeRequest = new Execute();
         Map<String, Object> inputs = new HashMap<>();
-        inputs.put(DatasetDownloadEnums.Condition.UUID.getValue(), "test-uuid");
-        inputs.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), "2023-01-01");
-        inputs.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), "2023-01-31");
-        inputs.put(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue(), "test-multipolygon");
-        inputs.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), "test@example.com");
+        inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
+        inputs.put(DatasetDownloadEnums.Parameter.START_DATE.getValue(), "2023-01-01");
+        inputs.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), "2023-01-31");
+        inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "test-multipolygon");
+        inputs.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), "test@example.com");
         executeRequest.setInputs(inputs);
     }
 
