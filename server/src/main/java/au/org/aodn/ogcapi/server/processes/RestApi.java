@@ -47,11 +47,11 @@ public class RestApi implements ProcessesApi {
 
             try {
 
-                var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Condition.UUID.getValue());
-                var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Condition.START_DATE.getValue());
-                var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Condition.END_DATE.getValue());
-                var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue());
-                var recipient = (String) body.getInputs().get(DatasetDownloadEnums.Condition.RECIPIENT.getValue());
+                var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
+                var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue());
+                var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
+                var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
+                var recipient = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.RECIPIENT.getValue());
 
                 // move the notify user email from data-access-service to here to make the first email faster
                 restServices.notifyUser(recipient, uuid, startDate, endDate);

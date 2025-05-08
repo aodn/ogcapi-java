@@ -62,12 +62,16 @@ public class RestServices {
     ) throws JsonProcessingException {
 
         Map<String, String> parameters = new HashMap<>();
-        parameters.put(DatasetDownloadEnums.Condition.UUID.getValue(), id);
-        parameters.put(DatasetDownloadEnums.Condition.START_DATE.getValue(), startDate);
-        parameters.put(DatasetDownloadEnums.Condition.END_DATE.getValue(), endDate);
-        parameters.put(DatasetDownloadEnums.Condition.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
-        parameters.put(DatasetDownloadEnums.Condition.RECIPIENT.getValue(), recipient);
+        parameters.put(DatasetDownloadEnums.Parameter.UUID.getValue(), id);
+        parameters.put(DatasetDownloadEnums.Parameter.START_DATE.getValue(), startDate);
+        parameters.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), endDate);
+        parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
+        parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), recipient);
 
+        parameters.put(
+                DatasetDownloadEnums.Parameter.TYPE.getValue(),
+                DatasetDownloadEnums.Type.SUB_SETTING.getValue()
+        );
 
         String jobId = submitJob(
                 "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
