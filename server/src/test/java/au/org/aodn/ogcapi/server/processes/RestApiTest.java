@@ -44,6 +44,7 @@ public class RestApiTest {
         inputs.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), "2023-01-31");
         inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "test-multipolygon");
         inputs.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), "test@example.com");
+        inputs.put(DatasetDownloadEnums.Parameter.TYPE.getValue(), DatasetDownloadEnums.Type.SUB_SETTING.getValue());
         executeRequest.setInputs(inputs);
     }
 
