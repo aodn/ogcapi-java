@@ -15,6 +15,7 @@ public class DatasetDownloadEnums {
         MULTI_POLYGON("multi_polygon"),
         RECIPIENT("recipient"),
         TYPE("type"),
+        DATE_RANGES("date_ranges"),
         ;
 
         private final String value;
@@ -26,7 +27,7 @@ public class DatasetDownloadEnums {
 
     @Getter
     public enum Type {
-        SUB_SETTING("sub_setting"),
+        SUB_SETTING("sub-setting"),
         ;
         private final String value;
         Type(String value) {
@@ -36,7 +37,7 @@ public class DatasetDownloadEnums {
 
     @Getter
     public enum JobDefinition {
-        GENERATE_CSV_DATA_FILE("generate-csv-data-file");
+        GENERATE_CSV_DATA_FILE("generate-csv-data-file-dev");
 
         private final String value;
 
