@@ -29,7 +29,33 @@ public class DateUtils {
         return Optional.empty();
     }
 
+    public static Map<Integer, String> splitDateRangeIntoMonths(String startDateStr, String endDateStr) {
+        var yearMonthFormater = DateTimeFormatter.ofPattern(DateFormatEnum.MM_YYYY_HYPHEN.getValue());
+        var startYearMonth = YearMonth.parse(startDateStr, yearMonthFormater);
+        var endYearMonth = YearMonth.parse(endDateStr, yearMonthFormater);
 
+        Map<Integer, String> dateRanges = new HashMap<>();
+        int index = 0;
+        for (int year = startYearMonth.getYear(); year <= endYearMonth.getYear(); year++) {
+            for (int month = 1; month <= 12; month++) {
+                // ignore months outside the range
+                if (year == startYearMonth.getYear() && month < startYearMonth.getMonthValue()) {
+                    continue;
+                }
+                if (year == endYearMonth.getYear() && month > endYearMonth.getMonthValue()) {
+                    continue;
+                }
+
+                YearMonth yearMonth = YearMonth.of(year, month);
+                dateRanges.put(index, yearMonth.format(yearMonthFormater));
+                index++;
+            }
+        }
+        return dateRanges;
+    }
+
+
+    // This function will be used for full date format (including year, month, day) in the future. So please keep it
     public static Map<Integer, String[]> splitDateRangeByMonth(String startDateStr, String endDateStr) {
         Optional<LocalDate> start = parseDate(startDateStr);
         Optional<LocalDate> end = parseDate(endDateStr);
