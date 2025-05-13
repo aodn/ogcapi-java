@@ -26,7 +26,7 @@ public class DatasetDownloadEnums {
 
     @Getter
     public enum Type {
-        SUB_SETTING("sub_setting"),
+        SUB_SETTING("sub-setting"),
         ;
         private final String value;
         Type(String value) {
