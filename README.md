@@ -62,3 +62,32 @@ By default the sort is sortby=-score that is desc order of _score of elastic sea
 sortby=-score,+title or parameter as long as that field support each, ref to CQLCollectionsField.class and check
 whether the sortField is null or not. The sort function require change in elastic schema so we do not support all
 of the fields. In fact some fields sort do not make sense.
+
+# Commit
+We are using [gitmoji](https://gitmoji.dev/)(OPTIONAL) for consistent commit messages. Here are examples of the most used ones:
+- :art: - Improving structure/format of the code.
+- :zap: - Improving performance.
+- :fire: - Removing code or files.
+- :bug: - Fixing a bug.
+- :ambulance: - Critical hotfix.
+- :sparkles: - Introducing new features.
+- :memo: - Adding or updating documentation.
+- :rocket: - Deploying stuff.
+- :lipstick: - Updating the UI and style files.
+- :tada: - Beginning a project.
+
+Example of use:
+`:sparkles: implement new OGC Features API endpoint`
+
+# Branching name
+- `hotfix/`: for quickly fixing critical issues,
+- `usually/`: with a temporary solution
+- `bugfix/`: for fixing a bug
+- `feature/`: for adding, removing or modifying a feature
+- `test/`: for experimenting something which is not an issue
+- `wip/`: for a work in progress
+
+And add the issue id after an `/` followed with an explanation of the task.
+
+Example of use:
+`feature/123-implement-ogc-processes-api`
