@@ -37,6 +37,10 @@
 			<id>repo.osgeo.org</id>
 			<url>https://repo.osgeo.org/repository/release/</url>
 		</repository>
+		<repository>
+            <id>codeartifact</id>
+            <url>https://central-aodn-org-au.d.codeartifact.ap-southeast-2.amazonaws.com/maven/maven-aodn-store/</url>
+        </repository>
 	</repositories>
 	<modules>
 		<module>common</module>
