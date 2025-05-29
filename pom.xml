@@ -157,6 +157,11 @@
 				<artifactId>ses</artifactId>
 				<version>${aws.sdk.version}</version>
 			</dependency>
+			<dependency>
+                <groupId>au.org.aodn</groupId>
+                <artifactId>es-indexer</artifactId>
+                <version>0.0.37</version>
+</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<distributionManagement>
