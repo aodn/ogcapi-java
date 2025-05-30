@@ -212,6 +212,7 @@
                             <version>${org.projectlombok.binding}</version>
                         </path>
                     </annotationProcessorPaths>
+                    <parameters>true</parameters>
                 </configuration>
             </plugin>
             <plugin>
