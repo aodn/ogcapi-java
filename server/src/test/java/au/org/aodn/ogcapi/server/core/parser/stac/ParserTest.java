@@ -157,4 +157,37 @@ public class ParserTest {
         Assertions.assertEquals(151.62121416760516, mp.getGeometryN(0).getCentroid().getX(), 0.0000001, "getX() for 1");
         Assertions.assertEquals(-18.000822620336752, mp.getGeometryN(0).getCentroid().getY(),  0.0000001, "getY() for 1");
     }
+
+    @Test
+    public void verifyIntersectWorks1() throws CQLException, IOException, FactoryException, TransformException, ParseException {
+        // Assume we have the following CQL
+        Converter.Param param = Converter.Param.builder()
+                .coordinationSystem(CQLCrsType.EPSG4326)
+                .filter("score>=1.5 AND  INTERSECTS(geometry,POLYGON ((145.16909105878426 -10.464349225802914, 144.73440233886106 -9.848517493899884, 144.47064456419093 -9.657695528909853, 144.46280593719746 -9.905001382894994, 144.2060197558053 -10.242037054678411, 144.16893528215599 -10.457443951550495, 144.0000000000374 -10.46518242537087, 144.0000000000374 -10.686536176266213, 144.9994690420176 -10.681893446539034, 145.00106191494456 -12.998524118431453, 146.00107091314112 -14.998515117696627, 147.00107091515906 -17.498488120437123, 149.96308495492246 -19.293403529258228, 152.91580273613386 -20.997390209369716, 154.00000443319107 -24.495283451153206, 158.33154102878632 -24.498407105902825, 157.8012592598626 -23.248298763101843, 157.31004039489108 -22.519537254185753, 157.21996792100708 -22.18289466451383, 157.24246410497653 -21.781057076406388, 157.17153685914286 -21.215798230336727, 157.05264790906187 -20.54107583454862, 156.82625898816468 -20.141075746345383, 156.2603178109748 -19.293585408462032, 156.63014151780646 -18.925219368232813, 156.94570327990823 -18.540241996336075, 158.3761729881353 -16.430664685375895, 158.76098074418962 -15.735241194712154, 157.72268453595484 -14.68925351658542, 157.25646824177636 -14.286426921513115, 156.97026318293013 -14.177729011764056, 156.67405154112384 -14.093699797756436, 156.61349189679618 -14.08296197760852, 154.2550937971438 -14.747312889369214, 152.12620732406822 -14.63230005662328, 150.23373673986976 -13.961229062351725, 148.08837935213808 -13.174974098634262, 147.1427175218439 -12.640158093580235, 146.50484986992365 -12.33365784677699, 145.16909105878426 -10.464349225802914)))")
+                .build();
+        // Expected polygon shape after the no land area intersection of the Intersect polygon
+        Optional<Geometry> expected = GeometryUtils.readGeometry(
+                GeometryUtils.convertToGeoJson(
+                        new LiteralExpressionImpl(
+                                "POLYGON ((148.24123450580774 -18.25, 147.00107091515906 -17.498488120437123, 147 -17.495810861456647, 147 -12.571581241412517, 147.1427175218439 -12.640158093580235, 148.08837935213808 -13.174974098634262, 150.23373673986976 -13.961229062351727, 152.12620732406822 -14.63230005662328, 154.2550937971438 -14.747312889369214, 156.25 -14.185356129422741, 156.25 -18.25, 148.24123450580774 -18.25))"),
+                        CQLCrsType.EPSG4326
+                )
+        );
+
+        // Parse the json and get the noland section
+        String json = BaseTestClass.readResourceFile("classpath:databag/e26d0a56-5603-4413-911d-7b359a533a75.json");
+        StacCollectionModel model = mapper.readValue(json, StacCollectionModel.class);
+
+        Filter filter = CompilerUtil.parseFilter(Language.CQL, param.getFilter(), factory);
+        Optional<Geometry> geo = GeometryUtils.readGeometry(model.getSummaries().getGeometryNoLand());
+
+        Assertions.assertTrue(geo.isPresent(), "Parse no land correct");
+        GeometryVisitor visitor = GeometryVisitor.builder()
+                .build();
+
+        // return value are geo applied the CQL, and in this case only INTERSECTS
+        Geometry g = (Geometry)filter.accept(visitor, geo.get());
+        Assertions.assertTrue(expected.isPresent(), "Expected parse correct");
+        Assertions.assertEquals(g, expected.get(), "They are equals");
+    }
 }

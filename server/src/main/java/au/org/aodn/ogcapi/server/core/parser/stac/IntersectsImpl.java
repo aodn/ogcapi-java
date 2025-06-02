@@ -36,7 +36,7 @@ public class IntersectsImpl<T extends Enum<T> & CQLFieldsInterface> implements I
                 String geojson = GeometryUtils.convertToGeoJson(literal, cqlCrsType);
                 geometry = GeometryUtils
                         .readGeometry(geojson)
-                        .map(g -> GeometryUtils.normalizePolygon(g));
+                        .map(GeometryUtils::normalizePolygon);
             }
             catch(Exception ex) {
                 logger.warn("Exception in parsing, query result will be wrong", ex);
