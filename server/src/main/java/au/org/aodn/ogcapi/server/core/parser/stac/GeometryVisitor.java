@@ -21,6 +21,8 @@ public class GeometryVisitor extends DefaultFilterVisitor {
         if(filter instanceof IntersectsImpl<?> impl) {
             if(data instanceof Polygon || data instanceof GeometryCollection) {
                 if(impl.getGeometry().isPresent()) {
+                    // The getGeometry return the INTERSECT() geometry area, so we make a intersection
+                    // with the Object data
                     return impl.getGeometry().get().intersection(((Geometry) data).buffer(0.0));
                 }
                 else {
