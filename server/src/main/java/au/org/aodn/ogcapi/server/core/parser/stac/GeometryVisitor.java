@@ -10,16 +10,26 @@ import org.opengis.filter.spatial.*;
 @Builder
 public class GeometryVisitor extends DefaultFilterVisitor {
     /**
-     * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
-     * of the map and chop the spatial extents accordingly. The other INTERSECT, WITHIN ops isn't something we need to handle
-     * here and therefore always return data
+     * If user used intersect, then we make sure we reduce the geometry to within the intersect area
+     * so later centroid is always within the intersect area
      * @param filter - Intersect filter
      * @param data - The income data
-     * @return - Return same data
+     * @return - Return same data if no filter set, or the geometry and only intersect with the CQL intersect geometry
      */
     @Override
     public Object visit(Intersects filter, Object data) {
-        return data;
+        if(filter instanceof IntersectsImpl<?> impl) {
+            if(data instanceof Polygon || data instanceof GeometryCollection) {
+                if(impl.getGeometry().isPresent()) {
+                    return impl.getGeometry().get().intersection(((Geometry) data).buffer(0.0));
+                }
+                else {
+                    return data;
+                }
+            }
+        }
+        return null;
+
     }
     /**
      * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
@@ -97,7 +107,7 @@ public class GeometryVisitor extends DefaultFilterVisitor {
     @Override
     public Object visit(BBOX filter, Object data) {
         if(filter instanceof BBoxImpl<?> impl) {
-            if(impl.getBounds() != null && data instanceof Polygon || data instanceof GeometryCollection) {
+            if(impl.getGeometry() != null && (data instanceof Polygon || data instanceof GeometryCollection)) {
                 return impl.getGeometry().intersection(((Geometry) data).buffer(0.0));
             }
             else {

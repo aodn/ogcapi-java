@@ -153,6 +153,8 @@ public interface Converter<F, T> {
                 // Geometry from elastic search always store in EPSG4326
                 GeometryUtils.readGeometry(noLand)
                         .ifPresent(input -> {
+                            // filter have values if user CQL contains BBox, hence our centroid point needs to be
+                            // the noland geometry intersect with BBox and centroid point will be within the BBox
                             Geometry g = filter != null ? (Geometry)filter.accept(visitor, input) : input;
                             collection.getProperties().put(
                                     CollectionProperty.centroid,
