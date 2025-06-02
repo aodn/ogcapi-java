@@ -159,7 +159,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             }
             if (bbox != null) {
                 // OGC api pass BBox in a param call BBox, although there is another field in CQL call BBOX that works
-                // the same, we append the bbox parameter to the filter in case use use this parameter
+                // the same, we append the bbox parameter to the filter in case user use this parameter
                 filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), bbox, filter);
             }
             return commonService.getCollectionList(
