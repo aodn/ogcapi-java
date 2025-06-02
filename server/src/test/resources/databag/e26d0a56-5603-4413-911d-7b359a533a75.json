@@ -1,0 +1,781 @@
+{
+  "title": "Photosynthetic characteristics of Coral Sea picoplankton (<2µm size fraction)",
+  "description": "Experiments were carries out in the Coral Sea in August-1984, October-November-1985, and February, 1986. Photosynthetic parameters were measured in living phytoplankton populations from the Coral sea during October - November 1985. This study aimed to compare photosynthesis irradiance (P-I) response of near surface and deep living picoplankton assemblages. Experiments were conducted using short midday incubations, and to counter any distortion by diurnal fluctuation in photosynthetic potential, time series experiments were also conducted to establish temporal patters of carbon uptake over the course of a day. P-I experiments were carried out at seven locations in the Coral Sea, where three locations used near-surface phytoplankton (10m) and four used phytoplankton from the deep chlorophyll maximum layer (&gt;100m). Three time series experiments were conducted at Davies Reef and Old Reef located in the central Great Barrier Reef region, to establish relationships between photosynthesis measured in short-term mid-day incubations and estimated of daily production integrated from dawn-to-dusk series of contiguous short incubations.  Data for these experiments can be found on Furnas MJ and Mitchell AW (1988) Phytoplankton primary production measurements in reef lagoons. AIMS Data Report. Australian Institute of Marine Science. (29 p.)",
+  "extent": {
+    "bbox": [
+      [
+        147.0629882813,
+        -19.3519630451,
+        156.181640625,
+        -12.0822958374
+      ],
+      [
+        147.0629882813,
+        -18.3336694458,
+        156.181640625,
+        -12.0822958374
+      ],
+      [
+        148.0867767334,
+        -19.3519630451,
+        148.0867767334,
+        -19.3519630451
+      ],
+      [
+        147.6387405396,
+        -18.82409183,
+        147.6387405396,
+        -18.82409183
+      ]
+    ],
+    "temporal": [
+      [
+        "1984-08-01T14:00:00Z",
+        "1986-02-28T12:59:59Z"
+      ],
+      [
+        "1984-08-01T14:00:00Z",
+        "1986-02-28T12:59:59Z"
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 73,
+    "status": "completed",
+    "credits": [
+      "Furnas, Miles J, Dr (Principal Investigator)"
+    ],
+    "scope": {
+      "code": "dataset",
+      "name": ""
+    },
+    "statement": "",
+    "creation": "2010-11-23T00:00:00",
+    "revision": "2019-10-14T00:00:00",
+    "dataset_group": "aims",
+    "update_frequency": "completed",
+    "proj:geometry": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                147.06298828125003,
+                -18.3336694457713
+              ],
+              [
+                156.18164062500003,
+                -18.3336694457713
+              ],
+              [
+                156.18164062500003,
+                -12.082295837363578
+              ],
+              [
+                147.06298828125003,
+                -12.082295837363578
+              ],
+              [
+                147.06298828125003,
+                -18.3336694457713
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Point",
+          "coordinates": [
+            148.08677673339847,
+            -19.351963045071315
+          ]
+        },
+        {
+          "type": "Point",
+          "coordinates": [
+            147.6387405395508,
+            -18.824091829956703
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "proj:geometry_noland": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                147,
+                -12
+              ],
+              [
+                147,
+                -18.25
+              ],
+              [
+                156.25,
+                -18.25
+              ],
+              [
+                156.25,
+                -12
+              ],
+              [
+                147,
+                -12
+              ]
+            ]
+          ]
+        },
+        {
+          "type": "Point",
+          "coordinates": [
+            148,
+            -19.25
+          ]
+        },
+        {
+          "type": "Point",
+          "coordinates": [
+            147.75,
+            -18.75
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "temporal": [
+      {
+        "start": "1984-08-01T14:00:00Z",
+        "end": "1986-02-28T12:59:59Z"
+      }
+    ],
+    "parameter_vocabs": [],
+    "platform_vocabs": [],
+    "organisation_vocabs": [
+      "Australian Institute of Marine Science (AIMS)"
+    ]
+  },
+  "contacts": [
+    {
+      "roles": [
+        "principalInvestigator",
+        "about"
+      ],
+      "organization": "Australian Institute of Marine Science (AIMS)",
+      "name": "Furnas, Miles J, Dr",
+      "position": "",
+      "emails": [
+        "reception@aims.gov.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE"
+          ],
+          "city": "TOWNSVILLE",
+          "country": "Australia",
+          "postal_code": "4810",
+          "administrative_area": "Queensland"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "+61 7 4753 4444"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": ""
+        }
+      ],
+      "links": [
+        {
+          "href": "https://www.aims.gov.au",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "AIMS Web Site"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "Australian Institute of Marine Science (AIMS)",
+      "name": "Data Manager, AIMS Data Centre",
+      "position": "",
+      "emails": [
+        "adc@aims.gov.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE"
+          ],
+          "city": "TOWNSVILLE",
+          "country": "Australia",
+          "postal_code": "4810",
+          "administrative_area": "Queensland"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "+61 7 4753 4444"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": ""
+        }
+      ],
+      "links": [
+        {
+          "href": "https://www.aims.gov.au",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "AIMS Web Site"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "pointOfContact",
+        "metadata"
+      ],
+      "organization": "Australian Institute of Marine Science (AIMS)",
+      "name": "",
+      "position": "AIMS Data Centre",
+      "emails": [
+        "adc@aims.gov.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "PRIVATE MAIL BAG 3"
+          ],
+          "city": "TOWNSVILLE MAIL CENTRE",
+          "country": "Australia",
+          "postal_code": "4810",
+          "administrative_area": "Queensland"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "+61 7 4753 4444"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": "+61 7 4772 5852"
+        }
+      ],
+      "links": [
+        {
+          "href": "https://www.aims.gov.au/adc",
+          "type": "WWW:LINK-1.0-http--link"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "publisher",
+        "citation"
+      ],
+      "organization": "Australian Institute of Marine Science (AIMS)",
+      "name": "",
+      "position": "",
+      "emails": [
+        "reception@aims.gov.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE"
+          ],
+          "city": "TOWNSVILLE",
+          "country": "Australia",
+          "postal_code": "4810",
+          "administrative_area": "Queensland"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "+61 7 4753 4444"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": ""
+        }
+      ],
+      "links": [
+        {
+          "href": "https://www.aims.gov.au",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "AIMS Web Site"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "owner",
+        "citation"
+      ],
+      "organization": "Australian Institute of Marine Science (AIMS)",
+      "name": "",
+      "position": "",
+      "emails": [
+        "reception@aims.gov.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "PRIVATE MAIL BAG 3, TOWNSVILLE MAIL CENTRE"
+          ],
+          "city": "TOWNSVILLE",
+          "country": "Australia",
+          "postal_code": "4810",
+          "administrative_area": "Queensland"
+        }
+      ],
+      "phones": [
+        {
+          "roles": [
+            "voice"
+          ],
+          "value": "+61 7 4753 4444"
+        },
+        {
+          "roles": [
+            "facsimile"
+          ],
+          "value": ""
+        }
+      ],
+      "links": [
+        {
+          "href": "https://www.aims.gov.au",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "AIMS Web Site"
+        }
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "https://apps.aims.gov.au/metadata/view/43c367e1-b319-4f24-9fe3-e297ffec6527",
+      "rel": "related",
+      "type": "",
+      "title": "Primary production, biomass, size structure and nitrogen nutrition of phytoplankton in the Coral Sea (RV Franklin Cruise 05/85)"
+    },
+    {
+      "href": "articleId=8660",
+      "rel": "related",
+      "type": "",
+      "title": "Photosynthetic characteristics of Coral Sea picoplankton (<2 um size fraction): Furnas MJ and Mitchell AW (1988) Photosynthetic characteristics of Coral Sea picoplankton (<2 um size fraction). Biological Oceanography 5: 163-182."
+    },
+    {
+      "href": "https://apps.aims.gov.au/metadata/view/9cf1c9bb-6479-4349-a192-30cdfcdaaacd",
+      "rel": "related",
+      "type": "",
+      "title": "Diffusion culture experiments using natural phytoplankton from the Great Barrier Reef (MECOR)"
+    },
+    {
+      "href": "https://apps.aims.gov.au/metadata/view/8d9d0155-16ce-481b-beab-3879ced51c37",
+      "rel": "related",
+      "type": "",
+      "title": "Phytoplankton Primary Production Measurements In Reef Lagoons, Great Barrier Reef"
+    },
+    {
+      "href": "https://geonetwork-edge.edge.aodn.org.au:443/geonetwork/images/logos/81465e5f-731c-4f72-9b4e-68f2f5e52f41.png",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://apps.aims.gov.au/metadata/view/e26d0a56-5603-4413-911d-7b359a533a75",
+      "rel": "describedby",
+      "type": "text/html",
+      "title": "Full metadata link"
+    },
+    {
+      "href": "http://i.creativecommons.org/l/by-nc/3.0/au/88x31.png",
+      "rel": "license",
+      "type": "image/png"
+    },
+    {
+      "href": "http://creativecommons.org/licenses/by-nc/3.0/au/",
+      "rel": "license",
+      "type": "text/html"
+    }
+  ],
+  "license": "Creative Commons Attribution-NonCommercial 3.0 Australia License",
+  "providers": [
+    {
+      "name": "Australian Institute of Marine Science (AIMS)",
+      "roles": [
+        "pointOfContact"
+      ]
+    }
+  ],
+  "themes": [],
+  "id": "e26d0a56-5603-4413-911d-7b359a533a75",
+  "search_suggestions": {
+    "abstract_phrases": [
+      "locations used near",
+      "during october",
+      "furnas",
+      "great barrier",
+      "old reef",
+      "short midday incubations",
+      "uptake over",
+      "mitchell aw",
+      "between photosynthesis measured",
+      "p i experiments were",
+      "reef region",
+      "near",
+      "day p i",
+      "chlorophyll maximum",
+      "temporal",
+      "reef",
+      "using",
+      "great barrier reef region",
+      "august",
+      "compare photosynthesis",
+      "i experiments were carried",
+      "old",
+      "coral sea where",
+      "production measurements",
+      "photosynthesis irradiance p",
+      "barrier reef region",
+      "mitchell",
+      "diurnal",
+      "aw",
+      "science",
+      "near surface",
+      "dawn",
+      "institute",
+      "populations",
+      "fluctuation",
+      "were conducted using",
+      "compare",
+      "carried out",
+      "dusk series",
+      "experiments",
+      "counter any distortion",
+      "mid",
+      "where three",
+      "aims data report",
+      "sea",
+      "marine",
+      "short term",
+      "used phytoplankton from",
+      "living picoplankton",
+      "integrated from dawn",
+      "found",
+      "picoplankton assemblages experiments",
+      "barrier reef",
+      "parameters were",
+      "where",
+      "term",
+      "three locations used",
+      "coral sea where three",
+      "time series experiments were",
+      "three locations",
+      "measurements",
+      "layer gt",
+      "relationships between photosynthesis measured",
+      "photosynthetic potential time series",
+      "were also conducted",
+      "where three locations",
+      "relationships between",
+      "maximum layer",
+      "reef lagoons",
+      "potential time",
+      "three time series",
+      "four used phytoplankton",
+      "maximum layer gt",
+      "used near",
+      "series",
+      "data report australian institute",
+      "maximum",
+      "i response",
+      "november",
+      "production integrated from",
+      "dusk",
+      "contiguous short incubations",
+      "seven",
+      "integrated from",
+      "three time",
+      "phytoplankton",
+      "lagoons aims",
+      "counter any",
+      "i experiments",
+      "were conducted",
+      "were carried out",
+      "day incubations",
+      "used phytoplankton",
+      "reef located",
+      "seven locations",
+      "time series",
+      "establish temporal",
+      "series experiments were conducted",
+      "conducted using",
+      "davies",
+      "lagoons",
+      "report australian institute",
+      "were carries out",
+      "short midday",
+      "p i",
+      "term mid day incubations",
+      "deep living",
+      "production integrated",
+      "three locations used near",
+      "region",
+      "parameters",
+      "short term mid",
+      "contiguous",
+      "mid day incubations",
+      "deep",
+      "production",
+      "coral sea",
+      "assemblages experiments were conducted",
+      "reef lagoons aims data",
+      "between photosynthesis",
+      "compare photosynthesis irradiance",
+      "picoplankton assemblages",
+      "diurnal fluctuation",
+      "central",
+      "p i experiments",
+      "assemblages experiments",
+      "irradiance",
+      "central great barrier reef",
+      "conducted using short",
+      "time series experiments",
+      "potential time series",
+      "over",
+      "experiments were conducted using",
+      "living",
+      "experiments can",
+      "lagoons aims data",
+      "locations used",
+      "conducted using short midday",
+      "chlorophyll",
+      "estimated",
+      "october november",
+      "counter",
+      "gt",
+      "relationships between photosynthesis",
+      "short",
+      "time",
+      "day p i experiments",
+      "sea where",
+      "measured",
+      "mid day",
+      "marine science",
+      "locations used near surface",
+      "potential time series experiments",
+      "also conducted",
+      "central great barrier",
+      "during",
+      "chlorophyll maximum layer gt",
+      "where three locations used",
+      "three",
+      "experiments were conducted",
+      "sea where three locations",
+      "daily production integrated",
+      "photosynthetic potential time",
+      "relationships",
+      "photosynthetic parameters",
+      "furnas mj",
+      "photosynthesis",
+      "using short midday",
+      "experiments were carried out",
+      "picoplankton assemblages experiments were",
+      "carbon",
+      "four",
+      "between",
+      "compare photosynthesis irradiance p",
+      "living phytoplankton populations from",
+      "short incubations",
+      "incubations data",
+      "surface",
+      "old reef located",
+      "aimed",
+      "contiguous short",
+      "incubations",
+      "using short midday incubations",
+      "living phytoplankton populations",
+      "coral sea during october",
+      "report australian",
+      "deep chlorophyll maximum",
+      "primary production measurements",
+      "primary",
+      "study",
+      "deep chlorophyll maximum layer",
+      "day p",
+      "daily production",
+      "australian",
+      "used near surface phytoplankton",
+      "patters",
+      "davies reef",
+      "layer",
+      "establish relationships between",
+      "out",
+      "parameters were measured",
+      "sea during",
+      "populations from",
+      "any distortion",
+      "course",
+      "deep living picoplankton assemblages",
+      "assemblages",
+      "photosynthesis irradiance p i",
+      "coral sea during",
+      "midday incubations",
+      "series experiments were also",
+      "australian institute",
+      "establish relationships between photosynthesis",
+      "deep living picoplankton",
+      "term mid day",
+      "temporal patters",
+      "great",
+      "production integrated from dawn",
+      "deep chlorophyll",
+      "were also",
+      "used near surface",
+      "photosynthetic potential",
+      "report",
+      "phytoplankton populations from",
+      "located",
+      "p i response",
+      "phytoplankton primary",
+      "living phytoplankton",
+      "living picoplankton assemblages",
+      "assemblages experiments were",
+      "chlorophyll maximum layer",
+      "data",
+      "contiguous short incubations data",
+      "living picoplankton assemblages experiments",
+      "surface phytoplankton",
+      "i experiments were",
+      "experiments were carried",
+      "phytoplankton from",
+      "used",
+      "phytoplankton populations",
+      "series experiments",
+      "sea where three",
+      "establish temporal patters",
+      "barrier",
+      "central great",
+      "coral",
+      "carries out",
+      "carbon uptake",
+      "from",
+      "from dawn",
+      "experiments were also",
+      "potential",
+      "day",
+      "mj",
+      "were measured",
+      "irradiance p i",
+      "midday",
+      "uptake",
+      "data report australian",
+      "phytoplankton primary production measurements",
+      "experiments were also conducted",
+      "conducted",
+      "three time series experiments",
+      "establish",
+      "photosynthetic parameters were",
+      "daily production integrated from",
+      "carbon uptake over",
+      "reef lagoons aims",
+      "primary production",
+      "were",
+      "sea during october",
+      "photosynthesis measured",
+      "daily",
+      "experiments were carries",
+      "study aimed",
+      "october",
+      "distortion",
+      "sea during october november",
+      "irradiance p",
+      "were conducted using short",
+      "aims data",
+      "near surface phytoplankton",
+      "during october november",
+      "phytoplankton primary production",
+      "series experiments were",
+      "irradiance p i response",
+      "four used phytoplankton from",
+      "integrated",
+      "experiments were",
+      "can",
+      "photosynthetic parameters were measured",
+      "picoplankton",
+      "four used",
+      "establish relationships",
+      "short incubations data",
+      "carried",
+      "term mid",
+      "aims",
+      "photosynthetic",
+      "aims data report australian",
+      "february",
+      "were carries",
+      "also",
+      "any",
+      "short term mid day",
+      "lagoons aims data report",
+      "carries",
+      "photosynthesis irradiance",
+      "response",
+      "experiments were carries out",
+      "using short",
+      "were carried",
+      "locations",
+      "data report",
+      "great barrier reef"
+    ],
+    "parameter_vocabs_sayt": [],
+    "platform_vocabs_sayt": [],
+    "organisation_vocabs_sayt": [
+      "Australian Institute of Marine Science (AIMS)"
+    ]
+  },
+  "type": "Collection",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"
+  ]
+}
