@@ -152,6 +152,12 @@
 				<artifactId>ses</artifactId>
 				<version>${aws.sdk.version}</version>
 			</dependency>
+			<!-- Add JSON layout dependency -->
+			<dependency>
+				<groupId>org.apache.logging.log4j</groupId>
+				<artifactId>log4j-layout-template-json</artifactId>
+				<version>2.24.3</version> <!-- Check for the latest version -->
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
 	<distributionManagement>
