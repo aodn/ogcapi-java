@@ -31,7 +31,7 @@
 	<repositories>
 		<repository>
 			<id>mvnrepository.com</id>
-			<url>https://repo1.maven.org/maven2/</url>
+	 		<url>https://repo1.maven.org/maven2/</url>
 		</repository>
 		<repository>
 			<id>repo.osgeo.org</id>
@@ -39,7 +39,7 @@
 		</repository>
 		<repository>
             <id>codeartifact</id>
-            <url>https://central-aodn-org-au.d.codeartifact.ap-southeast-2.amazonaws.com/maven/maven-aodn-store/</url>
+            <url>https://central-aodn-org-au-851725428481.d.codeartifact.ap-southeast-2.amazonaws.com/maven/maven-aodn-store/</url>
         </repository>
 	</repositories>
 	<modules>
@@ -64,7 +64,6 @@
 				<artifactId>jackson-datatype-threetenbp</artifactId>
 				<version>2.6.4</version>
 			</dependency>
-			<!-- https://www.elastic.co/guide/en/elasticsearch/client/java-api-client/current/getting-started-java.html-->
 			<dependency>
 				<groupId>co.elastic.clients</groupId>
 				<artifactId>elasticsearch-java</artifactId>
@@ -90,7 +89,6 @@
 				<artifactId>lombok-mapstruct-binding</artifactId>
 				<version>${org.projectlombok.binding}</version>
 			</dependency>
-			<!-- https://mvnrepository.com/artifact/org.geotools/gt-cql -->
 			<dependency>
 				<groupId>org.geotools</groupId>
 				<artifactId>gt-cql</artifactId>
@@ -106,10 +104,6 @@
 				<artifactId>gt-referencing</artifactId>
 				<version>${org.geotools.version}</version>
 			</dependency>
-			<!--
-			https://mvnrepository.com/artifact/org.geotools/gt-epsg-hsql
-			it is use to lookup EPSG values
-			-->
 			<dependency>
 				<groupId>org.geotools</groupId>
 				<artifactId>gt-epsg-hsql</artifactId>
@@ -161,9 +155,33 @@
                 <groupId>au.org.aodn</groupId>
                 <artifactId>es-indexer</artifactId>
                 <version>0.0.37</version>
-</dependency>
+			</dependency>
 		</dependencies>
 	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>software.amazon.codeartifact</groupId>
+				<artifactId>codeartifact-login-maven-plugin</artifactId>
+				<version>1.1.0</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>login</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<domain>central-aodn-org-au</domain>
+					<domainOwner>851725428481</domainOwner>
+					<repository>maven-aodn-store</repository>
+					<region>ap-southeast-2</region>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
 	<distributionManagement>
         <repository>
             <id>codeartifact</id>
