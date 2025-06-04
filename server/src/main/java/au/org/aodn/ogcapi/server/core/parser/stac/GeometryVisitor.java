@@ -23,7 +23,14 @@ public class GeometryVisitor extends DefaultFilterVisitor {
                 if(impl.getGeometry().isPresent()) {
                     // The getGeometry return the INTERSECT() geometry area, so we make a intersection
                     // with the Object data
-                    return impl.getGeometry().get().intersection(((Geometry) data).buffer(0.0));
+                    Geometry input = impl.getGeometry().get();
+                    if(!input.isValid()) {
+                        // buffer is expensive to fix invalid geometry, call it only if needed
+                        return input.intersection(input.buffer(0.0));
+                    }
+                    else {
+                        return input.intersection(input);
+                    }
                 }
                 else {
                     return data;
@@ -31,7 +38,6 @@ public class GeometryVisitor extends DefaultFilterVisitor {
             }
         }
         return null;
-
     }
     /**
      * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
@@ -110,7 +116,14 @@ public class GeometryVisitor extends DefaultFilterVisitor {
     public Object visit(BBOX filter, Object data) {
         if(filter instanceof BBoxImpl<?> impl) {
             if(impl.getGeometry() != null && (data instanceof Polygon || data instanceof GeometryCollection)) {
-                return impl.getGeometry().intersection(((Geometry) data).buffer(0.0));
+                Geometry input = (Geometry) data;
+                if(!input.isValid()) {
+                    // buffer is expensive to fix invalid geometry, call it only if needed
+                    return impl.getGeometry().intersection(input.buffer(0.0));
+                }
+                else {
+                    return impl.getGeometry().intersection(input);
+                }
             }
             else {
                 return data;
