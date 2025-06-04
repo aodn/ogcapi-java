@@ -20,11 +20,9 @@
     <Loggers>
         <!-- avoid duplicated logs with additivity=false -->
         <Logger name="au.org.aodn.ogcapi" level="debug" additivity="false">
-            <AppenderRef ref="LogToRollingFile"/>
             <AppenderRef ref="LogToConsole"/>
         </Logger>
         <Root level="info">
-            <AppenderRef ref="LogToRollingFile"/>
             <AppenderRef ref="LogToConsole"/>
         </Root>
     </Loggers>
