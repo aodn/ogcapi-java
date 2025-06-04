@@ -24,12 +24,12 @@ public class GeometryVisitor extends DefaultFilterVisitor {
                     // The getGeometry return the INTERSECT() geometry area, so we make a intersection
                     // with the Object data
                     Geometry input = impl.getGeometry().get();
-                    if(!input.isValid()) {
+                    try {
+                        return input.intersection(input);
+                    }
+                    catch(Exception e) {
                         // buffer is expensive to fix invalid geometry, call it only if needed
                         return input.intersection(input.buffer(0.0));
-                    }
-                    else {
-                        return input.intersection(input);
                     }
                 }
                 else {
@@ -117,12 +117,12 @@ public class GeometryVisitor extends DefaultFilterVisitor {
         if(filter instanceof BBoxImpl<?> impl) {
             if(impl.getGeometry() != null && (data instanceof Polygon || data instanceof GeometryCollection)) {
                 Geometry input = (Geometry) data;
-                if(!input.isValid()) {
+                try {
+                    return impl.getGeometry().intersection(input);
+                }
+                catch(Exception e) {
                     // buffer is expensive to fix invalid geometry, call it only if needed
                     return impl.getGeometry().intersection(input.buffer(0.0));
-                }
-                else {
-                    return impl.getGeometry().intersection(input);
                 }
             }
             else {
