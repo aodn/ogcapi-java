@@ -152,6 +152,10 @@
         <artifactId>auth</artifactId>
         <version>${aws.sdk.version}</version>
       </dependency>
+	  <dependency>
+        <groupId>au.org.aodn</groupId>
+        <artifactId>es-indexer</artifactId>
+      </dependency>
       <dependency>
         <groupId>software.amazon.awssdk</groupId>
         <artifactId>ses</artifactId>
