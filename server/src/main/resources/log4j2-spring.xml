@@ -6,10 +6,10 @@
     </Properties>
     <Appenders>
         <Console name="LogToConsole" target="SYSTEM_OUT">
-            <JsonTemplateLayout eventTemplateUri="classpath:Log4j2JsonLayout.json" prettyPrintEnabled="true" />
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2JsonLayout.json"/>
         </Console>
         <RollingFile name="LogToRollingFile" fileName="/tmp/logs/ogcapi.log" filePattern="/tmp/logs/ogcapi-%i.%d{yyyy-MM-dd}.log">
-            <JsonTemplateLayout eventTemplateUri="classpath:Log4j2JsonLayout.json" prettyPrintEnabled="true" />
+            <JsonTemplateLayout eventTemplateUri="classpath:log4j2JsonLayout.json"/>
             <Policies>
                 <TimeBasedTriggeringPolicy />
                 <SizeBasedTriggeringPolicy size="10 MB"/>
@@ -20,9 +20,11 @@
     <Loggers>
         <!-- avoid duplicated logs with additivity=false -->
         <Logger name="au.org.aodn.ogcapi" level="debug" additivity="false">
+            <AppenderRef ref="LogToRollingFile"/>
             <AppenderRef ref="LogToConsole"/>
         </Logger>
         <Root level="info">
+            <AppenderRef ref="LogToRollingFile"/>
             <AppenderRef ref="LogToConsole"/>
         </Root>
     </Loggers>
