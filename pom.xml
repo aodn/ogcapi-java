@@ -164,7 +164,7 @@
       <dependency>
         <groupId>au.org.aodn</groupId>
         <artifactId>es-indexer</artifactId>
-        <version>0.0.37</version>
+        <version>0.0.40</version>
       </dependency>
     </dependencies>
   </dependencyManagement>
