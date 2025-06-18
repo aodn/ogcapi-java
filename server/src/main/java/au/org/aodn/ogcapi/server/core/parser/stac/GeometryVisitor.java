@@ -10,34 +10,35 @@ import org.opengis.filter.spatial.*;
 @Builder
 public class GeometryVisitor extends DefaultFilterVisitor {
     /**
-     * If user used intersect, then we make sure we reduce the geometry to within the intersect area
-     * so later centroid is always within the intersect area
+     * Not a good idea to implement this because it will focus all points within a small area due to intersect with the
+     * area. This make the UI hard to display so many points in the same cluster
      * @param filter - Intersect filter
      * @param data - The income data
      * @return - Return same data if no filter set, or the geometry and only intersect with the CQL intersect geometry
      */
     @Override
     public Object visit(Intersects filter, Object data) {
-        if(filter instanceof IntersectsImpl<?> impl) {
-            if(data instanceof Polygon || data instanceof GeometryCollection) {
-                if(impl.getGeometry().isPresent()) {
-                    // The getGeometry return the INTERSECT() geometry area, so we make a intersection
-                    // with the Object data
-                    Geometry input = impl.getGeometry().get();
-                    try {
-                        return input.intersection(input);
-                    }
-                    catch(Exception e) {
-                        // buffer is expensive to fix invalid geometry, call it only if needed
-                        return input.intersection(input.buffer(0.0));
-                    }
-                }
-                else {
-                    return data;
-                }
-            }
-        }
-        return null;
+    //        if(filter instanceof IntersectsImpl<?> impl) {
+    //            if(data instanceof Polygon || data instanceof GeometryCollection) {
+    //                if(impl.getGeometry().isPresent()) {
+    //                    // The getGeometry return the INTERSECT() geometry area, so we make a intersection
+    //                    // with the Object data
+    //                    Geometry input = impl.getGeometry().get();
+    //                    try {
+    //                        return input.intersection(input);
+    //                    }
+    //                    catch(Exception e) {
+    //                        // buffer is expensive to fix invalid geometry, call it only if needed
+    //                        return input.intersection(input.buffer(0.0));
+    //                    }
+    //                }
+    //                else {
+    //                    return data;
+    //                }
+    //            }
+    //        }
+    //        return null;
+        return data;
     }
     /**
      * Always return data, the reason is that this GeometryVisitor only purpose is to consider the BBOX aka the view point
