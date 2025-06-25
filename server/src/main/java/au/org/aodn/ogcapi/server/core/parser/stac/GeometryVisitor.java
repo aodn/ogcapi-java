@@ -118,13 +118,14 @@ public class GeometryVisitor extends DefaultFilterVisitor {
         if(filter instanceof BBoxImpl<?> impl) {
             if(impl.getGeometry() != null && (data instanceof Polygon || data instanceof GeometryCollection)) {
                 Geometry input = (Geometry) data;
-                try {
-                    return impl.getGeometry().intersection(input);
-                }
-                catch(Exception e) {
-                    // buffer is expensive to fix invalid geometry, call it only if needed
-                    return impl.getGeometry().intersection(input.buffer(0.0));
-                }
+                // buffer is expensive but turns out it is faster in most case by doing it instead of using try catch
+                // try {
+                //    return impl.getGeometry().intersection(input);
+                // }
+                // catch(Exception e) {
+                //    return impl.getGeometry().intersection(input.buffer(0.0));
+                //}
+                return impl.getGeometry().intersection(input.buffer(0.0));
             }
             else {
                 return data;
