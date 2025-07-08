@@ -114,6 +114,7 @@ public interface Converter<F, T> {
                                         .type(l.getType())
                                         .rel(l.getRel())
                                         .title(l.getTitle())
+                                        .aigroup(l.getAiGroup())
                                 )
                                 .toList()
                 );
