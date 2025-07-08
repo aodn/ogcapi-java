@@ -158,6 +158,9 @@
               },
               "description": {
                 "type": "text"
+              },
+              "ai:group": {
+                "type": "text"
               }
             }
           }

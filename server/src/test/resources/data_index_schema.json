@@ -36,7 +36,8 @@
               "rel": { "type": "text" },
               "type": { "type": "text" },
               "title": { "type": "text" },
-              "description": { "type": "text" }
+              "description": { "type": "text" },
+              "ai:group": { "type": "text" }
             }
           }
         }
