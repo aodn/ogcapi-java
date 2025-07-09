@@ -788,9 +788,6 @@ components:
           example: "Trierer Strasse 70, 53115 Bonn"
         length:
           type: integer
-        ai:group:
-          type: string
-          description: AI group identifier
     multilinestringGeoJSON:
       required:
         - coordinates

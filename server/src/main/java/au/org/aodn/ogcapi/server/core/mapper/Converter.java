@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
+import au.org.aodn.ogcapi.server.core.model.ExtendedLink;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
@@ -109,12 +110,12 @@ public interface Converter<F, T> {
                 collection.getLinks().addAll(
                         m.getLinks()
                                 .stream()
-                                .map(l -> new Link()
+                                .map(l -> new ExtendedLink()
                                         .href(l.getHref())
                                         .type(l.getType())
                                         .rel(l.getRel())
                                         .title(l.getTitle())
-                                        .aigroup(l.getAiGroup())
+                                        .aiGroup(l.getAiGroup())
                                 )
                                 .toList()
                 );
