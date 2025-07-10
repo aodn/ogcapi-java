@@ -75,6 +75,20 @@ public class StacToCollectionTest {
                 .links(Collections.singletonList(link))
                 .phones(Collections.singletonList(InfoModel.builder().value("value").build())
                 ).build();
+        var link1 = LinkModel.builder()
+                .rel("related")
+                .href("https://example.com/data")
+                .type("text/html")
+                .title("Data Link")
+                .aiGroup("data-access")
+                .build();
+        var link2 = LinkModel.builder()
+                .rel("self")
+                .href("https://example.com/self")
+                .type("application/json")
+                .title("Self Link")
+                .aiGroup("ai-group")
+                .build();
         var theme = ThemeModel.builder()
                 .scheme("scheme")
                 .description("description")
@@ -99,6 +113,7 @@ public class StacToCollectionTest {
                 )
                 .license("Attribution 4.0")
                 .contacts(Collections.singletonList(contact))
+                .links(Arrays.asList(link1, link2))
                 .themes(Collections.singletonList(theme))
                 .citation(citationString)
                 .build();
@@ -118,6 +133,8 @@ public class StacToCollectionTest {
         Assertions.assertEquals("Attribution 4.0", collection.getProperties().get(CollectionProperty.license));
         Assertions.assertEquals("creation date", collection.getProperties().get(CollectionProperty.creation));
         Assertions.assertEquals("revision date", collection.getProperties().get(CollectionProperty.revision));
+        Assertions.assertNotNull(collection.getLinks());
+        Assertions.assertEquals(2, collection.getLinks().size());
     }
 
     @Test
