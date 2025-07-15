@@ -41,6 +41,7 @@ import java.util.function.Supplier;
 @Slf4j
 abstract class ElasticSearchBase {
 
+    protected static final String STR_INDICATOR = "str:";
     protected Integer searchAsYouTypeSize;
     protected String indexName;
     protected Integer pageSize;
@@ -268,7 +269,7 @@ abstract class ElasticSearchBase {
                     } else if (value.isLong()) {
                         values.add(value.longValue());
                     } else if (value.isString()) {
-                        values.add(value.stringValue());
+                        values.add(STR_INDICATOR + value.stringValue());
                     }
                 }
                 result.setSortValues(values);

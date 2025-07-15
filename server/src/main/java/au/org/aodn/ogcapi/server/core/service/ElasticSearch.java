@@ -1,24 +1,20 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
-import co.elastic.clients.elasticsearch._types.aggregations.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
-import co.elastic.clients.json.JsonData;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -29,12 +25,9 @@ import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StopWatch;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -397,6 +390,13 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         if(s.trim().equalsIgnoreCase("true") || s.trim().equalsIgnoreCase("false")) {
             Boolean v = Boolean.parseBoolean(s.trim());
             return FieldValue.of(v);
+        }
+
+        if(s.trim().startsWith(STR_INDICATOR)) {
+            // UUID is part of the sort order, sometimes it will be an ID which is a
+            // number and can be parsed directly by code above, so to avoid incorrect parsing
+            // we will prefix it with STR_INDICATOR
+            return FieldValue.of(s.replaceFirst(STR_INDICATOR, "").trim());
         }
         // Assume it is string
         return FieldValue.of(s.trim());
