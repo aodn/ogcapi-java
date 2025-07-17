@@ -13,8 +13,6 @@ import java.util.List;
 @AllArgsConstructor
 public class ThemeModel {
     protected String scheme;
-    protected String description;
-    protected String title;
     protected List<ConceptModel> concepts;
 
 }

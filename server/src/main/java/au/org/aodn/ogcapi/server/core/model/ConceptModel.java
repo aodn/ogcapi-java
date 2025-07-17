@@ -12,4 +12,6 @@ import lombok.NoArgsConstructor;
 public class ConceptModel {
     protected String id;
     protected String url;
+    protected String description;
+    protected String title;
 }
