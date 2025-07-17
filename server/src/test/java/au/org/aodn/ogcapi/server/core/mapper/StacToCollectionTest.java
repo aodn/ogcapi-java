@@ -91,9 +91,9 @@ public class StacToCollectionTest {
                 .build();
         var theme = ThemeModel.builder()
                 .scheme("scheme")
-                .description("description")
-                .title("title")
-                .concepts(Collections.singletonList(ConceptModel.builder().id("id").url("url").build()))
+                .concepts(Collections.singletonList(
+                        ConceptModel.builder().id("id").url("url").description("description").title("title").build()
+                        ))
                 .build();
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
         var statement = "This is the statement of this record";
