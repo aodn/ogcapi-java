@@ -8,4 +8,4 @@ public class DownloadableFieldsNotFoundException extends RuntimeException {
     public DownloadableFieldsNotFoundException(String message) {
         super(message);
     }
-} 
+}

@@ -26,23 +26,22 @@ public class DownloadableFieldsService {
 
     /**
      * Get downloadable fields for a layer
-     * 
      * @param wfsUrl The WFS server URL
      * @param typeName The WFS type name
      * @return List of downloadable fields
      */
     public List<DownloadableField> getDownloadableFields(String wfsUrl, String typeName) {
         log.info("Getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl);
-        
+
         try {
             List<DownloadableField> fields = getFilterFieldsFromWfs(wfsUrl, typeName);
-            
+
             if (fields.isEmpty()) {
                 throw new DownloadableFieldsNotFoundException(
                     String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
                 );
             }
-            
+
             return fields;
         } catch (Exception e) {
             log.error("Error getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl, e);
@@ -68,11 +67,11 @@ public class DownloadableFieldsService {
                     .queryParam("typeName", typeName)
                     .build()
                     .toUri();
-            
+
             log.debug("WFS DescribeFeatureType request: {}", uri);
-            
+
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
-            
+
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WfsDescribeFeatureTypeResponse wfsResponse = xmlMapper.readValue(response.getBody(), WfsDescribeFeatureTypeResponse.class);
                 return convertWfsResponseToDownloadableFields(wfsResponse);
@@ -81,7 +80,7 @@ public class DownloadableFieldsService {
                     String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
                 );
             }
-            
+
         } catch (Exception e) {
             log.error("Error calling WFS DescribeFeatureType for typeName: {}", typeName, e);
             throw new DownloadableFieldsNotFoundException(
@@ -97,20 +96,19 @@ public class DownloadableFieldsService {
      */
     private List<DownloadableField> convertWfsResponseToDownloadableFields(WfsDescribeFeatureTypeResponse wfsResponse) {
         List<DownloadableField> fields = new ArrayList<>();
-        
+
         if (wfsResponse.getComplexTypes() != null) {
             for (WfsDescribeFeatureTypeResponse.ComplexType complexType : wfsResponse.getComplexTypes()) {
-                if (complexType.getComplexContent() != null && 
+                if (complexType.getComplexContent() != null &&
                     complexType.getComplexContent().getExtension() != null &&
                     complexType.getComplexContent().getExtension().getSequence() != null) {
-                    
-                    List<WfsDescribeFeatureTypeResponse.Element> elements = 
-                        complexType.getComplexContent().getExtension().getSequence().getElements();
-                    
+
+                    List<WfsDescribeFeatureTypeResponse.Element> elements = complexType.getComplexContent().getExtension().getSequence().getElements();
+
                     if (elements != null) {
                         for (WfsDescribeFeatureTypeResponse.Element element : elements) {
                             if (element.getName() != null && element.getType() != null) {
-                                
+
                                 // Add geometry fields
                                 if ("gml:GeometryPropertyType".equals(element.getType())) {
                                     DownloadableField geomField = new DownloadableField();
@@ -119,7 +117,7 @@ public class DownloadableFieldsService {
                                     geomField.setName(element.getName());
                                     fields.add(geomField);
                                 }
-                                
+
                                 // Add date/time fields
                                 else if ("xsd:dateTime".equals(element.getType())) {
                                     DownloadableField timeField = new DownloadableField();
@@ -148,7 +146,7 @@ public class DownloadableFieldsService {
                 }
             }
         }
-        
+
         return fields;
     }
-} 
+}

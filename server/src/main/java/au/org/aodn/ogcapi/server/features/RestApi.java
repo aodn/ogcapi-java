@@ -108,7 +108,7 @@ public class RestApi implements CollectionsApi {
             if (serverUrl == null || layerName == null) {
                 return ResponseEntity.badRequest().build();
             }
-            
+
             return featuresService.getDownloadableFields(serverUrl, layerName);
         }
 

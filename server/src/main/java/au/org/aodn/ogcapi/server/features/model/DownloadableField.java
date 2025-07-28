@@ -7,10 +7,10 @@ import lombok.Data;
 public class DownloadableField {
     @JsonProperty("label")
     private String label;
-    
+
     @JsonProperty("type")
     private String type;
-    
+
     @JsonProperty("name")
     private String name;
-} 
+}

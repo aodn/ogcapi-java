@@ -12,35 +12,35 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JacksonXmlRootElement(localName = "schema", namespace = "http://www.w3.org/2001/XMLSchema")
 public class WfsDescribeFeatureTypeResponse {
-    
+
     @JacksonXmlProperty(localName = "complexType")
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<ComplexType> complexTypes;
-    
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ComplexType {
         @JacksonXmlProperty(isAttribute = true)
         private String name;
-        
+
         @JacksonXmlProperty(localName = "complexContent")
         private ComplexContent complexContent;
     }
-    
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ComplexContent {
         @JacksonXmlProperty(localName = "extension")
         private Extension extension;
     }
-    
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Extension {
         @JacksonXmlProperty(localName = "sequence")
         private Sequence sequence;
     }
-    
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Sequence {
@@ -48,14 +48,14 @@ public class WfsDescribeFeatureTypeResponse {
         @JacksonXmlElementWrapper(useWrapping = false)
         private List<Element> elements;
     }
-    
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Element {
         @JacksonXmlProperty(isAttribute = true)
         private String name;
-        
+
         @JacksonXmlProperty(isAttribute = true)
         private String type;
     }
-} 
+}

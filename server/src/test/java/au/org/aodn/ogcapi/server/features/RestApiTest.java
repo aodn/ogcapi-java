@@ -589,11 +589,11 @@ public class RestApiTest extends BaseTestClass {
 
         assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), "Should return 404 for invalid layer");
         assertNotNull(response.getBody(), "Error response body should not be null");
-        assertTrue(response.getBody().getMessage().contains("No downloadable fields found"), 
+        assertTrue(response.getBody().getMessage().contains("No downloadable fields found"),
                    "Error message should indicate no fields found");
     }
 
-    @Test  
+    @Test
     public void testDownloadableFieldsMissingParameters() {
         // Test with missing serverUrl parameter - should return 400
         ResponseEntity<String> response = testRestTemplate.getForEntity(
