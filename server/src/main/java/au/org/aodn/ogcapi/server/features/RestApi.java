@@ -47,10 +47,8 @@ public class RestApi implements CollectionsApi {
     }
 
     @Operation(
-            summary = "fetch a single feature or downloadable fields",
-            description = "Fetch the feature with id `featureId` in the feature collection with id `collectionId`. Use content negotiation to request HTML or GeoJSON. " +
-                         "Special case: if featureId is 'downloadableFields', returns the downloadable fields for WFS subsetting. " +
-                         "For downloadableFields, requires query parameters: serverUrl (WMS server URL) and layerName (layer name).",
+            summary = "fetch a single feature",
+            description = "Fetch the feature with id `featureId` in the feature collection with id `collectionId`. Use content negotiation to request HTML or GeoJSON. ",
             tags = {"Data"}
     )
     @ApiResponses({@ApiResponse(
