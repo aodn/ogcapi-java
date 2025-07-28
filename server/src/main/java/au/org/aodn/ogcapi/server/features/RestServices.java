@@ -5,6 +5,8 @@ import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
+import au.org.aodn.ogcapi.server.features.model.DownloadableField;
+import au.org.aodn.ogcapi.server.features.service.DownloadableFieldsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +21,9 @@ public class RestServices extends OGCApiService {
 
     @Autowired
     protected StacToCollection StacToCollection;
+
+    @Autowired
+    protected DownloadableFieldsService downloadableFieldsService;
 
     @Override
     public List<String> getConformanceDeclaration() {
@@ -39,5 +44,17 @@ public class RestServices extends OGCApiService {
             log.error("UUID {} not found", id);
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * Get downloadable fields for a layer
+     * 
+     * @param wfsUrl The WFS server URL
+     * @param typeName The WFS type name  
+     * @return List of downloadable fields
+     */
+    public ResponseEntity<List<DownloadableField>> getDownloadableFields(String wfsUrl, String typeName) {
+        List<DownloadableField> fields = downloadableFieldsService.getDownloadableFields(wfsUrl, typeName);
+        return ResponseEntity.ok(fields);
     }
 }
