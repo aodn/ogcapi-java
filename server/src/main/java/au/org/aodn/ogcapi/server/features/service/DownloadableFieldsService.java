@@ -16,6 +16,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -38,13 +41,6 @@ public class DownloadableFieldsService {
         public List<DownloadableField> getDownloadableFields(String wfsUrl, String typeName) {
         log.info("Getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl);
 
-        // Validate WFS server URL against whitelist
-        if (!wfsServerConfig.isAllowed(wfsUrl)) {
-            throw new UnauthorizedServerException(
-                String.format("Access to WFS server '%s' is not authorized. Only approved servers are allowed.", wfsUrl)
-            );
-        }
-
         try {
             List<DownloadableField> fields = getFilterFieldsFromWfs(wfsUrl, typeName);
 
@@ -65,13 +61,18 @@ public class DownloadableFieldsService {
 
 
 
-
-
     /**
      * Get filter fields from WFS DescribeFeatureType
      */
     private List<DownloadableField> getFilterFieldsFromWfs(String wfsUrl, String typeName) {
         try {
+            // SSRF protection: validate URL before making HTTP request
+            if (!wfsServerConfig.isAllowed(wfsUrl)) {
+                throw new UnauthorizedServerException(
+                    String.format("Access to WFS server '%s' is not authorized. Only approved servers are allowed.", wfsUrl)
+                );
+            }
+
             URI uri = UriComponentsBuilder.fromUriString(wfsUrl)
                     .queryParam("service", "WFS")
                     .queryParam("version", "1.0.0")
@@ -80,8 +81,7 @@ public class DownloadableFieldsService {
                     .build()
                     .toUri();
 
-            log.debug("WFS DescribeFeatureType request: {}", uri);
-
+            // SSRF Protection: Only make request to pre-approved WFS servers
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -92,7 +92,6 @@ public class DownloadableFieldsService {
                     String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
                 );
             }
-
         } catch (Exception e) {
             log.error("Error calling WFS DescribeFeatureType for typeName: {}", typeName, e);
             throw new DownloadableFieldsNotFoundException(
@@ -102,36 +101,24 @@ public class DownloadableFieldsService {
     }
 
 
-
     /**
      * Convert WFS response to downloadable fields (geometry and date/time fields)
      */
     private List<DownloadableField> convertWfsResponseToDownloadableFields(WfsDescribeFeatureTypeResponse wfsResponse) {
-        List<DownloadableField> fields = new ArrayList<>();
-
-        if (wfsResponse.getComplexTypes() != null) {
-            for (WfsDescribeFeatureTypeResponse.ComplexType complexType : wfsResponse.getComplexTypes()) {
-                if (complexType.getComplexContent() != null &&
-                    complexType.getComplexContent().getExtension() != null &&
-                    complexType.getComplexContent().getExtension().getSequence() != null) {
-
-                    List<WfsDescribeFeatureTypeResponse.Element> elements = complexType.getComplexContent().getExtension().getSequence().getElements();
-
-                    if (elements != null) {
-                        for (WfsDescribeFeatureTypeResponse.Element element : elements) {
-                            if (element.getName() != null && element.getType() != null) {
-                                DownloadableField field = createDownloadableField(element);
-                                if (field != null) {
-                                    fields.add(field);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-
-        return fields;
+        return wfsResponse.getComplexTypes() != null ?
+            wfsResponse.getComplexTypes().stream()
+                .filter(complexType -> complexType.getComplexContent() != null)
+                .filter(complexType -> complexType.getComplexContent().getExtension() != null)
+                .filter(complexType -> complexType.getComplexContent().getExtension().getSequence() != null)
+                .flatMap(complexType -> {
+                    List<WfsDescribeFeatureTypeResponse.Element> elements =
+                        complexType.getComplexContent().getExtension().getSequence().getElements();
+                    return elements != null ? elements.stream() : Stream.empty();
+                })
+                .filter(element -> element.getName() != null && element.getType() != null)
+                .map(this::createDownloadableField)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()) : new ArrayList<>();
     }
 
     /**
