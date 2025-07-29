@@ -120,37 +120,9 @@ public class DownloadableFieldsService {
                     if (elements != null) {
                         for (WfsDescribeFeatureTypeResponse.Element element : elements) {
                             if (element.getName() != null && element.getType() != null) {
-
-                                // Add geometry fields
-                                if ("gml:GeometryPropertyType".equals(element.getType())) {
-                                    DownloadableField geomField = new DownloadableField();
-                                    geomField.setLabel(element.getName());
-                                    geomField.setType("geometrypropertytype");
-                                    geomField.setName(element.getName());
-                                    fields.add(geomField);
-                                }
-
-                                // Add date/time fields
-                                else if ("xsd:dateTime".equals(element.getType())) {
-                                    DownloadableField timeField = new DownloadableField();
-                                    timeField.setLabel(element.getName());
-                                    timeField.setType("dateTime");
-                                    timeField.setName(element.getName());
-                                    fields.add(timeField);
-                                }
-                                else if ("xsd:date".equals(element.getType())) {
-                                    DownloadableField dateField = new DownloadableField();
-                                    dateField.setLabel(element.getName());
-                                    dateField.setType("date");
-                                    dateField.setName(element.getName());
-                                    fields.add(dateField);
-                                }
-                                else if ("xsd:time".equals(element.getType())) {
-                                    DownloadableField timeField = new DownloadableField();
-                                    timeField.setLabel(element.getName());
-                                    timeField.setType("time");
-                                    timeField.setName(element.getName());
-                                    fields.add(timeField);
+                                DownloadableField field = createDownloadableField(element);
+                                if (field != null) {
+                                    fields.add(field);
                                 }
                             }
                         }
@@ -160,5 +132,36 @@ public class DownloadableFieldsService {
         }
 
         return fields;
+    }
+
+    /**
+     * Create a downloadable field based on the element type
+     */
+    private DownloadableField createDownloadableField(WfsDescribeFeatureTypeResponse.Element element) {
+        String elementType = element.getType();
+        if (elementType == null) {
+            return null;
+        }
+
+        DownloadableField field = new DownloadableField();
+        field.setLabel(element.getName());
+        field.setName(element.getName());
+
+        switch (elementType) {
+            case "gml:GeometryPropertyType":
+                field.setType("geometrypropertytype");
+                return field;
+            case "xsd:dateTime":
+                field.setType("dateTime");
+                return field;
+            case "xsd:date":
+                field.setType("date");
+                return field;
+            case "xsd:time":
+                field.setType("time");
+                return field;
+            default:
+                return null; // Ignore other types
+        }
     }
 }

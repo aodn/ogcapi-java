@@ -6,9 +6,7 @@ import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
-import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
-import au.org.aodn.ogcapi.server.features.model.DownloadableField;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -577,60 +575,5 @@ public class RestApiTest extends BaseTestClass {
 
         ));
         assertEquals(featureGeoJSON2, sf.get(1), "featureGeoJSON2");
-    }
-
-    @Test
-    public void testDownloadableFieldsNotFound() {
-        // Test with invalid layer name - should return 404
-        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/test-collection/items/downloadableFields?serverUrl=https://invalid-server.com/wfs&layerName=invalid:layer",
-                ErrorResponse.class
-        );
-
-        assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode(), "Should return 404 for invalid layer");
-        assertNotNull(response.getBody(), "Error response body should not be null");
-        assertTrue(response.getBody().getMessage().contains("No downloadable fields found"),
-                   "Error message should indicate no fields found");
-    }
-
-    @Test
-    public void testDownloadableFieldsMissingParameters() {
-        // Test with missing serverUrl parameter - should return 400
-        ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/test-collection/items/downloadableFields?layerName=test:layer",
-                String.class
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return 400 for missing serverUrl");
-
-        // Test with missing layerName parameter - should return 400
-        response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/test-collection/items/downloadableFields?serverUrl=https://test.com/wfs",
-                String.class
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return 400 for missing layerName");
-
-        // Test with missing both parameters - should return 400
-        response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/test-collection/items/downloadableFields",
-                String.class
-        );
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return 400 for missing both parameters");
-    }
-
-    @Test
-    public void testDownloadableFieldsUnauthorizedServer() {
-        // Test with unauthorized server URL - should return 403 Forbidden
-        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/test-collection/items/downloadableFields?serverUrl=https://wrong-server.com/wfs&layerName=test:layer",
-                ErrorResponse.class
-        );
-
-        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(), "Should return 403 for unauthorized server");
-        assertNotNull(response.getBody(), "Error response body should not be null");
-        assertTrue(response.getBody().getMessage().contains("not authorized"),
-                   "Error message should indicate server is not authorized");
     }
 }

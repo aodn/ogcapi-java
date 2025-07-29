@@ -14,10 +14,6 @@ public class WfsServerConfig {
         "https://geoserver.apps.aims.gov.au/aims/wfs"
     );
 
-    public List<String> getUrls() {
-        return urls;
-    }
-
     public boolean isAllowed(String serverUrl) {
         if (serverUrl == null) {
             return false;
