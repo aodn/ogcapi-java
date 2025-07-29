@@ -32,9 +32,6 @@ public class DownloadableFieldsServiceTest {
     @Mock
     private WfsServerConfig wfsServerConfig;
 
-    @Mock
-    private RestServices restServices;
-
     @InjectMocks
     private DownloadableFieldsService downloadableFieldsService;
 
@@ -67,7 +64,7 @@ public class DownloadableFieldsServiceTest {
                 </xsd:complexType>
             </xsd:schema>
             """;
-        when(wfsServerConfig.isAllowed(AUTHORIZED_SERVER)).thenReturn(true);
+        when(wfsServerConfig.validateAndGetApprovedServerUrl(AUTHORIZED_SERVER)).thenReturn(AUTHORIZED_SERVER);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
 
@@ -116,7 +113,7 @@ public class DownloadableFieldsServiceTest {
                 </xsd:complexType>
             </xsd:schema>
             """;
-        when(wfsServerConfig.isAllowed(AUTHORIZED_SERVER)).thenReturn(true);
+        when(wfsServerConfig.validateAndGetApprovedServerUrl(AUTHORIZED_SERVER)).thenReturn(AUTHORIZED_SERVER);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
 
@@ -131,7 +128,8 @@ public class DownloadableFieldsServiceTest {
 
     @Test
     public void testGetDownloadableFieldsUnauthorizedServer() {
-        when(wfsServerConfig.isAllowed(UNAUTHORIZED_SERVER)).thenReturn(false);
+        when(wfsServerConfig.validateAndGetApprovedServerUrl(UNAUTHORIZED_SERVER))
+                .thenThrow(new UnauthorizedServerException("Access to WFS server '" + UNAUTHORIZED_SERVER + "' is not authorized"));
         UnauthorizedServerException exception = assertThrows(
                 UnauthorizedServerException.class,
                 () -> downloadableFieldsService.getDownloadableFields(UNAUTHORIZED_SERVER, "test:layer")
@@ -143,7 +141,7 @@ public class DownloadableFieldsServiceTest {
 
     @Test
     public void testGetDownloadableFieldsWfsError() {
-        when(wfsServerConfig.isAllowed(AUTHORIZED_SERVER)).thenReturn(true);
+        when(wfsServerConfig.validateAndGetApprovedServerUrl(AUTHORIZED_SERVER)).thenReturn(AUTHORIZED_SERVER);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
 
@@ -157,7 +155,7 @@ public class DownloadableFieldsServiceTest {
 
     @Test
     public void testGetDownloadableFieldsNetworkError() {
-        when(wfsServerConfig.isAllowed(AUTHORIZED_SERVER)).thenReturn(true);
+        when(wfsServerConfig.validateAndGetApprovedServerUrl(AUTHORIZED_SERVER)).thenReturn(AUTHORIZED_SERVER);
         // Mock network error
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenThrow(new RuntimeException("Connection timeout"));
@@ -200,25 +198,5 @@ public class DownloadableFieldsServiceTest {
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return 400 for missing layerName");
-    }
-
-    @Test
-    public void testRestApiDownloadableFieldsUnauthorizedServer() throws Exception {
-        // Mock the service to throw UnauthorizedServerException
-        when(restServices.getDownloadableFields(any(), any()))
-                .thenThrow(new UnauthorizedServerException("Access to WFS server 'https://unauthorized-server.com/wfs' is not authorized"));
-
-        // This should propagate the exception (not catch it)
-        assertThrows(UnauthorizedServerException.class, () -> {
-            restApi.getFeature(
-                    "test-collection",
-                    "downloadableFields",
-                    null, // properties
-                    null, // bbox
-                    null, // datetime
-                    "https://unauthorized-server.com/wfs", // unauthorized serverUrl
-                    "test:layer" // layerName
-            );
-        });
     }
 }

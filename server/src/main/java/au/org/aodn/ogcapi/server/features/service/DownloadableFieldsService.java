@@ -51,6 +51,8 @@ public class DownloadableFieldsService {
             }
 
             return fields;
+        } catch (UnauthorizedServerException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl, e);
             throw new DownloadableFieldsNotFoundException(
@@ -61,19 +63,16 @@ public class DownloadableFieldsService {
 
 
 
-    /**
+        /**
      * Get filter fields from WFS DescribeFeatureType
      */
     private List<DownloadableField> getFilterFieldsFromWfs(String wfsUrl, String typeName) {
-        try {
-            // SSRF protection: validate URL before making HTTP request
-            if (!wfsServerConfig.isAllowed(wfsUrl)) {
-                throw new UnauthorizedServerException(
-                    String.format("Access to WFS server '%s' is not authorized. Only approved servers are allowed.", wfsUrl)
-                );
-            }
+        // SSRF protection: Only use pre-approved server URLs - no user input in URL construction
+        String validatedServerUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsUrl);
 
-            URI uri = UriComponentsBuilder.fromUriString(wfsUrl)
+        try {
+            // Build URI using only validated/approved server URL
+            URI uri = UriComponentsBuilder.fromUriString(validatedServerUrl)
                     .queryParam("service", "WFS")
                     .queryParam("version", "1.0.0")
                     .queryParam("request", "DescribeFeatureType")
@@ -81,7 +80,7 @@ public class DownloadableFieldsService {
                     .build()
                     .toUri();
 
-            // SSRF Protection: Only make request to pre-approved WFS servers
+            // Safe HTTP request - URL is from approved whitelist only
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -92,6 +91,9 @@ public class DownloadableFieldsService {
                     String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
                 );
             }
+
+        } catch (UnauthorizedServerException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Error calling WFS DescribeFeatureType for typeName: {}", typeName, e);
             throw new DownloadableFieldsNotFoundException(
