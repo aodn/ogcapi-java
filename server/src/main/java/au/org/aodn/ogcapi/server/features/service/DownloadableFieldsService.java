@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.features.service;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
+import au.org.aodn.ogcapi.server.features.config.WfsServerConfig;
 import au.org.aodn.ogcapi.server.features.model.*;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,9 @@ public class DownloadableFieldsService {
     @Autowired
     private RestTemplate restTemplate;
 
+    @Autowired
+    private WfsServerConfig wfsServerConfig;
+
     private final XmlMapper xmlMapper = new XmlMapper();
 
     /**
@@ -30,8 +35,15 @@ public class DownloadableFieldsService {
      * @param typeName The WFS type name
      * @return List of downloadable fields
      */
-    public List<DownloadableField> getDownloadableFields(String wfsUrl, String typeName) {
+        public List<DownloadableField> getDownloadableFields(String wfsUrl, String typeName) {
         log.info("Getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl);
+
+        // Validate WFS server URL against whitelist
+        if (!wfsServerConfig.isAllowed(wfsUrl)) {
+            throw new UnauthorizedServerException(
+                String.format("Access to WFS server '%s' is not authorized. Only approved servers are allowed.", wfsUrl)
+            );
+        }
 
         try {
             List<DownloadableField> fields = getFilterFieldsFromWfs(wfsUrl, typeName);

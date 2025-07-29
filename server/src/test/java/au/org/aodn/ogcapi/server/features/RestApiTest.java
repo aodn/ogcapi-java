@@ -619,4 +619,18 @@ public class RestApiTest extends BaseTestClass {
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return 400 for missing both parameters");
     }
+
+    @Test
+    public void testDownloadableFieldsUnauthorizedServer() {
+        // Test with unauthorized server URL - should return 403 Forbidden
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/test-collection/items/downloadableFields?serverUrl=https://wrong-server.com/wfs&layerName=test:layer",
+                ErrorResponse.class
+        );
+
+        assertEquals(HttpStatus.FORBIDDEN, response.getStatusCode(), "Should return 403 for unauthorized server");
+        assertNotNull(response.getBody(), "Error response body should not be null");
+        assertTrue(response.getBody().getMessage().contains("not authorized"),
+                   "Error message should indicate server is not authorized");
+    }
 }
