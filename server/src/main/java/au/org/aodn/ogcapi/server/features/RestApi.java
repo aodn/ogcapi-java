@@ -88,37 +88,36 @@ public class RestApi implements CollectionsApi {
             @Valid @RequestParam(value = "serverUrl", required = false) String serverUrl,
             @Parameter(in = ParameterIn.QUERY, description = "WFS type name (required when featureId is 'downloadableFields')" ,schema=@Schema())
             @Valid @RequestParam(value = "layerName", required = false) String layerName) {
+        FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
 
-        String filter = null;
-        if (datetime != null) {
-            filter = OGCApiService.processDatetimeParameter(CQLFields.temporal.name(), datetime, filter);
-        }
+        switch (fid) {
+            case downloadableFields:
+                if (serverUrl == null || layerName == null) {
+                    return ResponseEntity.badRequest().build();
+                }
+                return featuresService.getDownloadableFields(serverUrl, layerName);
+            case summary:
+                String filter = null;
+                if (datetime != null) {
+                    filter = OGCApiService.processDatetimeParameter(CQLFields.temporal.name(), datetime, filter);
+                }
 
-        if (bbox != null) {
-            filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), bbox, filter);
-        }
+                if (bbox != null) {
+                    filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), bbox, filter);
+                }
 
-        // Handle special case for downloadableFields
-        if ("downloadableFields".equals(featureId)) {
-            if (serverUrl == null || layerName == null) {
-                return ResponseEntity.badRequest().build();
-            }
-
-            return featuresService.getDownloadableFields(serverUrl, layerName);
-        }
-
-        try {
-            FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
-
-            return featuresService.getFeature(
-                    collectionId,
-                    fid,
-                    properties,
-                    filter != null ? "filter=" + filter : null
-            );
-        }
-        catch(java.lang.Exception e) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+                try {
+                    return featuresService.getFeature(
+                            collectionId,
+                            fid,
+                            properties,
+                            filter != null ? "filter=" + filter : null
+                    );
+                } catch (java.lang.Exception e) {
+                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+                }
+            default:
+                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
     }
 

@@ -2,9 +2,9 @@ package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
-import au.org.aodn.ogcapi.server.features.config.WfsServerConfig;
-import au.org.aodn.ogcapi.server.features.model.DownloadableField;
-import au.org.aodn.ogcapi.server.features.service.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
+import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -68,13 +68,13 @@ public class DownloadableFieldsServiceTest {
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
 
-        List<DownloadableField> result = downloadableFieldsService.getDownloadableFields(AUTHORIZED_SERVER, "test:layer");
+        List<DownloadableFieldModel> result = downloadableFieldsService.getDownloadableFields(AUTHORIZED_SERVER, "test:layer");
 
         assertNotNull(result);
         assertEquals(2, result.size());
 
         // Check geometry field
-        DownloadableField geomField = result.stream()
+        DownloadableFieldModel geomField = result.stream()
                 .filter(f -> "geom".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -83,7 +83,7 @@ public class DownloadableFieldsServiceTest {
         assertEquals("geometrypropertytype", geomField.getType());
 
         // Check datetime field
-        DownloadableField timeField = result.stream()
+        DownloadableFieldModel timeField = result.stream()
                 .filter(f -> "timestamp".equals(f.getName()))
                 .findFirst()
                 .orElse(null);

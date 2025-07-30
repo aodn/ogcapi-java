@@ -5,8 +5,8 @@ import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import au.org.aodn.ogcapi.server.features.model.DownloadableField;
-import au.org.aodn.ogcapi.server.features.service.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,8 +52,8 @@ public class RestServices extends OGCApiService {
      * @param typeName The WFS type name
      * @return List of downloadable fields
      */
-    public ResponseEntity<List<DownloadableField>> getDownloadableFields(String wfsUrl, String typeName) {
-        List<DownloadableField> fields = downloadableFieldsService.getDownloadableFields(wfsUrl, typeName);
+    public ResponseEntity<List<DownloadableFieldModel>> getDownloadableFields(String wfsUrl, String typeName) {
+        List<DownloadableFieldModel> fields = downloadableFieldsService.getDownloadableFields(wfsUrl, typeName);
         return ResponseEntity.ok(fields);
     }
 }

@@ -1,10 +1,10 @@
-package au.org.aodn.ogcapi.server.features.model;
+package au.org.aodn.ogcapi.server.core.model.wfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
-public class DownloadableField {
+public class DownloadableFieldModel {
     @JsonProperty("label")
     private String label;
 

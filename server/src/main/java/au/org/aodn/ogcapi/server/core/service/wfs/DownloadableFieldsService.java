@@ -1,12 +1,14 @@
-package au.org.aodn.ogcapi.server.features.service;
+package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
-import au.org.aodn.ogcapi.server.features.config.WfsServerConfig;
-import au.org.aodn.ogcapi.server.features.model.*;
+import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
+import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.wfs.WfsDescribeFeatureTypeResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -32,17 +34,18 @@ public class DownloadableFieldsService {
 
     private final XmlMapper xmlMapper = new XmlMapper();
 
-    /**
+        /**
      * Get downloadable fields for a layer
      * @param wfsUrl The WFS server URL
      * @param typeName The WFS type name
      * @return List of downloadable fields
      */
-        public List<DownloadableField> getDownloadableFields(String wfsUrl, String typeName) {
+    @Cacheable(value = "downloadableFields", key = "#wfsUrl + ':' + #typeName")
+    public List<DownloadableFieldModel> getDownloadableFields(String wfsUrl, String typeName) {
         log.info("Getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl);
 
         try {
-            List<DownloadableField> fields = getFilterFieldsFromWfs(wfsUrl, typeName);
+            List<DownloadableFieldModel> fields = getFilterFieldsFromWfs(wfsUrl, typeName);
 
             if (fields.isEmpty()) {
                 throw new DownloadableFieldsNotFoundException(
@@ -62,16 +65,14 @@ public class DownloadableFieldsService {
     }
 
 
-
-        /**
+    /**
      * Get filter fields from WFS DescribeFeatureType
      */
-    private List<DownloadableField> getFilterFieldsFromWfs(String wfsUrl, String typeName) {
-        // SSRF protection: Only use pre-approved server URLs - no user input in URL construction
+    private List<DownloadableFieldModel> getFilterFieldsFromWfs(String wfsUrl, String typeName) {
+        // SSRF protection: Only use pre-approved server URLs
         String validatedServerUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsUrl);
 
         try {
-            // Build URI using only validated/approved server URL
             URI uri = UriComponentsBuilder.fromUriString(validatedServerUrl)
                     .queryParam("service", "WFS")
                     .queryParam("version", "1.0.0")
@@ -80,7 +81,6 @@ public class DownloadableFieldsService {
                     .build()
                     .toUri();
 
-            // Safe HTTP request - URL is from approved whitelist only
             ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, null, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
@@ -106,7 +106,7 @@ public class DownloadableFieldsService {
     /**
      * Convert WFS response to downloadable fields (geometry and date/time fields)
      */
-    private List<DownloadableField> convertWfsResponseToDownloadableFields(WfsDescribeFeatureTypeResponse wfsResponse) {
+    private List<DownloadableFieldModel> convertWfsResponseToDownloadableFields(WfsDescribeFeatureTypeResponse wfsResponse) {
         return wfsResponse.getComplexTypes() != null ?
             wfsResponse.getComplexTypes().stream()
                 .filter(complexType -> complexType.getComplexContent() != null)
@@ -126,31 +126,34 @@ public class DownloadableFieldsService {
     /**
      * Create a downloadable field based on the element type
      */
-    private DownloadableField createDownloadableField(WfsDescribeFeatureTypeResponse.Element element) {
+    private DownloadableFieldModel createDownloadableField(WfsDescribeFeatureTypeResponse.Element element) {
         String elementType = element.getType();
         if (elementType == null) {
             return null;
         }
 
-        DownloadableField field = new DownloadableField();
+        DownloadableFieldModel field = new DownloadableFieldModel();
         field.setLabel(element.getName());
         field.setName(element.getName());
 
-        switch (elementType) {
-            case "gml:GeometryPropertyType":
+        return switch (elementType) {
+            case "gml:GeometryPropertyType" -> {
                 field.setType("geometrypropertytype");
-                return field;
-            case "xsd:dateTime":
+                yield field;
+            }
+            case "xsd:dateTime" -> {
                 field.setType("dateTime");
-                return field;
-            case "xsd:date":
+                yield field;
+            }
+            case "xsd:date" -> {
                 field.setType("date");
-                return field;
-            case "xsd:time":
+                yield field;
+            }
+            case "xsd:time" -> {
                 field.setType("time");
-                return field;
-            default:
-                return null; // Ignore other types
-        }
+                yield field;
+            }
+            default -> null; // Ignore other types
+        };
     }
 }
