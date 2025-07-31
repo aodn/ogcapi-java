@@ -4,7 +4,7 @@ import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundExcept
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
 import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
-import au.org.aodn.ogcapi.server.core.model.wfs.WfsDescribeFeatureTypeResponse;
+import au.org.aodn.ogcapi.server.core.model.dto.wfs.WfsDescribeFeatureTypeResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.model.wfs;
+package au.org.aodn.ogcapi.server.core.model.dto.wfs;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;

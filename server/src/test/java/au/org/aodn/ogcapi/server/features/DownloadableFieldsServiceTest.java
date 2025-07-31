@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
 import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,29 +42,37 @@ public class DownloadableFieldsServiceTest {
     private static final String AUTHORIZED_SERVER = "https://geoserver-123.aodn.org.au/geoserver/wfs";
     private static final String UNAUTHORIZED_SERVER = "https://unauthorized-server.com/wfs";
 
+    // Helper method to create FeatureRequest for testing
+    private FeatureRequest createDownloadableFieldsRequest(String serverUrl, String layerName) {
+        return FeatureRequest.builder()
+                .serverUrl(serverUrl)
+                .layerName(layerName)
+                .build();
+    }
+
 
     @Test
     public void testGetDownloadableFieldsSuccess() {
         // Mock successful WFS response with geometry and datetime fields
         String mockWfsResponse = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                        xmlns:gml="http://www.opengis.net/gml/3.2"
-                        xmlns:test="test.namespace"
-                        targetNamespace="test.namespace">
-                <xsd:complexType name="testLayerType">
-                    <xsd:complexContent>
-                        <xsd:extension base="gml:AbstractFeatureType">
-                            <xsd:sequence>
-                                <xsd:element name="geom" type="gml:GeometryPropertyType"/>
-                                <xsd:element name="timestamp" type="xsd:dateTime"/>
-                                <xsd:element name="name" type="xsd:string"/>
-                            </xsd:sequence>
-                        </xsd:extension>
-                    </xsd:complexContent>
-                </xsd:complexType>
-            </xsd:schema>
-            """;
+                <?xml version="1.0" encoding="UTF-8"?>
+                <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                            xmlns:gml="http://www.opengis.net/gml/3.2"
+                            xmlns:test="test.namespace"
+                            targetNamespace="test.namespace">
+                    <xsd:complexType name="testLayerType">
+                        <xsd:complexContent>
+                            <xsd:extension base="gml:AbstractFeatureType">
+                                <xsd:sequence>
+                                    <xsd:element name="geom" type="gml:GeometryPropertyType"/>
+                                    <xsd:element name="timestamp" type="xsd:dateTime"/>
+                                    <xsd:element name="name" type="xsd:string"/>
+                                </xsd:sequence>
+                            </xsd:extension>
+                        </xsd:complexContent>
+                    </xsd:complexType>
+                </xsd:schema>
+                """;
         when(wfsServerConfig.validateAndGetApprovedServerUrl(AUTHORIZED_SERVER)).thenReturn(AUTHORIZED_SERVER);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
@@ -96,23 +105,23 @@ public class DownloadableFieldsServiceTest {
     public void testGetDownloadableFieldsEmptyResponse() {
         // Mock WFS response with no geometry or datetime fields
         String mockWfsResponse = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
-                        xmlns:gml="http://www.opengis.net/gml/3.2"
-                        xmlns:test="test.namespace"
-                        targetNamespace="test.namespace">
-                <xsd:complexType name="testLayerType">
-                    <xsd:complexContent>
-                        <xsd:extension base="gml:AbstractFeatureType">
-                            <xsd:sequence>
-                                <xsd:element name="name" type="xsd:string"/>
-                                <xsd:element name="id" type="xsd:int"/>
-                            </xsd:sequence>
-                        </xsd:extension>
-                    </xsd:complexContent>
-                </xsd:complexType>
-            </xsd:schema>
-            """;
+                <?xml version="1.0" encoding="UTF-8"?>
+                <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                            xmlns:gml="http://www.opengis.net/gml/3.2"
+                            xmlns:test="test.namespace"
+                            targetNamespace="test.namespace">
+                    <xsd:complexType name="testLayerType">
+                        <xsd:complexContent>
+                            <xsd:extension base="gml:AbstractFeatureType">
+                                <xsd:sequence>
+                                    <xsd:element name="name" type="xsd:string"/>
+                                    <xsd:element name="id" type="xsd:int"/>
+                                </xsd:sequence>
+                            </xsd:extension>
+                        </xsd:complexContent>
+                    </xsd:complexType>
+                </xsd:schema>
+                """;
         when(wfsServerConfig.validateAndGetApprovedServerUrl(AUTHORIZED_SERVER)).thenReturn(AUTHORIZED_SERVER);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
@@ -170,15 +179,12 @@ public class DownloadableFieldsServiceTest {
 
     @Test
     public void testRestApiDownloadableFieldsMissingServerUrl() {
-        // Test with missing serverUrl parameter - should return 400
+        FeatureRequest request = createDownloadableFieldsRequest(null, "test:layer");
+
         ResponseEntity<?> response = restApi.getFeature(
                 "test-collection",
                 "downloadableFields",
-                null, // properties
-                null, // bbox
-                null, // datetime
-                null, // serverUrl - missing
-                "test:layer" // layerName
+                request
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return 400 for missing serverUrl");
@@ -186,15 +192,12 @@ public class DownloadableFieldsServiceTest {
 
     @Test
     public void testRestApiDownloadableFieldsMissingLayerName() {
-        // Test with missing layerName parameter - should return 400
+        FeatureRequest request = createDownloadableFieldsRequest("https://test.com/wfs", null);
+
         ResponseEntity<?> response = restApi.getFeature(
                 "test-collection",
                 "downloadableFields",
-                null, // properties
-                null, // bbox
-                null, // datetime
-                "https://test.com/wfs", // serverUrl
-                null // layerName - missing
+                request
         );
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "Should return 400 for missing layerName");
