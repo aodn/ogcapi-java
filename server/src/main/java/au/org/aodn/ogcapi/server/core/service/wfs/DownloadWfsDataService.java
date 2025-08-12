@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,6 +16,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.util.List;
 import java.util.Optional;
@@ -87,34 +90,43 @@ public class DownloadWfsDataService {
 
             log.info("Downloading WFS data from: {}", wfsRequestUrl);
 
-            // Stream data directly from GeoServer to client
-            StreamingResponseBody stream = outputStream -> {
+            // Create streaming response body
+            StreamingResponseBody streamingResponseBody = outputStream -> {
                 try {
-                    // Use RestTemplate with proper redirect handling
-                    ResponseEntity<byte[]> response = restTemplate.getForEntity(wfsRequestUrl, byte[].class);
-
-                    if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                        outputStream.write(response.getBody());
-                    } else {
-                        log.error("Failed to get WFS data. Status: {}", response.getStatusCode());
-                        String errorMsg = "Error downloading WFS data: " + response.getStatusCode();
-                        outputStream.write(errorMsg.getBytes());
-                    }
+                    restTemplate.execute(
+                            wfsRequestUrl,
+                            HttpMethod.GET,
+                            null,
+                            clientHttpResponse -> {
+                                try (InputStream inputStream = clientHttpResponse.getBody()) {
+                                    // Stream data directly from WFS server to client
+                                    byte[] buffer = new byte[8192]; // 8KB buffer
+                                    int bytesRead;
+                                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                        outputStream.write(buffer, 0, bytesRead);
+                                        outputStream.flush();
+                                    }
+                                    log.info("Successfully streamed WFS data for UUID: {}", uuid);
+                                    return null;
+                                } catch (IOException e) {
+                                    log.error("Error streaming WFS data for UUID: {}", uuid, e);
+                                    throw new RuntimeException("Error streaming WFS data", e);
+                                }
+                            }
+                    );
                 } catch (Exception e) {
-                    log.error("Error streaming WFS data", e);
-                    String errorMsg = "Error downloading WFS data: " + e.getMessage();
-                    try {
-                        outputStream.write(errorMsg.getBytes());
-                    } catch (Exception ex) {
-                        log.error("Error writing error message", ex);
-                    }
+                    log.error("Error executing WFS request for UUID: {}", uuid, e);
+                    throw new RuntimeException("Error executing WFS request", e);
                 }
             };
 
+            // Return streaming response with proper headers
             return ResponseEntity.ok()
-                    .header("Content-Disposition", "attachment; filename=data.csv")
-                    .contentType(MediaType.parseMediaType("text/csv"))
-                    .body(stream);
+                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                    .header(HttpHeaders.CONTENT_DISPOSITION,
+                            "attachment; filename=\"" + layerName + "_" + uuid + ".csv\"")
+                    .header(HttpHeaders.CACHE_CONTROL, "no-cache")
+                    .body(streamingResponseBody);
 
         } catch (Exception e) {
             log.error("Error downloading WFS data for UUID {}", uuid, e);
@@ -155,8 +167,7 @@ public class DownloadWfsDataService {
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon,
-                                  List<DownloadableFieldModel> downloadableFields) {
+    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, List<DownloadableFieldModel> downloadableFields) {
         StringBuilder cqlFilter = new StringBuilder();
 
         // Find temporal field
@@ -180,7 +191,7 @@ public class DownloadWfsDataService {
 
         // Add spatial filter
         if (geometryField.isPresent() && multiPolygon != null) {
-            if (cqlFilter.length() > 0) {
+            if (!cqlFilter.isEmpty()) {
                 cqlFilter.append(" AND ");
             }
 

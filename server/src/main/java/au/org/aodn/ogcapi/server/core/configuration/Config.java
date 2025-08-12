@@ -8,13 +8,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.config.annotation.AsyncSupportConfigurer;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 @EnableCaching
 @EnableScheduling
-public class Config {
+public class Config implements WebMvcConfigurer {
 
     @Autowired
     ObjectMapper mapper;
@@ -32,6 +35,18 @@ public class Config {
 
     @Bean
     public RestTemplate createRestTemplate() {
-        return new RestTemplate();
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(200_000);  // 4 minutes connection timeout
+        factory.setReadTimeout(300_000);   // 5 minutes read timeout for large downloads
+
+        return new RestTemplate(factory);
+    }
+
+    /**
+     * Configure async support timeout for streaming downloads
+     */
+    @Override
+    public void configureAsyncSupport(AsyncSupportConfigurer configurer) {
+        configurer.setDefaultTimeout(400_000L); // 8 minutes for streaming downloads
     }
 }

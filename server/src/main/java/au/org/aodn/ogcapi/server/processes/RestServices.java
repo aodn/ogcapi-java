@@ -36,7 +36,7 @@ public class RestServices {
 
         String aodnInfoSender = "no.reply@aodn.org.au";
 
-        try(SesClient ses = SesClient.builder().build()) {
+        try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
             var content = Content.builder().data(generateStartedEmailContent(startDate, endDate)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
