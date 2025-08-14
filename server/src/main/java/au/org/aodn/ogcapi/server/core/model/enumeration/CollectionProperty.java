@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import com.fasterxml.jackson.annotation.JsonValue;
 import lombok.Getter;
 
 /**
@@ -19,12 +20,18 @@ public enum CollectionProperty {
     creation("creation"),
     revision("revision"),
     centroid("centroid"),
-    pace("pace")
+    pace("pace"),
+    aiDescription("ai:description")
     ;
 
     private final String value;
 
     CollectionProperty(String value) {
         this.value = value;
+    }
+
+    @JsonValue
+    public String getValue() {
+        return value;
     }
 }

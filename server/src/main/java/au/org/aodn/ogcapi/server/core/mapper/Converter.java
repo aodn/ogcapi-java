@@ -196,6 +196,10 @@ public interface Converter<F, T> {
             if (m.getSummaries().getRevision() != null) {
                 collection.getProperties().put(CollectionProperty.revision, m.getSummaries().getRevision());
             }
+
+            if (m.getSummaries().getAiDescription() != null) {
+                collection.getProperties().put(CollectionProperty.aiDescription, m.getSummaries().getAiDescription());
+            }
         }
 
         return collection;

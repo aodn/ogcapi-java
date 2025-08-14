@@ -253,6 +253,9 @@
           },
           "statement": {
             "type": "text"
+          },
+          "ai:description": {
+            "type": "text"
           }
         }
       },
