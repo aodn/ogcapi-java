@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 import java.util.List;
 import java.util.Map;
 
@@ -23,16 +24,19 @@ public class SummariesModel {
     protected String revision;
 
     @JsonProperty("proj:geometry")
-    protected Map<?,?> geometry;
+    protected Map<?, ?> geometry;
 
     @JsonProperty("proj:geometry_noland")
-    protected Map<?,?> geometryNoLand;
+    protected Map<?, ?> geometryNoLand;
 
     @JsonProperty("temporal")
     protected List<Map<String, String>> temporal;
 
     @JsonProperty("update_frequency")
     protected String updateFrequency;
+
+    @JsonProperty("ai:description")
+    protected String aiDescription;
 
     protected String statement;
 }

@@ -97,6 +97,7 @@ public class StacToCollectionTest {
                 .build();
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
         var statement = "This is the statement of this record";
+        var aiDescription = "AI-generated description for testing";
 
         StacCollectionModel model = StacCollectionModel
                 .builder()
@@ -109,6 +110,7 @@ public class StacToCollectionTest {
                                 .creation("creation date")
                                 .revision("revision date")
                                 .statement(statement)
+                                .aiDescription(aiDescription)
                                 .build()
                 )
                 .license("Attribution 4.0")
@@ -133,6 +135,7 @@ public class StacToCollectionTest {
         Assertions.assertEquals("Attribution 4.0", collection.getProperties().get(CollectionProperty.license));
         Assertions.assertEquals("creation date", collection.getProperties().get(CollectionProperty.creation));
         Assertions.assertEquals("revision date", collection.getProperties().get(CollectionProperty.revision));
+        Assertions.assertEquals(aiDescription, collection.getProperties().get(CollectionProperty.aiDescription));
         Assertions.assertNotNull(collection.getLinks());
         Assertions.assertEquals(2, collection.getLinks().size());
     }
