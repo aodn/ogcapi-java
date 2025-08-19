@@ -46,7 +46,7 @@ public interface Converter<F, T> {
 
         self.rel("self");
         self.type(MediaType.APPLICATION_JSON_VALUE);
-        self.href(String.format("%s/collections/%s",hostname, id));
+        self.href(String.format("%s/collections/%s", hostname, id));
 
         return self;
     }
@@ -56,7 +56,7 @@ public interface Converter<F, T> {
 
         self.rel("self");
         self.type(MediaType.APPLICATION_JSON_VALUE);
-        self.href(String.format("%s/collections/%s/tiles/WebMercatorQuad",hostname, id));
+        self.href(String.format("%s/collections/%s/tiles/WebMercatorQuad", hostname, id));
 
         return self;
     }
@@ -65,12 +65,14 @@ public interface Converter<F, T> {
         au.org.aodn.ogcapi.tile.model.Link schema = new au.org.aodn.ogcapi.tile.model.Link();
         schema.rel("http://www.opengis.net/def/rel/ogc/1.0/tiling-scheme");
         schema.type(MediaType.APPLICATION_JSON_VALUE);
-        schema.href(String.format("%s/tileMatrixSets/WebMercatorQuad",hostname));
+        schema.href(String.format("%s/tileMatrixSets/WebMercatorQuad", hostname));
 
         return schema;
     }
+
     /**
      * Create a collection given stac model
+     *
      * @param m - Income object to be transformed
      * @return A mapped JSON which match the St
      */
@@ -84,16 +86,15 @@ public interface Converter<F, T> {
 
         Extent extent = new Extent();
 
-        if(m.getExtent() != null) {
+        if (m.getExtent() != null) {
             extent.setSpatial(new ExtentSpatial());
 
-            if(m.getExtent().getBbox() != null
+            if (m.getExtent().getBbox() != null
                     && !m.getExtent().getBbox().isEmpty()) {
                 // The first item is the overall bbox, this is STAC spec requirement and it ok with ogc api
                 extent.getSpatial().bbox(m.getExtent().getBbox());
                 collection.setExtent(extent);
-            }
-            else {
+            } else {
                 logger.warn("BBOX is missing for this UUID {}", m.getUuid());
             }
 
@@ -102,11 +103,11 @@ public interface Converter<F, T> {
             collection.setExtent(extent);
         }
 
-        if(m.getLinks() != null || m.getUuid() != null || m.getAssets() != null) {
+        if (m.getLinks() != null || m.getUuid() != null || m.getAssets() != null) {
             collection.setLinks(new ArrayList<>());
 
             // Convert object type.
-            if(m.getLinks() != null) {
+            if (m.getLinks() != null) {
                 collection.getLinks().addAll(
                         m.getLinks()
                                 .stream()
@@ -121,7 +122,7 @@ public interface Converter<F, T> {
                 );
             }
 
-            if(m.getAssets() != null) {
+            if (m.getAssets() != null) {
                 m.getAssets().values().forEach(i -> collection.getLinks().add(new Link()
                         .title(i.getTitle())
                         .href(host + "/api/v1/ogc" + i.getHref())
@@ -139,7 +140,7 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.themes, m.getThemes());
         }
 
-        if(m.getCitation() != null && !m.getCitation().isEmpty()) {
+        if (m.getCitation() != null && !m.getCitation().isEmpty()) {
             ConstructUtils.constructByJsonString(m.getCitation(), CitationModel.class).ifPresent(
                     citation -> collection.getProperties().put(CollectionProperty.citation, citation)
             );
@@ -149,7 +150,7 @@ public interface Converter<F, T> {
             collection.getProperties().put(CollectionProperty.license, m.getLicense());
         }
 
-        if(m.getSummaries() != null ) {
+        if (m.getSummaries() != null) {
             Map<?, ?> noLand = m.getSummaries().getGeometryNoLand();
             if (noLand != null) {
                 // Geometry from elastic search always store in EPSG4326
@@ -157,7 +158,7 @@ public interface Converter<F, T> {
                         .ifPresent(input -> {
                             // filter have values if user CQL contains BBox, hence our centroid point needs to be
                             // the noland geometry intersect with BBox and centroid point will be within the BBox
-                            Geometry g = filter != null ? (Geometry)filter.accept(visitor, input) : input;
+                            Geometry g = filter != null ? (Geometry) filter.accept(visitor, input) : input;
                             collection.getProperties().put(
                                     CollectionProperty.centroid,
                                     createCentroid(g)
@@ -195,6 +196,10 @@ public interface Converter<F, T> {
 
             if (m.getSummaries().getRevision() != null) {
                 collection.getProperties().put(CollectionProperty.revision, m.getSummaries().getRevision());
+            }
+
+            if (m.getSummaries().getDatasetGroup() != null) {
+                collection.getProperties().put(CollectionProperty.datasetGroup, m.getSummaries().getDatasetGroup());
             }
 
             if (m.getSummaries().getAiDescription() != null) {
