@@ -93,10 +93,11 @@ public class StacToCollectionTest {
                 .scheme("scheme")
                 .concepts(Collections.singletonList(
                         ConceptModel.builder().id("id").url("url").description("description").title("title").build()
-                        ))
+                ))
                 .build();
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
         var statement = "This is the statement of this record";
+        var datasetGroup = "group_test";
         var aiDescription = "AI-generated description for testing";
 
         StacCollectionModel model = StacCollectionModel
@@ -110,6 +111,7 @@ public class StacToCollectionTest {
                                 .creation("creation date")
                                 .revision("revision date")
                                 .statement(statement)
+                                .datasetGroup(datasetGroup)
                                 .aiDescription(aiDescription)
                                 .build()
                 )
@@ -135,6 +137,7 @@ public class StacToCollectionTest {
         Assertions.assertEquals("Attribution 4.0", collection.getProperties().get(CollectionProperty.license));
         Assertions.assertEquals("creation date", collection.getProperties().get(CollectionProperty.creation));
         Assertions.assertEquals("revision date", collection.getProperties().get(CollectionProperty.revision));
+        Assertions.assertEquals(datasetGroup, collection.getProperties().get(CollectionProperty.datasetGroup));
         Assertions.assertEquals(aiDescription, collection.getProperties().get(CollectionProperty.aiDescription));
         Assertions.assertNotNull(collection.getLinks());
         Assertions.assertEquals(2, collection.getLinks().size());
@@ -156,7 +159,7 @@ public class StacToCollectionTest {
         // Should not throw any exception
         impl.convert(
                 result,
-                CompilerUtil.parseFilter(Language.CQL, "score>=1.5 AND INTERSECTS(geometry,POLYGON ((104 -43, 163 -43, 163 -8, 104 -8, 104 -43)))",factory)
+                CompilerUtil.parseFilter(Language.CQL, "score>=1.5 AND INTERSECTS(geometry,POLYGON ((104 -43, 163 -43, 163 -8, 104 -8, 104 -43)))", factory)
         );
     }
 }

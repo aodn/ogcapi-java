@@ -22,6 +22,9 @@
       "bbox": {
         "type": "double"
       },
+      "dataset_group": {
+        "type": "text"
+      },
       "ai:description": {
         "type": "text"
       },

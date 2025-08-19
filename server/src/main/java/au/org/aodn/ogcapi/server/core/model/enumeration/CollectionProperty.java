@@ -21,8 +21,8 @@ public enum CollectionProperty {
     revision("revision"),
     centroid("centroid"),
     pace("pace"),
-    aiDescription("ai:description")
-    ;
+    datasetGroup("dataset_group"),
+    aiDescription("ai:description");
 
     private final String value;
 
