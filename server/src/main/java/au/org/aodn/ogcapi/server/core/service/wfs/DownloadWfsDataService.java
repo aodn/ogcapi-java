@@ -4,7 +4,9 @@ import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
+import au.org.aodn.ogcapi.server.core.service.Search;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -18,25 +20,27 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 @Service
 public class DownloadWfsDataService {
+    private final Search elasticSearch;
+    private final DownloadableFieldsService downloadableFieldsService;
+    private final WfsServerConfig wfsServerConfig;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private ElasticSearch elasticSearch;
-
-    @Autowired
-    private DownloadableFieldsService downloadableFieldsService;
-
-    @Autowired
-    private WfsServerConfig wfsServerConfig;
-
-    @Autowired
-    private RestTemplate restTemplate;
+    public DownloadWfsDataService(
+            Search elasticSearch,
+            DownloadableFieldsService downloadableFieldsService,
+            WfsServerConfig wfsServerConfig,
+            RestTemplate restTemplate) {
+        this.elasticSearch = elasticSearch;
+        this.downloadableFieldsService = downloadableFieldsService;
+        this.wfsServerConfig = wfsServerConfig;
+        this.restTemplate = restTemplate;
+    }
 
     /**
      * Download WFS data and stream directly to client
@@ -69,24 +73,27 @@ public class DownloadWfsDataService {
             }
 
             // Validate and get approved WFS URL from whitelist (same as DownloadableFieldsService)
+            // For now we don't fully trust the server URL in the collection links as it may be user-provided
+            // and "geoserver/ows" server may not be directly accessible so we map to an approved URL
             String approvedWfsUrl;
             try {
-                approvedWfsUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl);
-                log.info("Using approved WFS URL: {} (original: {})", approvedWfsUrl, wfsInfo.wfsUrl);
+                approvedWfsUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl());
+                log.info("Using approved WFS URL: {} (original: {})", approvedWfsUrl, wfsInfo.wfsUrl());
             } catch (Exception e) {
-                log.error("WFS URL not authorized: {}", wfsInfo.wfsUrl, e);
+                log.error("WFS URL not authorized: {}", wfsInfo.wfsUrl(), e);
                 return ResponseEntity.badRequest().build();
             }
 
             // Get downloadable fields to map field names
             List<DownloadableFieldModel> downloadableFields =
-                    downloadableFieldsService.getDownloadableFields(approvedWfsUrl, wfsInfo.layerName);
+                    downloadableFieldsService.getDownloadableFields(approvedWfsUrl, wfsInfo.layerName());
 
             // Build CQL filter
+            // TODO: Need to check and implement later
             String cqlFilter = buildCqlFilter(startDate, endDate, multiPolygon, downloadableFields);
 
             // Build WFS URL using approved URL
-            String wfsRequestUrl = buildWfsUrl(approvedWfsUrl, wfsInfo.layerName, cqlFilter);
+            String wfsRequestUrl = buildWfsUrl(approvedWfsUrl, wfsInfo.layerName(), cqlFilter);
 
             log.info("Downloading WFS data from: {}", wfsRequestUrl);
 
@@ -100,7 +107,7 @@ public class DownloadWfsDataService {
                             clientHttpResponse -> {
                                 try (InputStream inputStream = clientHttpResponse.getBody()) {
                                     // Stream data directly from WFS server to client
-                                    byte[] buffer = new byte[8192]; // 8KB buffer
+                                    byte[] buffer = new byte[200 * 1024]; // 200KB buffer
                                     int bytesRead;
                                     while ((bytesRead = inputStream.read(buffer)) != -1) {
                                         outputStream.write(buffer, 0, bytesRead);
@@ -215,10 +222,9 @@ public class DownloadWfsDataService {
      */
     private String convertToWkt(Object multiPolygon) {
         // Simplified conversion - assuming multiPolygon is a simple bbox for now
-        // In a real implementation, you'd parse the actual polygon structure
         // For example: POLYGON((110 -45,160 -45,160 -5,110 -5,110 -45))
 
-        // This is a placeholder - implement proper polygon conversion based on your data structure
+        // This is a placeholder - implement proper polygon conversion based on data structure
         if (multiPolygon instanceof String) {
             return (String) multiPolygon;
         }
@@ -242,18 +248,5 @@ public class DownloadWfsDataService {
         }
 
         return builder.build().toUriString();
-    }
-
-    /**
-     * Inner class to hold WFS information
-     */
-    private static class WfsInfo {
-        final String wfsUrl;
-        final String layerName;
-
-        WfsInfo(String wfsUrl, String layerName) {
-            this.wfsUrl = wfsUrl;
-            this.layerName = layerName;
-        }
     }
 }
