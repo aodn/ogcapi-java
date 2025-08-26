@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
+import au.org.aodn.ogcapi.server.core.service.DuckDB;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,6 +25,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Map;
+import java.util.HashMap;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 
 @RestController("FeaturesRestApi")
 @RequestMapping(value = "/api/v1/ogc")
@@ -117,6 +128,82 @@ public class RestApi implements CollectionsApi {
                             filter != null ? "filter=" + filter : null
                     );
                 } catch (java.lang.Exception e) {
+                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+                }
+            case realtime:
+                String from = request.getDatetime();
+                String to = null;
+                if (from != null) {
+                    java.time.LocalDate localDate = java.time.LocalDate.parse(from);
+                    to = localDate.plusDays(1).toString();
+                }
+                try {
+                    long startTime = System.currentTimeMillis();
+
+                    // Database connection timing
+                    long connectionStart = System.currentTimeMillis();
+                    // Connection conn = DriverManager.getConnection("jdbc:duckdb:");
+                    long connectionTime = System.currentTimeMillis() - connectionStart;
+                    System.out.println("Database connection time: " + connectionTime + "ms");
+
+                    // Query execution timing
+                    long queryStart = System.currentTimeMillis();
+                    ResultSet result = DuckDB.getConnection().createStatement().executeQuery("SELECT \n" +
+                            "        site_name,\n" +
+                            "        first(LATITUDE) AS LATITUDE,\n" +
+                            "        first(LONGITUDE) AS LONGITUDE\n" +
+                            "        FROM 'https://gtrrz-victor-testing-bucket.s3.ap-southeast-2.amazonaws.com/db_wave_buoy_realtime_nonqc.parquet'\n"
+                            +
+                            "        WHERE TIME >= '" + from + "' AND TIME < '" + to + "' \n" +
+                            "        GROUP BY site_name");
+                    long queryTime = System.currentTimeMillis() - queryStart;
+                    System.out.println("Query execution time: " + queryTime + "ms");
+
+                    // Result processing timing
+                    long processingStart = System.currentTimeMillis();
+                    List<FeatureGeoJSON> features = new ArrayList<>();
+                    int featureCount = 0;
+                    while (result.next()) {
+                        featureCount++;
+                        String siteName = result.getString("site_name");
+                        BigDecimal latitude = result.getBigDecimal("LATITUDE");
+                        BigDecimal longitude = result.getBigDecimal("LONGITUDE");
+
+                        // Create geometry
+                        PointGeoJSON geometry = new PointGeoJSON();
+                        geometry.setType(PointGeoJSON.TypeEnum.POINT);
+                        geometry.setCoordinates(Arrays.asList(longitude, latitude));
+
+                        // Create properties
+                        Map<String, Object> properties = new HashMap<>();
+                        properties.put("buoy", siteName);
+
+                        // Create feature
+                        FeatureGeoJSON feature = new FeatureGeoJSON();
+                        feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
+                        feature.setGeometry(geometry);
+                        feature.setProperties(properties);
+
+                        features.add(feature);
+                    }
+                    long processingTime = System.currentTimeMillis() - processingStart;
+                    System.out.println("Result processing time: " + processingTime + "ms (processed " + featureCount
+                            + " features)");
+
+                    // Feature collection creation timing
+                    long collectionStart = System.currentTimeMillis();
+                    FeatureCollectionGeoJSON featureCollection = new FeatureCollectionGeoJSON();
+                    featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
+                    featureCollection.setFeatures(features);
+                    long collectionTime = System.currentTimeMillis() - collectionStart;
+                    System.out.println("Feature collection creation time: " + collectionTime + "ms");
+
+                    long totalTime = System.currentTimeMillis() - startTime;
+                    System.out.println("Total realtime action time: " + totalTime + "ms");
+
+                    return ResponseEntity.ok().body(featureCollection);
+                } catch (java.lang.Exception e) {
+                    System.err.println("Error fetching feature: " + e.getMessage());
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
             default:
