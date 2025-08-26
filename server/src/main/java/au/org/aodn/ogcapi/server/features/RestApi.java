@@ -148,14 +148,17 @@ public class RestApi implements CollectionsApi {
 
                     // Query execution timing
                     long queryStart = System.currentTimeMillis();
-                    ResultSet result = DuckDB.getConnection().createStatement().executeQuery("SELECT \n" +
+                    String sql = "SELECT \n" +
                             "        site_name,\n" +
                             "        first(LATITUDE) AS LATITUDE,\n" +
                             "        first(LONGITUDE) AS LONGITUDE\n" +
-                            "        FROM 'https://gtrrz-victor-testing-bucket.s3.ap-southeast-2.amazonaws.com/db_wave_buoy_realtime_nonqc.parquet'\n"
-                            +
-                            "        WHERE TIME >= '" + from + "' AND TIME < '" + to + "' \n" +
-                            "        GROUP BY site_name");
+                            "        FROM 'https://gtrrz-victor-testing-bucket.s3.ap-southeast-2.amazonaws.com/db_wave_buoy_realtime_nonqc.parquet'\n" +
+                            "        WHERE TIME >= ? AND TIME < ? \n" +
+                            "        GROUP BY site_name";
+                    java.sql.PreparedStatement pstmt = DuckDB.getConnection().prepareStatement(sql);
+                    pstmt.setString(1, from);
+                    pstmt.setString(2, to);
+                    ResultSet result = pstmt.executeQuery();
                     long queryTime = System.currentTimeMillis() - queryStart;
                     System.out.println("Query execution time: " + queryTime + "ms");
 
