@@ -7,8 +7,8 @@ import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import org.apache.commons.io.IOUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -99,32 +99,22 @@ public class DownloadWfsDataService {
 
             // Create streaming response body
             StreamingResponseBody streamingResponseBody = outputStream -> {
-                try {
-                    restTemplate.execute(
-                            wfsRequestUrl,
-                            HttpMethod.GET,
-                            null,
-                            clientHttpResponse -> {
-                                try (InputStream inputStream = clientHttpResponse.getBody()) {
-                                    // Stream data directly from WFS server to client
-                                    byte[] buffer = new byte[200 * 1024]; // 200KB buffer
-                                    int bytesRead;
-                                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                                        outputStream.write(buffer, 0, bytesRead);
-                                        outputStream.flush();
-                                    }
-                                    log.info("Successfully streamed WFS data for UUID: {}", uuid);
-                                    return null;
-                                } catch (IOException e) {
-                                    log.error("Error streaming WFS data for UUID: {}", uuid, e);
-                                    throw new RuntimeException("Error streaming WFS data", e);
-                                }
+                restTemplate.execute(
+                        wfsRequestUrl,
+                        HttpMethod.GET,
+                        null,
+                        clientHttpResponse -> {
+                            try (InputStream inputStream = clientHttpResponse.getBody()) {
+                                IOUtils.copy(inputStream, outputStream);
+                                outputStream.flush();
+                                log.info("Successfully streamed WFS data for UUID: {}", uuid);
+                                return null;
+                            } catch (IOException e) {
+                                log.error("Error streaming WFS data for UUID: {}", uuid, e);
+                                throw new RuntimeException("Error streaming WFS data", e);
                             }
-                    );
-                } catch (Exception e) {
-                    log.error("Error executing WFS request for UUID: {}", uuid, e);
-                    throw new RuntimeException("Error executing WFS request", e);
-                }
+                        }
+                );
             };
 
             // Return streaming response with proper headers
