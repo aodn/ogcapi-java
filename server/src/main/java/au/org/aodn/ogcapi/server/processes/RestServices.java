@@ -1,10 +1,13 @@
 package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
@@ -12,6 +15,7 @@ import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Slf4j
@@ -19,6 +23,9 @@ public class RestServices {
 
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
+
+    @Autowired
+    private DownloadWfsDataService downloadWfsDataService;
 
     public RestServices(BatchClient batchClient, ObjectMapper objectMapper) {
         this.batchClient = batchClient;
@@ -29,7 +36,7 @@ public class RestServices {
 
         String aodnInfoSender = "no.reply@aodn.org.au";
 
-        try(SesClient ses = SesClient.builder().build()) {
+        try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
             var content = Content.builder().data(generateStartedEmailContent(startDate, endDate)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
@@ -93,6 +100,17 @@ public class RestServices {
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);
         return submitJobResponse.jobId();
+    }
+
+    public ResponseEntity<StreamingResponseBody> downloadWfsData(
+            String uuid,
+            String startDate,
+            String endDate,
+            Object multiPolygon,
+            List<String> fields,
+            String layerName) {
+
+        return downloadWfsDataService.downloadWfsData(uuid, startDate, endDate, multiPolygon, fields, layerName);
     }
 
     private String generateStartedEmailContent(String startDate, String endDate) {

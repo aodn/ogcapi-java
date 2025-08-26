@@ -15,6 +15,8 @@ public class DatasetDownloadEnums {
         MULTI_POLYGON("multi_polygon"),
         RECIPIENT("recipient"),
         TYPE("type"),
+        FIELDS("fields"),
+        LAYER_NAME("layer_name"),
         ;
 
         private final String value;
