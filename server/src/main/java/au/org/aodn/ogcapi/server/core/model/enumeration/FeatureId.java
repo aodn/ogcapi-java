@@ -2,7 +2,8 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 
 public enum FeatureId {
     summary("summary"),
-    downloadableFields("downloadableFields");
+    downloadableFields("downloadableFields"),
+    realtime("realtime");
 
     private final String featureId;
 
