@@ -54,11 +54,11 @@ public class WfsServerConfig {
         try {
             URI userUri = URI.create(normalizeUrl(userProvidedUrl));
             String userHost = userUri.getHost();
-            
+
             if (userHost == null) {
                 return null;
             }
-            
+
             return urls.stream()
                     .filter(approvedUrl -> {
                         try {
@@ -82,7 +82,7 @@ public class WfsServerConfig {
      */
     public String validateAndGetApprovedServerUrl(String userProvidedUrl) {
         String matchedUrl = findMatchingUrl(userProvidedUrl);
-        
+
         if (matchedUrl == null) {
             throw new au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException(
                     String.format("Access to WFS server '%s' is not authorized. Only approved servers are allowed.", userProvidedUrl)

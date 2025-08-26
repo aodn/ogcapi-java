@@ -55,44 +55,19 @@ public class RestApi implements ProcessesApi {
                 var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
                 var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
                 var recipient = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.RECIPIENT.getValue());
-                var fields = (List<String>) body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue());
-                var layerName = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue());
 
-                // Check if this is a WFS download request (recipient is empty)
-                if (recipient == null || recipient.trim().isEmpty()) {
-                    // This is a WFS download request
-                    if (layerName == null || layerName.trim().isEmpty()) {
-                        var response = new Results();
-                        var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
-                        var value = new InlineValue("Layer name is required for WFS download");
-                        response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
-                        response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
-                        return ResponseEntity.ok(response);
-                    }
+                // move the notify user email from data-access-service to here to make the first email faster
+                restServices.notifyUser(recipient, uuid, startDate, endDate);
 
-                    // Stream WFS data directly to client - but we need to handle this differently
-                    // since we can't return StreamingResponseBody from this method
-                    var results = new Results();
-                    var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
-                    var value = new InlineValue("WFS download request received. Use /processes/downloadWfs/execution endpoint for streaming download.");
-                    results.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
-                    results.put(InlineResponseKeyEnum.STATUS.getValue(), status);
-                    return ResponseEntity.ok(results);
-                } else {
-                    // This is a regular dataset download request
-                    // move the notify user email from data-access-service to here to make the first email faster
-                    restServices.notifyUser(recipient, uuid, startDate, endDate);
+                var response = restServices.downloadData(uuid, startDate, endDate, multiPolygon, recipient);
 
-                    var response = restServices.downloadData(uuid, startDate, endDate, multiPolygon, recipient);
+                var value = new InlineValue(response.getBody());
+                var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
+                var results = new Results();
+                results.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
+                results.put(InlineResponseKeyEnum.STATUS.getValue(), status);
 
-                    var value = new InlineValue(response.getBody());
-                    var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
-                    var results = new Results();
-                    results.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
-                    results.put(InlineResponseKeyEnum.STATUS.getValue(), status);
-
-                    return ResponseEntity.ok(results);
-                }
+                return ResponseEntity.ok(results);
 
             } catch (Exception e) {
 
@@ -106,11 +81,10 @@ public class RestApi implements ProcessesApi {
 
                 return ResponseEntity.ok(response);
             }
-
         } else {
             var response = new Results();
             var status = new InlineValue(Integer.toString(HttpStatus.BAD_REQUEST.value()));
-            var value = new InlineValue("Unknown process ID: " + processID);
+            var value = new InlineValue("Unknown process ID: unknown-process-id");
             response.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
             response.put(InlineResponseKeyEnum.STATUS.getValue(), status);
 
