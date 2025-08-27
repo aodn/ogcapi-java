@@ -119,6 +119,8 @@ public class RestApi implements CollectionsApi {
                 } catch (java.lang.Exception e) {
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
+            case realtime:
+                return featuresService.getFeatures(request.getDatetime());
             default:
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
