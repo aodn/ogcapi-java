@@ -120,7 +120,7 @@ public class RestApi implements CollectionsApi {
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
             case realtime:
-                return featuresService.getFeatures(request.getDatetime()); 
+                return featuresService.getFeatures(request.getDatetime());
             default:
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }

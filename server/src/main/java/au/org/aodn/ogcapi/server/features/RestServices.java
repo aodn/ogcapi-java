@@ -57,7 +57,7 @@ public class RestServices extends OGCApiService {
 
     /**
      * Get downloadable fields for a layer
-     * 
+     *
      * @param wfsUrl   The WFS server URL
      * @param typeName The WFS type name
      * @return List of downloadable fields
