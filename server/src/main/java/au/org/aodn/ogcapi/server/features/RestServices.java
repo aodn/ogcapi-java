@@ -107,7 +107,7 @@ public class RestServices extends OGCApiService {
 
                 Map<String, Object> properties = new HashMap<>();
                 properties.put("buoy", siteName);
-                properties.put("date", result.getDate("TIME"));
+                properties.put("date", result.getString("TIME").split(" ")[0]);
 
                 FeatureGeoJSON feature = new FeatureGeoJSON();
                 feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
