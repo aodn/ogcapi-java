@@ -78,6 +78,7 @@ public class RestServices extends OGCApiService {
             long queryStart = System.currentTimeMillis();
             String sql = "SELECT \n" +
                     "        site_name,\n" +
+                    "        first(TIME) as TIME,\n" +
                     "        first(LATITUDE) AS LATITUDE,\n" +
                     "        first(LONGITUDE) AS LONGITUDE\n" +
                     "        FROM 'https://gtrrz-victor-testing-bucket.s3.ap-southeast-2.amazonaws.com/db_wave_buoy_realtime_nonqc.parquet'\n"
@@ -106,6 +107,7 @@ public class RestServices extends OGCApiService {
 
                 Map<String, Object> properties = new HashMap<>();
                 properties.put("buoy", siteName);
+                properties.put("date", result.getDate("TIME"));
 
                 FeatureGeoJSON feature = new FeatureGeoJSON();
                 feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
