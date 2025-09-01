@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
@@ -17,6 +18,8 @@ import software.amazon.awssdk.services.ses.model.*;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class RestServices {
@@ -102,16 +105,6 @@ public class RestServices {
         return submitJobResponse.jobId();
     }
 
-    public ResponseEntity<StreamingResponseBody> downloadWfsData(
-            String uuid,
-            String startDate,
-            String endDate,
-            Object multiPolygon,
-            List<String> fields,
-            String layerName) {
-
-        return downloadWfsDataService.downloadWfsData(uuid, startDate, endDate, multiPolygon, fields, layerName);
-    }
 
     private String generateStartedEmailContent(String startDate, String endDate) {
         return "Your request has been received. Date range: Start Date: " +
@@ -119,4 +112,156 @@ public class RestServices {
                 "After the process is completed, you will receive an email " +
                 "with the download link.";
     }
+
+    public SseEmitter downloadWfsDataWithSse(
+            String uuid,
+            String startDate,
+            String endDate,
+            Object multiPolygon,
+            List<String> fields,
+            String layerName,
+            SseEmitter emitter) {
+
+        // Validate parameters
+        try {
+            if (layerName == null || layerName.trim().isEmpty()) {
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data(Map.of("error", "Layer name is required")));
+                emitter.completeWithError(new IllegalArgumentException("Layer name is required"));
+                return emitter;
+            }
+        } catch (Exception e) {
+            log.error("Error sending validation error", e);
+            emitter.completeWithError(e);
+            return emitter;
+        }
+
+        // Start async download with SSE progress updates
+        CompletableFuture.runAsync(() -> {
+            try {
+                // STEP 1: Send connection established event
+                emitter.send(SseEmitter.event()
+                        .name("connection-established")
+                        .data(Map.of(
+                                "status", "connected",
+                                "message", "Starting WFS download for UUID: " + uuid,
+                                "timestamp", System.currentTimeMillis()
+                        )));
+
+                // STEP 2: Start keep-alive mechanism for WFS server wait time
+                ScheduledExecutorService keepAliveExecutor = Executors.newSingleThreadScheduledExecutor();
+                AtomicBoolean wfsServerResponded = new AtomicBoolean(false);
+                AtomicBoolean downloadCompleted = new AtomicBoolean(false);
+
+                // Send keep-alive every 20 seconds
+                ScheduledFuture<?> keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> {
+                    try {
+                        if (!downloadCompleted.get()) {
+                            String status = wfsServerResponded.get() ? "streaming" : "waiting-for-wfs-server";
+                            emitter.send(SseEmitter.event()
+                                    .name("keep-alive")
+                                    .data(Map.of(
+                                            "status", status,
+                                            "timestamp", System.currentTimeMillis(),
+                                            "message", wfsServerResponded.get() ?
+                                                    "WFS data streaming in progress..." : "Waiting for WFS server response..."
+                                    )));
+                            log.debug("Sent keep-alive event for UUID {}, status: {}", uuid, status);
+                        }
+                    } catch (Exception e) {
+                        log.error("Failed to send keep-alive for UUID {}", uuid, e);
+                    }
+                }, 20, 20, TimeUnit.SECONDS);
+
+                // STEP 3: Do fast preparation and WFS call
+                processWfsDownloadWithSse(
+                        uuid, startDate, endDate, multiPolygon, fields, layerName,
+                        emitter, wfsServerResponded, downloadCompleted, keepAliveTask, keepAliveExecutor
+                );
+
+            } catch (Exception e) {
+                log.error("Error in WFS SSE download for UUID {}", uuid, e);
+                try {
+                    emitter.send(SseEmitter.event()
+                            .name("error")
+                            .data(Map.of(
+                                    "error", "WFS download failed",
+                                    "message", e.getMessage()
+                            )));
+                    emitter.completeWithError(e);
+                } catch (Exception ioException) {
+                    log.error("Failed to send error event for UUID {}", uuid, ioException);
+                    emitter.completeWithError(ioException);
+                }
+            }
+        });
+
+        // Handle client disconnection
+        emitter.onCompletion(() -> log.info("Client disconnected from WFS SSE stream"));
+        emitter.onTimeout(() -> log.warn("WFS SSE stream timed out"));
+        emitter.onError(ex -> log.error("WFS SSE stream error", ex));
+
+        return emitter;
+    }
+
+    private void processWfsDownloadWithSse(
+            String uuid,
+            String startDate,
+            String endDate,
+            Object multiPolygon,
+            List<String> fields,
+            String layerName,
+            SseEmitter emitter,
+            AtomicBoolean wfsServerResponded,
+            AtomicBoolean downloadCompleted,
+            ScheduledFuture<?> keepAliveTask,
+            ScheduledExecutorService keepAliveExecutor) {
+
+        try {
+            // Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
+            String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
+                    uuid, startDate, endDate, multiPolygon, fields, layerName);
+
+            emitter.send(SseEmitter.event()
+                    .name("wfs-request-ready")
+                    .data(Map.of(
+                            "message", "Connecting to WFS server...",
+                            "timestamp", System.currentTimeMillis()
+                    )));
+
+            // Make the WFS call
+            downloadWfsDataService.executeWfsRequestWithSse(
+                    wfsRequestUrl,
+                    uuid,
+                    layerName,
+                    emitter,
+                    wfsServerResponded,
+                    downloadCompleted,
+                    keepAliveTask,
+                    keepAliveExecutor
+            );
+
+        } catch (Exception e) {
+            downloadCompleted.set(true);
+            keepAliveTask.cancel(false);
+            keepAliveExecutor.shutdown();
+
+            log.error("Error processing WFS SSE download for UUID: {}", uuid, e);
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data(Map.of(
+                                "error", "WFS processing failed",
+                                "message", e.getMessage(),
+                                "uuid", uuid
+                        )));
+                emitter.completeWithError(e);
+            } catch (Exception ex) {
+                log.error("Failed to send processing error event for UUID: {}", uuid, ex);
+                emitter.completeWithError(ex);
+            }
+        }
+    }
+
 }

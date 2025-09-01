@@ -17,8 +17,10 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.List;
@@ -104,42 +106,52 @@ public class RestApi implements ProcessesApi {
     }
 
     /**
-     * WFS download endpoint that streams data directly to client
+     * WFS download endpoint with SSE support to handle long-running operations and prevent timeouts
      */
     @RequestMapping(value = "/processes/downloadWfs/execution",
-            produces = {"text/csv", "application/octet-stream"},
+            produces = MediaType.TEXT_EVENT_STREAM_VALUE,
             consumes = {"application/json"},
             method = RequestMethod.POST)
-    public ResponseEntity<StreamingResponseBody> downloadWfs(
+    public SseEmitter downloadWfsSse(
             @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required = true, schema = @Schema())
-//            @Valid
             @RequestBody Execute body) {
+
+        final SseEmitter emitter = new SseEmitter(0L);
 
         try {
             var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
             var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue());
             var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
             var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
-            var recipient = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.RECIPIENT.getValue());
             var fields = (List<String>) body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue());
             var layerName = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue());
 
-            // Check if recipient is empty (signal for WFS download)
-            if (recipient != null && !recipient.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
-            }
-
             // Check if layer name is provided
             if (layerName == null || layerName.trim().isEmpty()) {
-                return ResponseEntity.badRequest().build();
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data("Layer name is required"));
+                emitter.completeWithError(new IllegalArgumentException("Layer name is required"));
+                return emitter;
             }
 
-            // Stream WFS data directly to client
-            return restServices.downloadWfsData(uuid, startDate, endDate, multiPolygon, fields, layerName);
+            return restServices.downloadWfsDataWithSse(
+                    uuid, startDate, endDate, multiPolygon, fields, layerName, emitter
+            );
 
         } catch (Exception e) {
-            log.error("Error processing WFS download request: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+            log.error("Error processing async WFS download request", e);
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data("Error processing request: " + e.getMessage()));
+                emitter.completeWithError(e);
+            } catch (Exception ex) {
+                log.error("Error sending error event via SSE", ex);
+                emitter.completeWithError(ex);
+            }
         }
+
+        return emitter;
     }
 }
