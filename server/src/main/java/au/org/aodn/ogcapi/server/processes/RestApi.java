@@ -104,7 +104,7 @@ public class RestApi implements ProcessesApi {
     public ResponseEntity<ProcessList> getProcesses() {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
-    
+
     /**
      * WFS download endpoint with SSE support to handle long-running operations and prevent timeouts
      */
@@ -114,7 +114,6 @@ public class RestApi implements ProcessesApi {
             method = RequestMethod.POST)
     public SseEmitter downloadWfsSse(
             @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required = true, schema = @Schema())
-//            @Valid
             @RequestBody Execute body) {
 
         final SseEmitter emitter = new SseEmitter(0L);
