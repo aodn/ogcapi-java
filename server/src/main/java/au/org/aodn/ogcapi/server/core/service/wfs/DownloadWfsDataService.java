@@ -15,13 +15,17 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
@@ -238,5 +242,216 @@ public class DownloadWfsDataService {
         }
 
         return builder.build().toUriString();
+    }
+
+    /**
+     * Does collection lookup, WFS validation, field retrieval, and URL building
+     */
+    public String prepareWfsRequestUrl(
+            String uuid,
+            String startDate,
+            String endDate,
+            Object multiPolygon,
+            List<String> fields,
+            String layerName) throws Exception {
+
+        // Get collection information from UUID (fast - Elasticsearch query)
+        ElasticSearch.SearchResult<StacCollectionModel> searchResult =
+                elasticSearch.searchCollections(List.of(uuid), null);
+
+        if (searchResult.getCollections().isEmpty()) {
+            throw new RuntimeException("Collection with UUID " + uuid + " not found");
+        }
+
+        StacCollectionModel collection = searchResult.getCollections().get(0);
+
+        // Extract WFS URL and layer name from collection links (fast)
+        WfsInfo wfsInfo = extractWfsInfo(collection, layerName);
+        if (wfsInfo == null) {
+            throw new RuntimeException("No WFS link found for collection " + uuid + " with layer name " + layerName);
+        }
+
+        // Validate and get approved WFS URL from whitelist (fast)
+        String approvedWfsUrl;
+        try {
+            approvedWfsUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl());
+            log.info("Using approved WFS URL: {} (original: {})", approvedWfsUrl, wfsInfo.wfsUrl());
+        } catch (Exception e) {
+            log.error("WFS URL not authorized: {}", wfsInfo.wfsUrl(), e);
+            throw new RuntimeException("WFS URL not authorized: " + wfsInfo.wfsUrl());
+        }
+
+        // Get downloadable fields to map field names
+        List<DownloadableFieldModel> downloadableFields =
+                downloadableFieldsService.getDownloadableFields(approvedWfsUrl, wfsInfo.layerName());
+
+        // Build CQL filter
+        String cqlFilter = buildCqlFilter(startDate, endDate, multiPolygon, downloadableFields);
+
+        // Build final WFS URL
+        String wfsRequestUrl = buildWfsUrl(approvedWfsUrl, wfsInfo.layerName(), cqlFilter);
+
+        log.info("Prepared WFS request URL: {}", wfsRequestUrl);
+        return wfsRequestUrl;
+    }
+
+    /**
+     * Execute WFS request with SSE support
+     */
+    public void executeWfsRequestWithSse(
+            String wfsRequestUrl,
+            String uuid,
+            String layerName,
+            SseEmitter emitter,
+            AtomicBoolean wfsServerResponded,
+            AtomicBoolean downloadCompleted,
+            ScheduledFuture<?> keepAliveTask,
+            ScheduledExecutorService keepAliveExecutor) {
+
+        try {
+            restTemplate.execute(
+                    wfsRequestUrl,
+                    HttpMethod.GET,
+                    null,
+                    clientHttpResponse -> {
+                        // WFS server has responded!
+                        wfsServerResponded.set(true);
+
+                        try {
+                            // Send download started confirmation
+                            emitter.send(SseEmitter.event()
+                                    .name("download-started")
+                                    .data(Map.of(
+                                            "message", "WFS server responded, starting data stream...",
+                                            "contentLength", clientHttpResponse.getHeaders().getContentLength(),
+                                            "contentType", clientHttpResponse.getHeaders().getContentType() != null ?
+                                                    clientHttpResponse.getHeaders().getContentType().toString() : "text/csv",
+                                            "timestamp", System.currentTimeMillis()
+                                    )));
+
+                            try (InputStream inputStream = clientHttpResponse.getBody()) {
+                                byte[] buffer = new byte[8192]; // 8k buffer
+                                int bytesRead;
+                                long totalBytes = 0;
+                                int chunkNumber = 0;
+                                long lastProgressTime = System.currentTimeMillis();
+                                ByteArrayOutputStream chunkBuffer = new ByteArrayOutputStream();
+
+                                while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                    chunkBuffer.write(buffer, 0, bytesRead);
+                                    totalBytes += bytesRead;
+
+                                    long currentTime = System.currentTimeMillis();
+
+                                    // Send chunk when buffer is full OR every 2 seconds
+                                    if (chunkBuffer.size() >= 16384 ||
+                                            (currentTime - lastProgressTime >= 2000)) {
+
+                                        byte[] chunkBytes = chunkBuffer.toByteArray();
+
+                                        // Ensure Base64 alignment
+                                        // Base64 works in 3-byte groups, so chunk size should be divisible by 3
+                                        int alignedSize = (chunkBytes.length / 3) * 3;
+
+                                        if (alignedSize > 0) {
+                                            // Send the aligned portion
+                                            byte[] alignedChunk = Arrays.copyOf(chunkBytes, alignedSize);
+                                            String encodedData = Base64.getEncoder().encodeToString(alignedChunk);
+
+                                            emitter.send(SseEmitter.event()
+                                                    .name("file-chunk")
+                                                    .data(Map.of(
+                                                            "chunkNumber", ++chunkNumber,
+                                                            "data", encodedData,
+                                                            "chunkSize", alignedChunk.length,
+                                                            "totalBytes", totalBytes,
+                                                            "timestamp", currentTime
+                                                    ))
+                                                    .id(String.valueOf(chunkNumber)));
+
+                                            // Keep the remaining bytes for next chunk
+                                            if (alignedSize < chunkBytes.length) {
+                                                byte[] remainder = Arrays.copyOfRange(chunkBytes, alignedSize, chunkBytes.length);
+                                                chunkBuffer.reset();
+                                                chunkBuffer.write(remainder);
+                                            } else {
+                                                chunkBuffer.reset();
+                                            }
+
+                                            lastProgressTime = currentTime;
+                                        }
+                                    }
+                                }
+
+                                // Send final chunk if any remains
+                                if (chunkBuffer.size() > 0) {
+                                    String encodedData = Base64.getEncoder()
+                                            .encodeToString(chunkBuffer.toByteArray());
+                                    emitter.send(SseEmitter.event()
+                                            .name("file-chunk")
+                                            .data(Map.of(
+                                                    "chunkNumber", ++chunkNumber,
+                                                    "data", encodedData,
+                                                    "chunkSize", chunkBuffer.size(),
+                                                    "totalBytes", totalBytes,
+                                                    "final", true
+                                            )));
+                                }
+
+                                downloadCompleted.set(true);
+                                keepAliveTask.cancel(false);
+                                keepAliveExecutor.shutdown();
+
+                                // Send completion event
+                                emitter.send(SseEmitter.event()
+                                        .name("download-complete")
+                                        .data(Map.of(
+                                                "totalBytes", totalBytes,
+                                                "totalChunks", chunkNumber,
+                                                "message", "WFS data download completed successfully",
+                                                "filename", layerName + "_" + uuid + ".csv"
+                                        )));
+
+                                emitter.complete();
+                                log.info("WFS SSE streaming completed: {} bytes in {} chunks for UUID: {}",
+                                        totalBytes, chunkNumber, uuid);
+
+                            } catch (IOException e) {
+                                downloadCompleted.set(true);
+                                keepAliveTask.cancel(false);
+                                keepAliveExecutor.shutdown();
+                                log.error("Error streaming WFS data via SSE for UUID: {}", uuid, e);
+                                emitter.completeWithError(e);
+                            }
+
+                        } catch (IOException e) {
+                            log.error("Error sending download started event for UUID: {}", uuid, e);
+                            emitter.completeWithError(e);
+                        }
+
+                        return null;
+                    }
+            );
+
+        } catch (Exception e) {
+            downloadCompleted.set(true);
+            keepAliveTask.cancel(false);
+            keepAliveExecutor.shutdown();
+
+            log.error("Error executing WFS request via SSE for UUID: {}", uuid, e);
+            try {
+                emitter.send(SseEmitter.event()
+                        .name("error")
+                        .data(Map.of(
+                                "error", "WFS request failed",
+                                "message", e.getMessage(),
+                                "uuid", uuid
+                        )));
+                emitter.completeWithError(e);
+            } catch (IOException ioException) {
+                log.error("Failed to send WFS request error event for UUID: {}", uuid, ioException);
+                emitter.completeWithError(ioException);
+            }
+        }
     }
 }
