@@ -104,41 +104,7 @@ public class RestApi implements ProcessesApi {
     public ResponseEntity<ProcessList> getProcesses() {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
-
-//    /**
-//     * WFS download endpoint that streams data directly to client
-//     */
-//    @RequestMapping(value = "/processes/downloadWfs/execution",
-//            produces = {"text/csv", "application/octet-stream"},
-//            consumes = {"application/json"},
-//            method = RequestMethod.POST)
-//    public ResponseEntity<StreamingResponseBody> downloadWfs(
-//            @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required = true, schema = @Schema())
-////            @Valid
-//            @RequestBody Execute body) {
-//
-//        try {
-//            var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
-//            var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue());
-//            var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
-//            var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
-//            var fields = (List<String>) body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue());
-//            var layerName = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue());
-//
-//            // Check if layer name is provided
-//            if (layerName == null || layerName.trim().isEmpty()) {
-//                return ResponseEntity.badRequest().build();
-//            }
-//
-//            // Stream WFS data directly to client
-//            return restServices.downloadWfsData(uuid, startDate, endDate, multiPolygon, fields, layerName);
-//
-//        } catch (Exception e) {
-//            log.error("Error processing WFS download request: {}", e.getMessage(), e);
-//            return ResponseEntity.internalServerError().build();
-//        }
-//    }
-
+    
     /**
      * WFS download endpoint with SSE support to handle long-running operations and prevent timeouts
      */

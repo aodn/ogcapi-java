@@ -105,16 +105,6 @@ public class RestServices {
         return submitJobResponse.jobId();
     }
 
-//    public ResponseEntity<StreamingResponseBody> downloadWfsData(
-//            String uuid,
-//            String startDate,
-//            String endDate,
-//            Object multiPolygon,
-//            List<String> fields,
-//            String layerName) {
-//
-//        return downloadWfsDataService.downloadWfsData(uuid, startDate, endDate, multiPolygon, fields, layerName);
-//    }
 
     private String generateStartedEmailContent(String startDate, String endDate) {
         return "Your request has been received. Date range: Start Date: " +
@@ -232,6 +222,13 @@ public class RestServices {
             // Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
             String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
                     uuid, startDate, endDate, multiPolygon, fields, layerName);
+
+            emitter.send(SseEmitter.event()
+                    .name("wfs-request-ready")
+                    .data(Map.of(
+                            "message", "Connecting to WFS server...",
+                            "timestamp", System.currentTimeMillis()
+                    )));
 
             // Make the WFS call
             downloadWfsDataService.executeWfsRequestWithSse(

@@ -47,95 +47,6 @@ public class DownloadWfsDataService {
     }
 
     /**
-     * Download WFS data and stream directly to client
-     */
-    public ResponseEntity<StreamingResponseBody> downloadWfsData(
-            String uuid,
-            String startDate,
-            String endDate,
-            Object multiPolygon,
-            List<String> fields,
-            String layerName) {
-
-        try {
-            // Get collection information from UUID
-            ElasticSearch.SearchResult<StacCollectionModel> searchResult =
-                    elasticSearch.searchCollections(List.of(uuid), null);
-
-            if (searchResult.getCollections().isEmpty()) {
-                log.error("Collection with UUID {} not found", uuid);
-                return ResponseEntity.notFound().build();
-            }
-
-            StacCollectionModel collection = searchResult.getCollections().get(0);
-
-            // Extract WFS URL and layer name from collection links
-            WfsInfo wfsInfo = extractWfsInfo(collection, layerName);
-            if (wfsInfo == null) {
-                log.error("No WFS link found for collection {} with layer name {}", uuid, layerName);
-                return ResponseEntity.badRequest().build();
-            }
-
-            // Validate and get approved WFS URL from whitelist (same as DownloadableFieldsService)
-            // For now we don't fully trust the server URL in the collection links as it may be user-provided
-            // and "geoserver/ows" server may not be directly accessible so we map to an approved URL
-            String approvedWfsUrl;
-            try {
-                approvedWfsUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl());
-                log.info("Using approved WFS URL: {} (original: {})", approvedWfsUrl, wfsInfo.wfsUrl());
-            } catch (Exception e) {
-                log.error("WFS URL not authorized: {}", wfsInfo.wfsUrl(), e);
-                return ResponseEntity.badRequest().build();
-            }
-
-            // Get downloadable fields to map field names
-            List<DownloadableFieldModel> downloadableFields =
-                    downloadableFieldsService.getDownloadableFields(approvedWfsUrl, wfsInfo.layerName());
-
-            // Build CQL filter
-            // TODO: Need to check and implement later
-            String cqlFilter = buildCqlFilter(startDate, endDate, multiPolygon, downloadableFields);
-
-            // Build WFS URL using approved URL
-            String wfsRequestUrl = buildWfsUrl(approvedWfsUrl, wfsInfo.layerName(), cqlFilter);
-
-            log.info("Downloading WFS data from: {}", wfsRequestUrl);
-
-            // Create streaming response body
-            StreamingResponseBody streamingResponseBody = outputStream -> {
-                restTemplate.execute(
-                        wfsRequestUrl,
-                        HttpMethod.GET,
-                        null,
-                        clientHttpResponse -> {
-                            try (InputStream inputStream = clientHttpResponse.getBody()) {
-                                IOUtils.copy(inputStream, outputStream);
-                                outputStream.flush();
-                                log.info("Successfully streamed WFS data for UUID: {}", uuid);
-                                return null;
-                            } catch (IOException e) {
-                                log.error("Error streaming WFS data for UUID: {}", uuid, e);
-                                throw new RuntimeException("Error streaming WFS data", e);
-                            }
-                        }
-                );
-            };
-
-            // Return streaming response with proper headers
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                    .header(HttpHeaders.CONTENT_DISPOSITION,
-                            "attachment; filename=\"" + layerName + "_" + uuid + ".csv\"")
-                    .header(HttpHeaders.CACHE_CONTROL, "no-cache")
-                    .body(streamingResponseBody);
-
-        } catch (Exception e) {
-            log.error("Error downloading WFS data for UUID {}", uuid, e);
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    /**
      * Extract WFS URL and layer name from collection links
      */
     private WfsInfo extractWfsInfo(StacCollectionModel collection, String layerName) {
@@ -167,6 +78,7 @@ public class DownloadWfsDataService {
 
     /**
      * Build CQL filter for temporal and spatial constraints
+     * TODO: Implement proper conversion based on actual data structure
      */
     private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, List<DownloadableFieldModel> downloadableFields) {
         StringBuilder cqlFilter = new StringBuilder();
@@ -213,6 +125,7 @@ public class DownloadWfsDataService {
 
     /**
      * Convert multiPolygon object to WKT format
+     * TODO: Implement proper conversion based on actual data structure
      */
     private String convertToWkt(Object multiPolygon) {
         // Simplified conversion - assuming multiPolygon is a simple bbox for now
