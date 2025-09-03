@@ -7,16 +7,11 @@ import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import org.apache.commons.io.IOUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.ByteArrayOutputStream;
@@ -168,7 +163,7 @@ public class DownloadWfsDataService {
             List<String> fields,
             String layerName) throws Exception {
 
-        // Get collection information from UUID (fast - Elasticsearch query)
+        // Get collection information from UUID
         ElasticSearch.SearchResult<StacCollectionModel> searchResult =
                 elasticSearch.searchCollections(List.of(uuid), null);
 
@@ -178,13 +173,13 @@ public class DownloadWfsDataService {
 
         StacCollectionModel collection = searchResult.getCollections().get(0);
 
-        // Extract WFS URL and layer name from collection links (fast)
+        // Extract WFS URL and layer name from collection links
         WfsInfo wfsInfo = extractWfsInfo(collection, layerName);
         if (wfsInfo == null) {
             throw new RuntimeException("No WFS link found for collection " + uuid + " with layer name " + layerName);
         }
 
-        // Validate and get approved WFS URL from whitelist (fast)
+        // Validate and get approved WFS URL from whitelist
         String approvedWfsUrl;
         try {
             approvedWfsUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl());
@@ -271,16 +266,30 @@ public class DownloadWfsDataService {
                                             byte[] alignedChunk = Arrays.copyOf(chunkBytes, alignedSize);
                                             String encodedData = Base64.getEncoder().encodeToString(alignedChunk);
 
-                                            emitter.send(SseEmitter.event()
-                                                    .name("file-chunk")
-                                                    .data(Map.of(
-                                                            "chunkNumber", ++chunkNumber,
-                                                            "data", encodedData,
-                                                            "chunkSize", alignedChunk.length,
-                                                            "totalBytes", totalBytes,
-                                                            "timestamp", currentTime
-                                                    ))
-                                                    .id(String.valueOf(chunkNumber)));
+                                            try {
+                                                emitter.send(SseEmitter.event()
+                                                        .name("file-chunk")
+                                                        .data(Map.of(
+                                                                "chunkNumber", ++chunkNumber,
+                                                                "data", encodedData,
+                                                                "chunkSize", alignedChunk.length,
+                                                                "totalBytes", totalBytes,
+                                                                "timestamp", currentTime
+                                                        ))
+                                                        .id(String.valueOf(chunkNumber)));
+                                            } catch (IOException e) {
+                                                // Check if it's a client disconnect
+                                                if (e.getMessage() != null &&
+                                                        (e.getMessage().contains("Broken pipe") ||
+                                                                e.getMessage().contains("Connection reset"))) {
+                                                    log.info("Client disconnected during chunk streaming for UUID: {}", uuid);
+                                                    return null;
+                                                } else {
+                                                    log.error("Error sending chunk for UUID: {}", uuid, e);
+                                                    emitter.completeWithError(e);
+                                                    return null;
+                                                }
+                                            }
 
                                             // Keep the remaining bytes for next chunk
                                             if (alignedSize < chunkBytes.length) {
@@ -338,7 +347,7 @@ public class DownloadWfsDataService {
                             }
 
                         } catch (IOException e) {
-                            log.error("Error sending download started event for UUID: {}", uuid, e);
+                            log.warn("Error sending download started event for UUID: {}", uuid, e);
                             emitter.completeWithError(e);
                         }
 
@@ -351,7 +360,6 @@ public class DownloadWfsDataService {
             keepAliveTask.cancel(false);
             keepAliveExecutor.shutdown();
 
-            log.error("Error executing WFS request via SSE for UUID: {}", uuid, e);
             try {
                 emitter.send(SseEmitter.event()
                         .name("error")
@@ -362,7 +370,7 @@ public class DownloadWfsDataService {
                         )));
                 emitter.completeWithError(e);
             } catch (IOException ioException) {
-                log.error("Failed to send WFS request error event for UUID: {}", uuid, ioException);
+                log.warn("Failed to send WFS request error event for UUID: {}", uuid, ioException);
                 emitter.completeWithError(ioException);
             }
         }

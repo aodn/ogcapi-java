@@ -8,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
@@ -20,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 public class RestServices {
@@ -137,6 +137,9 @@ public class RestServices {
             return emitter;
         }
 
+        AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
+        AtomicReference<ScheduledExecutorService> keepAliveExecutorRef = new AtomicReference<>();
+
         // Start async download with SSE progress updates
         CompletableFuture.runAsync(() -> {
             try {
@@ -167,12 +170,22 @@ public class RestServices {
                                             "message", wfsServerResponded.get() ?
                                                     "WFS data streaming in progress..." : "Waiting for WFS server response..."
                                     )));
-                            log.debug("Sent keep-alive event for UUID {}, status: {}", uuid, status);
                         }
                     } catch (Exception e) {
-                        log.error("Failed to send keep-alive for UUID {}", uuid, e);
+                        // Check if it's a client disconnect
+                        if (e.getMessage() != null &&
+                                (e.getMessage().contains("Broken pipe") ||
+                                        e.getMessage().contains("Connection reset"))) {
+                            log.info("Client disconnected, stopping keep-alive for UUID: {}", uuid);
+                            downloadCompleted.set(true); // Stop further keep-alive attempts
+                        } else {
+                            log.warn("Failed to send keep-alive for UUID {}", uuid, e);
+                        }
                     }
                 }, 20, 20, TimeUnit.SECONDS);
+
+                keepAliveTaskRef.set(keepAliveTask);
+                keepAliveExecutorRef.set(keepAliveExecutor);
 
                 // STEP 3: Do fast preparation and WFS call
                 processWfsDownloadWithSse(
@@ -190,17 +203,21 @@ public class RestServices {
                                     "message", e.getMessage()
                             )));
                     emitter.completeWithError(e);
-                } catch (Exception ioException) {
-                    log.error("Failed to send error event for UUID {}", uuid, ioException);
-                    emitter.completeWithError(ioException);
+                } catch (Exception ex) {
+                    log.warn("Failed to send error event for UUID {}", uuid, ex);
+                    emitter.completeWithError(ex);
                 }
             }
         });
 
-        // Handle client disconnection
         emitter.onCompletion(() -> log.info("Client disconnected from WFS SSE stream"));
         emitter.onTimeout(() -> log.warn("WFS SSE stream timed out"));
-        emitter.onError(ex -> log.error("WFS SSE stream error", ex));
+        emitter.onError(ex -> {
+            ScheduledFuture<?> task = keepAliveTaskRef.get();
+            if (task != null) task.cancel(false);
+            ScheduledExecutorService executor = keepAliveExecutorRef.get();
+            if (executor != null) executor.shutdown();
+        });
 
         return emitter;
     }
@@ -258,10 +275,9 @@ public class RestServices {
                         )));
                 emitter.completeWithError(e);
             } catch (Exception ex) {
-                log.error("Failed to send processing error event for UUID: {}", uuid, ex);
+                log.warn("Failed to send processing error event for UUID: {}", uuid, ex);
                 emitter.completeWithError(ex);
             }
         }
     }
-
 }
