@@ -39,7 +39,7 @@ import java.util.function.Supplier;
 @Getter
 @Setter
 @Slf4j
-abstract class ElasticSearchBase {
+public abstract class ElasticSearchBase {
 
     protected static final String STR_INDICATOR = "str:";
     protected Integer searchAsYouTypeSize;
