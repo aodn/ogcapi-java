@@ -36,17 +36,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     protected Map<CQLElasticSetting, String> defaultElasticSetting;
 
-    @Value("${elasticsearch.index.minScore:7}")
-    protected Integer minScore;
-
     @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
     protected String searchAsYouTypeFieldsPath;
 
     @Value("${elasticsearch.search_as_you_type.search_suggestions.fields}")
     protected String[] searchAsYouTypeEnabledFields;
-
-    @Value("${elasticsearch.vocabs_index.name}")
-    protected String vocabsIndexName;
 
     @Value("${elasticsearch.cloud_optimized_index.name}")
     protected String dataIndexName;
@@ -255,6 +249,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(t));
                     should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(t));
                     should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(t));
+                    should.add(CQLFields.id.getPropertyEqualToQuery(t));
                 }
             }
 
