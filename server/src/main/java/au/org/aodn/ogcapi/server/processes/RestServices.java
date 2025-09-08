@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.processes;
 
+import au.org.aodn.ogcapi.server.core.exception.wfs.SseErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -122,23 +123,23 @@ public class RestServices {
             String layerName,
             SseEmitter emitter) {
 
-        // Validate parameters
-        try {
-            if (layerName == null || layerName.trim().isEmpty()) {
-                emitter.send(SseEmitter.event()
-                        .name("error")
-                        .data(Map.of("error", "Layer name is required")));
-                emitter.completeWithError(new IllegalArgumentException("Layer name is required"));
-                return emitter;
-            }
-        } catch (Exception e) {
-            log.error("Error sending validation error", e);
-            emitter.completeWithError(e);
-            return emitter;
-        }
-
         AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
         AtomicReference<ScheduledExecutorService> keepAliveExecutorRef = new AtomicReference<>();
+        AtomicBoolean downloadCompleted = new AtomicBoolean(false);
+
+        // Set up emitter callbacks first
+        emitter.onCompletion(() -> log.info("Client disconnected from WFS SSE stream"));
+        emitter.onTimeout(() -> log.warn("WFS SSE stream timed out"));
+        emitter.onError(ex -> {
+            SseErrorHandler.handleError((Exception) ex, uuid, emitter, downloadCompleted,
+                    keepAliveTaskRef.get(), keepAliveExecutorRef.get());
+        });
+
+        // Validate parameters
+        if (layerName == null || layerName.trim().isEmpty()) {
+            emitter.completeWithError(new IllegalArgumentException("Layer name is required"));
+            return emitter;
+        }
 
         // Start async download with SSE progress updates
         CompletableFuture.runAsync(() -> {
@@ -155,7 +156,6 @@ public class RestServices {
                 // STEP 2: Start keep-alive mechanism for WFS server wait time
                 ScheduledExecutorService keepAliveExecutor = Executors.newSingleThreadScheduledExecutor();
                 AtomicBoolean wfsServerResponded = new AtomicBoolean(false);
-                AtomicBoolean downloadCompleted = new AtomicBoolean(false);
 
                 // Send keep-alive every 20 seconds
                 ScheduledFuture<?> keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> {
@@ -172,15 +172,7 @@ public class RestServices {
                                     )));
                         }
                     } catch (Exception e) {
-                        // Check if it's a client disconnect
-                        if (e.getMessage() != null &&
-                                (e.getMessage().contains("Broken pipe") ||
-                                        e.getMessage().contains("Connection reset"))) {
-                            log.info("Client disconnected, stopping keep-alive for UUID: {}", uuid);
-                            downloadCompleted.set(true); // Stop further keep-alive attempts
-                        } else {
-                            log.warn("Failed to send keep-alive for UUID {}", uuid, e);
-                        }
+                        emitter.completeWithError(e);
                     }
                 }, 20, 20, TimeUnit.SECONDS);
 
@@ -194,29 +186,8 @@ public class RestServices {
                 );
 
             } catch (Exception e) {
-                log.error("Error in WFS SSE download for UUID {}", uuid, e);
-                try {
-                    emitter.send(SseEmitter.event()
-                            .name("error")
-                            .data(Map.of(
-                                    "error", "WFS download failed",
-                                    "message", e.getMessage()
-                            )));
-                    emitter.completeWithError(e);
-                } catch (Exception ex) {
-                    log.warn("Failed to send error event for UUID {}", uuid, ex);
-                    emitter.completeWithError(ex);
-                }
+                emitter.completeWithError(e);
             }
-        });
-
-        emitter.onCompletion(() -> log.info("Client disconnected from WFS SSE stream"));
-        emitter.onTimeout(() -> log.warn("WFS SSE stream timed out"));
-        emitter.onError(ex -> {
-            ScheduledFuture<?> task = keepAliveTaskRef.get();
-            if (task != null) task.cancel(false);
-            ScheduledExecutorService executor = keepAliveExecutorRef.get();
-            if (executor != null) executor.shutdown();
         });
 
         return emitter;
@@ -260,24 +231,7 @@ public class RestServices {
             );
 
         } catch (Exception e) {
-            downloadCompleted.set(true);
-            keepAliveTask.cancel(false);
-            keepAliveExecutor.shutdown();
-
-            log.error("Error processing WFS SSE download for UUID: {}", uuid, e);
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("error")
-                        .data(Map.of(
-                                "error", "WFS processing failed",
-                                "message", e.getMessage(),
-                                "uuid", uuid
-                        )));
-                emitter.completeWithError(e);
-            } catch (Exception ex) {
-                log.warn("Failed to send processing error event for UUID: {}", uuid, ex);
-                emitter.completeWithError(ex);
-            }
+            SseErrorHandler.handleError(e, uuid, emitter, downloadCompleted, keepAliveTask, keepAliveExecutor);
         }
     }
 }

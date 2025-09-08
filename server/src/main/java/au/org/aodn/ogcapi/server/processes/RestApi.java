@@ -1,11 +1,11 @@
 package au.org.aodn.ogcapi.server.processes;
 
-
 import au.org.aodn.ogcapi.processes.api.ProcessesApi;
 import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.server.core.exception.wfs.SseErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.List;
 
@@ -120,6 +119,12 @@ public class RestApi implements ProcessesApi {
 
         try {
             var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
+
+            // Set up error handler first
+            emitter.onError(ex -> {
+                SseErrorHandler.handleError((Exception) ex, uuid, emitter);
+            });
+
             var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue());
             var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
             var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
@@ -128,11 +133,7 @@ public class RestApi implements ProcessesApi {
 
             // Check if layer name is provided
             if (layerName == null || layerName.trim().isEmpty()) {
-                emitter.send(SseEmitter.event()
-                        .name("error")
-                        .data("Layer name is required"));
-                emitter.completeWithError(new IllegalArgumentException("Layer name is required"));
-                return emitter;
+                throw new IllegalArgumentException("Layer name is required");
             }
 
             return restServices.downloadWfsDataWithSse(
@@ -140,18 +141,8 @@ public class RestApi implements ProcessesApi {
             );
 
         } catch (Exception e) {
-            log.error("Error processing async WFS download request", e);
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("error")
-                        .data("Error processing request: " + e.getMessage()));
-                emitter.completeWithError(e);
-            } catch (Exception ex) {
-                log.error("Error sending error event via SSE", ex);
-                emitter.completeWithError(ex);
-            }
+            emitter.completeWithError(e);
+            return emitter;
         }
-
-        return emitter;
     }
 }
