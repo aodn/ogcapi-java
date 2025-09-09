@@ -28,4 +28,20 @@
             <AppenderRef ref="LogToConsole"/>
         </Root>
     </Loggers>
+    <!-- Profile-specific configurations -->
+    <SpringProfile name="dev | test">
+        <Appenders>
+            <Console name="DevConsole" target="SYSTEM_OUT">
+                <PatternLayout pattern="[DEV] %d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
+            </Console>
+        </Appenders>
+        <Loggers>
+            <Logger name="au.org.aodn.esindexer" level="debug" additivity="false">
+                <AppenderRef ref="DevConsole"/>
+            </Logger>
+            <Root level="info">
+                <AppenderRef ref="DevConsole"/>
+            </Root>
+        </Loggers>
+    </SpringProfile>
 </Configuration>
