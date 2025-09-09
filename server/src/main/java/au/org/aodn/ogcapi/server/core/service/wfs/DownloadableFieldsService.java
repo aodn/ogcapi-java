@@ -34,9 +34,10 @@ public class DownloadableFieldsService {
 
     private final XmlMapper xmlMapper = new XmlMapper();
 
-        /**
+    /**
      * Get downloadable fields for a layer
-     * @param wfsUrl The WFS server URL
+     *
+     * @param wfsUrl   The WFS server URL
      * @param typeName The WFS type name
      * @return List of downloadable fields
      */
@@ -49,17 +50,16 @@ public class DownloadableFieldsService {
 
             if (fields.isEmpty()) {
                 throw new DownloadableFieldsNotFoundException(
-                    String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
+                        String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
                 );
             }
-
             return fields;
         } catch (UnauthorizedServerException e) {
             throw e;
         } catch (Exception e) {
             log.error("Error getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl, e);
             throw new DownloadableFieldsNotFoundException(
-                String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
+                    String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
             );
         }
     }
@@ -88,7 +88,7 @@ public class DownloadableFieldsService {
                 return convertWfsResponseToDownloadableFields(wfsResponse);
             } else {
                 throw new DownloadableFieldsNotFoundException(
-                    String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
+                        String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
                 );
             }
 
@@ -97,7 +97,7 @@ public class DownloadableFieldsService {
         } catch (Exception e) {
             log.error("Error calling WFS DescribeFeatureType for typeName: {}", typeName, e);
             throw new DownloadableFieldsNotFoundException(
-                String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
+                    String.format("No downloadable fields found for typeName '%s' from WFS server '%s'", typeName, wfsUrl)
             );
         }
     }
@@ -108,19 +108,19 @@ public class DownloadableFieldsService {
      */
     private List<DownloadableFieldModel> convertWfsResponseToDownloadableFields(WfsDescribeFeatureTypeResponse wfsResponse) {
         return wfsResponse.getComplexTypes() != null ?
-            wfsResponse.getComplexTypes().stream()
-                .filter(complexType -> complexType.getComplexContent() != null)
-                .filter(complexType -> complexType.getComplexContent().getExtension() != null)
-                .filter(complexType -> complexType.getComplexContent().getExtension().getSequence() != null)
-                .flatMap(complexType -> {
-                    List<WfsDescribeFeatureTypeResponse.Element> elements =
-                        complexType.getComplexContent().getExtension().getSequence().getElements();
-                    return elements != null ? elements.stream() : Stream.empty();
-                })
-                .filter(element -> element.getName() != null && element.getType() != null)
-                .map(this::createDownloadableField)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList()) : new ArrayList<>();
+                wfsResponse.getComplexTypes().stream()
+                        .filter(complexType -> complexType.getComplexContent() != null)
+                        .filter(complexType -> complexType.getComplexContent().getExtension() != null)
+                        .filter(complexType -> complexType.getComplexContent().getExtension().getSequence() != null)
+                        .flatMap(complexType -> {
+                            List<WfsDescribeFeatureTypeResponse.Element> elements =
+                                    complexType.getComplexContent().getExtension().getSequence().getElements();
+                            return elements != null ? elements.stream() : Stream.empty();
+                        })
+                        .filter(element -> element.getName() != null && element.getType() != null)
+                        .map(this::createDownloadableField)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()) : new ArrayList<>();
     }
 
     /**

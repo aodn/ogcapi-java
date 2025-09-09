@@ -1,11 +1,11 @@
 package au.org.aodn.ogcapi.server.processes;
 
-
 import au.org.aodn.ogcapi.processes.api.ProcessesApi;
 import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
@@ -21,7 +21,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.util.List;
 
@@ -126,32 +125,14 @@ public class RestApi implements ProcessesApi {
             var fields = (List<String>) body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue());
             var layerName = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue());
 
-            // Check if layer name is provided
-            if (layerName == null || layerName.trim().isEmpty()) {
-                emitter.send(SseEmitter.event()
-                        .name("error")
-                        .data("Layer name is required"));
-                emitter.completeWithError(new IllegalArgumentException("Layer name is required"));
-                return emitter;
-            }
-
             return restServices.downloadWfsDataWithSse(
                     uuid, startDate, endDate, multiPolygon, fields, layerName, emitter
             );
 
         } catch (Exception e) {
-            log.error("Error processing async WFS download request", e);
-            try {
-                emitter.send(SseEmitter.event()
-                        .name("error")
-                        .data("Error processing request: " + e.getMessage()));
-                emitter.completeWithError(e);
-            } catch (Exception ex) {
-                log.error("Error sending error event via SSE", ex);
-                emitter.completeWithError(ex);
-            }
+            log.error("Download wfs data failed with unhandled error {}", e.getMessage());
+            emitter.completeWithError(e);
+            return emitter;
         }
-
-        return emitter;
     }
 }
