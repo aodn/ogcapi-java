@@ -43,12 +43,12 @@ public class WfsErrorHandler {
 
             switch (errorType) {
                 case NETWORK_ERROR -> {
-                    log.info("Client disconnected for UUID: {}", uuid);
+                    log.warn("Client disconnected for UUID: {}", uuid);
                     emitter.completeWithError(e);
 
                 }
                 case VALIDATION_ERROR -> {
-                    log.info("Invalid parameter error for UUID {}: {}", uuid, e.getMessage());
+                    log.warn("Invalid parameter error for UUID {}: {}", uuid, e.getMessage());
                     emitter.send(SseEmitter.event()
                             .name("error")
                             .data(Map.of(
@@ -59,7 +59,7 @@ public class WfsErrorHandler {
                 }
 
                 case UNAUTHORIZED_SERVER_ERROR -> {
-                    log.error("Unauthorized wfs server for UUID {}", uuid, e);
+                    log.warn("Unauthorized wfs server for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
                             .name("error")
                             .data(Map.of(
@@ -70,7 +70,7 @@ public class WfsErrorHandler {
                 }
 
                 case DOWNLOADABLE_FIELDS_ERROR -> {
-                    log.error("No downloadable fields found for UUID {}", uuid, e);
+                    log.warn("No downloadable fields found for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
                             .name("error")
                             .data(Map.of(
