@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.processes;
 
-import au.org.aodn.ogcapi.server.core.exception.wfs.SseErrorHandler;
+import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -123,21 +123,49 @@ public class RestServices {
             String layerName,
             SseEmitter emitter) {
 
+        // Set up references for resources that need to be cleaned up
         AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
         AtomicReference<ScheduledExecutorService> keepAliveExecutorRef = new AtomicReference<>();
         AtomicBoolean downloadCompleted = new AtomicBoolean(false);
 
-        // Set up emitter callbacks first
-        emitter.onCompletion(() -> log.info("Client disconnected from WFS SSE stream"));
-        emitter.onTimeout(() -> log.warn("WFS SSE stream timed out"));
-        emitter.onError(ex -> {
-            SseErrorHandler.handleError((Exception) ex, uuid, emitter, downloadCompleted,
-                    keepAliveTaskRef.get(), keepAliveExecutorRef.get());
+        // Set up cleanup function to clear up resources
+        Runnable cleanupWfsResources = () -> {
+            try {
+                downloadCompleted.set(true);
+
+                ScheduledFuture<?> keepAliveTask = keepAliveTaskRef.get();
+                if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
+                    keepAliveTask.cancel(false);
+                }
+
+                ScheduledExecutorService keepAliveExecutor = keepAliveExecutorRef.get();
+                if (keepAliveExecutor != null && !keepAliveExecutor.isShutdown()) {
+                    keepAliveExecutor.shutdown();
+                }
+            } catch (Exception e) {
+                log.error("Error during cleanup for UUID: {}", uuid, e);
+            }
+        };
+
+        // Set up emitter callbacks
+        emitter.onCompletion(() -> {
+            log.info("WFS SSE stream completion");
+            cleanupWfsResources.run();
+        });
+
+        emitter.onTimeout(() -> {
+            log.warn("WFS SSE stream timed out");
+            cleanupWfsResources.run();
+        });
+
+        emitter.onError(throwable -> {
+            WfsErrorHandler.handleError((Exception) throwable, uuid, emitter, cleanupWfsResources);
         });
 
         // Validate parameters
-        if (layerName == null || layerName.trim().isEmpty()) {
-            emitter.completeWithError(new IllegalArgumentException("Layer name is required"));
+        if (uuid == null || layerName == null || layerName.trim().isEmpty()) {
+            IllegalArgumentException exception = new IllegalArgumentException("Layer name and Uuid are required");
+            WfsErrorHandler.handleError(exception, uuid, emitter, cleanupWfsResources);
             return emitter;
         }
 
@@ -172,66 +200,37 @@ public class RestServices {
                                     )));
                         }
                     } catch (Exception e) {
-                        emitter.completeWithError(e);
+                        WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
                     }
                 }, 20, 20, TimeUnit.SECONDS);
 
                 keepAliveTaskRef.set(keepAliveTask);
                 keepAliveExecutorRef.set(keepAliveExecutor);
 
-                // STEP 3: Do fast preparation and WFS call
-                processWfsDownloadWithSse(
-                        uuid, startDate, endDate, multiPolygon, fields, layerName,
-                        emitter, wfsServerResponded, downloadCompleted, keepAliveTask, keepAliveExecutor
+                // STEP 3: Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
+                String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
+                        uuid, startDate, endDate, multiPolygon, fields, layerName);
+
+                emitter.send(SseEmitter.event()
+                        .name("wfs-request-ready")
+                        .data(Map.of(
+                                "message", "Connecting to WFS server...",
+                                "timestamp", System.currentTimeMillis()
+                        )));
+
+                // STEP 4: Make the WFS call: Streaming the response directly to client via SSE
+                downloadWfsDataService.executeWfsRequestWithSse(
+                        wfsRequestUrl,
+                        uuid,
+                        layerName,
+                        emitter,
+                        wfsServerResponded
                 );
 
             } catch (Exception e) {
-                emitter.completeWithError(e);
+                WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
             }
         });
-
         return emitter;
-    }
-
-    private void processWfsDownloadWithSse(
-            String uuid,
-            String startDate,
-            String endDate,
-            Object multiPolygon,
-            List<String> fields,
-            String layerName,
-            SseEmitter emitter,
-            AtomicBoolean wfsServerResponded,
-            AtomicBoolean downloadCompleted,
-            ScheduledFuture<?> keepAliveTask,
-            ScheduledExecutorService keepAliveExecutor) {
-
-        try {
-            // Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
-            String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
-                    uuid, startDate, endDate, multiPolygon, fields, layerName);
-
-            emitter.send(SseEmitter.event()
-                    .name("wfs-request-ready")
-                    .data(Map.of(
-                            "message", "Connecting to WFS server...",
-                            "timestamp", System.currentTimeMillis()
-                    )));
-
-            // Make the WFS call
-            downloadWfsDataService.executeWfsRequestWithSse(
-                    wfsRequestUrl,
-                    uuid,
-                    layerName,
-                    emitter,
-                    wfsServerResponded,
-                    downloadCompleted,
-                    keepAliveTask,
-                    keepAliveExecutor
-            );
-
-        } catch (Exception e) {
-            SseErrorHandler.handleError(e, uuid, emitter, downloadCompleted, keepAliveTask, keepAliveExecutor);
-        }
     }
 }

@@ -5,7 +5,7 @@ import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
-import au.org.aodn.ogcapi.server.core.exception.wfs.SseErrorHandler;
+import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
@@ -119,28 +119,18 @@ public class RestApi implements ProcessesApi {
 
         try {
             var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
-
-            // Set up error handler first
-            emitter.onError(ex -> {
-                SseErrorHandler.handleError((Exception) ex, uuid, emitter);
-            });
-
             var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue());
             var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
             var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
             var fields = (List<String>) body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue());
             var layerName = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue());
 
-            // Check if layer name is provided
-            if (layerName == null || layerName.trim().isEmpty()) {
-                throw new IllegalArgumentException("Layer name is required");
-            }
-
             return restServices.downloadWfsDataWithSse(
                     uuid, startDate, endDate, multiPolygon, fields, layerName, emitter
             );
 
         } catch (Exception e) {
+            log.error("Download wfs data failed with unhandled error {}", e.getMessage());
             emitter.completeWithError(e);
             return emitter;
         }
