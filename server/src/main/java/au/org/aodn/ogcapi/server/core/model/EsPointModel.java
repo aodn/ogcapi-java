@@ -8,13 +8,12 @@ import java.math.BigDecimal;
 import java.util.List;
 @Getter
 @Setter
-public class EsPointModel {
-    protected String type;
+public class EsPointModel implements EsGeometry{
     protected List<BigDecimal> coordinates;
 
-    public PointGeoJSON toPointGeoJSON() {
+    @Override
+    public PointGeoJSON toGeoJson() {
         PointGeoJSON p = new PointGeoJSON();
-        p.setType(PointGeoJSON.TypeEnum.POINT);
         p.setCoordinates(coordinates);
         return p;
     }
