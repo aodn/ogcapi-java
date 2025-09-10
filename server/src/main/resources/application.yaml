@@ -32,6 +32,10 @@ springdoc:
   api-docs:
     path: /api/v1/ogc/api-docs/v3
 
+data-access-service:
+  host: http://localhost:5000
+  secret: 123
+
 management:
   info:
     env:

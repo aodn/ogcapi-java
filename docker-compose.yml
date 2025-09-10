@@ -23,6 +23,8 @@ services:
       INDEX_NAME: ${INDEX_NAME:-dev_portal_records}
       ELASTIC_URL: ${ELASTIC_URL:-https://dev-discovery-index.es.ap-southeast-2.aws.found.io}
       ELASTIC_KEY: ${ELASTIC_KEY}
+      DAS_HOST: ${DAS_HOST}
+      DAS_SECRET: ${DAS_SECRET}
     network_mode: "host"
     volumes:
       - /tmp:/tmp

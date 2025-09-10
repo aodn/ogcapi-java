@@ -153,9 +153,9 @@
 				<version>${aws.sdk.version}</version>
 			</dependency>
 			<dependency>
-				<groupId>org.duckdb</groupId>
-				<artifactId>duckdb_jdbc</artifactId>
-				<version>1.0.0</version>
+				<groupId>com.konghq</groupId>
+				<artifactId>unirest-java</artifactId>
+				<version>3.14.1</version>
 			</dependency>
 			<!-- Add JSON layout dependency -->
 			<dependency>
