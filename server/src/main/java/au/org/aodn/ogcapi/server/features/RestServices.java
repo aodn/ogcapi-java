@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.common.DasService;
+import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;

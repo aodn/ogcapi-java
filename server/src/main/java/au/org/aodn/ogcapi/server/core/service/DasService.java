@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.common;
+package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
@@ -25,7 +25,7 @@ public class DasService {
     @Autowired
     protected RestTemplate httpClient;
 
-    public FeatureCollectionGeoJSON getWaveBuoys(String from, String to){
+    public byte[] getWaveBuoys(String from, String to){
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         headers.set("X-API-KEY", dasConfig.secret);
@@ -40,10 +40,10 @@ public class DasService {
         params.put("start_date", from);
         params.put("end_date",to);
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,entity,FeatureCollectionGeoJSON.class,params).getBody();
+        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,entity,byte[].class,params).getBody();
     }
 
-    public FeatureGeoJSON getWaveBuoyData(String from, String to, String buoy){
+    public byte[] getWaveBuoyData(String from, String to, String buoy){
         String encodedBuoy = URLEncoder.encode(buoy, java.nio.charset.StandardCharsets.UTF_8);
 
         HttpHeaders headers = new HttpHeaders();
@@ -60,7 +60,7 @@ public class DasService {
         params.put("start_date", from);
         params.put("end_date",to);
 
-        return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,entity,FeatureGeoJSON.class,params).getBody();
+        return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,entity,byte[].class,params).getBody();
     }
 
     public boolean isCollectionSupported(String collectionId){
