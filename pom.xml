@@ -152,11 +152,6 @@
 				<artifactId>ses</artifactId>
 				<version>${aws.sdk.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>com.konghq</groupId>
-				<artifactId>unirest-java</artifactId>
-				<version>3.14.1</version>
-			</dependency>
 			<!-- Add JSON layout dependency -->
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>

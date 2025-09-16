@@ -119,15 +119,9 @@ public class RestApi implements CollectionsApi {
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
             case first_data_available:
-                // So far, only wave buoy realtime uuid is implemented
-                if (!collectionId.equals("b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc"))
-                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-                return featuresService.getWaveBuoys(request.getDatetime());
+                return featuresService.getWaveBuoys(collectionId, request.getDatetime());
             case timeseries:
-                // So far, only wave buoy realtime uuid is implemented
-                if (!collectionId.equals("b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc"))
-                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-                return  featuresService.getWaveBuoyData(request.getDatetime(), request.getWaveBuoy());
+                return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             default:
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }

@@ -1,21 +1,20 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
+import au.org.aodn.ogcapi.server.common.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
-import kong.unirest.HttpResponse;
-import kong.unirest.Unirest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.net.URLEncoder;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -24,7 +23,7 @@ import java.util.NoSuchElementException;
 public class RestServices extends OGCApiService {
 
     @Autowired
-    protected DASConfig dasConfig;
+    protected DasService dasService;
 
     @Autowired
     protected StacToCollection StacToCollection;
@@ -65,7 +64,10 @@ public class RestServices extends OGCApiService {
         return ResponseEntity.ok(fields);
     }
 
-    public ResponseEntity<?> getWaveBuoys(String from) {
+    public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
+        if (dasService.isCollectionSupported(collectionID)){
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
         if (from == null) {
             return ResponseEntity.badRequest().body("Parameter 'datetime' is required and must be in 'from/to' format");
         }
@@ -73,26 +75,21 @@ public class RestServices extends OGCApiService {
         java.time.LocalDate localDate = java.time.LocalDate.parse(from);
         String to = localDate.plusDays(1).toString();
         try {
-            System.out.println("Fetching data from " + dasConfig.host + " from " + from + " to " + to);
-            HttpResponse<byte[]> resp = Unirest
-                    .get(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy")
-                    .queryString("start_date", from)
-                    .queryString("end_date", to)
-                    .header("X-API-Key", dasConfig.secret)
-                    .asBytes();
-
-            return ResponseEntity
+           return ResponseEntity
                     .ok()
-                    .header("Content-Type", resp.getHeaders().getFirst("Content-Type"))
-                    .body(resp.getBody());
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getWaveBuoys(from,to));
 
         } catch (Exception e) {
-            log.error("Error fetching data from endpoint: {}", e.getMessage());
+            log.error("Error fetching wave buoys data: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }
 
-    public ResponseEntity<?> getWaveBuoyData(String datetime, String buoy) {
+    public ResponseEntity<?> getWaveBuoyData(String collectionID, String datetime, String buoy) {
+        if (dasService.isCollectionSupported(collectionID)){
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
         if (datetime == null) {
             return ResponseEntity.badRequest().body("Parameter 'datetime' is required and must be in 'from/to' format");
         }
@@ -108,21 +105,13 @@ public class RestServices extends OGCApiService {
             String from = parts[0];
             String to = parts[1];
 
-            String encodedBuoy = URLEncoder.encode(buoy, java.nio.charset.StandardCharsets.UTF_8);
-            HttpResponse<byte[]> resp = Unirest
-                    .get(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/" + encodedBuoy)
-                    .queryString("start_date", from)
-                    .queryString("end_date", to)
-                    .header("X-API-Key", dasConfig.secret)
-                    .asBytes();
-
             return ResponseEntity
                     .ok()
-                    .header("Content-Type", resp.getHeaders().getFirst("Content-Type"))
-                    .body(resp.getBody());
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getWaveBuoyData(from,to, buoy));
 
         } catch (Exception e) {
-            log.error("Error fetching data from endpoint: {}", e.getMessage());
+            log.error("Error fetching wave buoy historical data: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }
