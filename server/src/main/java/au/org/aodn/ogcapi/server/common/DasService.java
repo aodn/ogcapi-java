@@ -62,11 +62,11 @@ public class DasService {
 
         return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,entity,FeatureGeoJSON.class,params).getBody();
     }
-    
+
     public boolean isCollectionSupported(String collectionId){
         final String waveBuoyRealtimeCollectionID = "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc";
         return waveBuoyRealtimeCollectionID.contentEquals(collectionId);
     }
-    
+
 
 }
