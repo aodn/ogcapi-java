@@ -11,6 +11,7 @@ import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
+import org.locationtech.jts.io.WKTWriter;
 import org.locationtech.spatial4j.context.jts.JtsSpatialContext;
 import org.locationtech.spatial4j.shape.jts.JtsGeometry;
 import org.opengis.referencing.FactoryException;
@@ -47,9 +48,11 @@ public class GeometryUtils {
     protected static ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
 
     protected static Logger logger = LoggerFactory.getLogger(GeometryUtils.class);
+
     /**
      * Create a centroid point for the polygon, this will help to speed up the map processing as there is no need
      * to calculate large amount of data.
+     *
      * @param collection - The polygon that describe the spatial extents.
      * @return - The points that represent the centroid or use interior point if centroid is outside of the polygon.
      */
@@ -59,7 +62,7 @@ public class GeometryUtils {
             // Flatten the map and extract all polygon, some of the income geometry is GeometryCollection
             List<Coordinate> coordinates = calculateGeometryCentroid(collection);
 
-            if(coordinates != null) {
+            if (coordinates != null) {
                 return coordinates
                         .stream()
                         .filter(Objects::nonNull)
@@ -70,33 +73,25 @@ public class GeometryUtils {
                                 BigDecimal.valueOf(coordinate.getY()).setScale(getCentroidScale(), RoundingMode.HALF_UP))
                         )
                         .toList();
-            }
-            else {
+            } else {
                 return null;
             }
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             return null;
         }
     }
 
     protected static List<Coordinate> calculateGeometryCentroid(Geometry geometry) {
-        if(geometry instanceof GeometryCollection gc) {
-            return calculateCollectionCentroid(gc);
-        }
-        else if(geometry instanceof Polygon pl) {
-            return List.of(calculatePolygonCentroid(pl).getCoordinate());
-        }
-        else if(geometry instanceof LineString) {
-            return List.of(geometry.getCentroid().getCoordinate());
-        }
-        else if(geometry instanceof Point p) {
-            return List.of(p.getCoordinate());
-        }
-        else {
-            logger.info("Skip geometry centroid for {}", geometry.getGeometryType());
-            return null;
-        }
+        return switch (geometry) {
+            case GeometryCollection gc -> calculateCollectionCentroid(gc);
+            case Polygon pl -> List.of(calculatePolygonCentroid(pl).getCoordinate());
+            case LineString ls -> List.of(ls.getCentroid().getCoordinate());
+            case Point p -> List.of(p.getCoordinate());
+            default -> {
+                logger.info("Skip geometry centroid for {}", geometry.getGeometryType());
+                yield null;
+            }
+        };
     }
 
     protected static Point calculatePolygonCentroid(Geometry geometry) {
@@ -124,8 +119,7 @@ public class GeometryUtils {
         try {
             Point centroid = calculatePolygonCentroid(geometry);
             return List.of(new Coordinate(centroid.getX(), centroid.getY()));
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             // That means it cannot be simplified to a polygon that able to calculate centroid,
             // we need to calculate it one by one
             List<Coordinate> coordinates = new ArrayList<>();
@@ -141,8 +135,10 @@ public class GeometryUtils {
             return coordinates;
         }
     }
+
     /**
      * Create a grid based on the area of the spatial extents. Once we have the grid, we can union the area
+     *
      * @param envelope - An envelope that cover the area of the spatial extents
      * @param cellSize - How big each cell will be
      * @return - List of polygon that store the grid
@@ -166,8 +162,7 @@ public class GeometryUtils {
                     new Coordinate(minX, minY)  // Closing the polygon
             });
             gridPolygons.add(itself);
-        }
-        else {
+        } else {
             // Loop to create grid cells
             for (double x = minX; x < maxX; x += cellSize) {
                 for (double y = minY; y < maxY; y += cellSize) {
@@ -185,19 +180,21 @@ public class GeometryUtils {
         }
         return gridPolygons;
     }
+
     /**
      * Convert the WKT format from the cql to GeoJson use by Elastic search
+     *
      * @param literalExpression - Expression from parser
      * @return A Json string represent the literalExpression
      * @throws ParseException - Not expected to parse
-     * @throws IOException - Not expected to parse
+     * @throws IOException    - Not expected to parse
      */
     public static String convertToGeoJson(LiteralExpressionImpl literalExpression, CQLCrsType cqlCoorSystem) throws ParseException, IOException, FactoryException, TransformException {
         GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
         WKTReader reader = new WKTReader(geometryFactory);
         Geometry geo = reader.read(literalExpression.toString());
 
-        try(StringWriter writer = new StringWriter()) {
+        try (StringWriter writer = new StringWriter()) {
             Geometry t = CQLCrsType.transformGeometry(geo, cqlCoorSystem, CQLCrsType.EPSG4326);
             json.write(t, writer);
 
@@ -206,26 +203,28 @@ public class GeometryUtils {
             return r;
         }
     }
+
     /**
      * Please use this function as it contains the parser with enough decimal to make it work.
+     *
      * @param input - A Json of GeoJson
      * @return - An GeometryCollection that represent the GeoJson
      */
     public static Optional<Geometry> readGeometry(Object input) {
         try {
-            if(!(input instanceof String)) {
+            if (!(input instanceof String)) {
                 input = mapper.writeValueAsString(input);
             }
             return Optional.of(json.read(input));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             return Optional.empty();
         }
     }
+
     /**
      * Normalize a polygon by adjusting longitudes to the range [-180, 180], and return both parts as a GeometryCollection.
      *
-     * @param polygon  The input polygon.
+     * @param polygon The input polygon.
      * @return A polygon / multi-polygon unwrap at dateline.
      */
     public static Geometry normalizePolygon(Geometry polygon) {
@@ -236,15 +235,14 @@ public class GeometryUtils {
 
     public static List<ReferencedEnvelope> toReferencedEnvelope(Geometry geometry, CoordinateReferenceSystem crs) {
         List<ReferencedEnvelope> result = new ArrayList<>();
-        if(geometry instanceof MultiPolygon mp) {
-            for(int i = 0; i < mp.getNumGeometries(); i++) {
-                if(mp.getGeometryN(i) instanceof Polygon lr) {
+        if (geometry instanceof MultiPolygon mp) {
+            for (int i = 0; i < mp.getNumGeometries(); i++) {
+                if (mp.getGeometryN(i) instanceof Polygon lr) {
                     Coordinate[] coordinates = lr.getCoordinates();
                     result.add(toReferencedEnvelope(coordinates, crs));
                 }
             }
-        }
-        else if(geometry instanceof Polygon p) {
+        } else if (geometry instanceof Polygon p) {
             result.add(toReferencedEnvelope(p.getCoordinates(), crs));
         }
         return result;
@@ -265,5 +263,36 @@ public class GeometryUtils {
             maxy = Math.max(maxy, coord.y);
         }
         return new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
+    }
+
+    /**
+     * Convert GeoJSON MultiPolygon to WKT format for WFS CQL filter
+     * Handles multiple polygons properly by converting to WKT MULTIPOLYGON
+     *
+     * @param geoJsonGeometry GeoJSON geometry object (MultiPolygon)
+     * @return WKT string for use in INTERSECTS CQL filter, or null if invalid
+     * @throws IllegalArgumentException if the input is not valid GeoJSON
+     */
+    public static String convertToWkt(Object geoJsonGeometry) {
+        if (geoJsonGeometry == null) {
+            return null;
+        }
+
+        try {
+            // Use readGeometry method to parse the GeoJSON
+            Optional<Geometry> geometryOpt = readGeometry(geoJsonGeometry);
+
+            if (geometryOpt.isEmpty()) {
+                throw new IllegalArgumentException("Failed to parse GeoJSON geometry");
+            }
+
+            Geometry geometry = geometryOpt.get();
+            // Convert to WKT using JTS WKTWriter
+            WKTWriter wktWriter = new WKTWriter();
+            return wktWriter.write(geometry);
+
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid GeoJSON geometry for WKT conversion: " + e.getMessage(), e);
+        }
     }
 }
