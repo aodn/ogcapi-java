@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
-import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.WfsDescribeFeatureTypeResponse;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -30,7 +29,7 @@ public class DownloadableFieldsService {
     private RestTemplate restTemplate;
 
     @Autowired
-    private WfsServerConfig wfsServerConfig;
+    private WfsServer wfsServer;
 
     private final XmlMapper xmlMapper = new XmlMapper();
 
@@ -70,7 +69,7 @@ public class DownloadableFieldsService {
      */
     private List<DownloadableFieldModel> getFilterFieldsFromWfs(String wfsUrl, String typeName) {
         // SSRF protection: Only use pre-approved server URLs
-        String validatedServerUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsUrl);
+        String validatedServerUrl = wfsServer.validateAndGetApprovedServerUrl(wfsUrl);
 
         try {
             URI uri = UriComponentsBuilder.fromUriString(validatedServerUrl)

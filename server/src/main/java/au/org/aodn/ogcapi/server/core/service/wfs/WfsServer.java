@@ -1,12 +1,9 @@
-package au.org.aodn.ogcapi.server.core.configuration;
-
-import org.springframework.context.annotation.Configuration;
+package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import java.net.URI;
 import java.util.List;
 
-@Configuration
-public class WfsServerConfig {
+public class WfsServer {
     private final List<String> urls = List.of(
             "https://geoserver.imas.utas.edu.au/geoserver/wfs",
             "https://geoserver-123.aodn.org.au/geoserver/wfs",
@@ -43,7 +40,8 @@ public class WfsServerConfig {
 
     /**
      * Find matching URL from whitelist based on host only
-     * Example: "http://geoserver.imas.utas.edu.au/geoserver/ows" matches "https://geoserver.imas.utas.edu.au/geoserver/wfs"
+     * Example: "<a href="http://geoserver.imas.utas.edu.au/geoserver/ows">ows</a>"
+     * matches "<a href="https://geoserver.imas.utas.edu.au/geoserver/wfs">wfs</a>"
      * The matching is based on host only, ignoring protocol and path
      */
     private String findMatchingUrl(String userProvidedUrl) {

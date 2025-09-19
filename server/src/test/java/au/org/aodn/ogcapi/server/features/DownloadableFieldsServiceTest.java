@@ -2,7 +2,7 @@ package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
-import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
@@ -31,7 +31,7 @@ public class DownloadableFieldsServiceTest {
     private RestTemplate restTemplate;
 
     @Mock
-    private WfsServerConfig wfsServerConfig;
+    private WfsServer wfsServerConfig;
 
     @InjectMocks
     private DownloadableFieldsService downloadableFieldsService;
