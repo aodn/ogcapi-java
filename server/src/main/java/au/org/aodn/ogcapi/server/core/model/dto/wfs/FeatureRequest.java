@@ -26,6 +26,18 @@ public class FeatureRequest {
     @Schema(description = "WFS type name (required when featureId is 'downloadableFields')")
     private String layerName;
 
+    @Schema(description = "Width")
+    private BigDecimal width;
+
+    @Schema(description = "Height")
+    private BigDecimal height;
+
+    @Schema(description = "X")
+    private BigDecimal x;
+
+    @Schema(description = "Y")
+    private BigDecimal y;
+
     @Schema(description = "Wave buoy name")
     private String waveBuoy;
 }

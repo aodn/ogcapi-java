@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -31,6 +32,9 @@ public class RestApi implements CollectionsApi {
 
     @Autowired
     protected RestServices featuresService;
+
+    @Autowired
+    protected WmsServer wmsServer;
 
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
@@ -93,13 +97,15 @@ public class RestApi implements CollectionsApi {
             @ParameterObject @Valid FeatureRequest request) {
         FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
         switch (fid) {
-            case downloadableFields:
+            case downloadableFields -> {
                 if (request.getServerUrl() == null || request.getLayerName() == null) {
                     return ResponseEntity.badRequest().build();
                 }
                 return featuresService.getDownloadableFields(request.getServerUrl(), request.getLayerName());
-            case summary:
+            }
+            case summary -> {
                 String filter = null;
+
                 if (request.getDatetime() != null) {
                     filter = OGCApiService.processDatetimeParameter(CQLFields.temporal.name(), request.getDatetime(), filter);
                 }
@@ -118,12 +124,20 @@ public class RestApi implements CollectionsApi {
                 } catch (java.lang.Exception e) {
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
-            case first_data_available:
+            }
+            case first_data_available -> {
                 return featuresService.getWaveBuoys(collectionId, request.getDatetime());
-            case timeseries:
+            }
+            case timeseries -> {
                 return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
-            default:
+            }
+            case wms_map_feature -> {
+                String result = wmsServer.getMapFeatures(collectionId, request);
+                return ResponseEntity.ok().body(result);
+            }
+            default -> {
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+            }
         }
     }
 

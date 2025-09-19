@@ -22,6 +22,37 @@ elasticsearch:
 aws:
   region: ap-southeast-2
 
+# Default parameter for wms call
+wms-default-param:
+  wfs:
+    TRANSPARENT: "TRUE"
+    VERSION: "1.1.1"
+    FORMAT: "text/html"
+    EXCEPTIONS: "application/vnd.ogc.se_xml"
+    TILED: "true"
+    SERVICE: "WMS"
+    REQUEST: "GetFeatureInfo"
+    STYLES: ""
+    QUERYABLE: "true"
+    SRS: "EPSG:4326"         # This is the support from Geoserver which matches mapbox coordinate
+    INFO_FORMAT: "text/html"
+    FEATURE_COUNT: 100
+    BUFFER: 10
+  ncwms:
+    TRANSPARENT: "TRUE"
+    VERSION: "1.3.0"
+    FORMAT: "text/xml"
+    EXCEPTIONS: "application/vnd.ogc.se_xml"
+    TILED: "true"
+    SERVICE: "ncwms"
+    REQUEST: "GetFeatureInfo"
+    STYLES: ""
+    QUERYABLE: "true"
+    CRS: "EPSG:3857"
+    INFO_FORMAT: "text/xml"
+    FEATURE_COUNT: 100
+    BUFFER: 10
+
 api:
   host: http://localhost:${server.port}
 

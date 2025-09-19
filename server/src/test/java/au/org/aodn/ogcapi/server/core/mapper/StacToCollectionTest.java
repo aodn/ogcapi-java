@@ -153,7 +153,7 @@ public class StacToCollectionTest {
                 .cqlCrsType(CQLCrsType.EPSG4326)
                 .build();
 
-        ElasticSearch.SearchResult result = new ElasticSearch.SearchResult();
+        ElasticSearch.SearchResult<StacCollectionModel> result = new ElasticSearch.SearchResult<>();
         result.setCollections(List.of(model));
 
         // Should not throw any exception

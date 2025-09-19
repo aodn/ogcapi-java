@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
+import au.org.aodn.ogcapi.server.core.service.Search;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -13,5 +14,11 @@ public class TestConfig {
     @Primary
     public RestTemplate createMockRestTemplate() {
         return Mockito.mock(RestTemplate.class);
+    }
+
+    @Bean
+    @Primary
+    public Search createMockSearch() {
+        return Mockito.mock(Search.class);
     }
 }

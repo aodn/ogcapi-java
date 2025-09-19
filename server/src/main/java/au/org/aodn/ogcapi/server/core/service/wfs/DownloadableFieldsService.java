@@ -26,12 +26,12 @@ import java.util.stream.Stream;
 public class DownloadableFieldsService {
 
     @Autowired
-    private RestTemplate restTemplate;
+    protected RestTemplate restTemplate;
 
     @Autowired
-    private WfsServer wfsServer;
+    protected WfsServer wfsServer;
 
-    private final XmlMapper xmlMapper = new XmlMapper();
+    protected final XmlMapper xmlMapper = new XmlMapper();
 
     /**
      * Get downloadable fields for a layer
