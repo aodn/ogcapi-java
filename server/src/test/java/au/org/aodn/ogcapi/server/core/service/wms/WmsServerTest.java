@@ -4,11 +4,14 @@ import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.configuration.WfsWmsConfig;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.service.Search;
 import org.junit.jupiter.api.*;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -27,6 +30,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
                 CacheAutoConfiguration.class}
 )
 public class WmsServerTest {
+    // Inject the mock bean on the fly to avoid dependency issue
+    // we do not need this bean's function in this test
+    @MockitoBean
+    protected Search search;
 
     @Autowired
     protected WmsServer wmsServer;

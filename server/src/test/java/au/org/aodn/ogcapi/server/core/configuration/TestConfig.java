@@ -15,10 +15,4 @@ public class TestConfig {
     public RestTemplate createMockRestTemplate() {
         return Mockito.mock(RestTemplate.class);
     }
-
-    @Bean
-    @Primary
-    public Search createMockSearch() {
-        return Mockito.mock(Search.class);
-    }
 }
