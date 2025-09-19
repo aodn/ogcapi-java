@@ -152,11 +152,6 @@
 				<artifactId>ses</artifactId>
 				<version>${aws.sdk.version}</version>
 			</dependency>
-			<dependency>
-				<groupId>org.duckdb</groupId>
-				<artifactId>duckdb_jdbc</artifactId>
-				<version>1.0.0</version>
-			</dependency>
 			<!-- Add JSON layout dependency -->
 			<dependency>
 				<groupId>org.apache.logging.log4j</groupId>

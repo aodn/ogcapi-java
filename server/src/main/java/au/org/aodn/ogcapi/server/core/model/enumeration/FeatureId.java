@@ -3,7 +3,8 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 public enum FeatureId {
     summary("summary"),
     downloadableFields("downloadableFields"),
-    realtime("realtime");
+    first_data_available("first_data_available"),
+    timeseries("timeseries");
 
     private final String featureId;
 

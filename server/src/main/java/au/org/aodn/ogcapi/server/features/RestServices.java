@@ -1,32 +1,29 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
+import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.service.DuckDB;
+import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import au.org.aodn.ogcapi.features.model.*;
 
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 
 @Slf4j
 @Service("FeaturesRestService")
 public class RestServices extends OGCApiService {
+
+    @Autowired
+    protected DasService dasService;
 
     @Autowired
     protected StacToCollection StacToCollection;
@@ -67,69 +64,55 @@ public class RestServices extends OGCApiService {
         return ResponseEntity.ok(fields);
     }
 
-    public ResponseEntity<FeatureCollectionGeoJSON> getFeatures(String from) {
-        String to = null;
-        if (from != null) {
-            java.time.LocalDate localDate = java.time.LocalDate.parse(from);
-            to = localDate.plusDays(1).toString();
+    public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
+        if (dasService.isCollectionSupported(collectionID)){
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
+        if (from == null) {
+            return ResponseEntity.badRequest().body("Parameter 'datetime' is required and must be in 'from/to' format");
+        }
+
+        java.time.LocalDate localDate = java.time.LocalDate.parse(from);
+        String to = localDate.plusDays(1).toString();
         try {
-            long startTime = System.currentTimeMillis();
-            long queryStart = System.currentTimeMillis();
-            String sql = "SELECT \n" +
-                    "        site_name,\n" +
-                    "        first(TIME) as TIME,\n" +
-                    "        first(LATITUDE) AS LATITUDE,\n" +
-                    "        first(LONGITUDE) AS LONGITUDE\n" +
-                    "        FROM 'https://gtrrz-victor-testing-bucket.s3.ap-southeast-2.amazonaws.com/db_wave_buoy_realtime_nonqc.parquet'\n"
-                    +
-                    "        WHERE TIME >= ? AND TIME < ? \n" +
-                    "        GROUP BY site_name";
-            java.sql.PreparedStatement pstmt = DuckDB.getConnection().prepareStatement(sql);
-            pstmt.setString(1, from);
-            pstmt.setString(2, to);
-            ResultSet result = pstmt.executeQuery();
-            long queryTime = System.currentTimeMillis() - queryStart;
-            log.info("Query execution time: " + queryTime + "ms");
+           return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getWaveBuoys(from,to));
 
-            long processingStart = System.currentTimeMillis();
-            List<FeatureGeoJSON> features = new ArrayList<>();
-            int featureCount = 0;
-            while (result.next()) {
-                featureCount++;
-                String siteName = result.getString("site_name");
-                BigDecimal latitude = result.getBigDecimal("LATITUDE");
-                BigDecimal longitude = result.getBigDecimal("LONGITUDE");
+        } catch (Exception e) {
+            log.error("Error fetching wave buoys data: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 
-                PointGeoJSON geometry = new PointGeoJSON();
-                geometry.setType(PointGeoJSON.TypeEnum.POINT);
-                geometry.setCoordinates(Arrays.asList(longitude, latitude));
+    public ResponseEntity<?> getWaveBuoyData(String collectionID, String datetime, String buoy) {
+        if (dasService.isCollectionSupported(collectionID)){
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
+        if (datetime == null) {
+            return ResponseEntity.badRequest().body("Parameter 'datetime' is required and must be in 'from/to' format");
+        }
+        if (!datetime.contains("/")) {
+            return ResponseEntity.badRequest().body("Parameter 'datetime' must be in 'from/to' format");
+        }
+        if (buoy == null) {
+            return ResponseEntity.badRequest().body("Parameter 'waveBuoy' is required");
+        }
 
-                Map<String, Object> properties = new HashMap<>();
-                properties.put("buoy", siteName);
-                properties.put("date", result.getString("TIME").split(" ")[0]);
+        try {
+            String[] parts = datetime.split("/", 2);
+            String from = parts[0];
+            String to = parts[1];
 
-                FeatureGeoJSON feature = new FeatureGeoJSON();
-                feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
-                feature.setGeometry(geometry);
-                feature.setProperties(properties);
-                features.add(feature);
-            }
-            long processingTime = System.currentTimeMillis() - processingStart;
-            log.info("Result processing time: " + processingTime + "ms (processed " + featureCount
-                    + " features)");
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getWaveBuoyData(from,to, buoy));
 
-            FeatureCollectionGeoJSON featureCollection = new FeatureCollectionGeoJSON();
-            featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
-            featureCollection.setFeatures(features);
-
-            long totalTime = System.currentTimeMillis() - startTime;
-            log.info("Total getFeatures action time: " + totalTime + "ms");
-
-            return ResponseEntity.ok().body(featureCollection);
-        } catch (java.lang.Exception e) {
-            log.error("Error fetching features: " + e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            log.error("Error fetching wave buoy historical data: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

@@ -92,7 +92,6 @@ public class RestApi implements CollectionsApi {
             @PathVariable("featureId") String featureId,
             @ParameterObject @Valid FeatureRequest request) {
         FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
-
         switch (fid) {
             case downloadableFields:
                 if (request.getServerUrl() == null || request.getLayerName() == null) {
@@ -119,8 +118,10 @@ public class RestApi implements CollectionsApi {
                 } catch (java.lang.Exception e) {
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
-            case realtime:
-                return featuresService.getFeatures(request.getDatetime());
+            case first_data_available:
+                return featuresService.getWaveBuoys(collectionId, request.getDatetime());
+            case timeseries:
+                return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             default:
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
