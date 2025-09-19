@@ -6,7 +6,7 @@ public enum FeatureId {
     first_data_available("first_data_available"),
     timeseries("timeseries");
 
-    private final String featureId;
+    public final String featureId;
 
     FeatureId(String id) {
         this.featureId = id;

@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
-import au.org.aodn.ogcapi.server.core.configuration.WfsServerConfig;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
@@ -24,17 +23,17 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class DownloadWfsDataService {
     private final Search elasticSearch;
     private final DownloadableFieldsService downloadableFieldsService;
-    private final WfsServerConfig wfsServerConfig;
+    private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
 
     public DownloadWfsDataService(
             Search elasticSearch,
             DownloadableFieldsService downloadableFieldsService,
-            WfsServerConfig wfsServerConfig,
+            WfsServer wfsServer,
             RestTemplate restTemplate) {
         this.elasticSearch = elasticSearch;
         this.downloadableFieldsService = downloadableFieldsService;
-        this.wfsServerConfig = wfsServerConfig;
+        this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
     }
 
@@ -178,7 +177,7 @@ public class DownloadWfsDataService {
 
         // Validate and get approved WFS URL from whitelist
         String approvedWfsUrl;
-        approvedWfsUrl = wfsServerConfig.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl());
+        approvedWfsUrl = wfsServer.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl());
         log.info("Using approved WFS URL: {} (original: {})", approvedWfsUrl, wfsInfo.wfsUrl());
 
         // Get downloadable fields to map field names
