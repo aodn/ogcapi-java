@@ -6,6 +6,8 @@ import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -69,7 +71,6 @@ public class DownloadWfsDataService {
 
     /**
      * Build CQL filter for temporal and spatial constraints
-     * TODO: Implement proper conversion based on actual data structure
      */
     private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, List<DownloadableFieldModel> downloadableFields) {
         StringBuilder cqlFilter = new StringBuilder();
@@ -95,39 +96,24 @@ public class DownloadWfsDataService {
 
         // Add spatial filter
         if (geometryField.isPresent() && multiPolygon != null) {
-            if (!cqlFilter.isEmpty()) {
+            String fieldName = geometryField.get().getName();
+
+            String wkt = GeometryUtils.convertToWkt(multiPolygon);
+
+            if ((wkt != null) && !cqlFilter.isEmpty()) {
                 cqlFilter.append(" AND ");
             }
 
-            String fieldName = geometryField.get().getName();
-            // Convert multiPolygon to WKT format
-            String wktGeometry = convertToWkt(multiPolygon);
-            if (wktGeometry != null) {
+            if (wkt != null) {
                 cqlFilter.append("INTERSECTS(")
                         .append(fieldName)
                         .append(",")
-                        .append(wktGeometry)
+                        .append(wkt)
                         .append(")");
             }
         }
 
         return cqlFilter.toString();
-    }
-
-    /**
-     * Convert multiPolygon object to WKT format
-     * TODO: Implement proper conversion based on actual data structure
-     */
-    private String convertToWkt(Object multiPolygon) {
-        // Simplified conversion - assuming multiPolygon is a simple bbox for now
-        // For example: POLYGON((110 -45,160 -45,160 -5,110 -5,110 -45))
-
-        // This is a placeholder - implement proper polygon conversion based on data structure
-        if (multiPolygon instanceof String) {
-            return (String) multiPolygon;
-        }
-
-        return null;
     }
 
     /**
@@ -185,8 +171,12 @@ public class DownloadWfsDataService {
                 downloadableFieldsService.getDownloadableFields(approvedWfsUrl, wfsInfo.layerName());
         log.info("DownloadableFields: {}", downloadableFields);
 
+        // Validate start and end dates
+        String validStartDate = DatetimeUtils.validateAndFormatDate(startDate, true);
+        String validEndDate = DatetimeUtils.validateAndFormatDate(endDate, false);
+
         // Build CQL filter
-        String cqlFilter = buildCqlFilter(startDate, endDate, multiPolygon, downloadableFields);
+        String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, downloadableFields);
 
         // Build final WFS URL
         String wfsRequestUrl = buildWfsUrl(approvedWfsUrl, wfsInfo.layerName(), cqlFilter);
