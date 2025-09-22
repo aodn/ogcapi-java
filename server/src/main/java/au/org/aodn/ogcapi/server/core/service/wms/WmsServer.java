@@ -3,12 +3,12 @@ package au.org.aodn.ogcapi.server.core.service.wms;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfo;
 import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
@@ -18,21 +18,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.StringReader;
 import java.math.BigDecimal;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
 public class WmsServer {
+    protected XmlMapper xmlMapper;
+    protected DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM d, yyyy, h:mm:ss a", Locale.US);
 
     @Autowired
     protected RestTemplate restTemplate;
-
-    @Autowired
-    protected ObjectMapper objectMapper;
-
-    protected XmlMapper xmlMapper;
 
     @Autowired
     protected Search search;
@@ -50,10 +56,6 @@ public class WmsServer {
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
             if(components.getPath() != null) {
-                Map<String, String> queryParams = components
-                        .getQueryParams()
-                        .toSingleValueMap();
-
                 // Now depends on the service, we need to have different arguments
                 List<String> pathSegments = components.getPathSegments();
                 if (!pathSegments.isEmpty()) {
@@ -121,6 +123,65 @@ public class WmsServer {
         }
         return null;
     }
+    /**
+     * Specific to the geoserver we own, when request wms feature, it return HTML!! which is super bad.
+     * This force you to accept the format and styling, so better parse and convert it back to json
+     * @param html - HTML string from geoserver
+     * @return Object represent the content.
+     */
+    protected FeatureInfoResponse convertFromHtml(String html) {
+        FeatureInfoResponse result = FeatureInfoResponse.builder().featureInfo(new ArrayList<>()).build();
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        factory.setNamespaceAware(false);
+
+        try {
+            DocumentBuilder builder = factory.newDocumentBuilder();
+            // The incoming html is malformed with <br> not self close.
+            Document doc = builder.parse(new org.xml.sax.InputSource(new StringReader(html.replaceAll("(?i)<br\\s*>", "<br/>"))));
+            doc.getDocumentElement().normalize();
+            NodeList divs = doc.getElementsByTagName("div");
+            for (int i = 0; i < divs.getLength(); i++) {
+                Element div = (Element) divs.item(i);
+                if (div.getAttribute("class").equals("featurewhite")) {
+                    FeatureInfo featureInfo = new FeatureInfo();
+                    NodeList bTags = div.getElementsByTagName("b");
+                    for (int j = 0; j < bTags.getLength(); j++) {
+                        Element bTag = (Element) bTags.item(j);
+                        String key = bTag.getTextContent().trim().replace(" :", "");
+                        String value = bTag.getNextSibling() != null ? bTag.getNextSibling().getTextContent().trim() : "";
+                        switch (key) {
+                            case "Platform number":
+                                featureInfo.setPlatformNumber(value);
+                                break;
+                            case "Data centre":
+                                featureInfo.setDataCentre(value);
+                                break;
+                            case "Profile Processing Mode":
+                                featureInfo.setProfileProcessingMode(value);
+                                break;
+                            case "Oxygen Sensor on float:":
+                                featureInfo.setOxygenSensorOnFloat(Boolean.parseBoolean(value));
+                                break;
+                            case "Date":
+                                try {
+                                    ZonedDateTime date = ZonedDateTime.parse(value, formatter.withZone(java.time.ZoneId.of("UTC")));
+                                    featureInfo.setTime(date);
+                                } catch (DateTimeParseException e) {
+                                    throw new RuntimeException("Failed to parse date: " + value, e);
+                                }
+                                break;
+                        }
+                    }
+                    result.getFeatureInfo().add(featureInfo);
+                }
+            }
+        }
+        catch(Exception e){
+            log.error("Error parsing HTML", e);
+        }
+
+        return result;
+    }
 
     public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException {
         // Get the record contains the map feature, given one uuid , 1 result expected
@@ -149,7 +210,10 @@ public class WmsServer {
 
                     if(response.getStatusCode().is2xxSuccessful()) {
                         // Now try to unify the return
-                        if(MediaType.APPLICATION_XML.isCompatibleWith(response.getHeaders().getContentType())) {
+                        if(MediaType.TEXT_HTML.isCompatibleWith(response.getHeaders().getContentType())) {
+                            return convertFromHtml(response.getBody());
+                        }
+                        else if(MediaType.APPLICATION_XML.isCompatibleWith(response.getHeaders().getContentType())) {
                             return xmlMapper.readValue(response.getBody(), FeatureInfoResponse.class);
                         }
                     }

@@ -1,7 +1,9 @@
 package au.org.aodn.ogcapi.server.core.model.wms;
 
+import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
+import java.util.List;
 import lombok.*;
 
 @Getter
@@ -30,5 +32,6 @@ public class FeatureInfoResponse {
     protected Double gridCentreLat;
 
     @JacksonXmlProperty(localName = "FeatureInfo")
-    protected FeatureInfo featureInfo;
+    @JacksonXmlElementWrapper(useWrapping = false)
+    protected List<FeatureInfo> featureInfo;
 }
