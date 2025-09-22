@@ -30,7 +30,7 @@ public class DownloadableFieldsService {
 
     @Autowired
     protected WfsServer wfsServer;
-
+    // Cannot use singleton bean as it impacted other dependency
     protected final XmlMapper xmlMapper = new XmlMapper();
 
     /**

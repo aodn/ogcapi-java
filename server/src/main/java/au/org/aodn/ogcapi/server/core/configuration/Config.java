@@ -36,8 +36,8 @@ public class Config implements WebMvcConfigurer {
     @Bean
     public RestTemplate createRestTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout(1200000);  // 20 minutes connection timeout
-        factory.setReadTimeout(1200000);   // 20 minutes read timeout for large downloads
+        factory.setConnectTimeout(1200000); // 20 minutes connection timeout
+        factory.setReadTimeout(1200000);    // 20 minutes read timeout for large downloads
 
         return new RestTemplate(factory);
     }

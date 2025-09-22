@@ -3,10 +3,17 @@ package au.org.aodn.ogcapi.server.core.service.wms;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
@@ -23,10 +30,21 @@ public class WmsServer {
     protected RestTemplate restTemplate;
 
     @Autowired
+    protected ObjectMapper objectMapper;
+
+    protected XmlMapper xmlMapper;
+
+    @Autowired
     protected Search search;
 
     @Autowired
     protected WmsDefaultParam wmsDefaultParam;
+
+    public WmsServer() {
+        xmlMapper = new XmlMapper();
+        xmlMapper.registerModule(new JavaTimeModule()); // Add JavaTimeModule
+        xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    }
 
     protected List<String> createQueryUrl(String url, FeatureRequest request) {
         try {
@@ -54,8 +72,8 @@ public class WmsServer {
                     param.put("HEIGHT", request.getHeight().toString());
                     param.put("X", request.getX().toString());
                     param.put("Y", request.getY().toString());
-                    param.put("I", request.getX().toString());
-                    param.put("J", request.getY().toString());
+                    param.put("I", request.getX().toString());  // Same as X but some later protocol use I
+                    param.put("J", request.getY().toString());  // Same as Y but some later protocol use J
                     param.put("BBOX", request.getBbox().stream().map(BigDecimal::toString).collect(Collectors.joining(",")));
 
                     // Very specific to IMOS, if we see geoserver-123.aodn.org.au/geoserver/wms, then
@@ -73,7 +91,9 @@ public class WmsServer {
                                 builder.queryParam(key, value);
                             }
                         });
-                        urls.add(builder.build().toUriString());
+                        String target = builder.build().toUriString();
+                        log.debug("Cache url to geoserver {}", target);
+                        urls.add(target);
                     }
                     // This is the normal route
                     UriComponentsBuilder builder = UriComponentsBuilder
@@ -88,7 +108,9 @@ public class WmsServer {
                             builder.queryParam(key, value);
                         }
                     });
-                    urls.add(builder.build().toUriString());
+                    String target = builder.build().toUriString();
+                    log.debug("Url to geoserver {}", target);
+                    urls.add(target);
 
                     return urls;
                 }
@@ -100,7 +122,7 @@ public class WmsServer {
         return null;
     }
 
-    public String getMapFeatures(String collectionId, FeatureRequest request) {
+    public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException {
         // Get the record contains the map feature, given one uuid , 1 result expected
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(List.of(collectionId), null);
 
@@ -108,7 +130,8 @@ public class WmsServer {
             StacCollectionModel model = result.getCollections().get(0);
             Optional<String> mapServerUrl = model.getLinks()
                     .stream()
-                    .filter(link -> link.getAiGroup().contains("> wfs")) // This is the pattern for wfs link
+                    .filter(link -> link.getAiGroup() != null)
+                    .filter(link -> link.getAiGroup().contains("> wms") && link.getTitle().equalsIgnoreCase(request.getLayerName())) // This is the pattern for wfs link
                     .map(LinkModel::getHref)
                     .findFirst();
 
@@ -117,8 +140,18 @@ public class WmsServer {
                 for(String url : urls) {
                     // Try one by the, we exit when any works
                     ResponseEntity<String> response = restTemplate.getForEntity(url, String.class, Collections.emptyMap());
+
+                    if(response.getStatusCode().is3xxRedirection() && response.getHeaders().getLocation() != null) {
+                        // Redirect should happen automatically but it does not so here is a safe guard
+                        // the reason happens because http is use but redirect to https
+                        response = restTemplate.getForEntity(response.getHeaders().getLocation().toString(), String.class, Collections.emptyMap());
+                    }
+
                     if(response.getStatusCode().is2xxSuccessful()) {
-                        return response.getBody();
+                        // Now try to unify the return
+                        if(MediaType.APPLICATION_XML.isCompatibleWith(response.getHeaders().getContentType())) {
+                            return xmlMapper.readValue(response.getBody(), FeatureInfoResponse.class);
+                        }
                     }
                 }
             }

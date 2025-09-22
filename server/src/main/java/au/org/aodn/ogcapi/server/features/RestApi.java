@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
+import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -121,7 +123,7 @@ public class RestApi implements CollectionsApi {
                             request.getProperties(),
                             filter != null ? "filter=" + filter : null
                     );
-                } catch (java.lang.Exception e) {
+                } catch (Throwable e) {
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
             }
@@ -132,8 +134,13 @@ public class RestApi implements CollectionsApi {
                 return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wms_map_feature -> {
-                String result = wmsServer.getMapFeatures(collectionId, request);
-                return ResponseEntity.ok().body(result);
+                try {
+                    FeatureInfoResponse result = wmsServer.getMapFeatures(collectionId, request);
+                    return ResponseEntity.ok().body(result);
+                }
+                catch(Throwable e) {
+                    return ResponseEntity.internalServerError().body(e);
+                }
             }
             default -> {
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
