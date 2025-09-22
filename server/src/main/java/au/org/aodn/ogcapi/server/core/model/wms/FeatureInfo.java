@@ -15,16 +15,4 @@ public class FeatureInfo {
 
     @JacksonXmlProperty(localName = "value")
     protected String value;
-
-    @JacksonXmlProperty(localName = "platform")
-    protected String platformNumber;
-
-    @JacksonXmlProperty(localName = "dataCentre")
-    protected String dataCentre;
-
-    @JacksonXmlProperty(localName = "profileProcessingMode")
-    protected String profileProcessingMode;
-
-    @JacksonXmlProperty(localName = "oxygenSensorOnFloat")
-    protected Boolean oxygenSensorOnFloat;
 }

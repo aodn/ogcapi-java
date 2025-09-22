@@ -13,6 +13,9 @@ import lombok.*;
 @NoArgsConstructor
 @JacksonXmlRootElement(localName = "FeatureInfoResponse")
 public class FeatureInfoResponse {
+    // A special case where the return is a html directly
+    protected String html;
+
     @JacksonXmlProperty(localName = "longitude")
     protected Double longitude;
 

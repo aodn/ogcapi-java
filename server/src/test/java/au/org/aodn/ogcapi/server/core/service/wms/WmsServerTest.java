@@ -1,11 +1,9 @@
 package au.org.aodn.ogcapi.server.core.service.wms;
 
-import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.configuration.WfsWmsConfig;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,7 +14,6 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.List;
 
@@ -39,23 +36,6 @@ public class WmsServerTest {
 
     @Autowired
     protected WmsServer wmsServer;
-
-    @Test
-    public void verifyHTmlParseCorrect() throws IOException {
-        String html = BaseTestClass.readResourceFile("classpath:html/sampleMapFeature.html");
-        FeatureInfoResponse res = wmsServer.convertFromHtml(html);
-        assertEquals(2, res.getFeatureInfo().size(), "Two item");
-
-        assertEquals("1900160", res.getFeatureInfo().get(0).getPlatformNumber(), "Platform 1");
-        assertEquals("AOML", res.getFeatureInfo().get(0).getDataCentre(), "Data center 1");
-        assertEquals("Delayed", res.getFeatureInfo().get(0).getProfileProcessingMode(), "Profile 1");
-        assertEquals(false, res.getFeatureInfo().get(0).getOxygenSensorOnFloat(), "Sensor 1");
-
-        assertEquals("1900830", res.getFeatureInfo().get(1).getPlatformNumber(), "Platform 2");
-        assertEquals("AOML", res.getFeatureInfo().get(1).getDataCentre(), "Data center 2");
-        assertEquals("Realtime", res.getFeatureInfo().get(1).getProfileProcessingMode(), "Profile 2");
-        assertEquals(false, res.getFeatureInfo().get(1).getOxygenSensorOnFloat(), "Sensor 2");
-    }
 
     @Test
     public void verifyWfsUrlGenCorrect() {
