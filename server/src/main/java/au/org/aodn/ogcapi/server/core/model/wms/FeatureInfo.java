@@ -14,7 +14,7 @@ public class FeatureInfo {
     protected ZonedDateTime time;
 
     @JacksonXmlProperty(localName = "value")
-    protected double value;
+    protected String value;
 
     @JacksonXmlProperty(localName = "platform")
     protected String platformNumber;

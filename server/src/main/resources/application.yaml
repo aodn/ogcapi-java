@@ -48,7 +48,8 @@ wms-default-param:
     REQUEST: "GetFeatureInfo"
     STYLES: ""
     QUERYABLE: "true"
-    CRS: "EPSG:3857"
+    CRS: "EPSG:4326"
+    SRS: "EPSG:4326"
     INFO_FORMAT: "text/xml"
     FEATURE_COUNT: 100
     BUFFER: 10
