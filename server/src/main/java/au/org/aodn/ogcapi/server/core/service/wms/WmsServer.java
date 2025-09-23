@@ -140,10 +140,19 @@ public class WmsServer {
                     if(response.getStatusCode().is2xxSuccessful()) {
                         // Now try to unify the return
                         if(MediaType.TEXT_HTML.isCompatibleWith(response.getHeaders().getContentType())) {
-                            return FeatureInfoResponse.builder().html(response.getBody()).build();
+                            String html = response.getBody();
+                            // This is a simple trick to check if the html is in fact empty body, if empty
+                            // try another url
+                            if(html != null && html.contains("<div class=\"feature\">")) {
+                                return FeatureInfoResponse.builder().html(response.getBody()).build();
+                            }
                         }
                         else if(MediaType.APPLICATION_XML.isCompatibleWith(response.getHeaders().getContentType())) {
-                            return xmlMapper.readValue(response.getBody(), FeatureInfoResponse.class);
+                            FeatureInfoResponse r =  xmlMapper.readValue(response.getBody(), FeatureInfoResponse.class);
+                            //  give another url a chance
+                            if (!r.getFeatureInfo().isEmpty()) {
+                                return r;
+                            }
                         }
                     }
                 }
