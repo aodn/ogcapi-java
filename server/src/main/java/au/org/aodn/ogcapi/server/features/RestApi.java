@@ -5,8 +5,10 @@ import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
+import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -16,6 +18,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
+import net.bytebuddy.implementation.bytecode.Throw;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -31,6 +34,9 @@ public class RestApi implements CollectionsApi {
 
     @Autowired
     protected RestServices featuresService;
+
+    @Autowired
+    protected WmsServer wmsServer;
 
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
@@ -93,13 +99,15 @@ public class RestApi implements CollectionsApi {
             @ParameterObject @Valid FeatureRequest request) {
         FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
         switch (fid) {
-            case downloadableFields:
+            case downloadableFields -> {
                 if (request.getServerUrl() == null || request.getLayerName() == null) {
                     return ResponseEntity.badRequest().build();
                 }
                 return featuresService.getDownloadableFields(request.getServerUrl(), request.getLayerName());
-            case summary:
+            }
+            case summary -> {
                 String filter = null;
+
                 if (request.getDatetime() != null) {
                     filter = OGCApiService.processDatetimeParameter(CQLFields.temporal.name(), request.getDatetime(), filter);
                 }
@@ -115,15 +123,28 @@ public class RestApi implements CollectionsApi {
                             request.getProperties(),
                             filter != null ? "filter=" + filter : null
                     );
-                } catch (java.lang.Exception e) {
+                } catch (Throwable e) {
                     return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
                 }
-            case first_data_available:
+            }
+            case first_data_available -> {
                 return featuresService.getWaveBuoys(collectionId, request.getDatetime());
-            case timeseries:
+            }
+            case timeseries -> {
                 return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
-            default:
+            }
+            case wms_map_feature -> {
+                try {
+                    FeatureInfoResponse result = wmsServer.getMapFeatures(collectionId, request);
+                    return ResponseEntity.ok().body(result);
+                }
+                catch(Throwable e) {
+                    return ResponseEntity.internalServerError().body(e);
+                }
+            }
+            default -> {
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+            }
         }
     }
 

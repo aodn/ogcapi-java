@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
+import au.org.aodn.ogcapi.server.core.service.Search;
 import org.mockito.Mockito;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
