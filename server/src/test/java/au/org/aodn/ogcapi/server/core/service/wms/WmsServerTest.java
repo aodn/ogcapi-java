@@ -106,7 +106,7 @@ public class WmsServerTest {
 
         assertEquals(1, urls.size());
 
-        String expectedUrl = "https://geoserver-123.aodn.org.au/geoserver/ncwms?LAYERS=srs_ghrsst_l4_gamssa_url/analysed_sst&TRANSPARENT=TRUE&VERSION=1.3.0&FORMAT=text/xml&EXCEPTIONS=application/vnd.ogc.se_xml&TILED=true&SERVICE=ncwms&REQUEST=GetFeatureInfo&STYLES=&QUERYABLE=true&CRS=EPSG:3857&INFO_FORMAT=text/xml&FEATURE_COUNT=100&BUFFER=10&WIDTH=637&HEIGHT=550&I=254&J=191&X=254&Y=191&QUERY_LAYERS=srs_ghrsst_l4_gamssa_url/analysed_sst&BBOX=-111.86719179153421,-69.03714171275249,111.8671917915342,69.03714171275138";
+        String expectedUrl = "https://geoserver-123.aodn.org.au/geoserver/ncwms?LAYERS=srs_ghrsst_l4_gamssa_url/analysed_sst&TRANSPARENT=TRUE&VERSION=1.3.0&FORMAT=text/xml&EXCEPTIONS=application/vnd.ogc.se_xml&TILED=true&SERVICE=ncwms&REQUEST=GetFeatureInfo&STYLES=&QUERYABLE=true&CRS=EPSG:4326&INFO_FORMAT=text/xml&FEATURE_COUNT=100&BUFFER=10&WIDTH=637&HEIGHT=550&I=254&J=191&X=254&Y=191&QUERY_LAYERS=srs_ghrsst_l4_gamssa_url/analysed_sst&BBOX=-111.86719179153421,-69.03714171275249,111.8671917915342,69.03714171275138";
         UriComponents expected = UriComponentsBuilder.fromUriString(expectedUrl).build();
         UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
 
