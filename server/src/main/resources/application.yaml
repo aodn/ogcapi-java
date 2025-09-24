@@ -77,7 +77,7 @@ management:
       enabled: false
   endpoints:
     web:
-      base-path: /manage
+      base-path: /api/v1/ogc/manage
       exposure:
         include: "health,info"
   endpoint:
