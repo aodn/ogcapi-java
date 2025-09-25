@@ -12,7 +12,6 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -186,7 +185,6 @@ public class WmsServer {
      * @param collectionId - The uuid
      * @return - The wms server link.
      */
-    @Cacheable("wms-server-url")
     protected Optional<String> getMapServerUrl(String collectionId, FeatureRequest request) {
         // Get the record contains the map feature, given one uuid , 1 result expected
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(List.of(collectionId), null);
