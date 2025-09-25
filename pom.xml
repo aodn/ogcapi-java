@@ -122,6 +122,18 @@
 				<type>pom</type>
 				<scope>import</scope>
 			</dependency>
+            <!-- EhCache 3.x -->
+            <dependency>
+                <groupId>org.ehcache</groupId>
+                <artifactId>ehcache</artifactId>
+                <version>3.11.1</version> <!-- Use the latest version -->
+            </dependency>
+            <!-- JCache API -->
+            <dependency>
+                <groupId>javax.cache</groupId>
+                <artifactId>cache-api</artifactId>
+                <version>1.1.1</version>
+            </dependency>
 			<dependency>
 				<groupId>org.mock-server</groupId>
 				<artifactId>mockserver-netty</artifactId>

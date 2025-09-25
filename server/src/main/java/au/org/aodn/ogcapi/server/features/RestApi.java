@@ -18,7 +18,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
-import net.bytebuddy.implementation.bytecode.Throw;
 import org.springdoc.core.annotations.ParameterObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -40,7 +39,7 @@ public class RestApi implements CollectionsApi {
 
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
-        return featuresService.getCollection(collectionId, null);
+        return featuresService.getCollection(collectionId);
     }
 
     @Hidden
@@ -133,6 +132,14 @@ public class RestApi implements CollectionsApi {
             case timeseries -> {
                 return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
+            case wms_map_tile -> {
+                try {
+                    return ResponseEntity.ok().body(wmsServer.getMapTile(collectionId, request));
+                }
+                catch(Throwable e) {
+                    return ResponseEntity.internalServerError().body(e);
+                }
+            }
             case wms_map_feature -> {
                 try {
                     FeatureInfoResponse result = wmsServer.getMapFeatures(collectionId, request);
@@ -147,7 +154,6 @@ public class RestApi implements CollectionsApi {
             }
         }
     }
-
     /**
      * @param collectionId - The collection id
      * @param limit        - Limit of result return

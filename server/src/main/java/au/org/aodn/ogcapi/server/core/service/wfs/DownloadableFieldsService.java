@@ -40,7 +40,7 @@ public class DownloadableFieldsService {
      * @param typeName The WFS type name
      * @return List of downloadable fields
      */
-    @Cacheable(value = "downloadableFields", key = "#wfsUrl + ':' + #typeName")
+    @Cacheable(value = "downloadable-fields", key = "#wfsUrl + ':' + #typeName")
     public List<DownloadableFieldModel> getDownloadableFields(String wfsUrl, String typeName) {
         log.info("Getting downloadable fields for typeName: {} from WFS: {}", typeName, wfsUrl);
 

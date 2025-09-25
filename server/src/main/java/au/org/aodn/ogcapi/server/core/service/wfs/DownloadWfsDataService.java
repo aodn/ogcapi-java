@@ -147,7 +147,7 @@ public class DownloadWfsDataService {
 
         // Get collection information from UUID
         ElasticSearch.SearchResult<StacCollectionModel> searchResult =
-                elasticSearch.searchCollections(List.of(uuid), null);
+                elasticSearch.searchCollections(uuid);
 
         if (searchResult.getCollections().isEmpty()) {
             throw new RuntimeException("Collection with UUID " + uuid + " not found");

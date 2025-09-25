@@ -13,5 +13,8 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "wms-default-param")
 public class WmsDefaultParam {
     private Map<String, String> wfs;
+    private Map<String, String> ncwfs;
+
+    private Map<String, String> wms;
     private Map<String, String> ncwms;
 }
