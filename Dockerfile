@@ -11,7 +11,7 @@ ENTRYPOINT [\
     "-Dserver.port=${PORT}",\
     "-Delasticsearch.serverUrl=${ELASTIC_URL}",\
     "-Delasticsearch.apiKey=${ELASTIC_KEY}",\
-    "-data-access-service.host=${DAS_HOST}",\
-    "-data-access-service.secret=${DAS_SECRET}",\
+    "-Ddata-access-service.host=${DAS_HOST}",\
+    "-Ddata-access-service.secret=${DAS_SECRET}",\
     "-jar",\
     "/app.jar"]
