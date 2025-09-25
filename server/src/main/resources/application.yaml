@@ -11,7 +11,7 @@ elasticsearch:
   vocabs_index:
     name: vocabs_index
   cloud_optimized_index:
-    name: es-coindexer-edge
+    name: es-coindexer-dev
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
   search_as_you_type:
