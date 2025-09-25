@@ -23,6 +23,7 @@ import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
 import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -219,6 +220,12 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Override
     public ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollectionsWithGeometry(String sortBy) {
         return searchCollectionsByIds(null, Boolean.TRUE, sortBy);
+    }
+
+    @Cacheable(value="elastic-search-uuid-only", key="#id")
+    @Override
+    public ElasticSearchBase.SearchResult<StacCollectionModel> searchCollections(String id) {
+        return searchCollections(List.of(id), null);
     }
 
     @Override

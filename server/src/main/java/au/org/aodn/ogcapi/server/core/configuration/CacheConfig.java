@@ -1,16 +1,21 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
+import org.ehcache.config.builders.*;
+import org.ehcache.config.units.MemoryUnit;
+import org.ehcache.jsr107.EhcacheCachingProvider;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import javax.cache.CacheManager;
 import javax.cache.Caching;
-import javax.cache.configuration.MutableConfiguration;
-import javax.cache.expiry.Duration;
-import javax.cache.expiry.TouchedExpiryPolicy;
-import java.util.concurrent.TimeUnit;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
 
 @Configuration
 @EnableCaching
@@ -22,24 +27,61 @@ public class CacheConfig {
     }
 
     @Bean
-    public JCacheCacheManager cacheManager() {
-        // Create a JCache CacheManager backed by EhCache
-        javax.cache.CacheManager cacheManager = Caching.getCachingProvider().getCacheManager();
+    public JCacheCacheManager cacheManager() throws IOException {
 
-        // Configure the "elastic-collection-list" cache
-        MutableConfiguration<Object, Object> cacheConfiguration = new MutableConfiguration<>()
-                .setTypes(Object.class, Object.class) // Generic key-value types
-                .setStoreByValue(false)
-                .setExpiryPolicyFactory(TouchedExpiryPolicy.factoryOf(new Duration(TimeUnit.HOURS, 24))) // TTL of 60 minutes
-                .setStatisticsEnabled(true) // Optional: Enable cache statistics
-                .setManagementEnabled(true); // Optional: Enable cache management
+        // Create a temporary directory for EhCache disk storage
+        Path tempDir = Files.createTempDirectory("ehcache-elastic-collection-list");
+        File storagePath = tempDir.toFile();
+        storagePath.deleteOnExit(); // Mark the directory for deletion on JVM exit
 
-        // Register the cache
-        cacheManager.createCache("all-noland-geometry", cacheConfiguration);
-        cacheManager.createCache("parameter-vocabs", cacheConfiguration);
-        cacheManager.createCache("downloadable-fields", cacheConfiguration);
+        org.ehcache.config.Configuration config = ConfigurationBuilder
+                .newConfigurationBuilder()
+                .withService(new org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration(storagePath))
+                .withCache("cache-maptile",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, byte[].class,
+                                ResourcePoolsBuilder.newResourcePoolsBuilder()
+                                        .heap(100, MemoryUnit.MB)
+                                        .disk(10, MemoryUnit.GB, true)
+                                )
+                                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                .withCache("all-noland-geometry",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(1)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                .withCache("parameter-vocabs",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(10)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                .withCache("downloadable-fields",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(200)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                .withCache("elastic-search-uuid-only",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(200)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
+                )
+                .build();
 
-        // Return Spring's JCacheCacheManager
-        return new JCacheCacheManager(cacheManager);
+
+        // Get EhcacheCachingProvider
+        EhcacheCachingProvider provider = (EhcacheCachingProvider) Caching.getCachingProvider();
+
+        // Create JCache manager from EhCache config
+        CacheManager jCacheManager = provider.getCacheManager(
+                provider.getDefaultURI(),
+                config
+        );
+
+        return new JCacheCacheManager(jCacheManager);
     }
 }

@@ -39,7 +39,7 @@ public class RestApi implements CollectionsApi {
 
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
-        return featuresService.getCollection(collectionId, null);
+        return featuresService.getCollection(collectionId);
     }
 
     @Hidden
@@ -134,7 +134,7 @@ public class RestApi implements CollectionsApi {
             }
             case wms_map_tile -> {
                 try {
-                    return wmsServer.getMapTile(collectionId, request);
+                    return ResponseEntity.ok().body(wmsServer.getMapTile(collectionId, request));
                 }
                 catch(Throwable e) {
                     return ResponseEntity.internalServerError().body(e);

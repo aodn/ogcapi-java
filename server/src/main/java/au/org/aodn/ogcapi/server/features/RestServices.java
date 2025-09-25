@@ -36,8 +36,8 @@ public class RestServices extends OGCApiService {
         return List.of("http://www.opengis.net/doc/IS/ogcapi-features-1/1.0.1");
     }
 
-    public ResponseEntity<Collection> getCollection(String id, String sortBy) throws NoSuchElementException {
-        ElasticSearch.SearchResult<StacCollectionModel> model = search.searchCollections(List.of(id), sortBy);
+    public ResponseEntity<Collection> getCollection(String id) throws NoSuchElementException {
+        ElasticSearch.SearchResult<StacCollectionModel> model = search.searchCollections(id);
 
         if (!model.getCollections().isEmpty()) {
             if (model.getCollections().size() > 1) {

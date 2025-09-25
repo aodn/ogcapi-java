@@ -12,7 +12,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.Resource;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -187,7 +187,7 @@ public class WmsServer {
      */
     protected Optional<String> getMapServerUrl(String collectionId, FeatureRequest request) {
         // Get the record contains the map feature, given one uuid , 1 result expected
-        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(List.of(collectionId), null);
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if(!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
             return model.getLinks()
@@ -263,20 +263,20 @@ public class WmsServer {
      * Get the wms image/png tile
      * @param collectionId - The uuid
      * @param request - The request param
-     * @return - A resource likely image/png
+     * @return - Must use byte[] to allow cache to disk
      * @throws URISyntaxException - Not expected
      */
-    public ResponseEntity<Resource> getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
-
+    @Cacheable(value = "cache-maptile", key = "{#collectionId, #request.layerName, #request.bbox}")
+    public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
 
         if(mapServerUrl.isPresent()) {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), request);
             // Try one by one, we exit when any works
             for (String url : urls) {
-                ResponseEntity<Resource> response = handleRedirect(url, restTemplate.getForEntity(url, Resource.class, Collections.emptyMap()), Resource.class);
+                ResponseEntity<byte[]> response = handleRedirect(url, restTemplate.getForEntity(url, byte[].class, Collections.emptyMap()), byte[].class);
                 if(response.getStatusCode().is2xxSuccessful()) {
-                    return response;
+                    return response.getBody();
                 }
             }
         }
