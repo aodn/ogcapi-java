@@ -99,10 +99,10 @@ public class RestApi implements CollectionsApi {
         FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
         switch (fid) {
             case downloadableFields -> {
-                if (request.getServerUrl() == null || request.getLayerName() == null) {
+                if (request.getLayerName() == null) {
                     return ResponseEntity.badRequest().build();
                 }
-                return featuresService.getDownloadableFields(request.getServerUrl(), request.getLayerName());
+                return featuresService.getDownloadableFields(collectionId, request.getLayerName());
             }
             case summary -> {
                 String filter = null;
@@ -130,7 +130,7 @@ public class RestApi implements CollectionsApi {
                 return featuresService.getWaveBuoys(collectionId, request.getDatetime());
             }
             case timeseries -> {
-                return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
+                return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wms_map_tile -> {
                 try {
@@ -144,8 +144,7 @@ public class RestApi implements CollectionsApi {
                 try {
                     FeatureInfoResponse result = wmsServer.getMapFeatures(collectionId, request);
                     return ResponseEntity.ok().body(result);
-                }
-                catch(Throwable e) {
+                } catch (Throwable e) {
                     return ResponseEntity.internalServerError().body(e);
                 }
             }

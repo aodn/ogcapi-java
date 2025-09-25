@@ -1,9 +1,22 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
+import au.org.aodn.ogcapi.server.core.model.LinkModel;
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
+import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
+import au.org.aodn.ogcapi.server.core.service.Search;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
+@Slf4j
 public class WfsServer {
+    @Autowired
+    protected Search elasticSearch;
+
     private final List<String> urls = List.of(
             "https://geoserver.imas.utas.edu.au/geoserver/wfs",
             "https://geoserver-123.aodn.org.au/geoserver/wfs",
@@ -89,5 +102,47 @@ public class WfsServer {
 
         // Return the exact approved URL from our whitelist, not user input
         return matchedUrl;
+    }
+
+    /**
+     * Extract WFS URL and type name from collection links given uuid
+     */
+    public WfsInfo getWfsInfo(String uuid, String typeName) {
+        // Get collection from ElasticSearch
+        ElasticSearch.SearchResult<StacCollectionModel> searchResult =
+                elasticSearch.searchCollections(List.of(uuid), null);
+
+        if (searchResult.getCollections().isEmpty()) {
+            log.warn("Collection with UUID {} not found", uuid);
+            return null;
+        }
+
+        StacCollectionModel collection = searchResult.getCollections().get(0);
+        if (collection.getLinks() == null) {
+            log.warn("Collection with UUID {} has no links", uuid);
+            return null;
+        }
+
+        // Find WFS link with matching layer name (title)
+        Optional<LinkModel> wfsLink = collection.getLinks().stream()
+                .filter(link -> link.getAiGroup() != null && link.getAiGroup().contains("wfs"))
+                .filter(link -> typeName.equals(link.getTitle()))
+                .findFirst();
+
+        if (wfsLink.isEmpty()) {
+            log.warn("No WFS link found with UUID {} and layer name: {}", uuid, typeName);
+            return null;
+        }
+
+        String href = wfsLink.get().getHref();
+        String title = wfsLink.get().getTitle();
+
+        if (href == null || title == null) {
+            log.warn("No valid WFS link found found with UUID {} and layer name: {}", uuid, typeName);
+            return null;
+        }
+
+        // The href is the WFS server URL, title is the layer name
+        return new WfsInfo(href, title);
     }
 }

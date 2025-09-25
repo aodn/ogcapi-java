@@ -39,35 +39,35 @@ public class DownloadWfsDataService {
         this.restTemplate = restTemplate;
     }
 
-    /**
-     * Extract WFS URL and layer name from collection links
-     */
-    private WfsInfo extractWfsInfo(StacCollectionModel collection, String layerName) {
-        if (collection.getLinks() == null) {
-            return null;
-        }
-
-        // Find WFS link with matching layer name (title)
-        Optional<LinkModel> wfsLink = collection.getLinks().stream()
-                .filter(link -> "wfs".equals(link.getRel()))
-                .filter(link -> layerName.equals(link.getTitle()))
-                .findFirst();
-
-        if (wfsLink.isEmpty()) {
-            log.warn("No WFS link found with layer name: {}", layerName);
-            return null;
-        }
-
-        String href = wfsLink.get().getHref();
-        String title = wfsLink.get().getTitle();
-
-        if (href == null || title == null) {
-            return null;
-        }
-
-        // The href is the WFS server URL, title is the layer name
-        return new WfsInfo(href, title);
-    }
+//    /**
+//     * Extract WFS URL and layer name from collection links
+//     */
+//    private WfsInfo extractWfsInfo(StacCollectionModel collection, String layerName) {
+//        if (collection.getLinks() == null) {
+//            return null;
+//        }
+//
+//        // Find WFS link with matching layer name (title)
+//        Optional<LinkModel> wfsLink = collection.getLinks().stream()
+//                .filter(link -> "wfs".equals(link.getRel()))
+//                .filter(link -> layerName.equals(link.getTitle()))
+//                .findFirst();
+//
+//        if (wfsLink.isEmpty()) {
+//            log.warn("No WFS link found with layer name: {}", layerName);
+//            return null;
+//        }
+//
+//        String href = wfsLink.get().getHref();
+//        String title = wfsLink.get().getTitle();
+//
+//        if (href == null || title == null) {
+//            return null;
+//        }
+//
+//        // The href is the WFS server URL, title is the layer name
+//        return new WfsInfo(href, title);
+//    }
 
     /**
      * Build CQL filter for temporal and spatial constraints
@@ -145,18 +145,8 @@ public class DownloadWfsDataService {
             List<String> fields,
             String layerName) {
 
-        // Get collection information from UUID
-        ElasticSearch.SearchResult<StacCollectionModel> searchResult =
-                elasticSearch.searchCollections(uuid);
-
-        if (searchResult.getCollections().isEmpty()) {
-            throw new RuntimeException("Collection with UUID " + uuid + " not found");
-        }
-
-        StacCollectionModel collection = searchResult.getCollections().get(0);
-
         // Extract WFS URL and layer name from collection links
-        WfsInfo wfsInfo = extractWfsInfo(collection, layerName);
+        WfsInfo wfsInfo = wfsServer.getWfsInfo(uuid, layerName);
         if (wfsInfo == null) {
             throw new RuntimeException("No WFS link found for collection " + uuid + " with layer name " + layerName);
         }
@@ -168,7 +158,7 @@ public class DownloadWfsDataService {
 
         // Get downloadable fields to map field names
         List<DownloadableFieldModel> downloadableFields =
-                downloadableFieldsService.getDownloadableFields(approvedWfsUrl, wfsInfo.layerName());
+                downloadableFieldsService.getFilterFieldsFromWfs(approvedWfsUrl, wfsInfo.layerName());
         log.info("DownloadableFields: {}", downloadableFields);
 
         // Validate start and end dates
