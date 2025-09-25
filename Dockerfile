@@ -13,6 +13,6 @@ ENTRYPOINT [\
     "-Delasticsearch.apiKey=${ELASTIC_KEY}",\
     "-Ddata-access-service.host=${DAS_HOST}",\
     "-Ddata-access-service.secret=${DAS_SECRET}",\
-    "--enable-preview ",\
+    "--enable-preview",\
     "-jar",\
     "/app.jar"]
