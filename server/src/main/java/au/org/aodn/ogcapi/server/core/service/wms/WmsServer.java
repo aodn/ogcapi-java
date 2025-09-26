@@ -266,7 +266,7 @@ public class WmsServer {
      * @return - Must use byte[] to allow cache to disk
      * @throws URISyntaxException - Not expected
      */
-    @Cacheable(value = "cache-maptile", key = "{#collectionId, #request.layerName, #request.bbox}")
+    @Cacheable(value = "cache-maptile")
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
 

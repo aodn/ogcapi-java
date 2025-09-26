@@ -3,14 +3,17 @@ package au.org.aodn.ogcapi.server.core.model.dto.wfs;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.List;
 
 @Schema(description = "Query parameters for feature requests")
 @Data
 @Builder
-public class FeatureRequest {
+@EqualsAndHashCode
+public class FeatureRequest implements Serializable {
     @Schema(description = "Property to be return")
     private List<String> properties;
 
