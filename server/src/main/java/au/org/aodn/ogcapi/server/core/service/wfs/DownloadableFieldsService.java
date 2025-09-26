@@ -43,7 +43,6 @@ public class DownloadableFieldsService {
      */
     @Cacheable(value = "downloadable-fields", key = "#uuid + ':' + #typeName")
     public List<DownloadableFieldModel> getDownloadableFields(String uuid, String typeName) {
-        log.info("Getting downloadable fields for typeName: {} from uuid: {}", typeName, uuid);
         // Extract WFS URL and layer name from collection links
         WfsInfo wfsInfo = wfsServer.getWfsInfo(uuid, typeName);
         if (wfsInfo == null) {
@@ -77,13 +76,12 @@ public class DownloadableFieldsService {
     /**
      * Get filter fields from WFS DescribeFeatureType
      */
-//    @Cacheable(value = "downloadable-fields", key = "#wfsUrl + ':' + #typeName")
     public List<DownloadableFieldModel> getFilterFieldsFromWfs(String approvedWfsUrl, String typeName) {
         // SSRF protection: Only use pre-approved server URL is used in the request
         try {
             URI uri = UriComponentsBuilder.fromUriString(approvedWfsUrl)
                     .queryParam("service", "WFS")
-                    .queryParam("version", "1.0.0")
+                    .queryParam("version", "2.0.0")
                     .queryParam("request", "DescribeFeatureType")
                     .queryParam("typeName", typeName)
                     .build()
@@ -93,6 +91,7 @@ public class DownloadableFieldsService {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 WfsDescribeFeatureTypeResponse wfsResponse = xmlMapper.readValue(response.getBody(), WfsDescribeFeatureTypeResponse.class);
+                log.info("Getting downloadable fields for typeName: {} from url: {} ", typeName, uri);
                 return convertWfsResponseToDownloadableFields(wfsResponse);
             } else {
                 throw new DownloadableFieldsNotFoundException(

@@ -1,10 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
-import au.org.aodn.ogcapi.server.core.model.LinkModel;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
-import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
@@ -38,36 +35,6 @@ public class DownloadWfsDataService {
         this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
     }
-
-//    /**
-//     * Extract WFS URL and layer name from collection links
-//     */
-//    private WfsInfo extractWfsInfo(StacCollectionModel collection, String layerName) {
-//        if (collection.getLinks() == null) {
-//            return null;
-//        }
-//
-//        // Find WFS link with matching layer name (title)
-//        Optional<LinkModel> wfsLink = collection.getLinks().stream()
-//                .filter(link -> "wfs".equals(link.getRel()))
-//                .filter(link -> layerName.equals(link.getTitle()))
-//                .findFirst();
-//
-//        if (wfsLink.isEmpty()) {
-//            log.warn("No WFS link found with layer name: {}", layerName);
-//            return null;
-//        }
-//
-//        String href = wfsLink.get().getHref();
-//        String title = wfsLink.get().getTitle();
-//
-//        if (href == null || title == null) {
-//            return null;
-//        }
-//
-//        // The href is the WFS server URL, title is the layer name
-//        return new WfsInfo(href, title);
-//    }
 
     /**
      * Build CQL filter for temporal and spatial constraints
@@ -122,7 +89,7 @@ public class DownloadWfsDataService {
     private String buildWfsUrl(String wfsUrl, String layerName, String cqlFilter) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(wfsUrl)
                 .queryParam("service", "WFS")
-                .queryParam("version", "2.0.0")
+                .queryParam("version", "1.0.0")
                 .queryParam("request", "GetFeature")
                 .queryParam("typeName", layerName)
                 .queryParam("outputFormat", "text/csv");

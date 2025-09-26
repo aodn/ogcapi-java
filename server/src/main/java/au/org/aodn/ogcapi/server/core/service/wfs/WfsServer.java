@@ -18,10 +18,11 @@ public class WfsServer {
     protected Search elasticSearch;
 
     private final List<String> urls = List.of(
-            "https://geoserver.imas.utas.edu.au/geoserver/wfs",
-            "https://geoserver-123.aodn.org.au/geoserver/wfs",
-            "https://www.cmar.csiro.au/geoserver/wfs",
-            "https://geoserver.apps.aims.gov.au/aims/wfs"
+            "https://geoserver-123.aodn.org.au/geoserver/ows",
+            "https://geoserver.imas.utas.edu.au/geoserver/ows",
+            "https://www.cmar.csiro.au/geoserver/ows",
+            "https://geoserver.apps.aims.gov.au/aims/ows",
+            "https://data.aad.gov.au/geoserver/underway/ows"
     );
 
     public boolean isAllowed(String serverUrl) {
@@ -31,7 +32,7 @@ public class WfsServer {
         return findMatchingUrl(serverUrl) != null;
     }
 
-    public String normalizeUrl(String serverUrl) {
+    private String normalizeUrl(String serverUrl) {
         if (serverUrl == null) {
             return null;
         }
@@ -53,9 +54,6 @@ public class WfsServer {
 
     /**
      * Find matching URL from whitelist based on host only
-     * Example: "<a href="http://geoserver.imas.utas.edu.au/geoserver/ows">ows</a>"
-     * matches "<a href="https://geoserver.imas.utas.edu.au/geoserver/wfs">wfs</a>"
-     * The matching is based on host only, ignoring protocol and path
      */
     private String findMatchingUrl(String userProvidedUrl) {
         if (userProvidedUrl == null) {
@@ -110,7 +108,7 @@ public class WfsServer {
     public WfsInfo getWfsInfo(String uuid, String typeName) {
         // Get collection from ElasticSearch
         ElasticSearch.SearchResult<StacCollectionModel> searchResult =
-                elasticSearch.searchCollections(List.of(uuid), null);
+                elasticSearch.searchCollections(uuid);
 
         if (searchResult.getCollections().isEmpty()) {
             log.warn("Collection with UUID {} not found", uuid);
