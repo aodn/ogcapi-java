@@ -55,17 +55,17 @@ public class RestServices extends OGCApiService {
     /**
      * Get downloadable fields for a layer
      *
-     * @param wfsUrl   The WFS server URL
+     * @param uuid     The collection UUID
      * @param typeName The WFS type name
      * @return List of downloadable fields
      */
-    public ResponseEntity<List<DownloadableFieldModel>> getDownloadableFields(String wfsUrl, String typeName) {
-        List<DownloadableFieldModel> fields = downloadableFieldsService.getDownloadableFields(wfsUrl, typeName);
+    public ResponseEntity<List<DownloadableFieldModel>> getDownloadableFields(String uuid, String typeName) {
+        List<DownloadableFieldModel> fields = downloadableFieldsService.getDownloadableFields(uuid, typeName);
         return ResponseEntity.ok(fields);
     }
 
     public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
-        if (dasService.isCollectionSupported(collectionID)){
+        if (dasService.isCollectionSupported(collectionID)) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
         if (from == null) {
@@ -75,10 +75,10 @@ public class RestServices extends OGCApiService {
         java.time.LocalDate localDate = java.time.LocalDate.parse(from);
         String to = localDate.plusDays(1).toString();
         try {
-           return ResponseEntity
+            return ResponseEntity
                     .ok()
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoys(from,to));
+                    .body(dasService.getWaveBuoys(from, to));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoys data: {}", e.getMessage());
@@ -87,7 +87,7 @@ public class RestServices extends OGCApiService {
     }
 
     public ResponseEntity<?> getWaveBuoyData(String collectionID, String datetime, String buoy) {
-        if (dasService.isCollectionSupported(collectionID)){
+        if (dasService.isCollectionSupported(collectionID)) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
         if (datetime == null) {
@@ -108,7 +108,7 @@ public class RestServices extends OGCApiService {
             return ResponseEntity
                     .ok()
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoyData(from,to, buoy));
+                    .body(dasService.getWaveBuoyData(from, to, buoy));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoy historical data: {}", e.getMessage());
