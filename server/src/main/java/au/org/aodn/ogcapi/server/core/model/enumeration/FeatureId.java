@@ -2,9 +2,9 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 
 public enum FeatureId {
     summary("summary"),
-    downloadableFields("downloadableFields"),
     first_data_available("first_data_available"),
     timeseries("timeseries"),
+    wfs_downloadable_fields("wfs_downloadable_fields"),
     wms_map_tile("wms_map_tile"),
     wms_map_feature("wms_map_feature");
 
