@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.ogcapi.server.core.service.WmsWfsBase;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -19,14 +20,13 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 import java.math.BigDecimal;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class WmsServer {
-    protected XmlMapper xmlMapper;
+public class WmsServer extends WmsWfsBase {
+    protected final XmlMapper xmlMapper;
 
     @Autowired
     protected RestTemplate restTemplate;
@@ -200,32 +200,6 @@ public class WmsServer {
         else {
             return Optional.empty();
         }
-    }
-    /**
-     * We may get http to https response from our geoserver, so this is make sure we redirect call, although we get the url
-     * from metadata, we also want to make sure the redirect is to the same server.
-     * @param sourceUrl - url from metadata
-     * @param response - the original that may or may not have the redirect
-     * @param type - The type of response
-     * @return - If it is redirect, then call the redirect location given host check, if not same response return
-     * @param <T> The type of the return type
-     * @throws URISyntaxException - Not expect to throw
-     */
-    protected <T> ResponseEntity<T> handleRedirect(String sourceUrl, ResponseEntity<T> response, Class<T> type) throws URISyntaxException {
-        if(response.getStatusCode().is3xxRedirection() && response.getHeaders().getLocation() != null) {
-            // Redirect should happen automatically but it does not so here is a safe-guard
-            // the reason happens because http is use but redirect to https
-            URI source = new URI(sourceUrl);
-            URI redirect = response.getHeaders().getLocation();
-            if(redirect.getHost().equalsIgnoreCase(source.getHost())) {
-                // Only allow redirect to same server.
-                return restTemplate.getForEntity(response.getHeaders().getLocation().toString(), type, Collections.emptyMap());
-            }
-            else {
-                log.error("Redirect to different host not allowed, from {} to {}", source, redirect);
-            }
-        }
-        return response;
     }
 
     public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException, URISyntaxException {

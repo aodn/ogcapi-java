@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
+import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
@@ -8,6 +10,8 @@ import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,6 +19,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.NoSuchElementException;
 
@@ -30,6 +35,9 @@ public class RestServices extends OGCApiService {
 
     @Autowired
     protected DownloadableFieldsService downloadableFieldsService;
+
+    @Autowired
+    protected WmsServer wmsServer;
 
     @Override
     public List<String> getConformanceDeclaration() {
@@ -52,18 +60,49 @@ public class RestServices extends OGCApiService {
         }
     }
 
-    /**
-     * Get downloadable fields for a layer
-     *
-     * @param wfsUrl   The WFS server URL
-     * @param typeName The WFS type name
-     * @return List of downloadable fields
-     */
-    public ResponseEntity<List<DownloadableFieldModel>> getDownloadableFields(String wfsUrl, String typeName) {
-        List<DownloadableFieldModel> fields = downloadableFieldsService.getDownloadableFields(wfsUrl, typeName);
-        return ResponseEntity.ok(fields);
+    public ResponseEntity<FeatureInfoResponse> getWmsMapFeature(String collectionId, FeatureRequest request) {
+        try {
+            return ResponseEntity.ok()
+                .body(wmsServer.getMapFeatures(collectionId, request));
+        }
+        catch (JsonProcessingException | URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
+    public ResponseEntity<byte[]> getWmsMapTile(String collectionId, FeatureRequest request) {
+        try {
+            return ResponseEntity.ok()
+                    .body(wmsServer.getMapTile(collectionId, request));
+        }
+        catch(Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+    /**
+     *
+     * @param collectionId
+     * @param request
+     * @return
+     */
+    public ResponseEntity<?> getDownloadableFields(String collectionId, FeatureRequest request) {
+
+        if(request.getLayerName() == null) {
+            return ResponseEntity.badRequest().body("Layer name cannot be null");
+        }
+
+        List<DownloadableFieldModel> result = downloadableFieldsService.getDownloadableFields(collectionId, request);
+
+        return result.isEmpty() ?
+                ResponseEntity.notFound().build() :
+                ResponseEntity.ok(result);
+    }
+    /**
+     *
+     * @param collectionID
+     * @param from
+     * @return
+     */
     public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
         if (dasService.isCollectionSupported(collectionID)){
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();

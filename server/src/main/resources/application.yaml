@@ -22,6 +22,12 @@ elasticsearch:
 aws:
   region: ap-southeast-2
 
+wfs-default-param:
+  fields:
+    SERVICE: "WFS"
+    VERSION: "2.0.0"
+    REQUEST: "DescribeFeatureType"
+
 # Default parameter for wms call
 wms-default-param:
   wfs:

@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
@@ -168,7 +169,7 @@ public class DownloadWfsDataService {
 
         // Get downloadable fields to map field names
         List<DownloadableFieldModel> downloadableFields =
-                downloadableFieldsService.getDownloadableFields(approvedWfsUrl, wfsInfo.layerName());
+                downloadableFieldsService.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsInfo.layerName()).build());
         log.info("DownloadableFields: {}", downloadableFields);
 
         // Validate start and end dates

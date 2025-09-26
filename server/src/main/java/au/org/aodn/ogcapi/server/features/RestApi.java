@@ -5,7 +5,6 @@ import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
-import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
@@ -33,9 +32,6 @@ public class RestApi implements CollectionsApi {
 
     @Autowired
     protected RestServices featuresService;
-
-    @Autowired
-    protected WmsServer wmsServer;
 
     @Override
     public ResponseEntity<Collection> describeCollection(String collectionId) {
@@ -90,7 +86,7 @@ public class RestApi implements CollectionsApi {
             produces = {"application/geo+json", "text/html", "application/json"},
             method = {RequestMethod.GET}
     )
-    ResponseEntity<?> getFeature(
+    public ResponseEntity<?> getFeature(
             @Parameter(in = ParameterIn.PATH, description = "local identifier of a collection", required = true, schema = @Schema)
             @PathVariable("collectionId") String collectionId,
             @Parameter(in = ParameterIn.PATH, description = "local identifier of a feature", required = true, schema = @Schema)
@@ -98,12 +94,6 @@ public class RestApi implements CollectionsApi {
             @ParameterObject @Valid FeatureRequest request) {
         FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
         switch (fid) {
-            case downloadableFields -> {
-                if (request.getServerUrl() == null || request.getLayerName() == null) {
-                    return ResponseEntity.badRequest().build();
-                }
-                return featuresService.getDownloadableFields(request.getServerUrl(), request.getLayerName());
-            }
             case summary -> {
                 String filter = null;
 
@@ -132,22 +122,16 @@ public class RestApi implements CollectionsApi {
             case timeseries -> {
                 return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
+            case wfs_downloadable_fields -> {
+                return request.getLayerName() == null ?
+                        ResponseEntity.badRequest().build() :
+                        featuresService.getDownloadableFields(collectionId, request);
+            }
             case wms_map_tile -> {
-                try {
-                    return ResponseEntity.ok().body(wmsServer.getMapTile(collectionId, request));
-                }
-                catch(Throwable e) {
-                    return ResponseEntity.internalServerError().body(e);
-                }
+                return featuresService.getWmsMapTile(collectionId, request);
             }
             case wms_map_feature -> {
-                try {
-                    FeatureInfoResponse result = wmsServer.getMapFeatures(collectionId, request);
-                    return ResponseEntity.ok().body(result);
-                }
-                catch(Throwable e) {
-                    return ResponseEntity.internalServerError().body(e);
-                }
+                return featuresService.getWmsMapFeature(collectionId, request);
             }
             default -> {
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
