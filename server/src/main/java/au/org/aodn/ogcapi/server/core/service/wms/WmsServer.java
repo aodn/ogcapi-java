@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
@@ -19,6 +20,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -56,7 +58,7 @@ public class WmsServer extends WmsWfsBase {
             // to look it up
             String cql = null;
 
-            List<DownloadableFieldModel> m = wfsServer.getDownloadableFields(uuid, request);
+            List<DownloadableFieldModel> m = this.getDownloadableFields(uuid, request);
             Optional<DownloadableFieldModel> target = m.stream()
                     .filter(value -> "dateTime".equalsIgnoreCase(value.getType()))
                     .findFirst();
@@ -137,6 +139,72 @@ public class WmsServer extends WmsWfsBase {
             }
         }
             catch(Exception e) {
+            log.error("URL syntax error {}", url, e);
+        }
+        return null;
+    }
+
+    protected List<String> createMapDescribeUrl(String url, String uuid, FeatureRequest request) {
+        try {
+            UriComponents components = UriComponentsBuilder.fromUriString(url).build();
+            if(components.getPath() != null) {
+                // Now depends on the service, we need to have different arguments
+                List<String> pathSegments = components.getPathSegments();
+                if (!pathSegments.isEmpty()) {
+                    Map<String, String> param = new HashMap<>(wmsDefaultParam.getDescLayer());
+
+                    // Now we add the missing argument from the request
+                    param.put("LAYERS", request.getLayerName());
+
+                    // Very specific to IMOS, if we see geoserver-123.aodn.org.au/geoserver/wms, then
+                    // we should try cache server -> https://tilecache.aodn.org.au/geowebcache/service/wms, if not work fall back
+                    List<String> urls = new ArrayList<>();
+                    if (components.getHost() != null
+                            && components.getHost().equalsIgnoreCase("geoserver-123.aodn.org.au")
+                            && components.getPath().equalsIgnoreCase("/geoserver/wms")) {
+
+                        UriComponentsBuilder builder = UriComponentsBuilder
+                                .fromUriString("https://tilecache.aodn.org.au/geowebcache/service/wms");
+
+                        param.forEach((key, value) -> {
+                            if(value != null) {
+                                builder.queryParam(key, value);
+                            }
+                        });
+                        String target = builder.build().toUriString();
+                        log.debug("Cache url wms geoserver for describe layer {}", target);
+                        urls.add(target);
+                    }
+                    // This is the normal route
+                    UriComponentsBuilder builder = UriComponentsBuilder
+                            .newInstance()
+                            .scheme(components.getScheme())
+                            .port(components.getPort())
+                            .host(components.getHost())
+                            .path(components.getPath());
+
+                    param.forEach((key, value) -> {
+                        if(value != null) {
+                            builder.queryParam(key, value);
+                        }
+                    });
+                    String target = builder.build().toUriString();
+                    log.debug("Url to wms geoserver for describe layer {}", target);
+                    urls.add(target);
+
+                    if(pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms") && request.getLayerName().contains("/")) {
+                        // Special handle for ncwms, the layer name may be incorrect with /xxx suffix
+                        // for example srs_ghrsst_l4_gamssa_url/analysed_sst, we need to remove the /xxxx
+                        // Generate more url to test which one works
+                        String[] s = request.getLayerName().split("/");
+                        FeatureRequest fixed = FeatureRequest.builder().layerName(s[0]).build();
+                        urls.addAll(createMapDescribeUrl(url, uuid, fixed));
+                    }
+                    return urls;
+                }
+            }
+        }
+        catch(Exception e) {
             log.error("URL syntax error {}", url, e);
         }
         return null;
@@ -270,6 +338,30 @@ public class WmsServer extends WmsWfsBase {
         }
         return null;
     }
+
+    protected DescribeLayerResponse describeLayer(String collectionId, FeatureRequest request) {
+        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+
+        if(mapServerUrl.isPresent()) {
+            List<String> urls = createMapDescribeUrl(mapServerUrl.get(), collectionId, request);
+            // Try one by one, we exit when any works
+            for (String url : urls) {
+                try {
+                    ResponseEntity<String> response = handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
+                    if (response.getStatusCode().is2xxSuccessful()) {
+                        DescribeLayerResponse layer = xmlMapper.readValue(response.getBody(), DescribeLayerResponse.class);
+                        if(layer.getLayerDescription() != null) {
+                            return layer;
+                        }
+                    }
+                }
+                catch(RestClientException | URISyntaxException | JsonProcessingException pe) {
+                    log.debug("Exception ignored it as we will retry", pe);
+                }
+            }
+        }
+        return null;
+    }
     /**
      * Get the wms image/png tile
      * @param collectionId - The uuid
@@ -292,5 +384,19 @@ public class WmsServer extends WmsWfsBase {
             }
         }
         return null;
+    }
+
+    public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
+        DescribeLayerResponse response = this.describeLayer(collectionId, request);
+
+        if(response != null && response.getLayerDescription().getWfs() != null) {
+            // If we are able to find the wfs server and real layer name based on wms layer, then use it
+            FeatureRequest modified = FeatureRequest.builder().layerName(response.getLayerDescription().getQuery().getTypeName()).build();
+            return wfsServer.getDownloadableFields(collectionId, modified, response.getLayerDescription().getWfs());
+        }
+        else {
+            // We trust what is found inside the elastic search metadata
+            return wfsServer.getDownloadableFields(collectionId, request, null);
+        }
     }
 }

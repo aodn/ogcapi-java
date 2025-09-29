@@ -138,7 +138,7 @@ public class DownloadableFieldsServiceTest {
         when(search.searchCollections(eq(id)))
                 .thenReturn(stac);
 
-        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(id, request);
+        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(id, request, null);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -210,7 +210,7 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> wfsServer.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request, null)
         );
 
         assertEquals("No downloadable fields found for call 'http://geoserver-123.aodn.org.au/geoserver/ows?VERSION=2.0.0&SERVICE=WFS&TYPENAME=test:layer2&REQUEST=DescribeFeatureType'",
@@ -261,7 +261,7 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> wfsServer.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request, null)
         );
 
         assertTrue(exception.getMessage().contains("No downloadable fields found"));
@@ -297,7 +297,7 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> wfsServer.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request, null)
         );
 
         assertTrue(exception.getMessage().contains("No downloadable fields found due to remote connection timeout"));

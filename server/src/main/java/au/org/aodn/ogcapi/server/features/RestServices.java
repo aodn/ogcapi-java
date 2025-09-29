@@ -80,18 +80,36 @@ public class RestServices extends OGCApiService {
         }
     }
     /**
-     *
-     * @param collectionId
-     * @param request
-     * @return
+     * This is used to get the downloadable fields from wfs where layer name is not mentioned in wms
+     * @param collectionId - The uuid of dataset
+     * @param request - Request to get field given a layer name
+     * @return - The downloadable field name
      */
-    public ResponseEntity<?> getDownloadableFields(String collectionId, FeatureRequest request) {
+    public ResponseEntity<?> getWfsDownloadableFields(String collectionId, FeatureRequest request) {
 
         if(request.getLayerName() == null) {
             return ResponseEntity.badRequest().body("Layer name cannot be null");
         }
 
-        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(collectionId, request);
+        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(collectionId, request, null);
+
+        return result.isEmpty() ?
+                ResponseEntity.notFound().build() :
+                ResponseEntity.ok(result);
+    }
+    /**
+     * This is used to get the downloadable fields from wfs given a wms layer
+     * @param collectionId - The uuid of dataset
+     * @param request - Request to get field given a WMS layer name
+     * @return - The downloadable field name
+     */
+    public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
+
+        if(request.getLayerName() == null) {
+            return ResponseEntity.badRequest().body("Layer name cannot be null");
+        }
+
+        List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
 
         return result.isEmpty() ?
                 ResponseEntity.notFound().build() :

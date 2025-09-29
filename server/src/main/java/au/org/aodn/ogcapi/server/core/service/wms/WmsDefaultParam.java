@@ -17,4 +17,6 @@ public class WmsDefaultParam {
 
     private Map<String, String> wms;
     private Map<String, String> ncwms;
+
+    private Map<String, String> descLayer;
 }

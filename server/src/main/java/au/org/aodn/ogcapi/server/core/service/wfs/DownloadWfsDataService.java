@@ -169,7 +169,7 @@ public class DownloadWfsDataService {
 
         // Get downloadable fields to map field names
         List<DownloadableFieldModel> downloadableFields =
-                wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsInfo.layerName()).build());
+                wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsInfo.layerName()).build(), null);
         log.info("DownloadableFields: {}", downloadableFields);
 
         // Validate start and end dates

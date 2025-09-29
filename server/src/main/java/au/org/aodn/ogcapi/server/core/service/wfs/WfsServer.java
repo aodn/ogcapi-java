@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestClientException;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -48,15 +49,17 @@ public class WfsServer extends WmsWfsBase {
     }
 
     @Cacheable(value = "downloadable-fields")
-    public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
+    public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request, String assumedWfsServer) {
 
-        Optional<List<String>> mapFeatureUrl = getFeatureServerUrl(collectionId, request);
+        Optional<List<String>> mapFeatureUrl = assumedWfsServer != null ?
+                Optional.of(List.of(assumedWfsServer)) :
+                getFeatureServerUrl(collectionId, request);
 
         if(mapFeatureUrl.isPresent()) {
             // Keep trying all possible url until one get response
             for(String url: mapFeatureUrl.get()) {
+                String uri = downloadableFieldsService.createFeatureFieldQueryUrl(url, request);
                 try {
-                    String uri = downloadableFieldsService.createFeatureFieldQueryUrl(url, request);
                     if (uri != null) {
                         log.debug("Try Url to wfs {}", uri);
                         ResponseEntity<String> response = handleRedirect(uri, restTemplate.getForEntity(uri, String.class), String.class);
@@ -65,22 +68,14 @@ public class WfsServer extends WmsWfsBase {
                             return DownloadableFieldsService.convertWfsResponseToDownloadableFields(
                                     xmlMapper.readValue(response.getBody(), WfsDescribeFeatureTypeResponse.class)
                             );
-                        } else {
-                            throw new DownloadableFieldsNotFoundException(
-                                    String.format("No downloadable fields found for call '%s'", uri)
-                            );
                         }
                     }
-                } catch (URISyntaxException | JsonProcessingException e) {
-                    throw new RuntimeException(e);
-                } catch (DownloadableFieldsNotFoundException de) {
-                    throw de;
-                } catch (RuntimeException re) {
-                    throw new DownloadableFieldsNotFoundException("No downloadable fields found due to remote connection timeout");
+                } catch (URISyntaxException | JsonProcessingException | RestClientException e) {
+                    log.debug("Ignore error for {}, will try another url", uri);
                 }
             }
         }
-        return List.of();
+        throw new DownloadableFieldsNotFoundException("No downloadable fields found for all url");
     }
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group or it is an ows url
