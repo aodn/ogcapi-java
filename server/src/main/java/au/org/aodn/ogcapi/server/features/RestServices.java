@@ -122,7 +122,7 @@ public class RestServices extends OGCApiService {
      * @return
      */
     public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
-        if (dasService.isCollectionSupported(collectionID)){
+        if (!dasService.isCollectionSupported(collectionID)){
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
         if (from == null) {
@@ -144,7 +144,7 @@ public class RestServices extends OGCApiService {
     }
 
     public ResponseEntity<?> getWaveBuoyData(String collectionID, String datetime, String buoy) {
-        if (dasService.isCollectionSupported(collectionID)){
+        if (!dasService.isCollectionSupported(collectionID)){
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
         if (datetime == null) {
