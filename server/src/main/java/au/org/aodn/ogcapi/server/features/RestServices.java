@@ -10,6 +10,7 @@ import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +35,7 @@ public class RestServices extends OGCApiService {
     protected StacToCollection StacToCollection;
 
     @Autowired
-    protected DownloadableFieldsService downloadableFieldsService;
+    protected WfsServer wfsServer;
 
     @Autowired
     protected WmsServer wmsServer;
@@ -91,7 +92,7 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.badRequest().body("Layer name cannot be null");
         }
 
-        List<DownloadableFieldModel> result = downloadableFieldsService.getDownloadableFields(collectionId, request);
+        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(collectionId, request);
 
         return result.isEmpty() ?
                 ResponseEntity.notFound().build() :

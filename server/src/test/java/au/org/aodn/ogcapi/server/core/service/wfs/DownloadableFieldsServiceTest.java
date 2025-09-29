@@ -59,6 +59,9 @@ public class DownloadableFieldsServiceTest {
     @Autowired
     private RestApi restApi;
 
+    @Autowired
+    private WfsServer wfsServer;
+
     @MockitoBean
     private DasService dasService;
 
@@ -135,7 +138,7 @@ public class DownloadableFieldsServiceTest {
         when(search.searchCollections(eq(id)))
                 .thenReturn(stac);
 
-        List<DownloadableFieldModel> result = downloadableFieldsService.getDownloadableFields(id, request);
+        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(id, request);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -207,7 +210,7 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> downloadableFieldsService.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request)
         );
 
         assertEquals("No downloadable fields found for call 'http://geoserver-123.aodn.org.au/geoserver/ows?VERSION=2.0.0&SERVICE=WFS&TYPENAME=test:layer2&REQUEST=DescribeFeatureType'",
@@ -258,7 +261,7 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> downloadableFieldsService.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request)
         );
 
         assertTrue(exception.getMessage().contains("No downloadable fields found"));
@@ -294,7 +297,7 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> downloadableFieldsService.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request)
         );
 
         assertTrue(exception.getMessage().contains("No downloadable fields found due to remote connection timeout"));

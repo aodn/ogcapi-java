@@ -53,7 +53,7 @@ public class WmsServerTest {
                         BigDecimal.valueOf(69.03714171275138)))
                 .build();
 
-        List<String> urls = wmsServer.createMapFeatureQueryUrl("http://geoserver-123.aodn.org.au/geoserver/wms", featureRequest);
+        List<String> urls = wmsServer.createMapFeatureQueryUrl("http://geoserver-123.aodn.org.au/geoserver/wms", "id", featureRequest);
 
         assertEquals(2, urls.size());
 
@@ -102,7 +102,7 @@ public class WmsServerTest {
                         BigDecimal.valueOf(69.03714171275138)))
                 .build();
 
-        List<String> urls = wmsServer.createMapFeatureQueryUrl("https://geoserver-123.aodn.org.au/geoserver/ncwms", featureRequest);
+        List<String> urls = wmsServer.createMapFeatureQueryUrl("https://geoserver-123.aodn.org.au/geoserver/ncwms", "id", featureRequest);
 
         assertEquals(1, urls.size());
 

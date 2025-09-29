@@ -3,10 +3,13 @@ package au.org.aodn.ogcapi.server.core.service.wms;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.WmsWfsBase;
+import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -14,6 +17,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
@@ -31,6 +35,10 @@ public class WmsServer extends WmsWfsBase {
     @Autowired
     protected RestTemplate restTemplate;
 
+    @Lazy
+    @Autowired
+    protected WfsServer wfsServer;
+
     @Autowired
     protected Search search;
 
@@ -43,7 +51,31 @@ public class WmsServer extends WmsWfsBase {
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    protected List<String> createMapQueryUrl(String url, FeatureRequest request) {
+    protected Map<String, String> addCQLFilter(Map<String, String> param, String uuid, FeatureRequest request) {
+        if (request.getDatetime() != null) {
+            // Special handle for date time field, the field name will be diff across dataset. So we need
+            // to look it up
+            String cql = null;
+
+            List<DownloadableFieldModel> m = wfsServer.getDownloadableFields(uuid, request);
+            Optional<DownloadableFieldModel> target = m.stream()
+                    .filter(value -> "dateTime".equalsIgnoreCase(value.getType()))
+                    .findFirst();
+
+            if (target.isPresent()) {
+                cql = String.format("%s=%s", target.get().getName(), request.getDatetime());
+                log.debug("Map datetime field to name {} form filter {}", target.get().getName(), cql);
+
+                param.put("CQL_FILTER", cql);
+            }
+            else {
+                log.error("No date time field found from query, result will not be bounded by date time");
+            }
+        }
+        return param;
+    }
+
+    protected List<String> createMapQueryUrl(String url, String uuid, FeatureRequest request) {
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
             if(components.getPath() != null) {
@@ -58,6 +90,9 @@ public class WmsServer extends WmsWfsBase {
                     else if(pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwms());
                     }
+
+                    param = addCQLFilter(param, uuid, request);
+
                     // Now we add the missing argument from the request
                     param.put("LAYERS", request.getLayerName());
                     param.put("BBOX", request.getBbox().stream().map(BigDecimal::toString).collect(Collectors.joining(",")));
@@ -108,7 +143,7 @@ public class WmsServer extends WmsWfsBase {
         return null;
     }
 
-    protected List<String> createMapFeatureQueryUrl(String url, FeatureRequest request) {
+    protected List<String> createMapFeatureQueryUrl(String url, String uuid, FeatureRequest request) {
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
             if(components.getPath() != null) {
@@ -123,6 +158,9 @@ public class WmsServer extends WmsWfsBase {
                     else if(pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwfs());
                     }
+
+                    param = addCQLFilter(param, uuid, request);
+
                     // Now we add the missing argument from the request
                     param.put("LAYERS", request.getLayerName());
                     param.put("QUERY_LAYERS", request.getLayerName());
@@ -207,7 +245,7 @@ public class WmsServer extends WmsWfsBase {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
 
         if(mapServerUrl.isPresent()) {
-            List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), request);
+            List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for(String url : urls) {
                 ResponseEntity<String> response = handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
@@ -245,7 +283,7 @@ public class WmsServer extends WmsWfsBase {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
 
         if(mapServerUrl.isPresent()) {
-            List<String> urls = createMapQueryUrl(mapServerUrl.get(), request);
+            List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for (String url : urls) {
                 ResponseEntity<byte[]> response = handleRedirect(url, restTemplate.getForEntity(url, byte[].class, Collections.emptyMap()), byte[].class);
