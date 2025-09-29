@@ -2,13 +2,12 @@ package au.org.aodn.ogcapi.server.core.service.wms;
 
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
-import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.WmsWfsBase;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;

@@ -2,9 +2,9 @@ package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
-import au.org.aodn.ogcapi.server.core.model.wfs.WfsInfo;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;

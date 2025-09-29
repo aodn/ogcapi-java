@@ -1,15 +1,14 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import com.fasterxml.jackson.core.JsonProcessingException;

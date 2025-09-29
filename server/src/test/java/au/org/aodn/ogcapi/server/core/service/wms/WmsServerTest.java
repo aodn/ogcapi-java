@@ -3,8 +3,10 @@ package au.org.aodn.ogcapi.server.core.service.wms;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.configuration.WfsWmsConfig;
-import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
@@ -25,6 +27,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
                 Config.class,
                 WfsWmsConfig.class,
                 WmsDefaultParam.class,
+                WfsDefaultParam.class,
+                DownloadableFieldsService.class,
                 JacksonAutoConfiguration.class,
                 CacheAutoConfiguration.class}
 )
