@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.model.dto.wfs;
+package au.org.aodn.ogcapi.server.core.model.ogc;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;

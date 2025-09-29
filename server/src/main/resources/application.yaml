@@ -30,6 +30,10 @@ wfs-default-param:
 
 # Default parameter for wms call
 wms-default-param:
+  descLayer:
+    SERVICE: "WMS"
+    VERSION: "1.1.1"
+    REQUEST: "DescribeLayer"
   wfs:
     TRANSPARENT: "TRUE"
     VERSION: "1.1.1"

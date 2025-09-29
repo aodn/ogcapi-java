@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.model.wms;
+package au.org.aodn.ogcapi.server.core.model.ogc.wms;
 
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlElementWrapper;
 import com.fasterxml.jackson.dataformat.xml.annotation.JacksonXmlProperty;

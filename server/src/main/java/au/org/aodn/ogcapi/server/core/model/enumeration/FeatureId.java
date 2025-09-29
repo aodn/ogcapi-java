@@ -4,7 +4,8 @@ public enum FeatureId {
     summary("summary"),
     first_data_available("first_data_available"),
     timeseries("timeseries"),
-    wfs_downloadable_fields("wfs_downloadable_fields"),
+    wfs_downloadable_fields("wfs_downloadable_fields"), // Query field based on pure wfs and given layer
+    wms_downloadable_fields("wms_downloadable_fields"), // Query field based on value from wms describe layer query
     wms_map_tile("wms_map_tile"),
     wms_map_feature("wms_map_feature");
 

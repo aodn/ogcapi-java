@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.model.wfs;
+package au.org.aodn.ogcapi.server.core.model.ogc.wfs;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Builder;

@@ -26,7 +26,7 @@ public class WmsWfsBase {
      * @throws URISyntaxException - Not expect to throw
      */
     protected <T> ResponseEntity<T> handleRedirect(String sourceUrl, ResponseEntity<T> response, Class<T> type) throws URISyntaxException {
-        if(response.getStatusCode().is3xxRedirection() && response.getHeaders().getLocation() != null) {
+        if(response != null && response.getStatusCode().is3xxRedirection() && response.getHeaders().getLocation() != null) {
             // Redirect should happen automatically but it does not so here is a safe-guard
             // the reason happens because http is use but redirect to https
             URI source = new URI(sourceUrl);

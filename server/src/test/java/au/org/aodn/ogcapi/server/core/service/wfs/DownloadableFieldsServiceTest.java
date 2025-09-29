@@ -6,9 +6,9 @@ import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundExcept
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
-import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
@@ -58,6 +58,9 @@ public class DownloadableFieldsServiceTest {
 
     @Autowired
     private RestApi restApi;
+
+    @Autowired
+    private WfsServer wfsServer;
 
     @MockitoBean
     private DasService dasService;
@@ -135,7 +138,7 @@ public class DownloadableFieldsServiceTest {
         when(search.searchCollections(eq(id)))
                 .thenReturn(stac);
 
-        List<DownloadableFieldModel> result = downloadableFieldsService.getDownloadableFields(id, request);
+        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(id, request, null);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -207,10 +210,10 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> downloadableFieldsService.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request, null)
         );
 
-        assertEquals("No downloadable fields found for call 'http://geoserver-123.aodn.org.au/geoserver/ows?VERSION=2.0.0&SERVICE=WFS&TYPENAME=test:layer2&REQUEST=DescribeFeatureType'",
+        assertEquals("No downloadable fields found for all url",
                     exception.getMessage(),
            "Exception not match"
         );
@@ -258,7 +261,7 @@ public class DownloadableFieldsServiceTest {
 
         DownloadableFieldsNotFoundException exception = assertThrows(
                 DownloadableFieldsNotFoundException.class,
-                () -> downloadableFieldsService.getDownloadableFields(id, request)
+                () -> wfsServer.getDownloadableFields(id, request, null)
         );
 
         assertTrue(exception.getMessage().contains("No downloadable fields found"));
@@ -292,12 +295,12 @@ public class DownloadableFieldsServiceTest {
         when(restTemplate.getForEntity(any(String.class), eq(String.class)))
                 .thenThrow(new RuntimeException("Connection timeout"));
 
-        DownloadableFieldsNotFoundException exception = assertThrows(
-                DownloadableFieldsNotFoundException.class,
-                () -> downloadableFieldsService.getDownloadableFields(id, request)
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> wfsServer.getDownloadableFields(id, request, null)
         );
 
-        assertTrue(exception.getMessage().contains("No downloadable fields found due to remote connection timeout"));
+        assertTrue(exception.getMessage().contains("Connection timeout"));
     }
 
     @Test

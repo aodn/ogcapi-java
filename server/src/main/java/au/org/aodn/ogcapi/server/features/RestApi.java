@@ -6,8 +6,7 @@ import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -125,7 +124,12 @@ public class RestApi implements CollectionsApi {
             case wfs_downloadable_fields -> {
                 return request.getLayerName() == null ?
                         ResponseEntity.badRequest().build() :
-                        featuresService.getDownloadableFields(collectionId, request);
+                        featuresService.getWfsDownloadableFields(collectionId, request);
+            }
+            case wms_downloadable_fields -> {
+                return request.getLayerName() == null ?
+                        ResponseEntity.badRequest().build() :
+                        featuresService.getWmsDownloadableFields(collectionId, request);
             }
             case wms_map_tile -> {
                 return featuresService.getWmsMapTile(collectionId, request);

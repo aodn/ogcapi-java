@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.core.service;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.dto.SearchSuggestionsDto;
+import au.org.aodn.ogcapi.server.core.model.SearchSuggestionsModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
@@ -86,7 +86,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         ));
     }
 
-    protected List<Hit<SearchSuggestionsDto>> getSuggestionsByField(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
+    protected List<Hit<SearchSuggestionsModel>> getSuggestionsByField(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         // create query
         List<Query> suggestFieldsQueries = new ArrayList<>();
         Stream.of(searchAsYouTypeEnabledFields).forEach(field -> {
@@ -129,7 +129,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         // execute
         log.info("getRecordSuggestions | Elastic search payload {}", searchRequest.toString());
-        SearchResponse<SearchSuggestionsDto> response = esClient.search(searchRequest, SearchSuggestionsDto.class);
+        SearchResponse<SearchSuggestionsModel> response = esClient.search(searchRequest, SearchSuggestionsModel.class);
         log.info("getRecordSuggestions | Elastic search response {}", response);
 
         // return
@@ -138,7 +138,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
         Map<String, Set<String>> searchSuggestions = new HashMap<>();
-        List<Hit<SearchSuggestionsDto>> suggestion = this.getSuggestionsByField(input, cql, coor);
+        List<Hit<SearchSuggestionsModel>> suggestion = this.getSuggestionsByField(input, cql, coor);
         // extract parameter vocab suggestions
         Set<String> parameterVocabSuggestions = suggestion
                 .stream()

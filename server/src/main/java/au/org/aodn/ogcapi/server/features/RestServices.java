@@ -1,15 +1,15 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.core.model.dto.wfs.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.wms.FeatureInfoResponse;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class RestServices extends OGCApiService {
     protected StacToCollection StacToCollection;
 
     @Autowired
-    protected DownloadableFieldsService downloadableFieldsService;
+    protected WfsServer wfsServer;
 
     @Autowired
     protected WmsServer wmsServer;
@@ -80,18 +80,36 @@ public class RestServices extends OGCApiService {
         }
     }
     /**
-     *
-     * @param collectionId
-     * @param request
-     * @return
+     * This is used to get the downloadable fields from wfs where layer name is not mentioned in wms
+     * @param collectionId - The uuid of dataset
+     * @param request - Request to get field given a layer name
+     * @return - The downloadable field name
      */
-    public ResponseEntity<?> getDownloadableFields(String collectionId, FeatureRequest request) {
+    public ResponseEntity<?> getWfsDownloadableFields(String collectionId, FeatureRequest request) {
 
         if(request.getLayerName() == null) {
             return ResponseEntity.badRequest().body("Layer name cannot be null");
         }
 
-        List<DownloadableFieldModel> result = downloadableFieldsService.getDownloadableFields(collectionId, request);
+        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(collectionId, request, null);
+
+        return result.isEmpty() ?
+                ResponseEntity.notFound().build() :
+                ResponseEntity.ok(result);
+    }
+    /**
+     * This is used to get the downloadable fields from wfs given a wms layer
+     * @param collectionId - The uuid of dataset
+     * @param request - Request to get field given a WMS layer name
+     * @return - The downloadable field name
+     */
+    public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
+
+        if(request.getLayerName() == null) {
+            return ResponseEntity.badRequest().body("Layer name cannot be null");
+        }
+
+        List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
 
         return result.isEmpty() ?
                 ResponseEntity.notFound().build() :
