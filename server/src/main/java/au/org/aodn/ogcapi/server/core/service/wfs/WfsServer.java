@@ -75,6 +75,9 @@ public class WfsServer extends WmsWfsBase {
                 }
             }
         }
+        else {
+            return List.of();
+        }
         throw new DownloadableFieldsNotFoundException("No downloadable fields found for all url");
     }
     /**
