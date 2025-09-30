@@ -8,7 +8,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsDescribeFeatureTypeRespon
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.WmsWfsBase;
+import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -25,7 +26,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Slf4j
-public class WfsServer extends WmsWfsBase {
+public class WfsServer {
     private final List<String> urls = List.of(
             "https://geoserver.imas.utas.edu.au/geoserver/wfs",
             "https://geoserver-123.aodn.org.au/geoserver/wfs",
@@ -38,6 +39,12 @@ public class WfsServer extends WmsWfsBase {
 
     @Autowired
     protected DownloadableFieldsService downloadableFieldsService;
+
+    @Autowired
+    protected RestTemplateUtils restTemplateUtils;
+
+    @Autowired
+    protected RestTemplate restTemplate;
 
     @Autowired
     protected Search search;
@@ -62,7 +69,7 @@ public class WfsServer extends WmsWfsBase {
                 try {
                     if (uri != null) {
                         log.debug("Try Url to wfs {}", uri);
-                        ResponseEntity<String> response = handleRedirect(uri, restTemplate.getForEntity(uri, String.class), String.class);
+                        ResponseEntity<String> response = restTemplateUtils.handleRedirect(uri, restTemplate.getForEntity(uri, String.class), String.class);
 
                         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                             return DownloadableFieldsService.convertWfsResponseToDownloadableFields(

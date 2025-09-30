@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
