@@ -28,6 +28,7 @@ import java.math.BigDecimal;
 import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 public class WmsServer {
@@ -62,17 +63,38 @@ public class WmsServer {
             String cql = null;
 
             List<DownloadableFieldModel> m = this.getDownloadableFields(uuid, request);
-            Optional<DownloadableFieldModel> target = m.stream()
+            List<DownloadableFieldModel> target = m.stream()
                     .filter(value -> "dateTime".equalsIgnoreCase(value.getType()))
-                    .findFirst();
+                    .toList();
 
-            if (target.isPresent()) {
-                log.debug("Map datetime field to name to [{}] -> {}", target.get().getName(), cql);
-                return String.format("CQL_FILTER=%s DURING %s", target.get().getName(), request.getDatetime());
+            if (!target.isEmpty()) {
+
+                if(target.size() > 2) {
+                    // Try to find possible fields where it contains start end min max
+                    target = target.stream()
+                            .filter(v -> Stream.of("start","end","min","max").anyMatch(k -> v.getName().contains(k)))
+                            .toList();
+                }
+
+                if(target.size() == 2) {
+                    // Due to no standard name, we try our best to guess if 2 dateTime field
+                    String[] d = request.getDatetime().split("/");
+                    String guess1 = target.get(0).getName();
+                    String guess2 = target.get(1).getName();
+                    if((guess1.contains("start") || guess1.contains("min")) && (guess2.contains("end") || guess2.contains("max"))) {
+                        return String.format("CQL_FILTER=%s >= %s AND %s <= %s", guess1, d[0], guess2, d[1]);
+                    }
+                    if((guess2.contains("start") || guess2.contains("min")) && (guess1.contains("end") || guess1.contains("max"))) {
+                        return String.format("CQL_FILTER=%s >= %s AND %s <= %s", guess2, d[0], guess2, d[1]);
+                    }
+                }
+                else {
+                    // Only 1 field so use it.
+                    log.debug("Map datetime field to name to [{}]", target.get(0).getName());
+                    return String.format("CQL_FILTER=%s DURING %s", target.get(0).getName(), request.getDatetime());
+                }
             }
-            else {
-                log.error("No date time field found from query, result will not be bounded by date time");
-            }
+            log.error("No date time field found from query for uuid {}, result will not be bounded by date time", uuid);
         }
         return "";
     }
