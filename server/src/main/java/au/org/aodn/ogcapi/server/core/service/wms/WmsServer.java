@@ -8,8 +8,8 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.WmsWfsBase;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
@@ -30,11 +30,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class WmsServer extends WmsWfsBase {
+public class WmsServer {
     protected final XmlMapper xmlMapper;
 
     @Autowired
     protected RestTemplate restTemplate;
+
+    @Autowired
+    protected RestTemplateUtils restTemplateUtils;
 
     @Lazy
     @Autowired
@@ -52,7 +55,7 @@ public class WmsServer extends WmsWfsBase {
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
-    protected Map<String, String> addCQLFilter(Map<String, String> param, String uuid, FeatureRequest request) {
+    protected String createCQLFilter(String uuid, FeatureRequest request) {
         if (request.getDatetime() != null) {
             // Special handle for date time field, the field name will be diff across dataset. So we need
             // to look it up
@@ -64,16 +67,14 @@ public class WmsServer extends WmsWfsBase {
                     .findFirst();
 
             if (target.isPresent()) {
-                cql = String.format("%s=%s", target.get().getName(), request.getDatetime());
-                log.debug("Map datetime field to name {} form filter {}", target.get().getName(), cql);
-
-                param.put("CQL_FILTER", cql);
+                log.debug("Map datetime field to name to [{}] -> {}", target.get().getName(), cql);
+                return String.format("CQL_FILTER=%s DURING %s", target.get().getName(), request.getDatetime());
             }
             else {
                 log.error("No date time field found from query, result will not be bounded by date time");
             }
         }
-        return param;
+        return "";
     }
 
     protected List<String> createMapQueryUrl(String url, String uuid, FeatureRequest request) {
@@ -91,8 +92,6 @@ public class WmsServer extends WmsWfsBase {
                     else if(pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwms());
                     }
-
-                    param = addCQLFilter(param, uuid, request);
 
                     // Now we add the missing argument from the request
                     param.put("LAYERS", request.getLayerName());
@@ -113,7 +112,10 @@ public class WmsServer extends WmsWfsBase {
                                 builder.queryParam(key, value);
                             }
                         });
-                        String target = builder.build().toUriString();
+                        // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
+                        // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
+                        // build() call, we append the cql after the construction.
+                        String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
                         log.debug("Cache url to wms geoserver {}", target);
                         urls.add(target);
                     }
@@ -130,7 +132,10 @@ public class WmsServer extends WmsWfsBase {
                             builder.queryParam(key, value);
                         }
                     });
-                    String target = builder.build().toUriString();
+                    // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
+                    // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
+                    // build() call, we append the cql after the construction.
+                    String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
                     log.debug("Url to wms geoserver {}", target);
                     urls.add(target);
 
@@ -226,8 +231,6 @@ public class WmsServer extends WmsWfsBase {
                         param.putAll(wmsDefaultParam.getNcwfs());
                     }
 
-                    param = addCQLFilter(param, uuid, request);
-
                     // Now we add the missing argument from the request
                     param.put("LAYERS", request.getLayerName());
                     param.put("QUERY_LAYERS", request.getLayerName());
@@ -315,7 +318,7 @@ public class WmsServer extends WmsWfsBase {
             List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for(String url : urls) {
-                ResponseEntity<String> response = handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
+                ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
                 if(response.getStatusCode().is2xxSuccessful()) {
                     // Now try to unify the return
                     if(MediaType.TEXT_HTML.isCompatibleWith(response.getHeaders().getContentType())) {
@@ -347,7 +350,7 @@ public class WmsServer extends WmsWfsBase {
             // Try one by one, we exit when any works
             for (String url : urls) {
                 try {
-                    ResponseEntity<String> response = handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
+                    ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
                     if (response.getStatusCode().is2xxSuccessful()) {
                         DescribeLayerResponse layer = xmlMapper.readValue(response.getBody(), DescribeLayerResponse.class);
                         if(layer.getLayerDescription() != null) {
@@ -377,7 +380,7 @@ public class WmsServer extends WmsWfsBase {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for (String url : urls) {
-                ResponseEntity<byte[]> response = handleRedirect(url, restTemplate.getForEntity(url, byte[].class, Collections.emptyMap()), byte[].class);
+                ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, byte[].class, Collections.emptyMap()), byte[].class);
                 if(response.getStatusCode().is2xxSuccessful()) {
                     return response.getBody();
                 }
