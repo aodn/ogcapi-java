@@ -33,11 +33,13 @@ public class RestTemplateUtils {
         if(response != null && response.getStatusCode().is3xxRedirection() && response.getHeaders().getLocation() != null) {
             // The reason we do this because we must use the un-encode param, once encoded especially with CQL_FILTER will
             // fail on geoserver
-            String redirect = String.format("%s://%s%s?%s",
+            String redirect = String.format("%s://%s%s%s",
                     response.getHeaders().getLocation().getScheme(),
                     response.getHeaders().getLocation().getHost(),
                     response.getHeaders().getLocation().getPath(),
-                    response.getHeaders().getLocation().getRawQuery().replace("%20", " ")
+                    response.getHeaders().getLocation().getRawQuery() != null ?
+                            "?" + response.getHeaders().getLocation().getRawQuery().replace("%20", " ") :
+                            ""
             );
             if(haveSameHost(sourceUrl, redirect)) {
                 // Only allow redirect to same server.
