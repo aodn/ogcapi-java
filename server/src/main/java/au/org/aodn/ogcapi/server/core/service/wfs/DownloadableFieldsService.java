@@ -45,7 +45,7 @@ public class DownloadableFieldsService {
                     }
                 });
                 String target = builder.build().toUriString();
-                log.debug("Url to wms geoserver {}", target);
+                log.debug("Url query support field in wfs {}", target);
 
                 return target;
             }
