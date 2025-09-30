@@ -76,4 +76,3 @@ public class RestTemplateUtils {
         return host1 != null && host1.equalsIgnoreCase(host2);
     }
 }
-
