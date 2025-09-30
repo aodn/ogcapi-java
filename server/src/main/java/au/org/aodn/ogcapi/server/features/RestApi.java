@@ -137,6 +137,9 @@ public class RestApi implements CollectionsApi {
             case wms_map_feature -> {
                 return featuresService.getWmsMapFeature(collectionId, request);
             }
+            case wms_map_fields -> {
+                return featuresService.getWmsDownloadableFields(collectionId, request);
+            }
             default -> {
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
             }
