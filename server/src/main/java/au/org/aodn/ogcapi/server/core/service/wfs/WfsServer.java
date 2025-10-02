@@ -20,20 +20,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Optional;
 
 @Slf4j
 public class WfsServer {
-    private final List<String> urls = List.of(
-            "https://geoserver.imas.utas.edu.au/geoserver/wfs",
-            "https://geoserver-123.aodn.org.au/geoserver/wfs",
-            "https://www.cmar.csiro.au/geoserver/wfs",
-            "https://geoserver.apps.aims.gov.au/aims/wfs"
-    );
-
     // Cannot use singleton bean as it impacted other dependency
     protected final XmlMapper xmlMapper;
 
@@ -55,16 +47,24 @@ public class WfsServer {
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
+    /**
+     * Get the downloadable fields for a given collection id and layer name
+     *
+     * @param collectionId     - The uuid of the collection
+     * @param request          - The feature request containing the layer name
+     * @param assumedWfsServer - An optional wfs server url to use instead of searching for one
+     * @return - A list of downloadable fields
+     */
     @Cacheable(value = "downloadable-fields")
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request, String assumedWfsServer) {
 
         Optional<List<String>> mapFeatureUrl = assumedWfsServer != null ?
                 Optional.of(List.of(assumedWfsServer)) :
-                getFeatureServerUrl(collectionId, request);
+                getAllFeatureServerUrls(collectionId);
 
-        if(mapFeatureUrl.isPresent()) {
+        if (mapFeatureUrl.isPresent()) {
             // Keep trying all possible url until one get response
-            for(String url: mapFeatureUrl.get()) {
+            for (String url : mapFeatureUrl.get()) {
                 String uri = downloadableFieldsService.createFeatureFieldQueryUrl(url, request);
                 try {
                     if (uri != null) {
@@ -81,21 +81,22 @@ public class WfsServer {
                     log.debug("Ignore error for {}, will try another url", uri);
                 }
             }
-        }
-        else {
+        } else {
             return List.of();
         }
         throw new DownloadableFieldsNotFoundException("No downloadable fields found for all url");
     }
+
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group or it is an ows url
+     *
      * @param collectionId - The uuid
-     * @return - The wms server link.
+     * @return - All the possible wfs server links
      */
-    protected Optional<List<String>> getFeatureServerUrl(String collectionId, FeatureRequest request) {
+    protected Optional<List<String>> getAllFeatureServerUrls(String collectionId) {
         // Get the record contains the map feature, given one uuid , 1 result expected
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
-        if(!result.getCollections().isEmpty()) {
+        if (!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
             return Optional.of(
                     model.getLinks()
@@ -104,88 +105,36 @@ public class WfsServer {
                             .filter(link ->
                                     // This is the pattern for wfs link
                                     link.getAiGroup().contains("Data Access > wfs") ||
-                                    // The data itself can be unclean, ows is another option where it works with wfs
-                                    link.getHref().contains("/ows")
+                                            // The data itself can be unclean, ows is another option where it works with wfs
+                                            link.getHref().contains("/ows")
                             )
                             .map(LinkModel::getHref)
                             .toList()
             );
-        }
-        else {
+        } else {
             return Optional.empty();
         }
     }
 
-    public String normalizeUrl(String serverUrl) {
-        if (serverUrl == null) {
-            return null;
-        }
-
-        // Normalize the URL by removing trailing slashes and query parameters
-        String normalizedUrl = serverUrl.trim();
-        if (normalizedUrl.endsWith("/")) {
-            normalizedUrl = normalizedUrl.substring(0, normalizedUrl.length() - 1);
-        }
-
-        // Remove query parameters if present
-        int queryIndex = normalizedUrl.indexOf('?');
-        if (queryIndex != -1) {
-            normalizedUrl = normalizedUrl.substring(0, queryIndex);
-        }
-
-        return normalizedUrl;
-    }
-
     /**
-     * Find matching URL from whitelist based on host only
-     * Example: "<a href="http://geoserver.imas.utas.edu.au/geoserver/ows">ows</a>"
-     * matches "<a href="https://geoserver.imas.utas.edu.au/geoserver/wfs">wfs</a>"
-     * The matching is based on host only, ignoring protocol and path
+     * Find the url that is able to get WFS call, this can be found in ai:Group
+     *
+     * @param collectionId - The uuid
+     * @param layerName    - The layer name to match the title
+     * @return - The first wfs server link if found
      */
-    private String findMatchingUrl(String userProvidedUrl) {
-        if (userProvidedUrl == null) {
-            return null;
+    protected Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
+        if (!result.getCollections().isEmpty()) {
+            StacCollectionModel model = result.getCollections().get(0);
+            return model.getLinks()
+                    .stream()
+                    .filter(link -> link.getAiGroup() != null)
+                    .filter(link -> link.getAiGroup().contains("Data Access > wfs") && link.getTitle().equalsIgnoreCase(layerName))
+                    .map(LinkModel::getHref)
+                    .findFirst();
+        } else {
+            return Optional.empty();
         }
-
-        try {
-            URI userUri = URI.create(normalizeUrl(userProvidedUrl));
-            String userHost = userUri.getHost();
-
-            if (userHost == null) {
-                return null;
-            }
-
-            return urls.stream()
-                    .filter(approvedUrl -> {
-                        try {
-                            URI approvedUri = URI.create(approvedUrl);
-                            String approvedHost = approvedUri.getHost();
-                            return userHost.equals(approvedHost);
-                        } catch (Exception e) {
-                            return false;
-                        }
-                    })
-                    .findFirst()
-                    .orElse(null);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    /**
-     * SSRF Protection: Validate user input against whitelist and return approved URL
-     * This ensures no user input is directly used in HTTP requests
-     */
-    public String validateAndGetApprovedServerUrl(String userProvidedUrl) {
-        String matchedUrl = findMatchingUrl(userProvidedUrl);
-
-        if (matchedUrl == null) {
-            throw new au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException(
-                    String.format("Access to WFS server '%s' is not authorized. Only approved servers are allowed.", userProvidedUrl)
-            );
-        }
-
-        // Return the exact approved URL from our whitelist, not user input
-        return matchedUrl;
     }
 }
