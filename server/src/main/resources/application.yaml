@@ -27,6 +27,10 @@ wfs-default-param:
     SERVICE: "WFS"
     VERSION: "2.0.0"
     REQUEST: "DescribeFeatureType"
+  download:
+    SERVICE: "WFS"
+    VERSION: "1.0.0"       # TODO: Change to 2.0.0 after testing CQL query
+    REQUEST: "GetFeature"
 
 # Default parameter for wms call
 wms-default-param:

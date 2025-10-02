@@ -1,12 +1,9 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
-import au.org.aodn.ogcapi.server.core.model.LinkModel;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsInfo;
-import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
-import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -24,50 +21,21 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Service
 public class DownloadWfsDataService {
-    private final Search elasticSearch;
-    private final DownloadableFieldsService downloadableFieldsService;
+    private final WmsServer wmsServer;
     private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
+    private final WfsDefaultParam wfsDefaultParam;
 
     public DownloadWfsDataService(
-            Search elasticSearch,
-            DownloadableFieldsService downloadableFieldsService,
+            WmsServer wmsServer,
             WfsServer wfsServer,
-            RestTemplate restTemplate) {
-        this.elasticSearch = elasticSearch;
-        this.downloadableFieldsService = downloadableFieldsService;
+            RestTemplate restTemplate,
+            WfsDefaultParam wfsDefaultParam
+    ) {
+        this.wmsServer = wmsServer;
         this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
-    }
-
-    /**
-     * Extract WFS URL and layer name from collection links
-     */
-    private WfsInfo extractWfsInfo(StacCollectionModel collection, String layerName) {
-        if (collection.getLinks() == null) {
-            return null;
-        }
-
-        // Find WFS link with matching layer name (title)
-        Optional<LinkModel> wfsLink = collection.getLinks().stream()
-                .filter(link -> "wfs".equals(link.getRel()))
-                .filter(link -> layerName.equals(link.getTitle()))
-                .findFirst();
-
-        if (wfsLink.isEmpty()) {
-            log.warn("No WFS link found with layer name: {}", layerName);
-            return null;
-        }
-
-        String href = wfsLink.get().getHref();
-        String title = wfsLink.get().getTitle();
-
-        if (href == null || title == null) {
-            return null;
-        }
-
-        // The href is the WFS server URL, title is the layer name
-        return new WfsInfo(href, title);
+        this.wfsDefaultParam = wfsDefaultParam;
     }
 
     /**
@@ -120,14 +88,22 @@ public class DownloadWfsDataService {
     /**
      * Build WFS GetFeature URL
      */
-    private String buildWfsUrl(String wfsUrl, String layerName, String cqlFilter) {
+    private String buildWfsRequestUrl(String wfsUrl, String layerName, String cqlFilter) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(wfsUrl)
-                .queryParam("service", "WFS")
-                .queryParam("version", "2.0.0")
-                .queryParam("request", "GetFeature")
-                .queryParam("typeName", layerName)
-                .queryParam("outputFormat", "text/csv");
+                .scheme("https");  // Force HTTPS to fix redirect
 
+        Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
+        param.put("typeName", layerName);
+        param.put("outputFormat", "text/csv");
+
+        // Add general query parameters
+        param.forEach((key, value) -> {
+            if (value != null) {
+                builder.queryParam(key, value);
+            }
+        });
+
+        // Add CQL filter if present
         if (cqlFilter != null && !cqlFilter.isEmpty()) {
             builder.queryParam("cql_filter", cqlFilter);
         }
@@ -143,34 +119,34 @@ public class DownloadWfsDataService {
             String startDate,
             String endDate,
             Object multiPolygon,
-            List<String> fields,
+            List<String> fields,// TODO: currently not used
             String layerName) {
 
-        // Get collection information from UUID
-        ElasticSearch.SearchResult<StacCollectionModel> searchResult =
-                elasticSearch.searchCollections(uuid);
+        DescribeLayerResponse describeLayerResponse = wmsServer.describeLayer(uuid, FeatureRequest.builder().layerName(layerName).build());
 
-        if (searchResult.getCollections().isEmpty()) {
-            throw new RuntimeException("Collection with UUID " + uuid + " not found");
+        String wfsServerUrl;
+        String wfsTypeName;
+        List<DownloadableFieldModel> downloadableFields;
+
+        // Try to get WFS details from DescribeLayer first, then fallback to searching by layer name
+        if (describeLayerResponse != null && describeLayerResponse.getLayerDescription().getWfs() != null) {
+            wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
+            wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
+
+            downloadableFields = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+            log.info("DownloadableFields by describeLayer: {}", downloadableFields);
+        } else {
+            Optional<String> featureServerUrl = wfsServer.getFeatureServerUrl(uuid, layerName);
+
+            if (featureServerUrl.isPresent()) {
+                wfsServerUrl = featureServerUrl.get();
+                wfsTypeName = layerName;
+                downloadableFields = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+                log.info("DownloadableFields by wfs typename: {}", downloadableFields);
+            } else {
+                throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
+            }
         }
-
-        StacCollectionModel collection = searchResult.getCollections().get(0);
-
-        // Extract WFS URL and layer name from collection links
-        WfsInfo wfsInfo = extractWfsInfo(collection, layerName);
-        if (wfsInfo == null) {
-            throw new RuntimeException("No WFS link found for collection " + uuid + " with layer name " + layerName);
-        }
-
-        // Validate and get approved WFS URL from whitelist
-        String approvedWfsUrl;
-        approvedWfsUrl = wfsServer.validateAndGetApprovedServerUrl(wfsInfo.wfsUrl());
-        log.info("Using approved WFS URL: {} (original: {})", approvedWfsUrl, wfsInfo.wfsUrl());
-
-        // Get downloadable fields to map field names
-        List<DownloadableFieldModel> downloadableFields =
-                wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsInfo.layerName()).build(), null);
-        log.info("DownloadableFields: {}", downloadableFields);
 
         // Validate start and end dates
         String validStartDate = DatetimeUtils.validateAndFormatDate(startDate, true);
@@ -179,8 +155,8 @@ public class DownloadWfsDataService {
         // Build CQL filter
         String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, downloadableFields);
 
-        // Build final WFS URL
-        String wfsRequestUrl = buildWfsUrl(approvedWfsUrl, wfsInfo.layerName(), cqlFilter);
+        // Build final WFS request URL
+        String wfsRequestUrl = buildWfsRequestUrl(wfsServerUrl, wfsTypeName, cqlFilter);
 
         log.info("Prepared WFS request URL: {}", wfsRequestUrl);
         return wfsRequestUrl;

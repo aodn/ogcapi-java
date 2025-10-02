@@ -13,4 +13,5 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "wfs-default-param")
 public class WfsDefaultParam {
     private Map<String, String> fields;
+    private Map<String, String> download;
 }

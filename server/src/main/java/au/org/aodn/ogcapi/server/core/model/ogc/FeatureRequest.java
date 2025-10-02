@@ -23,9 +23,6 @@ public class FeatureRequest implements Serializable {
     @Schema(description = "Either a date-time or an interval, open or closed. Date and time expressions adhere to RFC 3339. Open intervals are expressed using double-dots.  Examples:  * A date-time: \"2018-02-12T23:20:50Z\" * A closed interval: \"2018-02-12T00:00:00Z/2018-03-18T12:31:12Z\" * Open intervals: \"2018-02-12T00:00:00Z/..\" or \"../2018-03-18T12:31:12Z\"  Only records that have a temporal property that intersects the value of `datetime` are selected.  It is left to the decision of the server whether only a single temporal property is used to determine the extent or all relevant temporal properties.")
     private String datetime;
 
-    @Schema(description = "WFS server URL (required when featureId is 'downloadableFields')")
-    private String serverUrl;
-
     @Schema(description = "WFS type name (required when featureId is 'downloadableFields')")
     private String layerName;
 

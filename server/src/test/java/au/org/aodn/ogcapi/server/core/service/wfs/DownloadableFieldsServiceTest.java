@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -80,7 +81,6 @@ public class DownloadableFieldsServiceTest {
     // Helper method to create FeatureRequest for testing
     private FeatureRequest createDownloadableFieldsRequest(String serverUrl, String layerName) {
         return FeatureRequest.builder()
-                .serverUrl(serverUrl)
                 .layerName(layerName)
                 .build();
     }
@@ -214,12 +214,12 @@ public class DownloadableFieldsServiceTest {
         );
 
         assertEquals("No downloadable fields found for all url",
-                    exception.getMessage(),
-           "Exception not match"
+                exception.getMessage(),
+                "Exception not match"
         );
     }
 
-//    @Test
+    //    @Test
 //    public void testGetDownloadableFieldsUnauthorizedServer() {
 //        when(wfsServerConfig.validateAndGetApprovedServerUrl(UNAUTHORIZED_SERVER))
 //                .thenThrow(new UnauthorizedServerException("Access to WFS server '" + UNAUTHORIZED_SERVER + "' is not authorized"));
