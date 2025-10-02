@@ -159,6 +159,16 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    links_title_contains(
+            StacBasicField.LinksTitle.searchField,
+            StacBasicField.LinksTitle.displayField,
+            (literal) -> WildcardQuery.of(m -> m
+                    .field(StacBasicField.LinksTitle.searchField)
+                    // We want the words exact so need to add space in front and end
+                    .value("* " + literal + " *")
+                    .caseInsensitive(true))._toQuery(),
+            null
+    ),
     status(
             StacSummeries.Status.searchField,
             StacSummeries.Status.displayField,
