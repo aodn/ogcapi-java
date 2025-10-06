@@ -195,7 +195,7 @@ public enum CQLFields implements CQLFieldsInterface {
             (literal) -> MatchQuery.of(m -> m
                     .fuzziness("AUTO")
                     .field(StacBasicField.Title.searchField)
-                    .prefixLength(3)
+                    .prefixLength(4)    // Use 4 to deal with NRMN short form may match NRM records
                     // Increase the relevance of matches in title
                     .boost(2.0F)
                     .operator(Operator.And) // ensure all terms are matched with fuzziness
@@ -208,7 +208,7 @@ public enum CQLFields implements CQLFieldsInterface {
             (literal) -> MatchQuery.of(m -> m
                     .fuzziness("AUTO")
                     .field(StacBasicField.Description.searchField)
-                    .prefixLength(3)
+                    .prefixLength(4)  // Use 4 to deal with NRMN short form may match NRM records
                     .operator(Operator.And) // ensure all terms are matched with fuzziness
                     .query(literal))._toQuery(),
             null
