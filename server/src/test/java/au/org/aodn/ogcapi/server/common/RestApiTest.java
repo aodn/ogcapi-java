@@ -129,6 +129,27 @@ public class RestApiTest extends BaseTestClass {
                 "Correct UUID - 9fdb1eee-bc28-43a9-88c5-972324784837");
     }
     /**
+     * Acronym is not encourage to use in title or description, so NRMN record is not found, the acronym usually
+     * appears in links title, this test is make sure NRMN record is found from link as well.
+     * @throws IOException - IO Exception
+     */
+    @Test
+    public void verifyApiCollectionsQueryOnText3() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                // This is NRMN record where word NRMN not in title/desc but links
+                "8cdcdcad-399b-4bed-8cb2-29c486b6b124.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
+        );
+
+        // Call rest api directly and get query result
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=NRMN", ExtendedCollections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getTotal(), "Only 1 hit");
+        assertEquals(
+                "8cdcdcad-399b-4bed-8cb2-29c486b6b124",
+                collections.getBody().getCollections().get(0).getId(),
+                "Correct UUID - 8cdcdcad-399b-4bed-8cb2-29c486b6b124");
+    }
+    /**
      * The datetime field after xxx/.. xxx/ etc. It uses CQL internally so no need to test Before After During in CQL
      */
     @Test
