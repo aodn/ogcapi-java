@@ -112,7 +112,7 @@ public class RestApi implements CollectionsApi {
                             filter != null ? "filter=" + filter : null
                     );
                 } catch (Throwable e) {
-                    return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 }
             }
             case first_data_available -> {

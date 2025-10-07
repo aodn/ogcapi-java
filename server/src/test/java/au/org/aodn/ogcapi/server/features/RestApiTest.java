@@ -214,7 +214,7 @@ public class RestApiTest extends BaseTestClass {
                 "Record return size correct"
         );
         // Total number of record should be this
-        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+        assertEquals(5, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
@@ -243,12 +243,12 @@ public class RestApiTest extends BaseTestClass {
                 "Record return size correct"
         );
         // Total number of record should be this as the same search criteria applies
-        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+        assertEquals(5, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
+                "str:7709f541-fc0c-4318-b5b9-9053aa474e0e",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 arg"
         );
@@ -267,17 +267,17 @@ public class RestApiTest extends BaseTestClass {
                 });
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
-        assertEquals(2,
+        assertEquals(3,
                 Objects.requireNonNull(collections.getBody()).getCollections().size(),
                 "Record return size correct, total hit is 4, we move to the third record"
         );
         // Total number of record should be this as the same search criteria applies
-        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+        assertEquals(5, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
+                "str:19da2ce7-138f-4427-89de-a50c724f5f54",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 value"
         );
@@ -315,7 +315,7 @@ public class RestApiTest extends BaseTestClass {
                 "Record return size correct"
         );
         // Total number of record should be this
-        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+        assertEquals(5, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
@@ -344,17 +344,17 @@ public class RestApiTest extends BaseTestClass {
                 });
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
-        assertEquals(3,
+        assertEquals(4,
                 Objects.requireNonNull(collections.getBody()).getCollections().size(),
                 "Record return size correct"
         );
         // Total number of record should be this as the same search criteria applies
-        assertEquals(4, collections.getBody().getTotal(), "Get total works");
+        assertEquals(5, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
+                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getSearchAfter().get(2),
                 "Search after 2 value"
         );

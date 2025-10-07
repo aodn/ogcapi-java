@@ -129,6 +129,27 @@ public class RestApiTest extends BaseTestClass {
                 "Correct UUID - 9fdb1eee-bc28-43a9-88c5-972324784837");
     }
     /**
+     * Acronym is not encourage to use in title or description, so NRMN record is not found, the acronym usually
+     * appears in links title, this test is make sure NRMN record is found from link as well.
+     * @throws IOException - IO Exception
+     */
+    @Test
+    public void verifyApiCollectionsQueryOnText3() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                // This is NRMN record where word NRMN not in title/desc but links
+                "8cdcdcad-399b-4bed-8cb2-29c486b6b124.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
+        );
+
+        // Call rest api directly and get query result
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=NRMN", ExtendedCollections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getTotal(), "Only 1 hit");
+        assertEquals(
+                "8cdcdcad-399b-4bed-8cb2-29c486b6b124",
+                collections.getBody().getCollections().get(0).getId(),
+                "Correct UUID - 8cdcdcad-399b-4bed-8cb2-29c486b6b124");
+    }
+    /**
      * The datetime field after xxx/.. xxx/ etc. It uses CQL internally so no need to test Before After During in CQL
      */
     @Test
@@ -500,12 +521,12 @@ public class RestApiTest extends BaseTestClass {
 
         // Lower score but the fuzzy is now with operator AND, therefore it will try to match all words 'dataset' and 'includes' with fuzzy
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=1", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 3");
+        assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 3");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
 
         // Increase score will drop one record
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=3", Collections.class);
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 3");
+        assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 3, with score 3");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
     }
 
