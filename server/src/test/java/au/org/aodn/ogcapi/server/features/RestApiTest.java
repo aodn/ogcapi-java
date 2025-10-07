@@ -290,7 +290,7 @@ public class RestApiTest extends BaseTestClass {
     public void verifyCorrectPageSizeAndScoreWithQuery() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");
 
-        logger.info("Start verifyCorrectPageSizeAndScoreWithQuery");
+        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery");
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
