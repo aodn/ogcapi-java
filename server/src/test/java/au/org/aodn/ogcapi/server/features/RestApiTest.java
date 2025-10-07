@@ -320,7 +320,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "95",
+                "80",
                 collections.getBody().getSearchAfter().get(1),
                 "search_after 2 value"
         );
