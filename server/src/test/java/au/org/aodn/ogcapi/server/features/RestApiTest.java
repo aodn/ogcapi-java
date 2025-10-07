@@ -290,14 +290,16 @@ public class RestApiTest extends BaseTestClass {
     public void verifyCorrectPageSizeAndScoreWithQuery() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");
 
+        logger.info("Start verifyCorrectPageSizeAndScoreWithQuery");
+
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
         super.insertJsonToElasticRecordIndex(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
-                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
-                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
-                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json", //
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json", // *
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json", //
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result with search on "dataset"
