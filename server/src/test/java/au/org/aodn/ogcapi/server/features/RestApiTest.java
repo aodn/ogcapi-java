@@ -325,7 +325,7 @@ public class RestApiTest extends BaseTestClass {
                 "search_after 2 value"
         );
         assertEquals(
-                "str:7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                "str:bc55eff4-7596-3565-e044-00144fdd4fa6",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 value"
         );
