@@ -1,6 +1,6 @@
 {
   "title": "IMOS - National Reef Monitoring Network Sub-Facility",
-  "description": "The National Reef Monitoring Network brings together shallow reef surveys conducted around Australia into a centralised database. The IMOS National Reef Monitoring Network sub-Facility collates, cleans, stores and makes this data rapidly available from contributors including: Reef Life Survey, Parks Australia, Department of Biodiversity, Conservation and Attractions (Western Australia), Department of Environment, Water and Natural Resources (South Australia), Department of Primary Industries (New South Wales), Tasmanian Parks and Wildlife Service and Parks Victoria. The data provided by the National Reef Monitoring Network contributes to establishing and supporting national marine baselines, and assisting with the management of Commonwealth and State marine reserves. Reef Life Survey (RLS) and the Australian Temperate Reef Network (ATRC) aims to improve biodiversity conservation and the sustainable management of marine resources by coordinating surveys of rocky and coral reefs using scientific methods, with the ultimate goal to improve coastal stewardship. Our activities depend on the skills of marine scientists, experienced and motivated recreational SCUBA divers, partnerships with management agencies and university researchers, and active input from the ATRC partners and RLS Advisory Committee RLS and ATRC data are freely available to the public for non-profit purposes, so not only managers, but also groups such as local dive clubs or schools may use these data to look at changes over time in their own local reefs. By making data freely available and through public outputs, RLS and ATRC aims to raise broader community awareness of the status of Australia’s marine biodiversity and associated conservation issues.",
+  "description": "No value is fine, this case is make sure short form of National Reef Monitoring Network not appear here",
   "extent": {
     "bbox": [
       [
@@ -40,7 +40,7 @@
     },
     "creation": "2021-05-21T12:00:00",
     "revision": "2024-07-04T03:50:26",
-    "ai:description": "The National Reef Monitoring Network brings together shallow reef surveys conducted around Australia into a centralised database. The IMOS National Reef Monitoring Network sub-Facility collates, cleans, stores and makes this data rapidly available from contributors including: - Reef Life Surve - Parks Australi - Department of Biodiversity, Conservation and Attractions (Western Australia) - Department of Environment, Water and Natural Resources (South Australia) - Department of Primary Industries (New South Wales) - Tasmanian Parks and Wildlife Service - Parks Victoria. The data provided by the National Reef Monitoring Network contributes to establishing and supporting national marine baselines, and assisting with the management of Commonwealth and State marine reserves. Reef Life Survey (RLS) and the Australian Temperate Reef Network (ATRC) aims to improve biodiversity conservation and the sustainable management of marine resources by coordinating surveys of rocky and coral reefs using scientific methods, with the ultimate goal to improve coastal stewardship. Our activities depend on the skills of marine scientists, experienced and motivated recreational SCUBA divers, partnerships with management agencies and university researchers, and active input from the ATRC partners and RLS Advisory Committee. RLS and ATRC data are freely available to the public for non-profit purposes, so not only managers, but also groups such as local dive clubs or schools may use these data to look at changes over time in their own local reefs. By making data freely available and through public outputs, RLS and ATRC aims to raise broader community awareness of the status of Australia’s marine biodiversity and associated conservation issues.",
+    "ai:description": "No value is fine",
     "dataset_provider": "IMOS",
     "update_frequency": "other",
     "proj:geometry": {
@@ -11300,8 +11300,7 @@
       "href": "uuid:0f65b7ae-1f6f-4a55-b804-1c991f791e1a",
       "rel": "sibling",
       "type": "application/json",
-      "title": "{\"title\":\"IMOS - Autonomous Underwater Vehicles - AUV Iver",
-      "recordAbstract": "The IMOS Autonomous Underwater Vehicles Facility has an Autonomous Underwater Vehicle (AUV) called Iver (IMOS platform code:IVER), capable of undertaking high resolution geo-referenced survey work. This platform is a modified Ocean Server Iver2 AUV that is hand deployable off RHIBs and other small vessels in addition to being deployable off larger vessels.\n\nThis AUV has been modified for benthic imaging, including the addition of USBL and DVL for more accurate navigation and the addition of high resolution stereo cameras and strobes. The submersible is equipped with a suite of oceanographic sensors including high resolution stereo cameras (6MP each), depth sensor, Doppler Velocity Log (DVL), Compass and Ultra Short Baseline (USBL). The vehicle is controlled by an on-board PC stack which is used to log sensor information and run the vehicle's control algorithms.\n\nThe vehicle has demonstrated its capacity to collect high resolution, near bottom imagery on trajectories over smooth terrain that has been used to generate 3D meshes and ortho-mosaics.\"}"
+      "title": "Any works"
     }
   ],
   "license": "Creative Commons Attribution 4.0 International License",
@@ -11793,7 +11792,7 @@
       "National Reef Monitoring Network Sub-Facility, Integrated Marine Observing System (IMOS)"
     ]
   },
-  "sci:citation": "{\"suggestedCitation\":\"The citation in a list of references is: \\\"Reef Life Survey (RLS); Institute for Marine and Antarctic Studies (IMAS); Parks Victoria; Department of Primary Industries (DPI), New South Wales Government; Parks and Wildlife Tasmania; Department for Environment and Water (DEWNR), South Australia, Integrated Marine Observing System (IMOS) [year-of-data-download], National Reef Monitoring Network Sub-Facility, [data-access-URL], accessed [date-of-access].\\\"\",\"useLimitations\":[\"Data, products and services from IMOS are provided \\\"as is\\\" without any warranty as to fitness for a particular purpose.\"],\"otherConstraints\":null}",
+  "sci:citation": "Not importand for testing",
   "type": "Collection",
   "stac_version": "1.0.0",
   "stac_extensions": [
