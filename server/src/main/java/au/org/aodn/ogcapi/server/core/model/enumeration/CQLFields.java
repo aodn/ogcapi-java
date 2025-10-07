@@ -162,11 +162,16 @@ public enum CQLFields implements CQLFieldsInterface {
     links_title_contains(
             StacBasicField.LinksTitle.searchField,
             StacBasicField.LinksTitle.displayField,
-            (literal) -> WildcardQuery.of(m -> m
-                    .field(StacBasicField.LinksTitle.searchField)
+            (literal) -> NestedQuery.of(m -> m
+                    .path(StacBasicField.Links.searchField)
                     // We want the words exact so need to add space in front and end
-                    .value("* " + literal + " *")
-                    .caseInsensitive(true))._toQuery(),
+                    .query(q -> q
+                            .match(mq -> mq
+                                    .field(StacBasicField.LinksTitle.searchField)
+                                    .query(literal)
+                            )
+                    )
+            )._toQuery(),
             null
     ),
     status(
