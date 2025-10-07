@@ -243,7 +243,9 @@ public class BaseTestClass {
 
         assertEquals(filenames.length, response.hits().hits().size(), "Number of docs stored is correct");
         for (Hit<ObjectNode> hit : response.hits().hits()) {
-            logger.debug("Stored the following ids {}",hit.id());
+            if(hit.source() != null) {
+                logger.debug("Stored the following id {}", hit.source().get("id"));
+            }
         }
     }
 
