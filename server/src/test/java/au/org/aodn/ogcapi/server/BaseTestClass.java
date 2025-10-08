@@ -7,6 +7,7 @@ import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.*;
 import co.elastic.clients.elasticsearch.core.bulk.BulkResponseItem;
+import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.indices.CreateIndexRequest;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -241,6 +242,11 @@ public class BaseTestClass {
         logger.debug(response.toString());
 
         assertEquals(filenames.length, response.hits().hits().size(), "Number of docs stored is correct");
+        for (Hit<ObjectNode> hit : response.hits().hits()) {
+            if(hit.source() != null) {
+                logger.debug("Stored the following id {}", hit.source().get("id"));
+            }
+        }
     }
 
     protected void insertJsonToElasticRecordIndex(String... filenames) throws IOException {

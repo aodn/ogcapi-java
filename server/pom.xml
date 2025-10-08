@@ -266,6 +266,9 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <configuration>
                     <argLine>--enable-preview</argLine>
+                    <systemPropertyVariables>
+                        <spring.profiles.active>test</spring.profiles.active> <!-- e.g., for Spring Boot -->
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
             <plugin>

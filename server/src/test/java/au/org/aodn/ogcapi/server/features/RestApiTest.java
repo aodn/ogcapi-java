@@ -44,6 +44,7 @@ public class RestApiTest extends BaseTestClass {
     @BeforeEach
     public void afterTest() {
         super.clearElasticIndex();
+        super.createElasticIndex();
     }
 
     @Test
@@ -290,6 +291,8 @@ public class RestApiTest extends BaseTestClass {
     public void verifyCorrectPageSizeAndScoreWithQuery() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");
 
+        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery");
+
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
         super.insertJsonToElasticRecordIndex(
@@ -308,6 +311,8 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {
                 });
 
+        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
+
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
         // Given request page size is 1
         assertEquals(1,
@@ -319,6 +324,10 @@ public class RestApiTest extends BaseTestClass {
 
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
+
+        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - uuid return {}", collections.getBody().getCollections().get(0).getId());
+        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
+
         assertEquals(
                 "80",
                 collections.getBody().getSearchAfter().get(1),
@@ -342,6 +351,8 @@ public class RestApiTest extends BaseTestClass {
                 null,
                 new ParameterizedTypeReference<>() {
                 });
+
+        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 2");
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
         assertEquals(4,

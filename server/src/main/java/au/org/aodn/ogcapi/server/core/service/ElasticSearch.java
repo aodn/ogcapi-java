@@ -315,6 +315,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 }
             }
             catch(Exception e) {
+                log.warn("Error parsing score assume null", e);
                 // OK to ignore as accept null as the value
             }
             // Get the search after
