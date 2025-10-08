@@ -44,6 +44,7 @@ public class RestApiTest extends BaseTestClass {
     @BeforeEach
     public void afterTest() {
         super.clearElasticIndex();
+        super.createElasticIndex();
     }
 
     @Test
