@@ -310,7 +310,7 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {
                 });
 
-        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
+        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
         // Given request page size is 1
@@ -323,6 +323,8 @@ public class RestApiTest extends BaseTestClass {
 
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
+
+        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
         assertEquals(
                 "95",
                 collections.getBody().getSearchAfter().get(1),
