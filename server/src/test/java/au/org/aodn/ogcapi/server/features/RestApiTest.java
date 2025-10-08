@@ -310,6 +310,8 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {
                 });
 
+        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
+
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
         // Given request page size is 1
         assertEquals(1,
@@ -344,6 +346,8 @@ public class RestApiTest extends BaseTestClass {
                 null,
                 new ParameterizedTypeReference<>() {
                 });
+
+        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 2");
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
         assertEquals(4,
