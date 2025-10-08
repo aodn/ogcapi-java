@@ -184,7 +184,8 @@ public enum CQLFields implements CQLFieldsInterface {
             CQLElasticSetting.score.getSetting(),
             CQLElasticSetting.score.getSetting(),
             null,
-            (order) -> new SortOptions.Builder().field(f -> f.field(CQLElasticSetting.score.getSetting()).order(order))
+            (order) -> new SortOptions.Builder()
+                    .field(f -> f.field(CQLElasticSetting.score.getSetting()).order(order))
     ),
     // Rank score is an internal calculated score, it is different from the one use by ElasticSearch,
     // @see es-indexer RankingService

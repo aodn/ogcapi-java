@@ -141,28 +141,23 @@
       "links": {
         "type": "nested",
         "properties": {
-          "link": {
-            "type": "nested",
-            "properties": {
-              "href": {
-                "type": "text"
-              },
-              "rel": {
-                "type": "text"
-              },
-              "type": {
-                "type": "text"
-              },
-              "title": {
-                "type": "text"
-              },
-              "description": {
-                "type": "text"
-              },
-              "ai:group": {
-                "type": "text"
-              }
-            }
+          "href": {
+            "type": "text"
+          },
+          "rel": {
+            "type": "text"
+          },
+          "type": {
+            "type": "text"
+          },
+          "title": {
+            "type": "text"
+          },
+          "description": {
+            "type": "text"
+          },
+          "ai:group": {
+            "type": "text"
           }
         }
       },
@@ -202,6 +197,9 @@
       },
       "summaries": {
         "properties": {
+          "ai:description": {
+            "type": "text"
+          },
           "score": {
             "type": "long"
           },
@@ -252,9 +250,6 @@
             }
           },
           "statement": {
-            "type": "text"
-          },
-          "ai:description": {
             "type": "text"
           }
         }
