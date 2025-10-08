@@ -71,12 +71,12 @@ public class RestApiTest extends BaseTestClass {
 
         // Call rest api directly and get query result with search on "dataset"
         ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?q=dataset&filter=page_size=5 AND score>=1.3",
+                getBasePath() + "/collections?q=dataset&filter=page_size=1 AND score>=1.3",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});
 
-        collections.getBody().getCollections().forEach(i -> logger.info("uuid {}", i.getId()));
+        collections.getBody().getCollections().forEach(i -> logger.info("uuid {}, {}", i.getId(), collections.getBody().getSearchAfter()));
         assertFalse(true);
     }
 }
