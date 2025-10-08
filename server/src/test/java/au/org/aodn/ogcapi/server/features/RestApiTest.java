@@ -612,6 +612,6 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {});
 
         collections.getBody().getCollections().forEach(i -> logger.info("uuid {}", i.getId()));
-
+        assertFalse(true);
     }
 }
