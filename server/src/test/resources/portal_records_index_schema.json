@@ -141,23 +141,28 @@
       "links": {
         "type": "nested",
         "properties": {
-          "href": {
-            "type": "text"
-          },
-          "rel": {
-            "type": "text"
-          },
-          "type": {
-            "type": "text"
-          },
-          "title": {
-            "type": "text"
-          },
-          "description": {
-            "type": "text"
-          },
-          "ai:group": {
-            "type": "text"
+          "link": {
+            "type": "nested",
+            "properties": {
+              "href": {
+                "type": "text"
+              },
+              "rel": {
+                "type": "text"
+              },
+              "type": {
+                "type": "text"
+              },
+              "title": {
+                "type": "text"
+              },
+              "description": {
+                "type": "text"
+              },
+              "ai:group": {
+                "type": "text"
+              }
+            }
           }
         }
       },
