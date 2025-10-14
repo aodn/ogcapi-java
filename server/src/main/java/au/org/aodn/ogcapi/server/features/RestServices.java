@@ -129,8 +129,9 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.badRequest().body("Parameter 'datetime' is required and must be in 'from/to' format");
         }
 
-        java.time.LocalDate localDate = java.time.LocalDate.parse(from);
-        String to = localDate.plusDays(1).toString();
+        java.time.ZonedDateTime fromDateTime = java.time.ZonedDateTime.parse(from);
+        String to = fromDateTime.plusDays(1)
+            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
         try {
            return ResponseEntity
                     .ok()
