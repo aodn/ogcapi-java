@@ -10,6 +10,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
+import au.org.aodn.ogcapi.server.core.util.LinkUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -111,13 +112,20 @@ public interface Converter<F, T> {
                 collection.getLinks().addAll(
                         m.getLinks()
                                 .stream()
-                                .map(l -> new ExtendedLink()
-                                        .href(l.getHref())
-                                        .type(l.getType())
-                                        .rel(l.getRel())
-                                        .title(l.getTitle())
-                                        .aiGroup(l.getAiGroup())
-                                )
+                                .map(l -> {
+                                    // Parse title and description from the combined title
+                                    String[] parsed = LinkUtils.parseLinkTitleDescription(l.getTitle());
+                                    String title = parsed[0];
+                                    String description = parsed[1];
+
+                                    return new ExtendedLink()
+                                            .href(l.getHref())
+                                            .type(l.getType())
+                                            .rel(l.getRel())
+                                            .title(title)
+                                            .description(description)
+                                            .aiGroup(l.getAiGroup());
+                                })
                                 .toList()
                 );
             }

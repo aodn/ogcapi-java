@@ -18,4 +18,7 @@ public class LinkModel {
 
     @JsonProperty("ai:group")
     protected String aiGroup;
+
+    @JsonProperty("description")
+    protected String description;
 }
