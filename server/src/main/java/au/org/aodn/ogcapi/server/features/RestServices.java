@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
@@ -63,9 +64,8 @@ public class RestServices extends OGCApiService {
     public ResponseEntity<FeatureInfoResponse> getWmsMapFeature(String collectionId, FeatureRequest request) {
         try {
             return ResponseEntity.ok()
-                .body(wmsServer.getMapFeatures(collectionId, request));
-        }
-        catch (JsonProcessingException | URISyntaxException e) {
+                    .body(wmsServer.getMapFeatures(collectionId, request));
+        } catch (JsonProcessingException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
     }
@@ -74,20 +74,21 @@ public class RestServices extends OGCApiService {
         try {
             return ResponseEntity.ok()
                     .body(wmsServer.getMapTile(collectionId, request));
-        }
-        catch(Throwable e) {
+        } catch (Throwable e) {
             throw new RuntimeException(e);
         }
     }
+
     /**
      * This is used to get the downloadable fields from wfs where layer name is not mentioned in wms
+     *
      * @param collectionId - The uuid of dataset
-     * @param request - Request to get field given a layer name
+     * @param request      - Request to get field given a layer name
      * @return - The downloadable field name
      */
     public ResponseEntity<?> getWfsDownloadableFields(String collectionId, FeatureRequest request) {
 
-        if(request.getLayerName() == null) {
+        if (request.getLayerName() == null) {
             return ResponseEntity.badRequest().body("Layer name cannot be null");
         }
 
@@ -97,15 +98,17 @@ public class RestServices extends OGCApiService {
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
+
     /**
      * This is used to get the downloadable fields from wfs given a wms layer
+     *
      * @param collectionId - The uuid of dataset
-     * @param request - Request to get field given a WMS layer name
+     * @param request      - Request to get field given a WMS layer name
      * @return - The downloadable field name
      */
     public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
 
-        if(request.getLayerName() == null) {
+        if (request.getLayerName() == null) {
             return ResponseEntity.badRequest().body("Layer name cannot be null");
         }
 
@@ -115,14 +118,29 @@ public class RestServices extends OGCApiService {
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
+
     /**
+     * This is used to get all available layers from WMS GetCapabilities
      *
+     * @param collectionId - The uuid of dataset
+     * @param request      - Request to get layers
+     * @return - List of available layers with name, title, and serverUrl
+     */
+    public ResponseEntity<?> getWmsLayers(String collectionId, FeatureRequest request) {
+        List<LayerInfo> result = wmsServer.getCapabilitiesLayers(collectionId, request);
+
+        return result.isEmpty() ?
+                ResponseEntity.notFound().build() :
+                ResponseEntity.ok(result);
+    }
+
+    /**
      * @param collectionID
      * @param from
      * @return
      */
     public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
-        if (!dasService.isCollectionSupported(collectionID)){
+        if (!dasService.isCollectionSupported(collectionID)) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
         if (from == null) {
@@ -133,10 +151,10 @@ public class RestServices extends OGCApiService {
         String to = fromDateTime.plusDays(1)
             .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
         try {
-           return ResponseEntity
+            return ResponseEntity
                     .ok()
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoys(from,to));
+                    .body(dasService.getWaveBuoys(from, to));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoys data: {}", e.getMessage());
@@ -145,7 +163,7 @@ public class RestServices extends OGCApiService {
     }
 
     public ResponseEntity<?> getWaveBuoyData(String collectionID, String datetime, String buoy) {
-        if (!dasService.isCollectionSupported(collectionID)){
+        if (!dasService.isCollectionSupported(collectionID)) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
         }
         if (datetime == null) {
@@ -166,7 +184,7 @@ public class RestServices extends OGCApiService {
             return ResponseEntity
                     .ok()
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoyData(from,to, buoy));
+                    .body(dasService.getWaveBuoyData(from, to, buoy));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoy historical data: {}", e.getMessage());

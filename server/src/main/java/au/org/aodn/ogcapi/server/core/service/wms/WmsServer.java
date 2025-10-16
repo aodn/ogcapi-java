@@ -7,6 +7,8 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.GetCapabilitiesResponse;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
@@ -316,6 +318,7 @@ public class WmsServer {
      * unknown place
      *
      * @param collectionId - The uuid
+     * @param request      - The request containing optional layer name
      * @return - The wms server link.
      */
     protected Optional<String> getMapServerUrl(String collectionId, FeatureRequest request) {
@@ -323,13 +326,30 @@ public class WmsServer {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if (!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
+
+            String layerName = request != null ? request.getLayerName() : null;
+
+            // If no layer name provided, use the first WMS link
+            if (layerName == null || layerName.isEmpty()) {
+                log.debug("No layer name provided, searching for first WMS link");
+                return model.getLinks()
+                        .stream()
+                        .filter(link -> link.getAiGroup() != null)
+                        .filter(link -> link.getAiGroup().contains("Data Access > wms"))
+                        .map(LinkModel::getHref)
+                        .findFirst();
+            }
+
+            // If layer name provided, match by layer name
+            log.debug("Layer name provided: '{}', searching for matching WMS link", layerName);
             return model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains("Data Access > wms") && link.getTitle().equalsIgnoreCase(request.getLayerName())) // This is the pattern for wfs link
+                    .filter(link -> link.getAiGroup().contains("Data Access > wms") && link.getTitle().equalsIgnoreCase(layerName))
                     .map(LinkModel::getHref)
                     .findFirst();
         } else {
+            log.warn("getMapServerUrl - No collections found in search result for collectionId: {}", collectionId);
             return Optional.empty();
         }
     }
@@ -424,5 +444,86 @@ public class WmsServer {
             // We trust what is found inside the elastic search metadata
             return wfsServer.getDownloadableFields(collectionId, request, null);
         }
+    }
+
+    /**
+     * Get all layers from WMS GetCapabilities
+     *
+     * @param collectionId - The uuid
+     * @param request      - The request param
+     * @return - List of LayerInfo objects containing layer name, title, and serverUrl
+     */
+    public List<LayerInfo> getCapabilitiesLayers(String collectionId, FeatureRequest request) {
+        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+
+        if (mapServerUrl.isPresent()) {
+            try {
+                // Parse the base URL to construct GetCapabilities request
+                UriComponents components = UriComponentsBuilder.fromUriString(mapServerUrl.get()).build();
+
+                // Build the base server URL (before "?")
+                String serverUrl = UriComponentsBuilder
+                        .newInstance()
+                        .scheme(components.getScheme())
+                        .port(components.getPort())
+                        .host(components.getHost())
+                        .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
+                        .build()
+                        .toUriString();
+
+                // Build GetCapabilities URL
+                UriComponentsBuilder builder = UriComponentsBuilder
+                        .newInstance()
+                        .scheme(components.getScheme())
+                        .port(components.getPort())
+                        .host(components.getHost())
+                        .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
+                        .queryParam("service", "wms")
+                        .queryParam("request", "GetCapabilities");
+
+                String url = builder.build().toUriString();
+                log.debug("GetCapabilities URL: {}", url);
+
+                // Make the HTTP call
+                ResponseEntity<String> response = restTemplateUtils.handleRedirect(
+                        url,
+                        restTemplate.getForEntity(url, String.class, Collections.emptyMap()),
+                        String.class
+                );
+
+                if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                    // Parse XML response
+                    GetCapabilitiesResponse capabilitiesResponse = xmlMapper.readValue(
+                            response.getBody(),
+                            GetCapabilitiesResponse.class
+                    );
+
+                    // Extract all layers
+                    if (capabilitiesResponse != null
+                            && capabilitiesResponse.getCapability() != null
+                            && capabilitiesResponse.getCapability().getRootLayer() != null
+                            && capabilitiesResponse.getCapability().getRootLayer().getLayers() != null) {
+
+                        List<LayerInfo> layers = capabilitiesResponse.getCapability()
+                                .getRootLayer()
+                                .getLayers();
+
+                        // Populate serverUrl for each layer
+                        for (LayerInfo layer : layers) {
+                            layer.setServerUrl(serverUrl);
+                        }
+
+                        log.debug("Found {} layers from GetCapabilities", layers.size());
+                        return layers;
+                    }
+                }
+            } catch (RestClientException | URISyntaxException | JsonProcessingException e) {
+                log.error("Error fetching GetCapabilities for collection {}", collectionId, e);
+            }
+        } else {
+            log.warn("No map server URL found for collection {}", collectionId);
+        }
+
+        return Collections.emptyList();
     }
 }
