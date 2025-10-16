@@ -112,20 +112,14 @@ public interface Converter<F, T> {
                 collection.getLinks().addAll(
                         m.getLinks()
                                 .stream()
-                                .map(l -> {
-                                    // Parse title and description from the combined title
-                                    String[] parsed = LinkUtils.parseLinkTitleDescription(l.getTitle());
-                                    String title = parsed[0];
-                                    String description = parsed[1];
-
-                                    return new ExtendedLink()
-                                            .href(l.getHref())
-                                            .type(l.getType())
-                                            .rel(l.getRel())
-                                            .title(title)
-                                            .description(description)
-                                            .aiGroup(l.getAiGroup());
-                                })
+                                .map(l -> new ExtendedLink()
+                                        .href(l.getHref())
+                                        .type(l.getType())
+                                        .rel(l.getRel())
+                                        .title(l.getTitle())
+                                        .description(l.getDescription())
+                                        .aiGroup(l.getAiGroup())
+                                )
                                 .toList()
                 );
             }
