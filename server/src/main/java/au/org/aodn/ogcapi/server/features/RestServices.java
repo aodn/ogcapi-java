@@ -88,8 +88,8 @@ public class RestServices extends OGCApiService {
      */
     public ResponseEntity<?> getWfsDownloadableFields(String collectionId, FeatureRequest request) {
 
-        if (request.getLayerName() == null) {
-            return ResponseEntity.badRequest().body("Layer name cannot be null");
+        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
+            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
         }
 
         List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(collectionId, request, null);
@@ -108,8 +108,9 @@ public class RestServices extends OGCApiService {
      */
     public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
 
-        if (request.getLayerName() == null) {
-            return ResponseEntity.badRequest().body("Layer name cannot be null");
+        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
+            log.info("Layer name cannot be null or empty");
+            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
         }
 
         List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
@@ -149,7 +150,7 @@ public class RestServices extends OGCApiService {
 
         java.time.ZonedDateTime fromDateTime = java.time.ZonedDateTime.parse(from);
         String to = fromDateTime.plusDays(1)
-            .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
+                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
         try {
             return ResponseEntity
                     .ok()

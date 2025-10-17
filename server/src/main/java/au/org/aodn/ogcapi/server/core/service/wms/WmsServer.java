@@ -328,24 +328,40 @@ public class WmsServer {
             StacCollectionModel model = result.getCollections().get(0);
 
             String layerName = request != null ? request.getLayerName() : null;
-
-            // If no layer name provided, use the first WMS link
-            if (layerName == null || layerName.isEmpty()) {
-                log.debug("No layer name provided, searching for first WMS link");
-                return model.getLinks()
-                        .stream()
-                        .filter(link -> link.getAiGroup() != null)
-                        .filter(link -> link.getAiGroup().contains("Data Access > wms"))
-                        .map(LinkModel::getHref)
-                        .findFirst();
-            }
-
-            // If layer name provided, match by layer name
-            log.debug("Layer name provided: '{}', searching for matching WMS link", layerName);
-            return model.getLinks()
+            // Filter for WMS links
+            List<LinkModel> wmsLinks = model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains("Data Access > wms") && link.getTitle().equalsIgnoreCase(layerName))
+                    .filter(link -> link.getAiGroup().contains("Data Access > wms"))
+                    .collect(Collectors.toList());
+
+            if (wmsLinks.isEmpty()) {
+                log.warn("No WMS links found for collectionId: {}", collectionId);
+                return Optional.empty();
+            }
+
+            Optional<String> matchedUrl = Optional.empty();
+
+            if (layerName != null) {
+                // If layer name provided, try to match by layer name
+                log.debug("Layer name provided: '{}', searching for matching WMS link", layerName);
+                matchedUrl = wmsLinks.stream()
+                        .filter(link -> link.getTitle() != null && link.getTitle().equalsIgnoreCase(layerName))
+                        .map(LinkModel::getHref)
+                        .findFirst();
+
+                if (matchedUrl.isPresent()) {
+                    log.debug("Found WMS link matching layer name: '{}'", layerName);
+                    return matchedUrl;
+                } else {
+                    log.debug("No WMS link found matching layer name: '{}', falling back to first WMS link", layerName);
+                }
+            } else {
+                log.debug("No layer name provided, using first WMS link");
+            }
+
+            // Fallback: return the first WMS link
+            return wmsLinks.stream()
                     .map(LinkModel::getHref)
                     .findFirst();
         } else {
@@ -419,11 +435,12 @@ public class WmsServer {
     @Cacheable(value = "cache-maptile")
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-
+        log.debug("map tile request for uuid {} layername {}", collectionId, request.getLayerName());
         if (mapServerUrl.isPresent()) {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for (String url : urls) {
+                log.debug("map tile request for layername {} url {} ", request.getLayerName(), url);
                 ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, byte[].class, Collections.emptyMap()), byte[].class);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     return response.getBody();
@@ -514,7 +531,12 @@ public class WmsServer {
                         }
 
                         log.debug("Found {} layers from GetCapabilities", layers.size());
-                        return layers;
+
+                        // Filter layers based on WFS link matching
+                        List<LayerInfo> filteredLayers = wfsServer.filterLayersByWfsLinks(collectionId, layers);
+                        log.debug("Returning {} filtered layers", filteredLayers.size());
+
+                        return filteredLayers;
                     }
                 }
             } catch (RestClientException | URISyntaxException | JsonProcessingException e) {
