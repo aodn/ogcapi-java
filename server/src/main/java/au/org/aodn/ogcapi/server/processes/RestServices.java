@@ -108,8 +108,23 @@ public class RestServices {
 
 
     private String generateStartedEmailContent(String startDate, String endDate) {
-        return "Your request has been received. Date range: Start Date: " +
-                startDate + ", End Date: " + endDate + ". Please wait for the result. " +
+
+        // only include non-empty date conditions
+        var startDateCondition = "";
+        var endDateCondition = "";
+        var dateRangeCondition = "";
+        if (startDate != null && !startDate.isBlank()) {
+            startDateCondition = " Start Date: " + startDate + ".";
+        }
+        if (endDate != null && !endDate.isBlank()) {
+            endDateCondition = " End Date: " + endDate + ".";
+        }
+        if (!startDateCondition.isBlank() || !endDateCondition.isBlank()) {
+            dateRangeCondition = "Date range: " + startDateCondition + endDateCondition;
+        }
+
+        return "Your request has been received. The conditions of your request includes:  " + dateRangeCondition +
+                ". Please wait for the result. " +
                 "After the process is completed, you will receive an email " +
                 "with the download link.";
     }
