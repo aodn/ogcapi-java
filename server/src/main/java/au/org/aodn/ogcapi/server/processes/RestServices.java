@@ -113,17 +113,19 @@ public class RestServices {
         var startDateCondition = "";
         var endDateCondition = "";
         var dateRangeCondition = "";
-        if (startDate != null && !startDate.isBlank()) {
+        if (startDate != null && !startDate.equals("non-specified")) {
             startDateCondition = " Start Date: " + startDate + ".";
         }
-        if (endDate != null && !endDate.isBlank()) {
+        if (endDate != null && !endDate.equals("non-specified")) {
             endDateCondition = " End Date: " + endDate + ".";
         }
         if (!startDateCondition.isBlank() || !endDateCondition.isBlank()) {
             dateRangeCondition = "Date range: " + startDateCondition + endDateCondition;
         }
 
-        return "Your request has been received. The conditions of your request includes:  " + dateRangeCondition +
+        var conditionTitle = dateRangeCondition.isBlank() ? "" : "The conditions of your request include";
+
+        return "Your request has been received. " + conditionTitle+ dateRangeCondition +
                 ". Please wait for the result. " +
                 "After the process is completed, you will receive an email " +
                 "with the download link.";
