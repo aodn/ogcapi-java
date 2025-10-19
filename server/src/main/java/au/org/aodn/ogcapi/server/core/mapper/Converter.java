@@ -10,6 +10,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
+import au.org.aodn.ogcapi.server.core.util.LinkUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -116,6 +117,7 @@ public interface Converter<F, T> {
                                         .type(l.getType())
                                         .rel(l.getRel())
                                         .title(l.getTitle())
+                                        .description(l.getDescription())
                                         .aiGroup(l.getAiGroup())
                                 )
                                 .toList()

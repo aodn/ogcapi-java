@@ -12,12 +12,20 @@ public class ExtendedLink extends Link {
     @JsonProperty("ai:group")
     private String aiGroup;
 
+    @JsonProperty("description")
+    private String description;
+
     public ExtendedLink() {
         super();
     }
 
     public ExtendedLink aiGroup(String aiGroup) {
         this.aiGroup = aiGroup;
+        return this;
+    }
+
+    public ExtendedLink description(String description) {
+        this.description = description;
         return this;
     }
 

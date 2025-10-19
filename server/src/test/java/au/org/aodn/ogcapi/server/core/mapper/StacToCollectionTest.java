@@ -81,6 +81,7 @@ public class StacToCollectionTest {
                 .type("text/html")
                 .title("Data Link")
                 .aiGroup("data-access")
+                .description("description")
                 .build();
         var link2 = LinkModel.builder()
                 .rel("self")
@@ -88,6 +89,7 @@ public class StacToCollectionTest {
                 .type("application/json")
                 .title("Self Link")
                 .aiGroup("ai-group")
+                .description("description")
                 .build();
         var theme = ThemeModel.builder()
                 .scheme("scheme")
