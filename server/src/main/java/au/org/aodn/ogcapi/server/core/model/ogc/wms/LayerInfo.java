@@ -13,8 +13,8 @@ import lombok.NoArgsConstructor;
 public class LayerInfo {
 
     @JacksonXmlProperty(localName = "Name")
-    private String name;
+    protected String name;
 
     @JacksonXmlProperty(localName = "Title")
-    private String title;
+    protected String title;
 }
