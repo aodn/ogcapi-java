@@ -11,13 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class LayerInfo {
-    
+
     @JacksonXmlProperty(localName = "Name")
     private String name;
-    
+
     @JacksonXmlProperty(localName = "Title")
     private String title;
-    
-    // Not part of XML, populated after parsing
-    private String serverUrl;
 }

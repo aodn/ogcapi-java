@@ -70,12 +70,18 @@ public class CacheConfig {
                                 ResourcePoolsBuilder.heap(200)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
                 )
-//                .withCache("cache-capabilities-layers",
-//                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
-//                                Object.class, Object.class,
-//                                ResourcePoolsBuilder.heap(20)
-//                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
-//                )
+                .withCache("get-capabilities-wms-layers",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(20)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                .withCache("filtered-wms-layers",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(20)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
                 .build();
 
 
