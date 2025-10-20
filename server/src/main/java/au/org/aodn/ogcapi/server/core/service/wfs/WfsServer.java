@@ -161,12 +161,7 @@ public class WfsServer {
         String normalized1 = text1.contains(":") ? text1.substring(text1.indexOf(":") + 1) : text1;
         String normalized2 = text2.contains(":") ? text2.substring(text2.indexOf(":") + 1) : text2;
 
-        boolean matches = normalized1.equalsIgnoreCase(normalized2);
-        if (matches) {
-            log.debug("Fuzzy match SUCCESS: '{}' (normalized: '{}') matches '{}' (normalized: '{}')",
-                    text1, normalized1, text2, normalized2);
-        }
-        return matches;
+        return normalized1.equalsIgnoreCase(normalized2);
     }
 
     /**
@@ -180,7 +175,7 @@ public class WfsServer {
             UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
             var queryParams = builder.build().getQueryParams();
 
-            // Try different parameter name variations (case-sensitive)
+            // Try different parameter name variations
             List<String> typeNames = queryParams.get("typeName");
             if (typeNames == null || typeNames.isEmpty()) {
                 typeNames = queryParams.get("TYPENAME");
@@ -188,14 +183,10 @@ public class WfsServer {
             if (typeNames == null || typeNames.isEmpty()) {
                 typeNames = queryParams.get("typename");
             }
-
             if (typeNames != null && !typeNames.isEmpty()) {
                 // URL decode the typename (e.g., "underway%3Aunderway_60" -> "underway:underway_60")
                 String typename = UriUtils.decode(typeNames.get(0), StandardCharsets.UTF_8);
-                log.debug("Extracted and decoded typename '{}' from URL: {}", typename, url);
                 return Optional.of(typename);
-            } else {
-                log.debug("No typename parameter found in URL: {}", url);
             }
         } catch (Exception e) {
             log.debug("Failed to extract typename from URL: {}", url, e);
@@ -214,14 +205,11 @@ public class WfsServer {
      * @return Filtered list of WMS layers that have matching WFS links
      */
     public List<LayerInfo> filterLayersByWfsLinks(String collectionId, List<LayerInfo> layers) {
-        log.debug("filterLayersByWfsLinks called for collectionId: {}, wmsLayers count: {}", collectionId, layers.size());
-
-        // Search collection from elastic search
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
 
         if (result.getCollections().isEmpty()) {
-            log.warn("No collection found for collectionId: {}", collectionId);
-            return layers; // Return all layers if no collection found
+            log.info("Return all layers if as no collection found for collectionId: {}", collectionId);
+            return layers;
         }
 
         StacCollectionModel model = result.getCollections().get(0);
@@ -231,34 +219,23 @@ public class WfsServer {
                 .stream()
                 .filter(link -> link.getAiGroup() != null)
                 .filter(link -> link.getAiGroup().contains("Data Access > wfs"))
-                .collect(Collectors.toList());
-
-        log.debug("Found {} WFS links for collection {}", wfsLinks.size(), collectionId);
+                .toList();
 
         if (wfsLinks.isEmpty()) {
-            log.warn("No WFS links found for collection {}, returning all layers", collectionId);
-            return layers; // Return all layers if no WFS links
-        }
-
-        // Log all WFS links for debugging
-        log.info("=== Logging {} WFS links ===", wfsLinks.size());
-        for (LinkModel wfsLink : wfsLinks) {
-            log.info("WFS Link - title: '{}', href: '{}'", wfsLink.getTitle(), wfsLink.getHref());
+            log.warn("Return all layers if as no WFS links found for collection {}", collectionId);
+            return layers;
         }
 
         // Filter WMS layers based on matching with WFS links
         List<LayerInfo> filteredLayers = new ArrayList<>();
 
-        log.info("=== Starting to match {} layers ===", layers.size());
+        log.debug("=== Starting to match {} layers ===", layers.size());
         for (LayerInfo layer : layers) {
             boolean matched = false;
-            log.debug("Attempting to match layer: '{}' (title: '{}')", layer.getName(), layer.getTitle());
 
             for (LinkModel wfsLink : wfsLinks) {
                 // Primary match: link.title matches layer.name OR layer.title
                 if (wfsLink.getTitle() != null) {
-                    log.debug("  Trying primary match: WFS title '{}' vs layer name '{}' and title '{}'",
-                            wfsLink.getTitle(), layer.getName(), layer.getTitle());
                     if (fuzzyMatch(wfsLink.getTitle(), layer.getName()) ||
                             fuzzyMatch(wfsLink.getTitle(), layer.getTitle())) {
                         log.debug("  ✓ Primary match found - WFS title '{}' matches layer '{}'",
@@ -266,17 +243,12 @@ public class WfsServer {
                         matched = true;
                         break;
                     }
-                } else {
-                    log.debug("  WFS link title is null, skipping primary match");
                 }
 
                 // Fallback match: extract typename from link URI
                 if (!matched && wfsLink.getHref() != null) {
-                    log.debug("  Trying fallback match: extracting typename from URL '{}'", wfsLink.getHref());
                     Optional<String> typename = extractTypenameFromUrl(wfsLink.getHref());
                     if (typename.isPresent()) {
-                        log.debug("  Trying fallback match: typename '{}' vs layer name '{}' and title '{}'",
-                                typename.get(), layer.getName(), layer.getTitle());
                         if (fuzzyMatch(typename.get(), layer.getName()) ||
                                 fuzzyMatch(typename.get(), layer.getTitle())) {
                             log.debug("  ✓ Fallback match found - typename '{}' matches layer '{}'",
@@ -290,14 +262,11 @@ public class WfsServer {
 
             if (matched) {
                 filteredLayers.add(layer);
-            } else {
-                log.debug("No match found for layer: {} (title: {})", layer.getName(), layer.getTitle());
             }
         }
 
         log.info("Filtered {} layers out of {} based on WFS link matching",
                 filteredLayers.size(), layers.size());
-
         return filteredLayers;
     }
 }

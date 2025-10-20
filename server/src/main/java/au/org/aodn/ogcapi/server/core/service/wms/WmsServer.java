@@ -21,6 +21,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
@@ -53,6 +55,10 @@ public class WmsServer {
 
     @Autowired
     protected WmsDefaultParam wmsDefaultParam;
+
+    @Lazy
+    @Autowired
+    protected WmsServer self;
 
     public WmsServer() {
         xmlMapper = new XmlMapper();
@@ -344,7 +350,6 @@ public class WmsServer {
 
             if (layerName != null && !layerName.isEmpty()) {
                 // If layer name provided, try to match by layer name
-                log.debug("Layer name provided: '{}', searching for matching WMS link", layerName);
                 matchedUrl = wmsLinks.stream()
                         .filter(link -> link.getTitle() != null && link.getTitle().equalsIgnoreCase(layerName))
                         .map(LinkModel::getHref)
@@ -353,8 +358,6 @@ public class WmsServer {
                 if (matchedUrl.isPresent()) {
                     log.debug("Found WMS link matching layer name: '{}'", layerName);
                     return matchedUrl;
-                } else {
-                    log.debug("No WMS link found matching layer name: '{}', falling back to first WMS link", layerName);
                 }
             } else {
                 log.debug("No layer name provided, using first WMS link");
@@ -365,7 +368,6 @@ public class WmsServer {
                     .map(LinkModel::getHref)
                     .findFirst();
         } else {
-            log.warn("getMapServerUrl - No collections found in search result for collectionId: {}", collectionId);
             return Optional.empty();
         }
     }
@@ -418,6 +420,7 @@ public class WmsServer {
                     }
                 } catch (RestClientException | URISyntaxException | JsonProcessingException pe) {
                     log.debug("Exception ignored it as we will retry", pe);
+                    throw new RuntimeException(pe);
                 }
             }
         }
@@ -470,23 +473,11 @@ public class WmsServer {
      * @param wmsServerUrl - The WMS server base URL
      * @return - List of all LayerInfo objects from GetCapabilities (unfiltered)
      */
-    @Cacheable(value = "get-capabilities-wms-layers", key = "#wmsServerUrl")
+    @Cacheable(value = "get-capabilities-wms-layers")
     public List<LayerInfo> fetchCapabilitiesLayersByUrl(String wmsServerUrl) {
-        log.debug("fetchCapabilitiesLayersByUrl called for URL: {}", wmsServerUrl);
-
         try {
             // Parse the base URL to construct GetCapabilities request
             UriComponents components = UriComponentsBuilder.fromUriString(wmsServerUrl).build();
-
-            // Build the base server URL (before "?")
-            String serverUrl = UriComponentsBuilder
-                    .newInstance()
-                    .scheme(components.getScheme())
-                    .port(components.getPort())
-                    .host(components.getHost())
-                    .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
-                    .build()
-                    .toUriString();
 
             // Build GetCapabilities URL
             UriComponentsBuilder builder = UriComponentsBuilder
@@ -525,12 +516,13 @@ public class WmsServer {
                             .getRootLayer()
                             .getLayers();
 
-                    log.info("Fetched and cached {} layers from GetCapabilities URL: {}", layers.size(), wmsServerUrl);
+                    log.info("Fetched and cached get-capabilities layers {} ", layers);
                     return layers;
                 }
             }
         } catch (RestClientException | URISyntaxException | JsonProcessingException e) {
             log.error("Error fetching GetCapabilities for URL: {}", wmsServerUrl, e);
+            throw new RuntimeException(e);
         }
 
         return Collections.emptyList();
@@ -544,27 +536,20 @@ public class WmsServer {
      * @param request      - The request param
      * @return - List of LayerInfo objects filtered by WFS link matching
      */
-    @Cacheable(value = "filtered-wms-layers")
     public List<LayerInfo> getCapabilitiesLayers(String collectionId, FeatureRequest request) {
-        log.debug("getCapabilitiesLayers called for collectionId: {}", collectionId);
-
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
 
         if (mapServerUrl.isPresent()) {
             // Fetch all layers from GetCapabilities (this call is cached by URL)
-            List<LayerInfo> allLayers = fetchCapabilitiesLayersByUrl(mapServerUrl.get());
+            List<LayerInfo> allLayers = self.fetchCapabilitiesLayersByUrl(mapServerUrl.get());
 
             if (!allLayers.isEmpty()) {
-                log.debug("Found {} total layers, now filtering by WFS links", allLayers.size());
-
-                // Filter layers based on WFS link matching (this result is cached by collectionId)
+                // Filter layers based on WFS link matching
                 List<LayerInfo> filteredLayers = wfsServer.filterLayersByWfsLinks(collectionId, allLayers);
-                log.debug("Returning {} filtered layers for collection {}", filteredLayers.size(), collectionId);
+                log.debug("Returning filteredLayers {}", filteredLayers);
 
                 return filteredLayers;
             }
-        } else {
-            log.warn("No map server URL found for collection {}", collectionId);
         }
 
         return Collections.emptyList();

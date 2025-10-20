@@ -76,12 +76,6 @@ public class CacheConfig {
                                 ResourcePoolsBuilder.heap(20)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
-                .withCache("filtered-wms-layers",
-                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                Object.class, Object.class,
-                                ResourcePoolsBuilder.heap(20)
-                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
-                )
                 .build();
 
 
