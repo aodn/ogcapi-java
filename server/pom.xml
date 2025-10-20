@@ -229,6 +229,11 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <jvmArguments>
+                        --add-opens java.base/java.lang=ALL-UNNAMED
+                        --add-opens java.base/java.util=ALL-UNNAMED
+                        --add-opens java.base/java.math=ALL-UNNAMED
+                    </jvmArguments>
                     <classifier>exec</classifier>
                 </configuration>
             </plugin>
