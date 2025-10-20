@@ -16,26 +16,25 @@ import java.util.List;
 @AllArgsConstructor
 @JacksonXmlRootElement(localName = "WMS_Capabilities")
 public class GetCapabilitiesResponse {
-    
     @JacksonXmlProperty(localName = "Capability")
     private Capability capability;
-    
+
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class Capability {
-        
+
         @JacksonXmlProperty(localName = "Layer")
         private RootLayer rootLayer;
     }
-    
+
     @Data
     @Builder
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RootLayer {
-        
+
         @JacksonXmlElementWrapper(useWrapping = false)
         @JacksonXmlProperty(localName = "Layer")
         private List<LayerInfo> layers;
