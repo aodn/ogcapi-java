@@ -15,6 +15,9 @@ import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
 
+import java.io.InputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,10 +45,10 @@ public class RestServices {
 
         try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
-            var content = Content.builder().data(generateStartedEmailContent(startDate, endDate)).build();
+            var content = Content.builder().data(generateStartedEmailContent(uuid, startDate, endDate)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
 
-            var body = Body.builder().text(content).build();
+            var body = Body.builder().html(content).build();
             var message = Message.builder()
                     .subject(subject)
                     .body(body)
@@ -106,12 +109,43 @@ public class RestServices {
         return submitJobResponse.jobId();
     }
 
+    private String readBase64Image(String filename) throws IOException {
+        InputStream is = getClass().getResourceAsStream("/img/" + filename);
+        if (is == null) {
+            throw new IOException("Resource not found: /img/" + filename);
+        }
+        return "data:image/png;base64," + new String(is.readAllBytes()).trim();
+    }
 
-    private String generateStartedEmailContent(String startDate, String endDate) {
-        return "Your request has been received. Date range: Start Date: " +
-                startDate + ", End Date: " + endDate + ". Please wait for the result. " +
-                "After the process is completed, you will receive an email " +
-                "with the download link.";
+    private String generateStartedEmailContent(String uuid, String startDate, String endDate) {
+        try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
+
+            if (inputStream == null) {
+                log.error("Email template not found");
+                throw new RuntimeException("Email template not found");
+            }
+
+            String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+            return template
+                    .replace("{{uuid}}", uuid)
+                    .replace("{{startDate}}", startDate)
+                    .replace("{{endDate}}", endDate)
+                    .replace("{{HEADER_IMG}}", readBase64Image("header.txt"))
+                    .replace("{{DOWNLOAD_ICON}}", readBase64Image("download.txt"))
+                    .replace("{{BBOX_IMG}}", readBase64Image("bbox.txt"))
+                    .replace("{{TIME_RANGE_IMG}}", readBase64Image("time-range.txt"))
+                    .replace("{{ATTRIBUTES_IMG}}", readBase64Image("attributes.txt"))
+                    .replace("{{FACEBOOK_IMG}}", readBase64Image("facebook.txt"))
+                    .replace("{{INSTAGRAM_IMG}}", readBase64Image("instagram.txt"))
+                    .replace("{{X_IMG}}", readBase64Image("x.txt"))
+                    .replace("{{CONTACT_IMG}}", readBase64Image("email.txt"))
+                    .replace("{{LINKEDIN_IMG}}", readBase64Image("linkedin.txt"));
+
+        } catch (IOException e) {
+            log.error("Failed to load email template", e);
+            throw new RuntimeException("Failed to load email template", e);
+        }
     }
 
     public SseEmitter downloadWfsDataWithSse(
