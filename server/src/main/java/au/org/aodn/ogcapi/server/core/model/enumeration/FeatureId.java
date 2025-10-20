@@ -7,7 +7,8 @@ public enum FeatureId {
     wfs_downloadable_fields("wfs_downloadable_fields"), // Query field based on pure wfs and given layer
     wms_downloadable_fields("wms_downloadable_fields"), // Query field based on value from wms describe layer query
     wms_map_tile("wms_map_tile"),
-    wms_map_feature("wms_map_feature");
+    wms_map_feature("wms_map_feature"),
+    wms_layers("wms_layers"); // Get all available layers from WMS GetCapabilities
 
     public final String featureId;
 

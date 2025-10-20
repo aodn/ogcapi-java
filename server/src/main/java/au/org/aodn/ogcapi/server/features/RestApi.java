@@ -122,12 +122,12 @@ public class RestApi implements CollectionsApi {
                 return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wfs_downloadable_fields -> {
-                return request.getLayerName() == null ?
+                return (request.getLayerName() == null || request.getLayerName().isEmpty()) ?
                         ResponseEntity.badRequest().build() :
                         featuresService.getWfsDownloadableFields(collectionId, request);
             }
             case wms_downloadable_fields -> {
-                return request.getLayerName() == null ?
+                return (request.getLayerName() == null || request.getLayerName().isEmpty()) ?
                         ResponseEntity.badRequest().build() :
                         featuresService.getWmsDownloadableFields(collectionId, request);
             }
@@ -136,6 +136,9 @@ public class RestApi implements CollectionsApi {
             }
             case wms_map_feature -> {
                 return featuresService.getWmsMapFeature(collectionId, request);
+            }
+            case wms_layers -> {
+                return featuresService.getWmsLayers(collectionId, request);
             }
             default -> {
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
