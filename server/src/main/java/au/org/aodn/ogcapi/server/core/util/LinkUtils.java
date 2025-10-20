@@ -1,29 +1,25 @@
 package au.org.aodn.ogcapi.server.core.util;
 
+import static au.org.aodn.ogcapi.server.core.util.ConstructUtils.constructByJsonString;
+
 public class LinkUtils {
+    private record TitleWithDescription(String title, String description) {}
+
     public static String[] parseLinkTitleDescription(String combinedTitle) {
-        // if combinedTitle is null, return null for both title and description
-        if (combinedTitle == null) {
+        // if combinedTitle is null or empty, return null for both title and description
+        if (combinedTitle == null || combinedTitle.trim().isEmpty()) {
             return new String[]{null, null};
         }
-        // Otherwise, find the last bracket
-        int bracketCount = 0;
-        for (int i = combinedTitle.length() - 1; i >= 0; i--) {
-            if (combinedTitle.charAt(i) == ']') {
-                bracketCount++;
-            } else if (combinedTitle.charAt(i) == '[') {
-                bracketCount--;
-                if (bracketCount == 0) {
-                    String title = combinedTitle.substring(0, i).trim();
-                    String description = combinedTitle.substring(i + 1, combinedTitle.length() - 1).trim();
-                    return new String[]{
-                            title,
-                            description.isEmpty() ? null : description
-                    };
-                }
-            }
+        // Otherwise, try to parse json string
+        var titleWithDescription = constructByJsonString(combinedTitle, TitleWithDescription.class);
+        if (titleWithDescription.isPresent()) {
+            var titleDescription = titleWithDescription.get();
+            String title = (titleDescription.title() == null || titleDescription.title().trim().isEmpty()) ? null : titleDescription.title().trim();
+            String description = (titleDescription.description() == null || titleDescription.description().trim().isEmpty()) ? null : titleDescription.description().trim();
+            return new String[]{title, description};
         }
-        // return null description if no matching bracket found
-        return new String[]{combinedTitle, null};
+
+        // if not match, fallback to the original combinedTitle as title with null description
+        return new String[]{combinedTitle.trim(), null};
     }
 }
