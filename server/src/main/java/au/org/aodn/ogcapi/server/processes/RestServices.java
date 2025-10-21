@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -39,13 +40,13 @@ public class RestServices {
         this.objectMapper = objectMapper;
     }
 
-    public void notifyUser(String recipient, String uuid, String startDate, String endDate) {
+    public void notifyUser(String recipient, String uuid, String startDate, String endDate, Object multiPolygon) {
 
         String aodnInfoSender = "no.reply@aodn.org.au";
 
         try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
-            var content = Content.builder().data(generateStartedEmailContent(uuid, startDate, endDate)).build();
+            var content = Content.builder().data(generateStartedEmailContent(uuid, startDate, endDate, multiPolygon)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
 
             var body = Body.builder().html(content).build();
@@ -109,15 +110,7 @@ public class RestServices {
         return submitJobResponse.jobId();
     }
 
-    private String readBase64Image(String filename) throws IOException {
-        InputStream is = getClass().getResourceAsStream("/img/" + filename);
-        if (is == null) {
-            throw new IOException("Resource not found: /img/" + filename);
-        }
-        return "data:image/png;base64," + new String(is.readAllBytes()).trim();
-    }
-
-    private String generateStartedEmailContent(String uuid, String startDate, String endDate) {
+    private String generateStartedEmailContent(String uuid, String startDate, String endDate, Object multipolygon) {
         try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
 
             if (inputStream == null) {
@@ -131,21 +124,25 @@ public class RestServices {
             String displayStartDate = (startDate != null && !startDate.equals("non-specified")) ? startDate.replace("-", "/") : "";
             String displayEndDate = (endDate != null && !endDate.equals("non-specified")) ? endDate.replace("-", "/") : "";
 
+            // Generate dynamic bbox HTML
+            String bboxHtml = EmailUtils.generateBboxHtml(multipolygon, objectMapper);
+
             // Replace all variables in one chain
             return template
                     .replace("{{uuid}}", uuid)
                     .replace("{{startDate}}", displayStartDate)
                     .replace("{{endDate}}", displayEndDate)
-                    .replace("{{HEADER_IMG}}", readBase64Image("header.txt"))
-                    .replace("{{DOWNLOAD_ICON}}", readBase64Image("download.txt"))
-                    .replace("{{BBOX_IMG}}", readBase64Image("bbox.txt"))
-                    .replace("{{TIME_RANGE_IMG}}", readBase64Image("time-range.txt"))
-                    .replace("{{ATTRIBUTES_IMG}}", readBase64Image("attributes.txt"))
-                    .replace("{{FACEBOOK_IMG}}", readBase64Image("facebook.txt"))
-                    .replace("{{INSTAGRAM_IMG}}", readBase64Image("instagram.txt"))
-                    .replace("{{X_IMG}}", readBase64Image("x.txt"))
-                    .replace("{{CONTACT_IMG}}", readBase64Image("email.txt"))
-                    .replace("{{LINKEDIN_IMG}}", readBase64Image("linkedin.txt"));
+                    .replace("{{bboxContent}}", bboxHtml)
+                    .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
+                    .replace("{{DOWNLOAD_ICON}}", EmailUtils.readBase64Image("download.txt"))
+                    .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))
+                    .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
+                    .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
+                    .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
+                    .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
+                    .replace("{{X_IMG}}", EmailUtils.readBase64Image("x.txt"))
+                    .replace("{{CONTACT_IMG}}", EmailUtils.readBase64Image("email.txt"))
+                    .replace("{{LINKEDIN_IMG}}", EmailUtils.readBase64Image("linkedin.txt"));
 
         } catch (IOException e) {
             log.error("Failed to load email template", e);
