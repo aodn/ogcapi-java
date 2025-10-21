@@ -39,10 +39,10 @@ public class CacheConfig {
                 .withService(new org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration(storagePath))
                 .withCache("cache-maptile",
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                Object.class, byte[].class,
-                                ResourcePoolsBuilder.newResourcePoolsBuilder()
-                                        .heap(100, MemoryUnit.MB)
-                                        .disk(10, MemoryUnit.GB, true)
+                                        Object.class, byte[].class,
+                                        ResourcePoolsBuilder.newResourcePoolsBuilder()
+                                                .heap(100, MemoryUnit.MB)
+                                                .disk(10, MemoryUnit.GB, true)
                                 )
                                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
@@ -69,6 +69,12 @@ public class CacheConfig {
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(200)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
+                )
+                .withCache("get-capabilities-wms-layers",
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(20)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
                 .build();
 

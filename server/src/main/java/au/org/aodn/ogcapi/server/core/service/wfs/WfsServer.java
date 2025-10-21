@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsDescribeFeatureTypeResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -19,10 +20,15 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
+import org.springframework.web.util.UriUtils;
 
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class WfsServer {
@@ -136,5 +142,131 @@ public class WfsServer {
         } else {
             return Optional.empty();
         }
+    }
+
+    /**
+     * Fuzzy match utility to compare layer names, ignoring namespace prefixes
+     * For example: "underway:nuyina_underway_202122020" matches "nuyina_underway_202122020"
+     *
+     * @param text1 - First text to compare
+     * @param text2 - Second text to compare
+     * @return true if texts match (after removing namespace prefix)
+     */
+    protected boolean fuzzyMatch(String text1, String text2) {
+        if (text1 == null || text2 == null) {
+            return false;
+        }
+
+        // Remove namespace prefix (text before ":")
+        String normalized1 = text1.contains(":") ? text1.substring(text1.indexOf(":") + 1) : text1;
+        String normalized2 = text2.contains(":") ? text2.substring(text2.indexOf(":") + 1) : text2;
+
+        return normalized1.equalsIgnoreCase(normalized2);
+    }
+
+    /**
+     * Extract typename from WFS URL query parameters
+     *
+     * @param url - The WFS URL
+     * @return typename if found, empty otherwise
+     */
+    protected Optional<String> extractTypenameFromUrl(String url) {
+        try {
+            UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
+            var queryParams = builder.build().getQueryParams();
+
+            // Try different parameter name variations
+            List<String> typeNames = queryParams.get("typeName");
+            if (typeNames == null || typeNames.isEmpty()) {
+                typeNames = queryParams.get("TYPENAME");
+            }
+            if (typeNames == null || typeNames.isEmpty()) {
+                typeNames = queryParams.get("typename");
+            }
+            if (typeNames != null && !typeNames.isEmpty()) {
+                // URL decode the typename (e.g., "underway%3Aunderway_60" -> "underway:underway_60")
+                String typename = UriUtils.decode(typeNames.get(0), StandardCharsets.UTF_8);
+                return Optional.of(typename);
+            }
+        } catch (Exception e) {
+            log.debug("Failed to extract typename from URL: {}", url, e);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Filter WMS layers based on matching with WFS links
+     * Matching logic:
+     * 1. Primary: link.title matches layer.name OR layer.title (fuzzy match)
+     * 2. Fallback: extract typename from link URI, then typename matches layer.name OR layer.title (fuzzy match)
+     *
+     * @param collectionId - The uuid
+     * @param layers       - List of layers to filter
+     * @return Filtered list of WMS layers that have matching WFS links
+     */
+    public List<LayerInfo> filterLayersByWfsLinks(String collectionId, List<LayerInfo> layers) {
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
+
+        if (result.getCollections().isEmpty()) {
+            log.info("Return all layers if as no collection found for collectionId: {}", collectionId);
+            return layers;
+        }
+
+        StacCollectionModel model = result.getCollections().get(0);
+
+        // Filter WFS links where ai:group == "Data Access > wfs"
+        List<LinkModel> wfsLinks = model.getLinks()
+                .stream()
+                .filter(link -> link.getAiGroup() != null)
+                .filter(link -> link.getAiGroup().contains("Data Access > wfs"))
+                .toList();
+
+        if (wfsLinks.isEmpty()) {
+            log.warn("Return all layers if as no WFS links found for collection {}", collectionId);
+            return layers;
+        }
+
+        // Filter WMS layers based on matching with WFS links
+        List<LayerInfo> filteredLayers = new ArrayList<>();
+
+        log.debug("=== Starting to match {} layers ===", layers.size());
+        for (LayerInfo layer : layers) {
+            boolean matched = false;
+
+            for (LinkModel wfsLink : wfsLinks) {
+                // Primary match: link.title matches layer.name OR layer.title
+                if (wfsLink.getTitle() != null) {
+                    if (fuzzyMatch(wfsLink.getTitle(), layer.getName()) ||
+                            fuzzyMatch(wfsLink.getTitle(), layer.getTitle())) {
+                        log.debug("  ✓ Primary match found - WFS title '{}' matches layer '{}'",
+                                wfsLink.getTitle(), layer.getName());
+                        matched = true;
+                        break;
+                    }
+                }
+
+                // Fallback match: extract typename from link URI
+                if (!matched && wfsLink.getHref() != null) {
+                    Optional<String> typename = extractTypenameFromUrl(wfsLink.getHref());
+                    if (typename.isPresent()) {
+                        if (fuzzyMatch(typename.get(), layer.getName()) ||
+                                fuzzyMatch(typename.get(), layer.getTitle())) {
+                            log.debug("  ✓ Fallback match found - typename '{}' matches layer '{}'",
+                                    typename.get(), layer.getName());
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (matched) {
+                filteredLayers.add(layer);
+            }
+        }
+
+        log.info("Filtered {} layers out of {} based on WFS link matching",
+                filteredLayers.size(), layers.size());
+        return filteredLayers;
     }
 }

@@ -26,7 +26,8 @@ public class LinkModel {
     public void setTitle(String title) {
         String[] parsed = LinkUtils.parseLinkTitleDescription(title);
         this.title = parsed[0];
-        if (this.description == null) {
+        // set description if the link has successfully parsed description
+        if (this.description == null && parsed[1] != null) {
             this.description = parsed[1];
         }
     }
