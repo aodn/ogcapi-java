@@ -32,6 +32,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.ELASTIC_SEARCH_UUID_ONLY;
+
 @Slf4j
 public class ElasticSearch extends ElasticSearchBase implements Search {
 
@@ -222,7 +224,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.TRUE, sortBy);
     }
 
-    @Cacheable(value="elastic-search-uuid-only", key="#id")
+    @Cacheable(value=ELASTIC_SEARCH_UUID_ONLY, key="#id")
     @Override
     public ElasticSearchBase.SearchResult<StacCollectionModel> searchCollections(String id) {
         return searchCollections(List.of(id), null);

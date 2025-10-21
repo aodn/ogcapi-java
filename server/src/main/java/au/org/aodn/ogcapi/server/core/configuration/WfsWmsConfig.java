@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.wms.CacheWarm;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,5 +17,10 @@ public class WfsWmsConfig {
     @Bean
     public WmsServer createWmsServer() {
         return new WmsServer();
+    }
+
+    @Bean
+    public CacheWarm createCacheWarm(WmsServer wmsServer) {
+        return new CacheWarm(wmsServer);
     }
 }
