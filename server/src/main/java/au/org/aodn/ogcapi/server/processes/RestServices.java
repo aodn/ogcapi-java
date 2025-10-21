@@ -127,10 +127,15 @@ public class RestServices {
 
             String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
+            // Handle dates - only show if not "non-specified"
+            String displayStartDate = (startDate != null && !startDate.equals("non-specified")) ? startDate.replace("-", "/") : "";
+            String displayEndDate = (endDate != null && !endDate.equals("non-specified")) ? endDate.replace("-", "/") : "";
+
+            // Replace all variables in one chain
             return template
                     .replace("{{uuid}}", uuid)
-                    .replace("{{startDate}}", startDate)
-                    .replace("{{endDate}}", endDate)
+                    .replace("{{startDate}}", displayStartDate)
+                    .replace("{{endDate}}", displayEndDate)
                     .replace("{{HEADER_IMG}}", readBase64Image("header.txt"))
                     .replace("{{DOWNLOAD_ICON}}", readBase64Image("download.txt"))
                     .replace("{{BBOX_IMG}}", readBase64Image("bbox.txt"))
