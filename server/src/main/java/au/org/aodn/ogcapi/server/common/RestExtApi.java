@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.*;
 
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.ALL_PARAM_VOCABS;
+
 @Slf4j
 @RestController("CommonRestExtApi")
 @RequestMapping(value = "/api/v1/ogc/ext")
@@ -31,10 +33,10 @@ public class RestExtApi {
      * This call is cql aware, so if you provided the filter string, then the return value will be filtered by
      * the cql clause.
      *
-     * @param input
-     * @param cql
-     * @return
-     * @throws java.lang.Exception
+     * @param input - The text for search
+     * @param cql = The cql that bounded the search area
+     * @return - The suggested text based on the search criteria
+     * @throws java.lang.Exception - Should not happen
      */
     @GetMapping(path="/autocomplete")
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(
@@ -47,9 +49,9 @@ public class RestExtApi {
     }
     /**
      * Value cached to avoid excessive load
-     * @return
+     * @return - List of Json Vocabs
      */
-    @Cacheable("parameter-vocabs")
+    @Cacheable(ALL_PARAM_VOCABS)
     @GetMapping(path="/parameter/vocabs")
     public ResponseEntity<List<JsonNode>> getParameterVocab() throws IOException {
         return ResponseEntity.ok(restExtService.groupVocabsFromEsByKey("parameter_vocab"));

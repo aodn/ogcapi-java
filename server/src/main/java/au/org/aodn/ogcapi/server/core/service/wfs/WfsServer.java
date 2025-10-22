@@ -28,7 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
 
 @Slf4j
 public class WfsServer {
@@ -61,7 +61,7 @@ public class WfsServer {
      * @param assumedWfsServer - An optional wfs server url to use instead of searching for one
      * @return - A list of downloadable fields
      */
-    @Cacheable(value = "downloadable-fields")
+    @Cacheable(value = DOWNLOADABLE_FIELDS)
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request, String assumedWfsServer) {
 
         Optional<List<String>> mapFeatureUrl = assumedWfsServer != null ?

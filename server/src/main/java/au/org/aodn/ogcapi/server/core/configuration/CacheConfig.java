@@ -21,6 +21,13 @@ import java.time.Duration;
 @EnableCaching
 public class CacheConfig {
 
+    public static final String CACHE_WMS_MAP_TILE = "cache-wms-map_tile";
+    public static final String GET_CAPABILITIES_WMS_LAYERS = "get-capabilities-wms-layers";
+    public static final String DOWNLOADABLE_FIELDS = "downloadable-fields";
+    public static final String ALL_NO_LAND_GEOMETRY = "all-noland-geometry";
+    public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
+    public static final String ELASTIC_SEARCH_UUID_ONLY = "elastic-search-uuid-only";
+
     @Bean
     public CacheNoLandGeometry createCacheNoLandGeometry() {
         return new CacheNoLandGeometry();
@@ -37,7 +44,7 @@ public class CacheConfig {
         org.ehcache.config.Configuration config = ConfigurationBuilder
                 .newConfigurationBuilder()
                 .withService(new org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration(storagePath))
-                .withCache("cache-maptile",
+                .withCache(CACHE_WMS_MAP_TILE,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                         Object.class, byte[].class,
                                         ResourcePoolsBuilder.newResourcePoolsBuilder()
@@ -46,31 +53,31 @@ public class CacheConfig {
                                 )
                                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
-                .withCache("all-noland-geometry",
+                .withCache(ALL_NO_LAND_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(1)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
-                .withCache("parameter-vocabs",
+                .withCache(ALL_PARAM_VOCABS,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(10)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
-                .withCache("downloadable-fields",
+                .withCache(DOWNLOADABLE_FIELDS,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(200)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
-                .withCache("elastic-search-uuid-only",
+                .withCache(ELASTIC_SEARCH_UUID_ONLY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(200)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
                 )
-                .withCache("get-capabilities-wms-layers",
+                .withCache(GET_CAPABILITIES_WMS_LAYERS,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(20)
