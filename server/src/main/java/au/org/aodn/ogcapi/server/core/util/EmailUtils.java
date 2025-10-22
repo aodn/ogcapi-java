@@ -84,10 +84,10 @@ public class EmailUtils {
                     Polygon normalizedPolygon = (Polygon) normalizedBbox.getGeometryN(i);
                     Envelope envelope = normalizedPolygon.getEnvelopeInternal();
 
-                    String north = String.format("%.5f", envelope.getMaxY());
-                    String south = String.format("%.5f", envelope.getMinY());
-                    String west = String.format("%.5f", envelope.getMinX());
-                    String east = String.format("%.5f", envelope.getMaxX());
+                    String north = "" + envelope.getMaxY();
+                    String south = "" + envelope.getMinY();
+                    String west = "" + envelope.getMinX();
+                    String east = "" + envelope.getMaxX();
 
                     // Add spacing between multiple bboxes
                     if (bboxCounter > 0) {
