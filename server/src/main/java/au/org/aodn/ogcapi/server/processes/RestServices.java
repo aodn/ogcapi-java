@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -15,6 +16,9 @@ import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 import software.amazon.awssdk.services.ses.SesClient;
 import software.amazon.awssdk.services.ses.model.*;
 
+import java.io.InputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,16 +40,16 @@ public class RestServices {
         this.objectMapper = objectMapper;
     }
 
-    public void notifyUser(String recipient, String uuid, String startDate, String endDate) {
+    public void notifyUser(String recipient, String uuid, String startDate, String endDate, Object multiPolygon) {
 
         String aodnInfoSender = "no.reply@aodn.org.au";
 
         try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
-            var content = Content.builder().data(generateStartedEmailContent(startDate, endDate)).build();
+            var content = Content.builder().data(generateStartedEmailContent(uuid, startDate, endDate, multiPolygon)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
 
-            var body = Body.builder().text(content).build();
+            var body = Body.builder().html(content).build();
             var message = Message.builder()
                     .subject(subject)
                     .body(body)
@@ -106,29 +110,44 @@ public class RestServices {
         return submitJobResponse.jobId();
     }
 
+    private String generateStartedEmailContent(String uuid, String startDate, String endDate, Object multipolygon) {
+        try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
 
-    private String generateStartedEmailContent(String startDate, String endDate) {
+            if (inputStream == null) {
+                log.error("Email template not found");
+                throw new RuntimeException("Email template not found");
+            }
 
-        // only include non-empty date conditions
-        var startDateCondition = "";
-        var endDateCondition = "";
-        var dateRangeCondition = "";
-        if (startDate != null && !startDate.equals("non-specified")) {
-            startDateCondition = " Start Date: " + startDate + ".";
+            String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+
+            // Handle dates - only show if not "non-specified"
+            String displayStartDate = (startDate != null && !startDate.equals("non-specified")) ? startDate.replace("-", "/") : "";
+            String displayEndDate = (endDate != null && !endDate.equals("non-specified")) ? endDate.replace("-", "/") : "";
+
+            // Generate dynamic bbox HTML
+            String bboxHtml = EmailUtils.generateBboxHtml(multipolygon, objectMapper);
+
+            // Replace all variables in one chain
+            return template
+                    .replace("{{uuid}}", uuid)
+                    .replace("{{startDate}}", displayStartDate)
+                    .replace("{{endDate}}", displayEndDate)
+                    .replace("{{bboxContent}}", bboxHtml)
+                    .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
+                    .replace("{{DOWNLOAD_ICON}}", EmailUtils.readBase64Image("download.txt"))
+                    .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))
+                    .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
+                    .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
+                    .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
+                    .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
+                    .replace("{{X_IMG}}", EmailUtils.readBase64Image("x.txt"))
+                    .replace("{{CONTACT_IMG}}", EmailUtils.readBase64Image("email.txt"))
+                    .replace("{{LINKEDIN_IMG}}", EmailUtils.readBase64Image("linkedin.txt"));
+
+        } catch (IOException e) {
+            log.error("Failed to load email template", e);
+            throw new RuntimeException("Failed to load email template", e);
         }
-        if (endDate != null && !endDate.equals("non-specified")) {
-            endDateCondition = " End Date: " + endDate + ".";
-        }
-        if (!startDateCondition.isBlank() || !endDateCondition.isBlank()) {
-            dateRangeCondition = "Date range: " + startDateCondition + endDateCondition;
-        }
-
-        var conditionTitle = dateRangeCondition.isBlank() ? "" : "The conditions of your request include";
-
-        return "Your request has been received. " + conditionTitle+ dateRangeCondition +
-                ". Please wait for the result. " +
-                "After the process is completed, you will receive an email " +
-                "with the download link.";
     }
 
     public SseEmitter downloadWfsDataWithSse(
