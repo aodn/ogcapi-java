@@ -21,8 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
@@ -35,6 +33,8 @@ import java.net.URISyntaxException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.CACHE_WMS_MAP_TILE;
 
 @Slf4j
 public class WmsServer {
@@ -435,7 +435,7 @@ public class WmsServer {
      * @return - Must use byte[] to allow cache to disk
      * @throws URISyntaxException - Not expected
      */
-    @Cacheable(value = "cache-maptile")
+    @Cacheable(value = CACHE_WMS_MAP_TILE)
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
         log.debug("map tile request for uuid {} layername {}", collectionId, request.getLayerName());
@@ -443,7 +443,7 @@ public class WmsServer {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for (String url : urls) {
-                log.debug("map tile request for layername {} url {} ", request.getLayerName(), url);
+                log.debug("map tile request for layer name {} url {} ", request.getLayerName(), url);
                 ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, byte[].class, Collections.emptyMap()), byte[].class);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     return response.getBody();
@@ -473,7 +473,7 @@ public class WmsServer {
      * @param wmsServerUrl - The WMS server base URL
      * @return - List of all LayerInfo objects from GetCapabilities (unfiltered)
      */
-    @Cacheable(value = "get-capabilities-wms-layers")
+    @Cacheable(value = au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WMS_LAYERS)
     public List<LayerInfo> fetchCapabilitiesLayersByUrl(String wmsServerUrl) {
         try {
             // Parse the base URL to construct GetCapabilities request

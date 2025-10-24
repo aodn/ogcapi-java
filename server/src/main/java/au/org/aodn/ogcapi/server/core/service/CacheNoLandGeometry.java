@@ -13,6 +13,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.ALL_NO_LAND_GEOMETRY;
+
 /**
  * This class is used to cache some of the search result which is very expensive to transfer.
  */
@@ -32,7 +34,7 @@ public class CacheNoLandGeometry {
      * @return A Map include the uuid and the noloand geometry
      */
     @Scheduled(initialDelay = 1000, fixedDelay = Long.MAX_VALUE)
-    @Cacheable("all-noland-geometry")
+    @Cacheable(ALL_NO_LAND_GEOMETRY)
     public Map<String, StacCollectionModel> getAllNoLandGeometry() {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = elasticSearch.searchCollectionBy(
                 null,
