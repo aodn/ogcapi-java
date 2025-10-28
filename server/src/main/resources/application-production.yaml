@@ -1,0 +1,9 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,env,beans,logfile"
+
+logging:
+  level:
+    au.org.aodn.ogcapi.server: info
