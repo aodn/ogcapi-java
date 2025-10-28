@@ -49,8 +49,9 @@ public class DownloadWfsDataService {
                 .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
                 .findFirst();
 
-        // Add temporal filter
-        if (temporalField.isPresent() && startDate != null && endDate != null) {
+        // Add temporal filter only if both dates are specified
+        if (temporalField.isPresent() && startDate != null && !startDate.isEmpty() 
+                && endDate != null && !endDate.isEmpty()) {
             String fieldName = temporalField.get().getName();
             cqlFilter.append(fieldName)
                     .append(" DURING ")

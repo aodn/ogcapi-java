@@ -18,10 +18,15 @@ public class DatetimeUtils {
      *
      * @param dateInput   Input date string (supports MM-YYYY or YYYY-MM-DD formats)
      * @param isStartDate true for start date (first day of month), false for end date (last day of month)
-     * @return Formatted date string in YYYY-MM-DD format
+     * @return Formatted date string in YYYY-MM-DD format, or null if date is not specified
      * @throws IllegalArgumentException if date format is invalid
      */
     public static String validateAndFormatDate(String dateInput, boolean isStartDate) {
+        // Handle null, empty, or "non-specified" dates
+        if (dateInput == null || dateInput.trim().isEmpty() || "non-specified".equalsIgnoreCase(dateInput.trim())) {
+            return null;
+        }
+        
         if (MM_YYYY_PATTERN.matcher(dateInput).matches()) {
             String[] parts = dateInput.split("-");
             int month = Integer.parseInt(parts[0]);
