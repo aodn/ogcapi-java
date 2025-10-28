@@ -219,19 +219,6 @@ public class DownloadableFieldsServiceTest {
         );
     }
 
-    //    @Test
-//    public void testGetDownloadableFieldsUnauthorizedServer() {
-//        when(wfsServerConfig.validateAndGetApprovedServerUrl(UNAUTHORIZED_SERVER))
-//                .thenThrow(new UnauthorizedServerException("Access to WFS server '" + UNAUTHORIZED_SERVER + "' is not authorized"));
-//        UnauthorizedServerException exception = assertThrows(
-//                UnauthorizedServerException.class,
-//                () -> downloadableFieldsService.getDownloadableFields(UNAUTHORIZED_SERVER, "test:layer")
-//        );
-//
-//        assertTrue(exception.getMessage().contains("not authorized"));
-//        assertTrue(exception.getMessage().contains(UNAUTHORIZED_SERVER));
-//    }
-//
     @Test
     public void testGetDownloadableFieldsWfsError() {
         FeatureRequest request = FeatureRequest.builder().layerName("invalid:layer").build();

@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -121,8 +122,8 @@ public class RestServices {
             String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
             // Handle dates - only show if not "non-specified"
-            String displayStartDate = (startDate != null && !startDate.equals("non-specified")) ? startDate.replace("-", "/") : "";
-            String displayEndDate = (endDate != null && !endDate.equals("non-specified")) ? endDate.replace("-", "/") : "";
+            String displayStartDate = (startDate != null && !startDate.equals(DatetimeUtils.NON_SPECIFIED_DATE)) ? startDate.replace("-", "/") : "";
+            String displayEndDate = (endDate != null && !endDate.equals(DatetimeUtils.NON_SPECIFIED_DATE)) ? endDate.replace("-", "/") : "";
 
             // Generate dynamic bbox HTML
             String bboxHtml = EmailUtils.generateBboxHtml(multipolygon, objectMapper);

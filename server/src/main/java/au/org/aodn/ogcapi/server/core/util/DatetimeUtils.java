@@ -7,6 +7,7 @@ public class DatetimeUtils {
     private static final Pattern MM_YYYY_PATTERN = Pattern.compile("^(\\d{2})-(\\d{4})$");
     private static final Pattern YYYY_MM_DD_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final DateTimeFormatter ISO_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final String NON_SPECIFIED_DATE = "non-specified";
 
     private DatetimeUtils() {
     }
@@ -18,10 +19,15 @@ public class DatetimeUtils {
      *
      * @param dateInput   Input date string (supports MM-YYYY or YYYY-MM-DD formats)
      * @param isStartDate true for start date (first day of month), false for end date (last day of month)
-     * @return Formatted date string in YYYY-MM-DD format
+     * @return Formatted date string in YYYY-MM-DD format, or null if date is not specified
      * @throws IllegalArgumentException if date format is invalid
      */
     public static String validateAndFormatDate(String dateInput, boolean isStartDate) {
+        // Handle null, empty, or "non-specified" dates
+        if (dateInput == null || dateInput.trim().isEmpty() || NON_SPECIFIED_DATE.equalsIgnoreCase(dateInput.trim())) {
+            return null;
+        }
+
         if (MM_YYYY_PATTERN.matcher(dateInput).matches()) {
             String[] parts = dateInput.split("-");
             int month = Integer.parseInt(parts[0]);
