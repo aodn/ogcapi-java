@@ -52,21 +52,21 @@ public class DownloadWfsDataServiceTest {
      */
     private List<DownloadableFieldModel> createTestDownloadableFields() {
         List<DownloadableFieldModel> fields = new ArrayList<>();
-        
+
         // Add geometry field
         fields.add(DownloadableFieldModel.builder()
                 .name("geom")
                 .label("geom")
                 .type("geometrypropertytype")
                 .build());
-        
+
         // Add datetime field
         fields.add(DownloadableFieldModel.builder()
                 .name("timestamp")
                 .label("timestamp")
                 .type("dateTime")
                 .build());
-        
+
         return fields;
     }
 
@@ -76,30 +76,30 @@ public class DownloadWfsDataServiceTest {
         String uuid = "test-uuid";
         String layerName = "test:layer";
         List<DownloadableFieldModel> fields = createTestDownloadableFields();
-        
+
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
         DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-        
+
         when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
         when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
-        
+
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
         when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
-        
+
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
         defaultParams.put("version", "2.0.0");
         defaultParams.put("request", "GetFeature");
         when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
-        
+
         // Test with null dates (non-specified dates from frontend)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
                 uuid, null, null, null, null, layerName
         );
-        
+
         // Verify URL doesn't contain temporal filter when dates are null
         assertNotNull(result);
         assertTrue(result.contains("typeName=" + layerName));
@@ -112,30 +112,30 @@ public class DownloadWfsDataServiceTest {
         String uuid = "test-uuid";
         String layerName = "test:layer";
         List<DownloadableFieldModel> fields = createTestDownloadableFields();
-        
+
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
         DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-        
+
         when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
         when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
-        
+
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
         when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
-        
+
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
         defaultParams.put("version", "2.0.0");
         defaultParams.put("request", "GetFeature");
         when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
-        
+
         // Test with empty string dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
                 uuid, "", "", null, null, layerName
         );
-        
+
         // Verify URL doesn't contain temporal filter when dates are empty
         assertNotNull(result);
         assertTrue(result.contains("typeName=" + layerName));
@@ -150,30 +150,30 @@ public class DownloadWfsDataServiceTest {
         String startDate = "2023-01-01";
         String endDate = "2023-12-31";
         List<DownloadableFieldModel> fields = createTestDownloadableFields();
-        
+
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
         DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-        
+
         when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
         when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
-        
+
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
         when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
-        
+
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
         defaultParams.put("version", "2.0.0");
         defaultParams.put("request", "GetFeature");
         when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
-        
+
         // Test with valid dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
                 uuid, startDate, endDate, null, null, layerName
         );
-        
+
         // Verify URL contains temporal filter when valid dates are provided
         assertNotNull(result);
         assertTrue(result.contains("typeName=" + layerName));
@@ -190,30 +190,30 @@ public class DownloadWfsDataServiceTest {
         String layerName = "test:layer";
         String startDate = "2023-01-01";
         List<DownloadableFieldModel> fields = createTestDownloadableFields();
-        
+
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
         DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-        
+
         when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
         when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
-        
+
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
         when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
-        
+
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
         defaultParams.put("version", "2.0.0");
         defaultParams.put("request", "GetFeature");
         when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
-        
+
         // Test with only start date (end date is null)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
                 uuid, startDate, null, null, null, layerName
         );
-        
+
         // Verify URL doesn't contain temporal filter when only one date is provided
         assertNotNull(result);
         assertTrue(result.contains("typeName=" + layerName));
@@ -228,30 +228,30 @@ public class DownloadWfsDataServiceTest {
         String startDate = "01-2023";  // MM-YYYY format
         String endDate = "12-2023";    // MM-YYYY format
         List<DownloadableFieldModel> fields = createTestDownloadableFields();
-        
+
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
         DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-        
+
         when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
         when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
-        
+
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
         when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
-        
+
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
         defaultParams.put("version", "2.0.0");
         defaultParams.put("request", "GetFeature");
         when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
-        
+
         // Test with MM-YYYY format dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
                 uuid, startDate, endDate, null, null, layerName
         );
-        
+
         // Verify URL contains temporal filter with converted dates
         assertNotNull(result);
         assertTrue(result.contains("typeName=" + layerName));
@@ -268,18 +268,17 @@ public class DownloadWfsDataServiceTest {
         // Setup
         String uuid = "test-uuid";
         String layerName = "test:layer";
-        
+
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(null);
         when(wfsServer.getFeatureServerUrl(eq(uuid), eq(layerName))).thenReturn(java.util.Optional.empty());
-        
+
         // Test with no WFS server URL available
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             downloadWfsDataService.prepareWfsRequestUrl(
                     uuid, null, null, null, null, layerName
             );
         });
-        
+
         assertTrue(exception.getMessage().contains("No WFS server URL found"));
     }
 }
-

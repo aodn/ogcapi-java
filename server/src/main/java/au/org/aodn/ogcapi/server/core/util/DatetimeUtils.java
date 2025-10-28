@@ -26,7 +26,7 @@ public class DatetimeUtils {
         if (dateInput == null || dateInput.trim().isEmpty() || "non-specified".equalsIgnoreCase(dateInput.trim())) {
             return null;
         }
-        
+
         if (MM_YYYY_PATTERN.matcher(dateInput).matches()) {
             String[] parts = dateInput.split("-");
             int month = Integer.parseInt(parts[0]);

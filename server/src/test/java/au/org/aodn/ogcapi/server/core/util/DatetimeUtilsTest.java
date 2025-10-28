@@ -103,7 +103,6 @@ public class DatetimeUtilsTest {
         assertTrue(exception.getMessage().contains("Invalid month in date"));
     }
 
-
     @Test
     public void testValidateAndFormatDate_InvalidFormat_Slashes() {
         // Test date with slashes instead of dashes
@@ -131,4 +130,3 @@ public class DatetimeUtilsTest {
         assertTrue(exception.getMessage().contains("Date must be in MM-YYYY or YYYY-MM-DD format"));
     }
 }
-
