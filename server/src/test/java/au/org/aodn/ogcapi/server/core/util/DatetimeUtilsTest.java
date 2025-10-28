@@ -75,14 +75,14 @@ public class DatetimeUtilsTest {
     @Test
     public void testValidateAndFormatDate_NonSpecified() {
         // Test "non-specified" returns null (case-insensitive)
-        String result1 = DatetimeUtils.validateAndFormatDate("non-specified", true);
+        String result1 = DatetimeUtils.validateAndFormatDate(DatetimeUtils.NON_SPECIFIED_DATE, true);
         assertNull(result1, "non-specified should return null");
 
-        String result2 = DatetimeUtils.validateAndFormatDate("NON-SPECIFIED", false);
+        String result2 = DatetimeUtils.validateAndFormatDate(DatetimeUtils.NON_SPECIFIED_DATE.toUpperCase(), false);
         assertNull(result2, "NON-SPECIFIED should return null");
 
         String result3 = DatetimeUtils.validateAndFormatDate("Non-Specified", true);
-        assertNull(result3, "Non-Specified should return null");
+        assertNull(result3, "Non-Specified (mixed case) should return null");
     }
 
     @Test

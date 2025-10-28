@@ -7,6 +7,7 @@ public class DatetimeUtils {
     private static final Pattern MM_YYYY_PATTERN = Pattern.compile("^(\\d{2})-(\\d{4})$");
     private static final Pattern YYYY_MM_DD_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final DateTimeFormatter ISO_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    public static final String NON_SPECIFIED_DATE = "non-specified";
 
     private DatetimeUtils() {
     }
@@ -23,7 +24,7 @@ public class DatetimeUtils {
      */
     public static String validateAndFormatDate(String dateInput, boolean isStartDate) {
         // Handle null, empty, or "non-specified" dates
-        if (dateInput == null || dateInput.trim().isEmpty() || "non-specified".equalsIgnoreCase(dateInput.trim())) {
+        if (dateInput == null || dateInput.trim().isEmpty() || NON_SPECIFIED_DATE.equalsIgnoreCase(dateInput.trim())) {
             return null;
         }
 
