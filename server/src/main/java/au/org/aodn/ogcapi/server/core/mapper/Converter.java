@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.CitationModel;
+import au.org.aodn.ogcapi.server.core.model.AssetModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.ExtendedLink;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
@@ -10,7 +11,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
-import au.org.aodn.ogcapi.server.core.util.LinkUtils;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import static au.org.aodn.ogcapi.server.core.util.GeometryUtils.createCentroid;
@@ -125,12 +127,39 @@ public interface Converter<F, T> {
             }
 
             if (m.getAssets() != null) {
-                m.getAssets().values().forEach(i -> collection.getLinks().add(new Link()
-                        .title(i.getTitle())
-                        .href(host + "/api/v1/ogc" + i.getHref())
-                        .type(i.getType())
-                        .rel(i.getRole().toString().toLowerCase())
-                ));
+                ObjectMapper objectMapper = new ObjectMapper();
+                m.getAssets().values().forEach(value -> {
+                    List<AssetModel> assetList = new ArrayList<>();
+
+                    // to handle summary list
+                    if (value instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<?> list = (List<?>) value;
+                        list.forEach(item -> {
+                            if (item instanceof AssetModel) {
+                                assetList.add((AssetModel) item);
+                            } else {
+                                assetList.add(objectMapper.convertValue(item, AssetModel.class));
+                            }
+                        });
+                    }
+                    // to handle other asset
+                    else if (value instanceof AssetModel) {
+                        assetList.add((AssetModel) value);
+                    }
+                    else {
+                        assetList.add(objectMapper.convertValue(value, AssetModel.class));
+                    }
+
+                    assetList.forEach(asset ->
+                            collection.getLinks().add(new Link()
+                                    .title(asset.getTitle())
+                                    .href(host + "/api/v1/ogc" + asset.getHref())
+                                    .type(asset.getType())
+                                    .rel(asset.getRole().toString().toLowerCase())
+                            )
+                    );
+                });
             }
         }
 

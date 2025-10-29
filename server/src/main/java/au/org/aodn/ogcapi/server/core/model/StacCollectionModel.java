@@ -23,7 +23,7 @@ public class StacCollectionModel {
     protected List<ContactModel> contacts;
     protected List<ThemeModel> themes;
     protected String license;
-    protected Map<String, AssetModel> assets;
+    protected Map<String, Object> assets;
 
     @JsonProperty("sci:citation")
     protected String citation;
