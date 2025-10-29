@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.CitationModel;
+import au.org.aodn.ogcapi.server.core.model.AssetModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.ExtendedLink;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
@@ -10,7 +11,6 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
-import au.org.aodn.ogcapi.server.core.util.LinkUtils;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

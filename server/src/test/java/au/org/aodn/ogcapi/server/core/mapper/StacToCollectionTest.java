@@ -19,10 +19,7 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 import static au.org.aodn.ogcapi.server.BaseTestClass.readResourceFile;
 
@@ -97,6 +94,14 @@ public class StacToCollectionTest {
                         ConceptModel.builder().id("id").url("url").description("description").title("title").build()
                 ))
                 .build();
+        var asset = AssetModel.builder()
+                .role(AssetModel.Role.SUMMARY)
+                .href("/collections/test-uuid/items/summary")
+                .type("application/x-zarr")
+                .title("vessel_satellite_radiance_derived_product.zarr")
+                .build();
+        Map<String, AssetModel> assets = new HashMap<>();
+        assets.put("vessel_satellite_radiance_derived_product.zarr", asset);
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
         var statement = "This is the statement of this record";
         var datasetGroup = "group_test";
@@ -119,6 +124,7 @@ public class StacToCollectionTest {
                 )
                 .license("Attribution 4.0")
                 .contacts(Collections.singletonList(contact))
+                .assets(assets)
                 .links(Arrays.asList(link1, link2))
                 .themes(Collections.singletonList(theme))
                 .citation(citationString)
@@ -142,7 +148,7 @@ public class StacToCollectionTest {
         Assertions.assertEquals(datasetGroup, collection.getProperties().get(CollectionProperty.datasetGroup));
         Assertions.assertEquals(aiDescription, collection.getProperties().get(CollectionProperty.aiDescription));
         Assertions.assertNotNull(collection.getLinks());
-        Assertions.assertEquals(2, collection.getLinks().size());
+        Assertions.assertEquals(3, collection.getLinks().size());
     }
 
     @Test
