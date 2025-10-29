@@ -100,8 +100,8 @@ public class StacToCollectionTest {
                 .type("application/x-zarr")
                 .title("vessel_satellite_radiance_derived_product.zarr")
                 .build();
-        Map<String, Object> assets = new HashMap<>();
-        assets.put("summary", Arrays.asList(asset));
+        Map<String, AssetModel> assets = new HashMap<>();
+        assets.put("vessel_satellite_radiance_derived_product.zarr", asset);
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
         var statement = "This is the statement of this record";
         var datasetGroup = "group_test";
