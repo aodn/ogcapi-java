@@ -141,7 +141,7 @@ public class RestServices {
                     .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
                     .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
                     .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
-                    .replace("{{X_IMG}}", EmailUtils.readBase64Image("x.txt"))
+                    .replace("{{BLUESKY_IMG}}", EmailUtils.readBase64Image("bluesky.txt"))
                     .replace("{{CONTACT_IMG}}", EmailUtils.readBase64Image("email.txt"))
                     .replace("{{LINKEDIN_IMG}}", EmailUtils.readBase64Image("linkedin.txt"));
 
