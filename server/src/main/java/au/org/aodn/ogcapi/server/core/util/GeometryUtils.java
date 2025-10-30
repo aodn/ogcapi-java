@@ -226,15 +226,21 @@ public class GeometryUtils {
                 j = (String) input;
             }
 
-            Cache<String, Geometry> cache = cacheManager.getCache(STRING_TO_GEOMETRY);
+            if (cacheManager != null) {
+                Cache<String, Geometry> cache = cacheManager.getCache(STRING_TO_GEOMETRY);
 
-            if (cache != null) {
-                Geometry geometry = cache.get(j);
-                if (geometry == null) {
-                    geometry = json.read(j);
-                    cache.put(j, geometry);
+                if (cache != null) {
+                    Geometry geometry = cache.get(j);
+                    if (geometry == null) {
+                        geometry = json.read(j);
+                        cache.put(j, geometry);
+                    }
+                    return Optional.of(geometry);
                 }
-                return Optional.of(geometry);
+            }
+            else {
+                // We have not setup cache manager in test
+                return Optional.of(json.read(j));
             }
         }
         catch (IOException e) {
