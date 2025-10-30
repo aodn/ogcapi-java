@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
+import au.org.aodn.ogcapi.server.core.service.CacheWarm;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import org.ehcache.config.builders.*;
 import org.ehcache.config.units.MemoryUnit;
@@ -18,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.Map;
 
 @Configuration
 @EnableCaching
@@ -82,7 +85,7 @@ public class CacheConfig {
                 )
                 .withCache(STRING_TO_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                String.class, Geometry.class,
+                                Map.class, Geometry.class,
                                 ResourcePoolsBuilder.heap(20000)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(24)))
                 )
@@ -104,8 +107,12 @@ public class CacheConfig {
                 config
         );
 
-        GeometryUtils.setCacheManager(jCacheManager);
-
         return new JCacheCacheManager(jCacheManager);
+    }
+
+    @Bean
+    public CacheWarm createCacheWarm(WmsServer wmsServer, CacheNoLandGeometry cacheNoLandGeometry, GeometryUtils geometryUtils) {
+        GeometryUtils.setSelf(geometryUtils);
+        return new CacheWarm(wmsServer, cacheNoLandGeometry, geometryUtils);
     }
 }

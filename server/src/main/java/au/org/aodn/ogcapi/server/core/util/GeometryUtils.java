@@ -19,9 +19,8 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.Cacheable;
 
-import javax.cache.Cache;
-import javax.cache.CacheManager;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -35,15 +34,16 @@ public class GeometryUtils {
 
     protected static final int PRECISION = 15;
 
-    @Setter
-    protected static volatile CacheManager cacheManager;
-
     @Getter
     protected static GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
     protected static ObjectMapper mapper = new ObjectMapper();
     // This number of decimal is needed to do some accurate
     protected static GeometryJSON json = new GeometryJSON(PRECISION);
+
+    @Getter
+    @Setter
+    protected static GeometryUtils self = new GeometryUtils();  // Avoid testing fail, it will be replaced by bean instance
 
     @Getter
     @Setter
@@ -210,14 +210,23 @@ public class GeometryUtils {
             return r;
         }
     }
-
+    /**
+     * Many code require static access to this function, hence we will init it somewhere as bean and then
+     * set it to the static instance for sharing
+     * @param input - A geometry text input
+     * @return - The converted geometry
+     */
+    public static Optional<Geometry> readGeometry(Object input) {
+        return self.readCachedGeometry(input);
+    }
     /**
      * Please use this function as it contains the parser with enough decimal to make it work.
      *
      * @param input - A Json of GeoJson
      * @return - An GeometryCollection that represent the GeoJson
      */
-    public static Optional<Geometry> readGeometry(Object input) {
+    @Cacheable(STRING_TO_GEOMETRY)
+    public Optional<Geometry> readCachedGeometry(Object input) {
         try {
             String j;
             if (!(input instanceof String)) {
@@ -225,23 +234,7 @@ public class GeometryUtils {
             } else {
                 j = (String) input;
             }
-
-            if (cacheManager != null) {
-                Cache<String, Geometry> cache = cacheManager.getCache(STRING_TO_GEOMETRY);
-
-                if (cache != null) {
-                    Geometry geometry = cache.get(j);
-                    if (geometry == null) {
-                        geometry = json.read(j);
-                        cache.put(j, geometry);
-                    }
-                    return Optional.of(geometry);
-                }
-            }
-            else {
-                // We have not setup cache manager in test
-                return Optional.of(json.read(j));
-            }
+            return Optional.of(json.read(j));
         }
         catch (IOException e) {
             // Do nothing
