@@ -22,7 +22,7 @@ public abstract class StacToFeatureCollection implements Converter<ElasticSearch
         FeatureCollectionGeoJSON f = new FeatureCollectionGeoJSON();
         f.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
 
-        List<FeatureGeoJSON> features = model.getCollections().parallelStream()
+        List<FeatureGeoJSON> features = model.getCollections().stream()
                 .map(i -> {
                     FeatureGeoJSON feature = new FeatureGeoJSON();
                     feature.setType(FeatureGeoJSON.TypeEnum.FEATURE);
