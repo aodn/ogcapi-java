@@ -20,6 +20,8 @@ import org.opengis.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.cache.Cache;
+import javax.cache.CacheManager;
 import java.io.IOException;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -27,9 +29,14 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.*;
 
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.STRING_TO_GEOMETRY;
+
 public class GeometryUtils {
 
     protected static final int PRECISION = 15;
+
+    @Setter
+    protected static volatile CacheManager cacheManager;
 
     @Getter
     protected static GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -212,13 +219,28 @@ public class GeometryUtils {
      */
     public static Optional<Geometry> readGeometry(Object input) {
         try {
+            String j;
             if (!(input instanceof String)) {
-                input = mapper.writeValueAsString(input);
+                j = mapper.writeValueAsString(input);
+            } else {
+                j = (String) input;
             }
-            return Optional.of(json.read(input));
-        } catch (IOException e) {
-            return Optional.empty();
+
+            Cache<String, Geometry> cache = cacheManager.getCache(STRING_TO_GEOMETRY);
+
+            if (cache != null) {
+                Geometry geometry = cache.get(j);
+                if (geometry == null) {
+                    geometry = json.read(j);
+                    cache.put(j, geometry);
+                }
+                return Optional.of(geometry);
+            }
         }
+        catch (IOException e) {
+            // Do nothing
+        }
+        return Optional.empty();
     }
 
     /**

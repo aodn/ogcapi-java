@@ -1,9 +1,11 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import org.ehcache.config.builders.*;
 import org.ehcache.config.units.MemoryUnit;
 import org.ehcache.jsr107.EhcacheCachingProvider;
+import org.locationtech.jts.geom.Geometry;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -27,6 +29,7 @@ public class CacheConfig {
     public static final String ALL_NO_LAND_GEOMETRY = "all-noland-geometry";
     public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
     public static final String ELASTIC_SEARCH_UUID_ONLY = "elastic-search-uuid-only";
+    public static final String STRING_TO_GEOMETRY = "string-to-geometry";
 
     @Bean
     public CacheNoLandGeometry createCacheNoLandGeometry() {
@@ -74,8 +77,14 @@ public class CacheConfig {
                 .withCache(ELASTIC_SEARCH_UUID_ONLY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
-                                ResourcePoolsBuilder.heap(200)
+                                ResourcePoolsBuilder.heap(50)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
+                )
+                .withCache(STRING_TO_GEOMETRY,
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                String.class, Geometry.class,
+                                ResourcePoolsBuilder.heap(20000)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(24)))
                 )
                 .withCache(GET_CAPABILITIES_WMS_LAYERS,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
@@ -94,6 +103,8 @@ public class CacheConfig {
                 provider.getDefaultURI(),
                 config
         );
+
+        GeometryUtils.setCacheManager(jCacheManager);
 
         return new JCacheCacheManager(jCacheManager);
     }
