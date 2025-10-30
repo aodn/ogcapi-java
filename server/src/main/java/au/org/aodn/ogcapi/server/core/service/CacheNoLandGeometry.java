@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.List;
 import java.util.Map;
@@ -25,15 +24,10 @@ public class CacheNoLandGeometry {
     @Autowired
     ElasticSearch elasticSearch;
 
-    @Autowired
-    @Lazy
-    private CacheNoLandGeometry self;
-
     /**
      * Init cache after 1 second but then never call again due to Long.MAX_VALUE
      * @return A Map include the uuid and the noloand geometry
      */
-    @Scheduled(initialDelay = 1000, fixedDelay = Long.MAX_VALUE)
     @Cacheable(ALL_NO_LAND_GEOMETRY)
     public Map<String, StacCollectionModel> getAllNoLandGeometry() {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = elasticSearch.searchCollectionBy(

@@ -1,11 +1,15 @@
-package au.org.aodn.ogcapi.server.core.service.wms;
+package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Some WMS server response very slow for GetCapabilities operation, so we warm some
@@ -18,12 +22,18 @@ public class CacheWarm {
             "https://data.aad.gov.au/geoserver/underway/wms"
     );
     protected WmsServer wmsServer;
+    protected GeometryUtils geometryUtils;
+    protected CacheNoLandGeometry cacheNoLandGeometry;
 
     @Lazy
     @Autowired
     protected CacheWarm self;
 
-    public CacheWarm(WmsServer wmsServer) {
+    public CacheWarm(WmsServer wmsServer,
+                     CacheNoLandGeometry cacheNoLandGeometry,
+                     GeometryUtils geometryUtils) {
+        this.cacheNoLandGeometry = cacheNoLandGeometry;
+        this.geometryUtils = geometryUtils;
         this.wmsServer = wmsServer;
     }
     /**
@@ -37,6 +47,16 @@ public class CacheWarm {
             self.warmGetCapabilities(url);
         });
     }
+
+    @Scheduled(initialDelay = 1000, fixedRate = 23 * 60 * 60 * 1000)
+    public void keepWarmNoLandGeometryAndGeometryUtil() {
+        Map<String, StacCollectionModel> value = cacheNoLandGeometry.getAllNoLandGeometry();
+        value.values()
+                .stream()
+                .filter(collection -> collection.getSummaries() != null && collection.getSummaries().getGeometryNoLand() != null)
+                .forEach(collection -> geometryUtils.readCachedGeometry(collection.getSummaries().getGeometryNoLand()));
+    }
+
 
     @CacheEvict(value = au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WMS_LAYERS, key = "#key")
     protected void evictGetCapabilities(String key){
