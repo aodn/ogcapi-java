@@ -119,7 +119,15 @@ public class RestServices {
         return submitJobResponse.jobId();
     }
 
-    private String generateStartedEmailContent(String uuid, String startDate, String endDate, Object multipolygon, String collectionTitle, String fullMetadataLink, String suggestedCitation) {
+    private String generateStartedEmailContent(
+            String uuid,
+            String startDate,
+            String endDate,
+            Object multipolygon,
+            String collectionTitle,
+            String fullMetadataLink,
+            String suggestedCitation
+    ) {
         try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
 
             if (inputStream == null) {
@@ -129,22 +137,21 @@ public class RestServices {
 
             String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
 
-            // Handle dates - only show if not "non-specified"
-            String displayStartDate = (startDate != null && !startDate.equals(DatetimeUtils.NON_SPECIFIED_DATE)) ? startDate.replace("-", "/") : "";
-            String displayEndDate = (endDate != null && !endDate.equals(DatetimeUtils.NON_SPECIFIED_DATE)) ? endDate.replace("-", "/") : "";
-
-            // Generate dynamic bbox HTML
-            String bboxHtml = EmailUtils.generateBboxHtml(multipolygon, objectMapper);
+            // Generate subsetting section (returns empty string if no subsetting)
+            String subsettingSection = EmailUtils.generateSubsettingSection(
+                    startDate,
+                    endDate,
+                    multipolygon,
+                    objectMapper
+            );
 
             // Replace all variables in one chain
             return template
                     .replace("{{uuid}}", uuid)
-                    .replace("{{startDate}}", displayStartDate)
-                    .replace("{{endDate}}", displayEndDate)
-                    .replace("{{bboxContent}}", bboxHtml)
                     .replace("{{collectionTitle}}", collectionTitle != null ? collectionTitle : "")
                     .replace("{{fullMetadataLink}}", fullMetadataLink != null ? fullMetadataLink : "")
                     .replace("{{suggestedCitation}}", suggestedCitation != null ? suggestedCitation : "")
+                    .replace("{{subsettingSection}}", subsettingSection)
                     .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
                     .replace("{{DOWNLOAD_ICON}}", EmailUtils.readBase64Image("download.txt"))
                     .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))

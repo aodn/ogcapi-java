@@ -1,8 +1,11 @@
 package au.org.aodn.ogcapi.server.core.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -78,5 +81,44 @@ public class EmailUtilsTest {
         String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
 
         assertTrue(html.contains("{{BBOX_IMG}}"));
+    }
+
+    /**
+     * Test that full world bbox is treated as empty
+     */
+    @Test
+    void testFullWorldBboxReturnsEmpty() {
+        Map<String, Object> fullWorld = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(-180, 90),
+                                        List.of(-180, -90),
+                                        List.of(180, -90),
+                                        List.of(180, 90),
+                                        List.of(-180, 90)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", fullWorld, new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that subsetting section is hidden when no date and no bbox
+     */
+    @Test
+    void testNoSubsettingReturnsEmpty() {
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", null, new ObjectMapper()
+        );
+
+        assertEquals("", result);
     }
 }
