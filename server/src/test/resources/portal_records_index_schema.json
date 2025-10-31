@@ -168,34 +168,7 @@
       },
       "assets": {
         "type": "object",
-        "properties": {
-          "href": {
-            "type": "text",
-            "index": false
-          },
-          "title": {
-            "type": "text",
-            "fields": {
-              "keyword": {
-                "type": "keyword",
-                "ignore_above": 256
-              }
-            }
-          },
-          "type": {
-            "type": "keyword"
-          },
-          "roles": {
-            "type": "keyword"
-          },
-          "description": {
-            "type": "text"
-          },
-          "extra_fields": {
-            "type": "object",
-            "enabled": true
-          }
-        }
+        "enabled": false
       },
       "sci:citation": {
         "type": "text"
