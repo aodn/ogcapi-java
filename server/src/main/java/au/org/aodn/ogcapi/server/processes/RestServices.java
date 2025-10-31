@@ -41,13 +41,15 @@ public class RestServices {
         this.objectMapper = objectMapper;
     }
 
-    public void notifyUser(String recipient, String uuid, String startDate, String endDate, Object multiPolygon) {
+    public void notifyUser(String recipient, String uuid, String startDate, String endDate, Object multiPolygon, String collectionTitle,
+                           String fullMetadataLink,
+                           String suggestedCitation) {
 
         String aodnInfoSender = "no.reply@aodn.org.au";
 
         try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
-            var content = Content.builder().data(generateStartedEmailContent(uuid, startDate, endDate, multiPolygon)).build();
+            var content = Content.builder().data(generateStartedEmailContent(uuid, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
 
             var body = Body.builder().html(content).build();
@@ -74,7 +76,10 @@ public class RestServices {
             String startDate,
             String endDate,
             Object polygons,
-            String recipient
+            String recipient,
+            String collectionTitle,
+            String fullMetadataLink,
+            String suggestedCitation
     ) throws JsonProcessingException {
 
         Map<String, String> parameters = new HashMap<>();
@@ -83,6 +88,9 @@ public class RestServices {
         parameters.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), endDate);
         parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
         parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), recipient);
+        parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), collectionTitle);
+        parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), fullMetadataLink);
+        parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), suggestedCitation);
 
         parameters.put(
                 DatasetDownloadEnums.Parameter.TYPE.getValue(),
@@ -111,7 +119,7 @@ public class RestServices {
         return submitJobResponse.jobId();
     }
 
-    private String generateStartedEmailContent(String uuid, String startDate, String endDate, Object multipolygon) {
+    private String generateStartedEmailContent(String uuid, String startDate, String endDate, Object multipolygon, String collectionTitle, String fullMetadataLink, String suggestedCitation) {
         try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
 
             if (inputStream == null) {
@@ -134,6 +142,9 @@ public class RestServices {
                     .replace("{{startDate}}", displayStartDate)
                     .replace("{{endDate}}", displayEndDate)
                     .replace("{{bboxContent}}", bboxHtml)
+                    .replace("{{collectionTitle}}", collectionTitle != null ? collectionTitle : "")
+                    .replace("{{fullMetadataLink}}", fullMetadataLink != null ? fullMetadataLink : "")
+                    .replace("{{suggestedCitation}}", suggestedCitation != null ? suggestedCitation : "")
                     .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
                     .replace("{{DOWNLOAD_ICON}}", EmailUtils.readBase64Image("download.txt"))
                     .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))
