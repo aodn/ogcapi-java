@@ -193,7 +193,6 @@ public class WfsServer {
         }
         return Optional.empty();
     }
-
     /**
      * Filter WMS layers based on matching with WFS links
      * Matching logic:

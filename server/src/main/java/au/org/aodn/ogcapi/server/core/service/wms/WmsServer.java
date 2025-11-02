@@ -112,7 +112,13 @@ public class WmsServer {
         }
         return "";
     }
-
+    /**
+     * Create the full WMS url to fetch the tiles image
+     * @param url - The url from the metadata, it may point to the wms server only without specifying the remain details, this function will do a smart lookup
+     * @param uuid - The UUID of the metadata which use to find the WFS links
+     * @param request - The request like bbox and other param say datetime, layerName (where layerName is not reliable and need lookup internally)
+     * @return - The final URl to do the query
+     */
     protected List<String> createMapQueryUrl(String url, String uuid, FeatureRequest request) {
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
@@ -452,7 +458,12 @@ public class WmsServer {
         }
         return null;
     }
-
+    /**
+     * Query the field using WMS's DescriberLayer function to find out the associated WFS layer and fields
+     * @param collectionId - The uuid of the metadata that hold this WMS link
+     * @param request - Request item for this WMS layer, usually layer name, size, etc.
+     * @return - The fields contained in this WMS layer, we are particular interest in the date time field for subsetting
+     */
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
         DescribeLayerResponse response = this.describeLayer(collectionId, request);
 
@@ -465,9 +476,8 @@ public class WmsServer {
             return wfsServer.getDownloadableFields(collectionId, request, null);
         }
     }
-
     /**
-     * Fetch raw layers from WMS GetCapabilities - cached by URL
+     * Fetch raw layers from WMS GetCapabilities - cached by URL, that is query all layer supported by this WMS server.
      * This allows multiple collections sharing the same WMS server to use cached results
      *
      * @param wmsServerUrl - The WMS server base URL
@@ -527,7 +537,6 @@ public class WmsServer {
 
         return Collections.emptyList();
     }
-
     /**
      * Get filtered layers from WMS GetCapabilities for a specific collection
      * First fetches all layers (cached by URL), then filters by WFS links (cached by UUID)
