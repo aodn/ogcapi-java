@@ -115,9 +115,9 @@ public class EmailUtils {
             for (List<List<List<BigDecimal>>> polygon : coordinates) {
                 // Find min/max for THIS polygon only
                 double minLon = Double.MAX_VALUE;
-                double maxLon = Double.MIN_VALUE;
+                double maxLon = Double.NEGATIVE_INFINITY;
                 double minLat = Double.MAX_VALUE;
-                double maxLat = Double.MIN_VALUE;
+                double maxLat = Double.NEGATIVE_INFINITY;
 
                 for (List<List<BigDecimal>> ring : polygon) {
                     for (List<BigDecimal> point : ring) {
