@@ -167,8 +167,7 @@
         }
       },
       "assets": {
-        "type": "object",
-        "enabled": false
+        "type": "flattened"
       },
       "sci:citation": {
         "type": "text"

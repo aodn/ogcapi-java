@@ -641,7 +641,6 @@ public class RestApiTest extends BaseTestClass {
      * If this field exist, then
      */
     @Test
-    @Disabled("Skipping temporarily because assets.summary no longer exists")
     public void verifyAssetSummarySearchWorks() throws IOException {
         super.insertJsonToElasticRecordIndex(
                 "073fde5a-bff3-1c1f-e053-08114f8c5588.json",
