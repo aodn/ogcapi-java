@@ -352,7 +352,7 @@ public class WmsServer {
                 return Optional.empty();
             }
 
-            Optional<String> matchedUrl = Optional.empty();
+            Optional<String> matchedUrl;
 
             if (layerName != null && !layerName.isEmpty()) {
                 // If layer name provided, try to match by layer name
@@ -426,7 +426,6 @@ public class WmsServer {
                     }
                 } catch (RestClientException | URISyntaxException | JsonProcessingException pe) {
                     log.debug("Exception ignored it as we will retry", pe);
-                    throw new RuntimeException(pe);
                 }
             }
         }
