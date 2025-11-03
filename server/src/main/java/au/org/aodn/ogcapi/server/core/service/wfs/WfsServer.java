@@ -129,7 +129,7 @@ public class WfsServer {
      * @param layerName    - The layer name to match the title
      * @return - The first wfs server link if found
      */
-    protected Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+    public Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if (!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
