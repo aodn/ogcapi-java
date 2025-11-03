@@ -121,7 +121,6 @@ public class WfsServer {
             return Optional.empty();
         }
     }
-
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group
      *
@@ -129,7 +128,7 @@ public class WfsServer {
      * @param layerName    - The layer name to match the title
      * @return - The first wfs server link if found
      */
-    public Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+    public Optional<String> getFeatureServerUrlByTitle(String collectionId, String layerName) {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if (!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
@@ -143,7 +142,32 @@ public class WfsServer {
             return Optional.empty();
         }
     }
-
+    /**
+     * Find the url that is able to get WFS call, this can be found in ai:Group
+     *
+     * @param collectionId - The uuid
+     * @param layerName    - The layer name to match the title
+     * @return - The first wfs server link if found
+     */
+    public Optional<String> getFeatureServerUrlByTitleOrQueryParam(String collectionId, String layerName) {
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
+        if (!result.getCollections().isEmpty()) {
+            StacCollectionModel model = result.getCollections().get(0);
+            return model.getLinks()
+                    .stream()
+                    .filter(link -> link.getAiGroup() != null)
+                    .filter(link -> link.getAiGroup().contains("Data Access > wfs"))
+                    .filter(link -> {
+                        Optional<String> name = extractTypenameFromUrl(link.getHref());
+                        return link.getTitle().equalsIgnoreCase(layerName) ||
+                                (name.isPresent() && fuzzyMatch(name.get(), layerName));
+                    })
+                    .map(LinkModel::getHref)
+                    .findFirst();
+        } else {
+            return Optional.empty();
+        }
+    }
     /**
      * Fuzzy match utility to compare layer names, ignoring namespace prefixes
      * For example: "underway:nuyina_underway_202122020" matches "nuyina_underway_202122020"

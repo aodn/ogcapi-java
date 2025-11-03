@@ -270,14 +270,12 @@ public class DownloadWfsDataServiceTest {
         String layerName = "test:layer";
 
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(null);
-        when(wfsServer.getFeatureServerUrl(eq(uuid), eq(layerName))).thenReturn(java.util.Optional.empty());
+        when(wfsServer.getFeatureServerUrlByTitle(eq(uuid), eq(layerName))).thenReturn(java.util.Optional.empty());
 
         // Test with no WFS server URL available
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            downloadWfsDataService.prepareWfsRequestUrl(
-                    uuid, null, null, null, null, layerName
-            );
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> downloadWfsDataService.prepareWfsRequestUrl(
+                uuid, null, null, null, null, layerName
+        ));
 
         assertTrue(exception.getMessage().contains("No WFS server URL found"));
     }
