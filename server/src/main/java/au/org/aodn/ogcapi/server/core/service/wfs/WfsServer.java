@@ -296,7 +296,9 @@ public class WfsServer {
 
         // Very specific logic for AODN, we favor any layer name ends with _aodn_map, so we display
         // map layer similar to old portal, if we cannot find any then display what we have
-        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l -> l.getName().endsWith("_aodn_map")).toList();
+        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l ->
+                l.getName().endsWith("_aodn_map") || l.getTitle().endsWith("_aodn_map")
+        ).toList();
         if(!aodn_map.isEmpty()) {
             filteredLayers = aodn_map;
         }
