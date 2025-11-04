@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
@@ -26,6 +25,7 @@ import org.springframework.web.util.UriUtils;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
@@ -34,23 +34,24 @@ import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADA
 public class WfsServer {
     // Cannot use singleton bean as it impacted other dependency
     protected final XmlMapper xmlMapper;
-
-    @Autowired
     protected DownloadableFieldsService downloadableFieldsService;
-
-    @Autowired
     protected RestTemplateUtils restTemplateUtils;
-
-    @Autowired
     protected RestTemplate restTemplate;
-
-    @Autowired
     protected Search search;
 
-    public WfsServer() {
+    public WfsServer(Search search,
+                     DownloadableFieldsService downloadableFieldsService,
+                     RestTemplate restTemplate,
+                     RestTemplateUtils restTemplateUtils) {
+
         xmlMapper = new XmlMapper();
         xmlMapper.registerModule(new JavaTimeModule()); // Add JavaTimeModule
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        this.search = search;
+        this.restTemplate = restTemplate;
+        this.restTemplateUtils = restTemplateUtils;
+        this.downloadableFieldsService = downloadableFieldsService;
     }
 
     /**
@@ -237,7 +238,7 @@ public class WfsServer {
 
         if (result.getCollections().isEmpty()) {
             log.info("Return all layers if as no collection found for collectionId: {}", collectionId);
-            return layers;
+            return Collections.emptyList();
         }
 
         StacCollectionModel model = result.getCollections().get(0);
@@ -251,7 +252,7 @@ public class WfsServer {
 
         if (wfsLinks.isEmpty()) {
             log.warn("Return all layers if as no WFS links found for collection {}", collectionId);
-            return layers;
+            return Collections.emptyList();
         }
 
         // Filter WMS layers based on matching with WFS links
