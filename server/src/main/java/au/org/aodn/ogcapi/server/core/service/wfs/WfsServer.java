@@ -160,7 +160,7 @@ public class WfsServer {
                     .filter(link -> {
                         Optional<String> name = extractTypenameFromUrl(link.getHref());
                         return link.getTitle().equalsIgnoreCase(layerName) ||
-                                (name.isPresent() && fuzzyMatch(name.get(), layerName));
+                                (name.isPresent() && roughlyMatch(name.get(), layerName));
                     })
                     .map(LinkModel::getHref)
                     .findFirst();
@@ -176,7 +176,7 @@ public class WfsServer {
      * @param text2 - Second text to compare
      * @return true if texts match (after removing namespace prefix)
      */
-    protected boolean fuzzyMatch(String text1, String text2) {
+    protected boolean roughlyMatch(String text1, String text2) {
         if (text1 == null || text2 == null) {
             return false;
         }
@@ -185,9 +185,14 @@ public class WfsServer {
         String normalized1 = text1.contains(":") ? text1.substring(text1.indexOf(":") + 1) : text1;
         String normalized2 = text2.contains(":") ? text2.substring(text2.indexOf(":") + 1) : text2;
 
-        return normalized1.equalsIgnoreCase(normalized2);
+        if (normalized1.length() < normalized2.length()) {
+            // Swap the text so that compare startsWith using longer text.
+            String temp = normalized1;
+            normalized1 = normalized2;
+            normalized2 = temp;
+        }
+        return normalized1.startsWith(normalized2);
     }
-
     /**
      * Extract typename from WFS URL query parameters
      *
@@ -259,21 +264,21 @@ public class WfsServer {
             for (LinkModel wfsLink : wfsLinks) {
                 // Primary match: link.title matches layer.name OR layer.title
                 if (wfsLink.getTitle() != null) {
-                    if (fuzzyMatch(wfsLink.getTitle(), layer.getName()) ||
-                            fuzzyMatch(wfsLink.getTitle(), layer.getTitle())) {
+                    if (roughlyMatch(wfsLink.getTitle(), layer.getName()) ||
+                            roughlyMatch(wfsLink.getTitle(), layer.getTitle())) {
                         log.debug("  ✓ Primary match found - WFS title '{}' matches layer '{}'",
                                 wfsLink.getTitle(), layer.getName());
                         matched = true;
-                        break;
+                        break;  // This will skip the next if block
                     }
                 }
 
                 // Fallback match: extract typename from link URI
-                if (!matched && wfsLink.getHref() != null) {
+                if (wfsLink.getHref() != null) {
                     Optional<String> typename = extractTypenameFromUrl(wfsLink.getHref());
                     if (typename.isPresent()) {
-                        if (fuzzyMatch(typename.get(), layer.getName()) ||
-                                fuzzyMatch(typename.get(), layer.getTitle())) {
+                        if (roughlyMatch(typename.get(), layer.getName()) ||
+                                roughlyMatch(typename.get(), layer.getTitle())) {
                             log.debug("  ✓ Fallback match found - typename '{}' matches layer '{}'",
                                     typename.get(), layer.getName());
                             matched = true;
@@ -286,6 +291,13 @@ public class WfsServer {
             if (matched) {
                 filteredLayers.add(layer);
             }
+        }
+
+        // Very specific logic for AODN, we favor any layer name ends with _aodn_map, so we display
+        // map layer similar to old portal, if we cannot find any then display what we have
+        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l -> l.getName().endsWith("_aodn_map")).toList();
+        if(!aodn_map.isEmpty()) {
+            filteredLayers = aodn_map;
         }
 
         log.info("Filtered {} layers out of {} based on WFS link matching",
