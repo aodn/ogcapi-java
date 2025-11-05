@@ -65,13 +65,21 @@ public class WmsServer {
         xmlMapper.registerModule(new JavaTimeModule()); // Add JavaTimeModule
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
-
+    /**
+     * This function is used to append the CQL filter to the geonetwork query, it will guess the correct dataTime field by
+     * some logic, so that if user select filter by range, it works. In case of issue please debug the logic as we are
+     * dealing with different non-standard name
+     * @param uuid - The uuid of metadata
+     * @param request - The request object to the map
+     * @return - The CQL combined the wfs cql and the dateTime query.
+     */
     protected String createCQLFilter(String uuid, FeatureRequest request) {
         if (request.getDatetime() != null) {
             // Special handle for date time field, the field name will be diff across dataset. So we need
             // to look it up
             String cql = "";
             try {
+                // If the metadata record have wfs url query, we will use it and analysis it and extract the CQL part if exist
                 Optional<String> wfsUrl = wfsServer.getFeatureServerUrlByTitleOrQueryParam(uuid, request.getLayerName());
                 if(wfsUrl.isPresent()) {
                     UriComponents wfsUrlComponents = UriComponentsBuilder.fromUriString(wfsUrl.get()).build();
