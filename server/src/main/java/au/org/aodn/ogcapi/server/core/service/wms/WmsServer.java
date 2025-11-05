@@ -91,15 +91,16 @@ public class WmsServer {
 
                 if (!target.isEmpty()) {
 
+                    List<DownloadableFieldModel> range = null;
                     if (target.size() > 2) {
                         // Try to find possible fields where it contains start end min max
-                        target = target.stream()
+                        range = target.stream()
                                 .filter(v -> Stream.of("start", "end", "min", "max").anyMatch(k -> v.getName().contains(k)))
                                 .toList();
                     }
 
-                    if (target.size() == 2) {
-                        // Due to no standard name, we try our best to guess if 2 dateTime field
+                    if (range != null && range.size() == 2) {
+                        // Due to no standard name, we try our best to guess if 2 dateTime field, range mean we found start/end date
                         String[] d = request.getDatetime().split("/");
                         String guess1 = target.get(0).getName();
                         String guess2 = target.get(1).getName();
@@ -111,15 +112,21 @@ public class WmsServer {
                         }
                     } else {
                         // Only 1 field so use it.
-                        log.debug("Map datetime field to name to [{}]", target.get(0).getName());
-                        return String.format("CQL_FILTER=%s%s DURING %s", cql, target.get(0).getName(), request.getDatetime());
+                        List<DownloadableFieldModel> individual = target.stream()
+                                .filter(v -> Stream.of("juld").anyMatch(k -> v.getName().equalsIgnoreCase(k)))
+                                .toList();
+
+                        if(individual.size() == 1) {
+                            log.debug("Map datetime field to name to [{}]", target.get(0).getName());
+                            return String.format("CQL_FILTER=%s%s DURING %s", cql, target.get(0).getName(), request.getDatetime());
+                        }
                     }
                 }
                 log.error("No date time field found from query for uuid {}, result will not be bounded by date time", uuid);
             } catch (DownloadableFieldsNotFoundException dfnf) {
                 // Without field, we cannot create a valid CQL filte targeting a dateTime, so just return empty
-                return "";
             }
+            return "".equalsIgnoreCase(cql) ? "" : String.format("CQL_FILTER=%s", cql);
         }
         return "";
     }
