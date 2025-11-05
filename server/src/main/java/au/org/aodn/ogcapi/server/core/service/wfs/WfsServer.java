@@ -237,7 +237,7 @@ public class WfsServer {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
 
         if (result.getCollections().isEmpty()) {
-            log.info("Return all layers if as no collection found for collectionId: {}", collectionId);
+            log.info("Return empty layers if as no collection found for collectionId: {}", collectionId);
             return Collections.emptyList();
         }
 
@@ -251,7 +251,7 @@ public class WfsServer {
                 .toList();
 
         if (wfsLinks.isEmpty()) {
-            log.warn("Return all layers if as no WFS links found for collection {}", collectionId);
+            log.warn("Return empty layers if as no WFS links found for collection {}", collectionId);
             return Collections.emptyList();
         }
 
