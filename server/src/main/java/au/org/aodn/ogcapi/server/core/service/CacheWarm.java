@@ -19,8 +19,13 @@ import java.util.Map;
 public class CacheWarm {
     // Hardcode server list as not expect to change much overtime, add more if needed
     protected List<String> getCapabilitiesUrls = List.of(
-            "https://data.aad.gov.au/geoserver/underway/ows"
-            // "https://www.cmar.csiro.au/geoserver/ows" <- This one super slow and do not return complete XML, need a ticket to fix
+            "https://data.aad.gov.au/geoserver/underway/wms",
+            "https://www.cmar.csiro.au/geoserver/caab/wms",
+            "https://www.cmar.csiro.au/geoserver/ereefs/wms",
+            "https://www.cmar.csiro.au/geoserver/ea-be/wms",
+            "https://www.cmar.csiro.au/geoserver/gsfm/wms",
+            "https://www.cmar.csiro.au/geoserver/nerp/wms",
+            "https://www.cmar.csiro.au/geoserver/AusSeabed/wms"
     );
     protected WmsServer wmsServer;
     protected GeometryUtils geometryUtils;
