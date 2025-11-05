@@ -136,7 +136,7 @@ public class DownloadWfsDataService {
             downloadableFields = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
             log.info("DownloadableFields by describeLayer: {}", downloadableFields);
         } else {
-            Optional<String> featureServerUrl = wfsServer.getFeatureServerUrl(uuid, layerName);
+            Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitle(uuid, layerName);
 
             if (featureServerUrl.isPresent()) {
                 wfsServerUrl = featureServerUrl.get();

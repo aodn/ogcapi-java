@@ -10,7 +10,7 @@ import java.util.Optional;
 public class ConstructUtils {
 
     @Setter
-    private static ObjectMapper objectMapper;
+    private static ObjectMapper objectMapper = new ObjectMapper();  // Give default
 
     public static  <T> Optional<T> constructByJsonString(String jsonString, Class<T> clazz) {
         try {

@@ -70,9 +70,20 @@ public class WmsServer {
         if (request.getDatetime() != null) {
             // Special handle for date time field, the field name will be diff across dataset. So we need
             // to look it up
-            String cql = null;
-
+            String cql = "";
             try {
+                Optional<String> wfsUrl = wfsServer.getFeatureServerUrlByTitleOrQueryParam(uuid, request.getLayerName());
+                if(wfsUrl.isPresent()) {
+                    UriComponents wfsUrlComponents = UriComponentsBuilder.fromUriString(wfsUrl.get()).build();
+                    // Extract the CQL if existing in the WFS, we need to apply it to the WMS as well
+                    if(wfsUrlComponents.getQueryParams().get("cql_filter") != null) {
+                        cql = wfsUrlComponents.getQueryParams().get("cql_filter").get(0) + " AND ";
+                    }
+                    else if(wfsUrlComponents.getQueryParams().get("CQL_FILTER") != null) {
+                        cql = wfsUrlComponents.getQueryParams().get("CQL_FILTER").get(0) + " AND ";
+                    }
+                }
+
                 List<DownloadableFieldModel> m = this.getDownloadableFields(uuid, request);
                 List<DownloadableFieldModel> target = m.stream()
                         .filter(value -> "dateTime".equalsIgnoreCase(value.getType()))
@@ -93,15 +104,15 @@ public class WmsServer {
                         String guess1 = target.get(0).getName();
                         String guess2 = target.get(1).getName();
                         if ((guess1.contains("start") || guess1.contains("min")) && (guess2.contains("end") || guess2.contains("max"))) {
-                            return String.format("CQL_FILTER=%s >= %s AND %s <= %s", guess1, d[0], guess2, d[1]);
+                            return String.format("CQL_FILTER=%s%s >= %s AND %s <= %s", cql, guess1, d[0], guess2, d[1]);
                         }
                         if ((guess2.contains("start") || guess2.contains("min")) && (guess1.contains("end") || guess1.contains("max"))) {
-                            return String.format("CQL_FILTER=%s >= %s AND %s <= %s", guess2, d[0], guess2, d[1]);
+                            return String.format("CQL_FILTER=%s%s >= %s AND %s <= %s", cql, guess2, d[0], guess2, d[1]);
                         }
                     } else {
                         // Only 1 field so use it.
                         log.debug("Map datetime field to name to [{}]", target.get(0).getName());
-                        return String.format("CQL_FILTER=%s DURING %s", target.get(0).getName(), request.getDatetime());
+                        return String.format("CQL_FILTER=%s%s DURING %s", cql, target.get(0).getName(), request.getDatetime());
                     }
                 }
                 log.error("No date time field found from query for uuid {}, result will not be bounded by date time", uuid);
@@ -112,7 +123,13 @@ public class WmsServer {
         }
         return "";
     }
-
+    /**
+     * Create the full WMS url to fetch the tiles image
+     * @param url - The url from the metadata, it may point to the wms server only without specifying the remain details, this function will do a smart lookup
+     * @param uuid - The UUID of the metadata which use to find the WFS links
+     * @param request - The request like bbox and other param say datetime, layerName (where layerName is not reliable and need lookup internally)
+     * @return - The final URl to do the query
+     */
     protected List<String> createMapQueryUrl(String url, String uuid, FeatureRequest request) {
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
@@ -157,7 +174,7 @@ public class WmsServer {
                     // This is the normal route
                     UriComponentsBuilder builder = UriComponentsBuilder
                             .newInstance()
-                            .scheme(components.getScheme())
+                            .scheme("https")
                             .port(components.getPort())
                             .host(components.getHost())
                             .path(components.getPath());
@@ -346,7 +363,7 @@ public class WmsServer {
                 return Optional.empty();
             }
 
-            Optional<String> matchedUrl = Optional.empty();
+            Optional<String> matchedUrl;
 
             if (layerName != null && !layerName.isEmpty()) {
                 // If layer name provided, try to match by layer name
@@ -452,7 +469,12 @@ public class WmsServer {
         }
         return null;
     }
-
+    /**
+     * Query the field using WMS's DescriberLayer function to find out the associated WFS layer and fields
+     * @param collectionId - The uuid of the metadata that hold this WMS link
+     * @param request - Request item for this WMS layer, usually layer name, size, etc.
+     * @return - The fields contained in this WMS layer, we are particular interest in the date time field for subsetting
+     */
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
         DescribeLayerResponse response = this.describeLayer(collectionId, request);
 
@@ -465,9 +487,8 @@ public class WmsServer {
             return wfsServer.getDownloadableFields(collectionId, request, null);
         }
     }
-
     /**
-     * Fetch raw layers from WMS GetCapabilities - cached by URL
+     * Fetch raw layers from WMS GetCapabilities - cached by URL, that is query all layer supported by this WMS server.
      * This allows multiple collections sharing the same WMS server to use cached results
      *
      * @param wmsServerUrl - The WMS server base URL
@@ -527,7 +548,6 @@ public class WmsServer {
 
         return Collections.emptyList();
     }
-
     /**
      * Get filtered layers from WMS GetCapabilities for a specific collection
      * First fetches all layers (cached by URL), then filters by WFS links (cached by UUID)
