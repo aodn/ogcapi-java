@@ -30,6 +30,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.List;
 
+import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -124,7 +125,7 @@ public class DownloadableFieldsServiceTest {
                                 LinkModel.builder()
                                         .href("http://geoserver-123.aodn.org.au/geoserver/ows")
                                         .title(request.getLayerName())
-                                        .aiGroup("Data Access > wfs")
+                                        .aiGroup(WFS_LINK_MARKER)
                                         .build())
                         )
                         .build()
@@ -194,7 +195,7 @@ public class DownloadableFieldsServiceTest {
                                 LinkModel.builder()
                                         .href("http://geoserver-123.aodn.org.au/geoserver/ows")
                                         .title(request.getLayerName())
-                                        .aiGroup("Data Access > wfs")
+                                        .aiGroup(WFS_LINK_MARKER)
                                         .build())
                         )
                         .build()
@@ -232,7 +233,7 @@ public class DownloadableFieldsServiceTest {
                                 LinkModel.builder()
                                         .href("http://geoserver-123.aodn.org.au/geoserver/ows")
                                         .title(request.getLayerName())
-                                        .aiGroup("Data Access > wfs")
+                                        .aiGroup(WFS_LINK_MARKER)
                                         .build())
                         )
                         .build()
@@ -267,7 +268,7 @@ public class DownloadableFieldsServiceTest {
                                 LinkModel.builder()
                                         .href("http://geoserver-123.aodn.org.au/geoserver/ows")
                                         .title(request.getLayerName())
-                                        .aiGroup("Data Access > wfs")
+                                        .aiGroup(WFS_LINK_MARKER)
                                         .build())
                         )
                         .build()
