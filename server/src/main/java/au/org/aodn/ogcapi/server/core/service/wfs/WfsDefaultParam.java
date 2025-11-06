@@ -12,6 +12,9 @@ import java.util.Map;
 @Component
 @ConfigurationProperties(prefix = "wfs-default-param")
 public class WfsDefaultParam {
+
+    public static final String WFS_LINK_MARKER = "Data Access > wfs";
+
     private Map<String, String> fields;
     private Map<String, String> download;
 }
