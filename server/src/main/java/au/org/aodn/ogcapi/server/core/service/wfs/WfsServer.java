@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
+import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 
 @Slf4j
 public class WfsServer {
@@ -111,7 +112,7 @@ public class WfsServer {
                             .filter(link -> link.getAiGroup() != null)
                             .filter(link ->
                                     // This is the pattern for wfs link
-                                    link.getAiGroup().contains("Data Access > wfs") ||
+                                    link.getAiGroup().contains(WFS_LINK_MARKER) ||
                                             // The data itself can be unclean, ows is another option where it works with wfs
                                             link.getHref().contains("/ows")
                             )
@@ -136,7 +137,7 @@ public class WfsServer {
             return model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains("Data Access > wfs") && link.getTitle().equalsIgnoreCase(layerName))
+                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER) && link.getTitle().equalsIgnoreCase(layerName))
                     .map(LinkModel::getHref)
                     .findFirst();
         } else {
@@ -157,7 +158,7 @@ public class WfsServer {
             return model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains("Data Access > wfs"))
+                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
                     .filter(link -> {
                         Optional<String> name = extractTypenameFromUrl(link.getHref());
                         return link.getTitle().equalsIgnoreCase(layerName) ||
@@ -247,7 +248,7 @@ public class WfsServer {
         List<LinkModel> wfsLinks = model.getLinks()
                 .stream()
                 .filter(link -> link.getAiGroup() != null)
-                .filter(link -> link.getAiGroup().contains("Data Access > wfs"))
+                .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
                 .toList();
 
         if (wfsLinks.isEmpty()) {
