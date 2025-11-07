@@ -12,6 +12,9 @@ import java.util.Map;
 @Component
 @ConfigurationProperties(prefix = "wms-default-param")
 public class WmsDefaultParam {
+
+    public static final String WMS_LINK_MARKER = "Data Access > wms";
+
     private Map<String, String> wfs;
     private Map<String, String> ncwfs;
 

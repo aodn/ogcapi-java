@@ -18,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Collections;
 import java.util.List;
 
+import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -82,7 +83,7 @@ public class WfsServerTest {
     void primaryTitleMatch_filtersMatchingLayers() {
         LinkModel wfsLink = LinkModel.builder()
                 .title("test_layer")
-                .aiGroup("Data Access > wfs")
+                .aiGroup(WFS_LINK_MARKER)
                 .href("http://example.com?wfs").build();
 
         StacCollectionModel model = StacCollectionModel.builder().links(List.of(wfsLink)).build();
@@ -110,7 +111,7 @@ public class WfsServerTest {
     void primaryTitleMatch_filtersPreferAodnMapLayers() {
         LinkModel wfsLink = LinkModel.builder()
                 .title("test_layer")
-                .aiGroup("Data Access > wfs")
+                .aiGroup(WFS_LINK_MARKER)
                 .href("http://example.com?wfs").build();
 
         StacCollectionModel model = StacCollectionModel.builder().links(List.of(wfsLink)).build();
