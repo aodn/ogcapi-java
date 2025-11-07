@@ -156,8 +156,8 @@ public abstract class ElasticSearchBase {
                                                            final List<FieldValue> searchAfter,
                                                            final List<SortOptions> sortOptions,
                                                            final Double score,
-                                                           final Long maxSize) {
-
+                                                           final Long maxSize,
+                                                           final boolean useScriptScore) {
         Supplier<SearchRequest.Builder> builderSupplier = () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(indexName)
@@ -165,23 +165,113 @@ public abstract class ElasticSearchBase {
                     // we use the smaller one. The internal page size is used to get the result by
                     // batch, lets say page is 20 and internal is 10, then we do it in two batch.
                     // But if we request 5 only, then there is no point to load 10
-                    .size(maxSize != null && maxSize < pageSize ? maxSize.intValue() : pageSize)
-                    .query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
+                    .size(maxSize != null && maxSize < pageSize ? maxSize.intValue() : pageSize);
+
+            // use script score if search with text, in such case, the final score depends on both relevance and metadata quality
+            // put query in script block
+            if (useScriptScore) {
+                builder.query(q -> q.scriptScore(ss -> ss
+                        // to get the original _score from ELasticsearch
+                        .query(bq -> bq.bool(createBoolQueryForProperties(queries, should, filters)))
+                        .script(s -> s.inline(i -> i
+                                .lang("painless")
+                                .source(
+                                        // Step 1: Retrieve internal quality score from summaries.score field
+                                        // Default to 0 if field doesn't exist or is empty
+                                        "double internalScore = doc.containsKey('summaries.score') && " +
+                                                "!doc['summaries.score'].empty ? doc['summaries.score'].value : 0.0; " +
+
+                                                // Step 2: Normalize internal score to 0-1 range
+                                                // Assuming summaries.score is in range 0-106
+                                                "double normalizedScore = internalScore / 106.0; " +
+
+                                                // Step 3: Ensure minimum multiplier to avoid zero scores
+                                                "double multiplier = Math.max(normalizedScore, 0.01); " +
+
+                                                // Step 4: Calculate final score
+                                                // Final score = Elasticsearch relevance * normalized quality
+                                                "return _score * multiplier;"
+                                )
+                                )
+                        ))
+                );
+            }
+            // use original query logic
+            else {
+                builder.query(q -> q.bool(createBoolQueryForProperties(queries, should, filters)));
+            }
 
             if(searchAfter != null) {
                 builder.searchAfter(searchAfter);
             }
 
-            if(sortOptions != null) {
-                builder.sort(sortOptions);
-            }
+            // to use sort by uuid as a tiebreaker
+            boolean hasUuidSort = false;
 
-            builder.sort(so -> so
-                    // We need a unique key for the search, cannot use _id in v8 anymore, so we need
-                    // to sort using the keyword, this field is not for search and therefore not in enum
-                    .field(FieldSort.of(f -> f
-                            .field(StacBasicField.UUID.sortField)
-                            .order(SortOrder.Asc))));
+            // apply sort options
+            if (useScriptScore) {
+                // when using script_score, always sort by _score first
+                builder.sort(so -> so.score(sc -> sc.order(SortOrder.Desc)));
+
+                // add other sort options
+                if (sortOptions != null && !sortOptions.isEmpty()) {
+                    for (SortOptions sortOption : sortOptions) {
+                        // skip score sort if no relevance score applied (equally as 1 or null)
+                        if (sortOption.isScore() && (should == null || should.isEmpty())) {
+                            continue;
+                        }
+                        builder.sort(sortOption);
+
+                        // check if it has sort by id option
+                        if (sortOption.isField() &&
+                                sortOption.field().field().equals(StacBasicField.UUID.sortField)) {
+                            hasUuidSort = true;
+                        }
+                    }
+                }
+            }
+            else {
+                // when not using script_score, apply all sort options
+                if (sortOptions != null && !sortOptions.isEmpty()) {
+                    // check if sortOptions already contains _score
+                    boolean hasScoreSort = sortOptions.stream()
+                            .anyMatch(SortOptions::isScore);
+
+                    // if there are text queries (should clause) but no _score in sortOptions,
+                    // add _score as first sort criterion
+                    if (!hasScoreSort && should != null && !should.isEmpty()) {
+                        builder.sort(so -> so.score(sc -> sc.order(SortOrder.Desc)));
+                    }
+
+                    for (SortOptions sortOption : sortOptions) {
+                        // skip score sort if no relevance score applied (equally as 1 or null)
+                        if (sortOption.isScore() && (should == null || should.isEmpty())) {
+                            continue;
+                        }
+                        builder.sort(sortOption);
+
+                        // check if it has sort by id option
+                        if (sortOption.isField() &&
+                                sortOption.field().field().equals(StacBasicField.UUID.sortField)) {
+                            hasUuidSort = true;
+                        }
+                    }
+                }
+                else if (should != null && !should.isEmpty()) {
+                    // If no sortOptions provided but there are text queries,
+                    // default to sorting by _score
+                    builder.sort(so -> so.score(sc -> sc.order(SortOrder.Desc)));
+                }
+            }
+            // add sort by id as the final tiebreaker if it was applied
+            if (!hasUuidSort) {
+                builder.sort(so -> so
+                        // We need a unique key for the search, cannot use _id in v8 anymore, so we need
+                        // to sort using the keyword, this field is not for search and therefore not in enum
+                        .field(FieldSort.of(f -> f
+                                .field(StacBasicField.UUID.sortField)
+                                .order(SortOrder.Asc))));
+            }
 
             if(score != null) {
                 // By default we do not setup any min_score, the api caller should pass it in so
