@@ -210,16 +210,9 @@ public abstract class ElasticSearchBase {
 
             // apply sort options
             if (useScriptScore) {
-                // when using script_score, always sort by _score first
-                builder.sort(so -> so.score(sc -> sc.order(SortOrder.Desc)));
-
-                // add other sort options
+                // add sort options
                 if (sortOptions != null && !sortOptions.isEmpty()) {
                     for (SortOptions sortOption : sortOptions) {
-                        // skip score sort if no relevance score applied (equally as 1 or null)
-                        if (sortOption.isScore() && (should == null || should.isEmpty())) {
-                            continue;
-                        }
                         builder.sort(sortOption);
 
                         // check if it has sort by id option
@@ -233,21 +226,7 @@ public abstract class ElasticSearchBase {
             else {
                 // when not using script_score, apply all sort options
                 if (sortOptions != null && !sortOptions.isEmpty()) {
-                    // check if sortOptions already contains _score
-                    boolean hasScoreSort = sortOptions.stream()
-                            .anyMatch(SortOptions::isScore);
-
-                    // if there are text queries (should clause) but no _score in sortOptions,
-                    // add _score as first sort criterion
-                    if (!hasScoreSort && should != null && !should.isEmpty()) {
-                        builder.sort(so -> so.score(sc -> sc.order(SortOrder.Desc)));
-                    }
-
                     for (SortOptions sortOption : sortOptions) {
-                        // skip score sort if no relevance score applied (equally as 1 or null)
-                        if (sortOption.isScore() && (should == null || should.isEmpty())) {
-                            continue;
-                        }
                         builder.sort(sortOption);
 
                         // check if it has sort by id option
