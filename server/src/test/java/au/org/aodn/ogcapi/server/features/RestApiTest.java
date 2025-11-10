@@ -185,6 +185,11 @@ public class RestApiTest extends BaseTestClass {
      * Extreme case, page size set to 1 and query text "dataset" and page one by one. Only part of the json
      * will be return, the sort value should give you the next item and you will be able to go to next one.
      * The first sort value is the relevant and because of query text the value will be something greater than 1.0
+     * After weighted sorting, the actual order is (for the first 4 records):
+     * Document 0: UUID=bf287dfe-9ce4-4969-9c59-51c39ea4d011
+     * Document 1: UUID=7709f541-fc0c-4318-b5b9-9053aa474e0e
+     * Document 2: UUID=19da2ce7-138f-4427-89de-a50c724f5f54
+     * Document 3: UUID=bc55eff4-7596-3565-e044-00144fdd4fa6
      */
     @Test
     public void verifyCorrectPageSizeDataReturnWithQuery() throws IOException {
@@ -220,7 +225,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:bc55eff4-7596-3565-e044-00144fdd4fa6",
+                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 2 arg"
         );
@@ -232,7 +237,7 @@ public class RestApiTest extends BaseTestClass {
                         String.format("'%s||%s||%s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
-                                "bc55eff4-7596-3565-e044-00144fdd4fa6"),
+                                "bf287dfe-9ce4-4969-9c59-51c39ea4d011"),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -286,6 +291,11 @@ public class RestApiTest extends BaseTestClass {
     /**
      * Similar to verifyCorrectPageSizeDataReturnWithQuery and add score in the query,
      * this is used to verify a bug fix where page_size and score crash the query
+     * After weighted sorting, the actual order is (for the first 4 records):
+     * Document 0: UUID=bf287dfe-9ce4-4969-9c59-51c39ea4d011
+     * Document 1: UUID=7709f541-fc0c-4318-b5b9-9053aa474e0e
+     * Document 2: UUID=19da2ce7-138f-4427-89de-a50c724f5f54
+     * Document 3: UUID=bc55eff4-7596-3565-e044-00144fdd4fa6
      */
     @Test
     public void verifyCorrectPageSizeAndScoreWithQuery() throws IOException {
@@ -329,12 +339,12 @@ public class RestApiTest extends BaseTestClass {
         logger.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
 
         assertEquals(
-                "80",
+                "100",
                 collections.getBody().getSearchAfter().get(1),
                 "search_after 2 value"
         );
         assertEquals(
-                "str:bc55eff4-7596-3565-e044-00144fdd4fa6",
+                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 value"
         );
@@ -365,7 +375,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
+                "str:19da2ce7-138f-4427-89de-a50c724f5f54",
                 collections.getBody().getSearchAfter().get(2),
                 "Search after 2 value"
         );
