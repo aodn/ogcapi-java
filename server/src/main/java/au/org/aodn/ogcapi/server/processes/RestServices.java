@@ -86,11 +86,19 @@ public class RestServices {
         parameters.put(DatasetDownloadEnums.Parameter.UUID.getValue(), id);
         parameters.put(DatasetDownloadEnums.Parameter.START_DATE.getValue(), startDate);
         parameters.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), endDate);
-        parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
         parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), recipient);
         parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), collectionTitle);
         parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), fullMetadataLink);
         parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), suggestedCitation);
+        if (polygons == null || polygons.toString().isEmpty()) {
+            throw new IllegalArgumentException("Polygons parameter should now be null. If users didn't specify polygons, a 'non-specified' should be sent.");
+
+        // String (e.g. "non-specified") is working weird with function ObjectMapper.writeValueAsString(), so handle it separately
+        } else if (polygons.toString().equals("non-specified")) {
+            parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), polygons.toString());
+        } else {
+            parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
+        }
 
         parameters.put(
                 DatasetDownloadEnums.Parameter.TYPE.getValue(),

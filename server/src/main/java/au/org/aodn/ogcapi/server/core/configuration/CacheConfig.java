@@ -81,7 +81,7 @@ public class CacheConfig {
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(50)
-                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofSeconds(15)))
                 )
                 .withCache(STRING_TO_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(

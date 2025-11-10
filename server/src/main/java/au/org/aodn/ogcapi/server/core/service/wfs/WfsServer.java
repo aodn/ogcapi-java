@@ -15,7 +15,6 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
@@ -26,31 +25,34 @@ import org.springframework.web.util.UriUtils;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
+import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 
 @Slf4j
 public class WfsServer {
     // Cannot use singleton bean as it impacted other dependency
     protected final XmlMapper xmlMapper;
-
-    @Autowired
     protected DownloadableFieldsService downloadableFieldsService;
-
-    @Autowired
     protected RestTemplateUtils restTemplateUtils;
-
-    @Autowired
     protected RestTemplate restTemplate;
-
-    @Autowired
     protected Search search;
 
-    public WfsServer() {
+    public WfsServer(Search search,
+                     DownloadableFieldsService downloadableFieldsService,
+                     RestTemplate restTemplate,
+                     RestTemplateUtils restTemplateUtils) {
+
         xmlMapper = new XmlMapper();
         xmlMapper.registerModule(new JavaTimeModule()); // Add JavaTimeModule
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        this.search = search;
+        this.restTemplate = restTemplate;
+        this.restTemplateUtils = restTemplateUtils;
+        this.downloadableFieldsService = downloadableFieldsService;
     }
 
     /**
@@ -110,7 +112,7 @@ public class WfsServer {
                             .filter(link -> link.getAiGroup() != null)
                             .filter(link ->
                                     // This is the pattern for wfs link
-                                    link.getAiGroup().contains("Data Access > wfs") ||
+                                    link.getAiGroup().contains(WFS_LINK_MARKER) ||
                                             // The data itself can be unclean, ows is another option where it works with wfs
                                             link.getHref().contains("/ows")
                             )
@@ -121,7 +123,6 @@ public class WfsServer {
             return Optional.empty();
         }
     }
-
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group
      *
@@ -129,21 +130,46 @@ public class WfsServer {
      * @param layerName    - The layer name to match the title
      * @return - The first wfs server link if found
      */
-    protected Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+    public Optional<String> getFeatureServerUrlByTitle(String collectionId, String layerName) {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if (!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
             return model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains("Data Access > wfs") && link.getTitle().equalsIgnoreCase(layerName))
+                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER) && link.getTitle().equalsIgnoreCase(layerName))
                     .map(LinkModel::getHref)
                     .findFirst();
         } else {
             return Optional.empty();
         }
     }
-
+    /**
+     * Find the url that is able to get WFS call, this can be found in ai:Group
+     *
+     * @param collectionId - The uuid
+     * @param layerName    - The layer name to match the title
+     * @return - The first wfs server link if found
+     */
+    public Optional<String> getFeatureServerUrlByTitleOrQueryParam(String collectionId, String layerName) {
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
+        if (!result.getCollections().isEmpty()) {
+            StacCollectionModel model = result.getCollections().get(0);
+            return model.getLinks()
+                    .stream()
+                    .filter(link -> link.getAiGroup() != null)
+                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
+                    .filter(link -> {
+                        Optional<String> name = extractTypenameFromUrl(link.getHref());
+                        return link.getTitle().equalsIgnoreCase(layerName) ||
+                                (name.isPresent() && roughlyMatch(name.get(), layerName));
+                    })
+                    .map(LinkModel::getHref)
+                    .findFirst();
+        } else {
+            return Optional.empty();
+        }
+    }
     /**
      * Fuzzy match utility to compare layer names, ignoring namespace prefixes
      * For example: "underway:nuyina_underway_202122020" matches "nuyina_underway_202122020"
@@ -152,7 +178,7 @@ public class WfsServer {
      * @param text2 - Second text to compare
      * @return true if texts match (after removing namespace prefix)
      */
-    protected boolean fuzzyMatch(String text1, String text2) {
+    protected boolean roughlyMatch(String text1, String text2) {
         if (text1 == null || text2 == null) {
             return false;
         }
@@ -161,9 +187,14 @@ public class WfsServer {
         String normalized1 = text1.contains(":") ? text1.substring(text1.indexOf(":") + 1) : text1;
         String normalized2 = text2.contains(":") ? text2.substring(text2.indexOf(":") + 1) : text2;
 
-        return normalized1.equalsIgnoreCase(normalized2);
+        if (normalized1.length() < normalized2.length()) {
+            // Swap the text so that compare startsWith using longer text.
+            String temp = normalized1;
+            normalized1 = normalized2;
+            normalized2 = temp;
+        }
+        return normalized1.startsWith(normalized2);
     }
-
     /**
      * Extract typename from WFS URL query parameters
      *
@@ -193,7 +224,6 @@ public class WfsServer {
         }
         return Optional.empty();
     }
-
     /**
      * Filter WMS layers based on matching with WFS links
      * Matching logic:
@@ -208,8 +238,8 @@ public class WfsServer {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
 
         if (result.getCollections().isEmpty()) {
-            log.info("Return all layers if as no collection found for collectionId: {}", collectionId);
-            return layers;
+            log.info("Return empty layers if as no collection found for collectionId: {}", collectionId);
+            return Collections.emptyList();
         }
 
         StacCollectionModel model = result.getCollections().get(0);
@@ -218,12 +248,12 @@ public class WfsServer {
         List<LinkModel> wfsLinks = model.getLinks()
                 .stream()
                 .filter(link -> link.getAiGroup() != null)
-                .filter(link -> link.getAiGroup().contains("Data Access > wfs"))
+                .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
                 .toList();
 
         if (wfsLinks.isEmpty()) {
-            log.warn("Return all layers if as no WFS links found for collection {}", collectionId);
-            return layers;
+            log.warn("Return empty layers if as no WFS links found for collection {}", collectionId);
+            return Collections.emptyList();
         }
 
         // Filter WMS layers based on matching with WFS links
@@ -236,21 +266,21 @@ public class WfsServer {
             for (LinkModel wfsLink : wfsLinks) {
                 // Primary match: link.title matches layer.name OR layer.title
                 if (wfsLink.getTitle() != null) {
-                    if (fuzzyMatch(wfsLink.getTitle(), layer.getName()) ||
-                            fuzzyMatch(wfsLink.getTitle(), layer.getTitle())) {
+                    if (roughlyMatch(wfsLink.getTitle(), layer.getName()) ||
+                            roughlyMatch(wfsLink.getTitle(), layer.getTitle())) {
                         log.debug("  ✓ Primary match found - WFS title '{}' matches layer '{}'",
                                 wfsLink.getTitle(), layer.getName());
                         matched = true;
-                        break;
+                        break;  // This will skip the next if block
                     }
                 }
 
                 // Fallback match: extract typename from link URI
-                if (!matched && wfsLink.getHref() != null) {
+                if (wfsLink.getHref() != null) {
                     Optional<String> typename = extractTypenameFromUrl(wfsLink.getHref());
                     if (typename.isPresent()) {
-                        if (fuzzyMatch(typename.get(), layer.getName()) ||
-                                fuzzyMatch(typename.get(), layer.getTitle())) {
+                        if (roughlyMatch(typename.get(), layer.getName()) ||
+                                roughlyMatch(typename.get(), layer.getTitle())) {
                             log.debug("  ✓ Fallback match found - typename '{}' matches layer '{}'",
                                     typename.get(), layer.getName());
                             matched = true;
@@ -263,6 +293,15 @@ public class WfsServer {
             if (matched) {
                 filteredLayers.add(layer);
             }
+        }
+
+        // Very specific logic for AODN, we favor any layer name ends with _aodn_map, so we display
+        // map layer similar to old portal, if we cannot find any then display what we have
+        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l ->
+                l.getName().endsWith("_aodn_map") || l.getTitle().endsWith("_aodn_map")
+        ).toList();
+        if(!aodn_map.isEmpty()) {
+            filteredLayers = aodn_map;
         }
 
         log.info("Filtered {} layers out of {} based on WFS link matching",
