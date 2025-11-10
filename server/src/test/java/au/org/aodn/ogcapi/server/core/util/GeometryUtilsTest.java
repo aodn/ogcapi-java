@@ -28,9 +28,9 @@ public class GeometryUtilsTest {
         List<Geometry> geometries = new ArrayList<>();
 
         // Iterate through the FeatureCollection and extract geometries
-        try(FeatureIterator<SimpleFeature> features = featureCollection.features()) {
-            while(features.hasNext()) {
-                Geometry geometry = (Geometry)(features.next()).getDefaultGeometry();
+        try (FeatureIterator<SimpleFeature> features = featureCollection.features()) {
+            while (features.hasNext()) {
+                Geometry geometry = (Geometry) (features.next()).getDefaultGeometry();
                 geometries.add(geometry);
             }
         }
@@ -41,8 +41,10 @@ public class GeometryUtilsTest {
         // Create and return a GeometryCollection from the array of geometries
         return geometryFactory.createGeometryCollection(geometryArray);
     }
+
     /**
      * Given a irregular geojson, with hole the centroid point is still inside the polygon
+     *
      * @throws IOException - Not expected to throw this
      */
     @Test
@@ -58,8 +60,8 @@ public class GeometryUtilsTest {
 
         List<Coordinate> point = GeometryUtils.calculateCollectionCentroid(convertToGeometryCollection(feature));
         assertEquals(1, point.size(), "One item");
-        assertEquals(2.805438932281021, point.get(0).getX(),"X");
-        assertEquals( 2.0556251797475227, point.get(0).getY(), "Y");
+        assertEquals(2.805438932281021, point.get(0).getX(), "X");
+        assertEquals(2.0556251797475227, point.get(0).getY(), "Y");
     }
 
     @Test
@@ -100,6 +102,20 @@ public class GeometryUtilsTest {
         // Check that the exception message is as expected
         Assertions.assertEquals(1, gridPolygons.size(), "Get 1 back");
         Assertions.assertTrue(gridPolygons.get(0).equalsExact(polygon), "Get back itself");
+    }
+
+    @Test
+    public void verifyConvertToWktWithNullGeometry() {
+        // Test with null input
+        String result = GeometryUtils.convertToWkt(null);
+        Assertions.assertNull(result, "Expected null for null input");
+    }
+
+    @Test
+    public void verifyConvertToWktWithNonSpecifiedMultiPolygon() {
+        // Test with NON_SPECIFIED_MULTIPOLYGON constant value
+        String result = GeometryUtils.convertToWkt(GeometryUtils.NON_SPECIFIED_MULTIPOLYGON);
+        Assertions.assertNull(result, "Expected null for non-specified multipolygon");
     }
 
 }
