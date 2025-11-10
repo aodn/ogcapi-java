@@ -225,7 +225,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
+                "str:bc55eff4-7596-3565-e044-00144fdd4fa6",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 2 arg"
         );
@@ -339,12 +339,12 @@ public class RestApiTest extends BaseTestClass {
         logger.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
 
         assertEquals(
-                "100",
+                "80",
                 collections.getBody().getSearchAfter().get(1),
                 "search_after 2 value"
         );
         assertEquals(
-                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
+                "str:bc55eff4-7596-3565-e044-00144fdd4fa6",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 value"
         );
