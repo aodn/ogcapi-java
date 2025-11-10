@@ -121,4 +121,125 @@ public class EmailUtilsTest {
 
         assertEquals("", result);
     }
+
+    /**
+     * Test that "non-specified" string is treated as empty
+     */
+    @Test
+    void testNonSpecifiedStringReturnsEmpty() {
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", "non-specified", new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that empty coordinates list is treated as empty
+     */
+    @Test
+    void testEmptyCoordinatesReturnsEmpty() {
+        Map<String, Object> emptyCoords = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of()
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", emptyCoords, new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that invalid multipolygon structure is treated as empty
+     */
+    @Test
+    void testInvalidMultipolygonReturnsEmpty() {
+        Map<String, Object> invalid = Map.of(
+                "type", "MultiPolygon"
+                // Missing coordinates field
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", invalid, new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that valid bbox with dates shows subsetting section
+     */
+    @Test
+    void testValidBboxWithDatesShowsSection() {
+        Map<String, Object> validBbox = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(145, -40),
+                                        List.of(145, -41),
+                                        List.of(146, -41),
+                                        List.of(146, -40),
+                                        List.of(145, -40)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "2024-01-01", "2024-12-31", validBbox, new ObjectMapper()
+        );
+
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Bounding Box"));
+        assertTrue(result.contains("Time Range"));
+    }
+
+    /**
+     * Test that only dates (no bbox) shows subsetting section
+     */
+    @Test
+    void testOnlyDatesShowsSection() {
+        String result = EmailUtils.generateSubsettingSection(
+                "2024-01-01", "2024-12-31", null, new ObjectMapper()
+        );
+
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Time Range"));
+        assertFalse(result.contains("Bounding Box"));
+    }
+
+    /**
+     * Test that only bbox (no dates) shows subsetting section
+     */
+    @Test
+    void testOnlyBboxShowsSection() {
+        Map<String, Object> validBbox = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(145, -40),
+                                        List.of(145, -41),
+                                        List.of(146, -41),
+                                        List.of(146, -40),
+                                        List.of(145, -40)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", validBbox, new ObjectMapper()
+        );
+
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Bounding Box"));
+        assertFalse(result.contains("Time Range"));
+    }
 }

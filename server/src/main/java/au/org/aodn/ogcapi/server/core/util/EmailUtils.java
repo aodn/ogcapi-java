@@ -64,7 +64,9 @@ public class EmailUtils {
             StringBuilder html = new StringBuilder();
 
             // Add subsetting header
-            html.append(buildSubsettingHeader());
+            if (hasBboxSubsetting || hasDateSubsetting) {
+                html.append(buildSubsettingHeader());
+            }
 
             // Add bbox section if present
             if (hasBboxSubsetting) {
@@ -171,9 +173,25 @@ public class EmailUtils {
      */
     private static boolean isEmptyMultiPolygon(Object multipolygon) {
         try {
+            // Null check
+            if (multipolygon == null) {
+                return true;
+            }
+
+            // Check for "non-specified" string
+            if (multipolygon instanceof String && "non-specified".equals(multipolygon.toString())) {
+                return true;
+            }
+
             if (multipolygon instanceof Map) {
                 Map<String, Object> map = (Map<String, Object>) multipolygon;
                 Object coords = map.get("coordinates");
+
+                // No coordinates field at all
+                if (coords == null) {
+                    return true;
+                }
+
                 if (coords instanceof List) {
                     List<?> coordsList = (List<?>) coords;
                     // Empty coordinates
@@ -184,10 +202,18 @@ public class EmailUtils {
                     if (isFullWorldBbox(coordsList)) {
                         return true;
                     }
+                    // Has valid coordinates
+                    return false;
+                } else {
+                    // coordinates exists but is not a List
+                    return true;
                 }
             }
-            return false;
+
+            // Not a Map, not a String, treat as empty
+            return true;
         } catch (Exception e) {
+            log.warn("Error checking if multipolygon is empty, treating as empty", e);
             return true;
         }
     }

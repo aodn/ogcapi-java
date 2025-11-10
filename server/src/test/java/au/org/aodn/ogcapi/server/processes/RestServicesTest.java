@@ -80,7 +80,7 @@ public class RestServicesTest {
 
         // Act
         ResponseEntity<String> response = restServices.downloadData(
-                "test-uuid", "2023-01-01", "2023-01-31", "non-specified", "test@example.com");
+                "test-uuid", "2023-01-01", "2023-01-31", "non-specified", "test@example.com", "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).");
 
         // Capture the submitted request
         ArgumentCaptor<SubmitJobRequest> captor =
