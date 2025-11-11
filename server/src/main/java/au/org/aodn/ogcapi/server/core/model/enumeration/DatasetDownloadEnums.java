@@ -17,6 +17,9 @@ public class DatasetDownloadEnums {
         TYPE("type"),
         FIELDS("fields"),
         LAYER_NAME("layer_name"),
+        COLLECTION_TITLE("collection_title"),
+        FULL_METADATA_LINK("full_metadata_link"),
+        SUGGESTED_CITATION("suggested_citation"),
         ;
 
         private final String value;

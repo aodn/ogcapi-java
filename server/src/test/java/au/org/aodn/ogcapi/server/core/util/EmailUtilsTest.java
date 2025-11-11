@@ -1,8 +1,11 @@
 package au.org.aodn.ogcapi.server.core.util;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -78,5 +81,165 @@ public class EmailUtilsTest {
         String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
 
         assertTrue(html.contains("{{BBOX_IMG}}"));
+    }
+
+    /**
+     * Test that full world bbox is treated as empty
+     */
+    @Test
+    void testFullWorldBboxReturnsEmpty() {
+        Map<String, Object> fullWorld = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(-180, 90),
+                                        List.of(-180, -90),
+                                        List.of(180, -90),
+                                        List.of(180, 90),
+                                        List.of(-180, 90)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", fullWorld, new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that subsetting section is hidden when no date and no bbox
+     */
+    @Test
+    void testNoSubsettingReturnsEmpty() {
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", null, new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that "non-specified" string is treated as empty
+     */
+    @Test
+    void testNonSpecifiedStringReturnsEmpty() {
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", "non-specified", new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that empty coordinates list is treated as empty
+     */
+    @Test
+    void testEmptyCoordinatesReturnsEmpty() {
+        Map<String, Object> emptyCoords = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of()
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", emptyCoords, new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that invalid multipolygon structure is treated as empty
+     */
+    @Test
+    void testInvalidMultipolygonReturnsEmpty() {
+        Map<String, Object> invalid = Map.of(
+                "type", "MultiPolygon"
+                // Missing coordinates field
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", invalid, new ObjectMapper()
+        );
+
+        assertEquals("", result);
+    }
+
+    /**
+     * Test that valid bbox with dates shows subsetting section
+     */
+    @Test
+    void testValidBboxWithDatesShowsSection() {
+        Map<String, Object> validBbox = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(145, -40),
+                                        List.of(145, -41),
+                                        List.of(146, -41),
+                                        List.of(146, -40),
+                                        List.of(145, -40)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "2024-01-01", "2024-12-31", validBbox, new ObjectMapper()
+        );
+
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Bounding Box"));
+        assertTrue(result.contains("Time Range"));
+    }
+
+    /**
+     * Test that only dates (no bbox) shows subsetting section
+     */
+    @Test
+    void testOnlyDatesShowsSection() {
+        String result = EmailUtils.generateSubsettingSection(
+                "2024-01-01", "2024-12-31", null, new ObjectMapper()
+        );
+
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Time Range"));
+        assertFalse(result.contains("Bounding Box"));
+    }
+
+    /**
+     * Test that only bbox (no dates) shows subsetting section
+     */
+    @Test
+    void testOnlyBboxShowsSection() {
+        Map<String, Object> validBbox = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(145, -40),
+                                        List.of(145, -41),
+                                        List.of(146, -41),
+                                        List.of(146, -40),
+                                        List.of(145, -40)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", validBbox, new ObjectMapper()
+        );
+
+        assertFalse(result.isEmpty());
+        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Bounding Box"));
+        assertFalse(result.contains("Time Range"));
     }
 }
