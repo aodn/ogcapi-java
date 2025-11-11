@@ -33,6 +33,7 @@ import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.STRING_TO
 public class GeometryUtils {
 
     protected static final int PRECISION = 15;
+    public static final String NON_SPECIFIED_MULTIPOLYGON = "non-specified";
 
     @Getter
     protected static GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
@@ -210,15 +211,18 @@ public class GeometryUtils {
             return r;
         }
     }
+
     /**
      * Many code require static access to this function, hence we will init it somewhere as bean and then
      * set it to the static instance for sharing
+     *
      * @param input - A geometry text input
      * @return - The converted geometry
      */
     public static Optional<Geometry> readGeometry(Object input) {
         return self.readCachedGeometry(input);
     }
+
     /**
      * Please use this function as it contains the parser with enough decimal to make it work.
      *
@@ -235,8 +239,7 @@ public class GeometryUtils {
                 j = (String) input;
             }
             return Optional.of(json.read(j));
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             // Do nothing
         }
         return Optional.empty();
@@ -295,7 +298,7 @@ public class GeometryUtils {
      * @throws IllegalArgumentException if the input is not valid GeoJSON
      */
     public static String convertToWkt(Object geoJsonGeometry) {
-        if (geoJsonGeometry == null) {
+        if (geoJsonGeometry == null || geoJsonGeometry.toString().equals(NON_SPECIFIED_MULTIPOLYGON)) {
             return null;
         }
 
