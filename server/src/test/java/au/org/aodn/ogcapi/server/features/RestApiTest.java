@@ -71,7 +71,7 @@ public class RestApiTest extends BaseTestClass {
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
-                // set test summaries.score 80
+                // set test summaries.score 50
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
                 // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
@@ -120,7 +120,7 @@ public class RestApiTest extends BaseTestClass {
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
-                // set test summaries.score 80
+                // set test summaries.score 50
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
                 // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
@@ -219,7 +219,7 @@ public class RestApiTest extends BaseTestClass {
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
-                // set test summaries.score 80
+                // set test summaries.score 50
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
                 // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
@@ -333,7 +333,7 @@ public class RestApiTest extends BaseTestClass {
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
-                // set test summaries.score 80
+                // set test summaries.score 50
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
                 // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
