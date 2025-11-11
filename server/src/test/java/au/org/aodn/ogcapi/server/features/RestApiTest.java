@@ -63,11 +63,17 @@ public class RestApiTest extends BaseTestClass {
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
         super.insertJsonToElasticRecordIndex(
+                // set test summaries.score 90
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                // set test summaries.score 106
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                // set test summaries.score 70
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                // set test summaries.score 80
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result
@@ -97,6 +103,7 @@ public class RestApiTest extends BaseTestClass {
     }
     /**
      * with page_size set, the max number of record return will equals page_size
+     * With default search, the sort should follow uuid order
      */
     @Test
     public void verifyCorrectPageSizeDataReturn() throws IOException {
@@ -105,11 +112,17 @@ public class RestApiTest extends BaseTestClass {
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
         super.insertJsonToElasticRecordIndex(
+                // set test summaries.score 90
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                // set test summaries.score 106
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                // set test summaries.score 70
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                // set test summaries.score 80
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result
@@ -132,12 +145,12 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals("1.0", collections.getBody().getSearchAfter().get(0), "Search after 1 value");
         assertEquals(
-                "100",
+                "90",
                 collections.getBody().getSearchAfter().get(1),
                 "search_after 2 arg"
         );
         assertEquals(
-                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
+                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 arg"
         );
@@ -187,9 +200,9 @@ public class RestApiTest extends BaseTestClass {
      * The first sort value is the relevant and because of query text the value will be something greater than 1.0
      * After weighted sorting, the actual order is (for the first 4 records):
      * Document 0: UUID=bf287dfe-9ce4-4969-9c59-51c39ea4d011
-     * Document 1: UUID=7709f541-fc0c-4318-b5b9-9053aa474e0e
-     * Document 2: UUID=19da2ce7-138f-4427-89de-a50c724f5f54
-     * Document 3: UUID=bc55eff4-7596-3565-e044-00144fdd4fa6
+     * Document 1: UUID=19da2ce7-138f-4427-89de-a50c724f5f54
+     * Document 2: UUID=bc55eff4-7596-3565-e044-00144fdd4fa6
+     * Document 3: UUID=7709f541-fc0c-4318-b5b9-9053aa474e0e
      */
     @Test
     public void verifyCorrectPageSizeDataReturnWithQuery() throws IOException {
@@ -198,11 +211,17 @@ public class RestApiTest extends BaseTestClass {
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
         super.insertJsonToElasticRecordIndex(
+                // set test summaries.score 90
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                // set test summaries.score 106
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                // set test summaries.score 70
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                // set test summaries.score 80
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result with search on "dataset"
@@ -225,7 +244,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:bc55eff4-7596-3565-e044-00144fdd4fa6",
+                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 2 arg"
         );
@@ -254,7 +273,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:7709f541-fc0c-4318-b5b9-9053aa474e0e",
+                "str:19da2ce7-138f-4427-89de-a50c724f5f54",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 arg"
         );
@@ -283,7 +302,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:19da2ce7-138f-4427-89de-a50c724f5f54",
+                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 value"
         );
@@ -293,9 +312,9 @@ public class RestApiTest extends BaseTestClass {
      * this is used to verify a bug fix where page_size and score crash the query
      * After weighted sorting, the actual order is (for the first 4 records):
      * Document 0: UUID=bf287dfe-9ce4-4969-9c59-51c39ea4d011
-     * Document 1: UUID=7709f541-fc0c-4318-b5b9-9053aa474e0e
-     * Document 2: UUID=19da2ce7-138f-4427-89de-a50c724f5f54
-     * Document 3: UUID=bc55eff4-7596-3565-e044-00144fdd4fa6
+     * Document 1: UUID=19da2ce7-138f-4427-89de-a50c724f5f54
+     * Document 2: UUID=bc55eff4-7596-3565-e044-00144fdd4fa6
+     * Document 3: UUID=7709f541-fc0c-4318-b5b9-9053aa474e0e
      */
     @Test
     public void verifyCorrectPageSizeAndScoreWithQuery() throws IOException {
@@ -306,11 +325,17 @@ public class RestApiTest extends BaseTestClass {
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
         super.insertJsonToElasticRecordIndex(
+                // set test summaries.score 90
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                // set test summaries.score 106
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                // set test summaries.score 70
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                // set test summaries.score 60
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                // set test summaries.score 80
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                // set test summaries.score 100
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result with search on "dataset"
@@ -339,12 +364,12 @@ public class RestApiTest extends BaseTestClass {
         logger.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
 
         assertEquals(
-                "80",
+                "100",
                 collections.getBody().getSearchAfter().get(1),
                 "search_after 2 value"
         );
         assertEquals(
-                "str:bc55eff4-7596-3565-e044-00144fdd4fa6",
+                "str:bf287dfe-9ce4-4969-9c59-51c39ea4d011",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 value"
         );
@@ -356,7 +381,7 @@ public class RestApiTest extends BaseTestClass {
                         String.format("'%s|| %s || %s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
-                                "bc55eff4-7596-3565-e044-00144fdd4fa6"),
+                                "bf287dfe-9ce4-4969-9c59-51c39ea4d011"),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -375,7 +400,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:19da2ce7-138f-4427-89de-a50c724f5f54",
+                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getSearchAfter().get(2),
                 "Search after 2 value"
         );
