@@ -71,6 +71,7 @@ public class RestServices {
 
     public ResponseEntity<String> downloadData(
             String id,
+            String key,
             String startDate,
             String endDate,
             Object polygons,
@@ -79,6 +80,7 @@ public class RestServices {
 
         Map<String, String> parameters = new HashMap<>();
         parameters.put(DatasetDownloadEnums.Parameter.UUID.getValue(), id);
+        parameters.put(DatasetDownloadEnums.Parameter.KEY.getValue(), key);
         parameters.put(DatasetDownloadEnums.Parameter.START_DATE.getValue(), startDate);
         parameters.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), endDate);
         parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), recipient);

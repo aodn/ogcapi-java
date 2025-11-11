@@ -50,7 +50,7 @@ public class RestServicesTest {
 
         // Act
         ResponseEntity<String> response = restServices.downloadData(
-                "test-uuid", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
+                "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
 
         // Assert
         assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
@@ -64,7 +64,7 @@ public class RestServicesTest {
 
         // Act & Assert
         try {
-            restServices.downloadData("test-uuid", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
+            restServices.downloadData("test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
         } catch (JsonProcessingException e) {
             assertEquals("Error", e.getMessage());
         }
@@ -80,7 +80,7 @@ public class RestServicesTest {
 
         // Act
         ResponseEntity<String> response = restServices.downloadData(
-                "test-uuid", "2023-01-01", "2023-01-31", "non-specified", "test@example.com");
+                "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "non-specified", "test@example.com");
 
         // Capture the submitted request
         ArgumentCaptor<SubmitJobRequest> captor =

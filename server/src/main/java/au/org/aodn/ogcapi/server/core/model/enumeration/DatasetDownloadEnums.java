@@ -17,6 +17,7 @@ public class DatasetDownloadEnums {
         TYPE("type"),
         FIELDS("fields"),
         LAYER_NAME("layer_name"),
+        KEY("key")
         ;
 
         private final String value;
