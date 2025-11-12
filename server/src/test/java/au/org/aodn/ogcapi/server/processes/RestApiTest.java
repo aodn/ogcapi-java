@@ -50,7 +50,7 @@ public class RestApiTest {
 
     @Test
     public void testExecuteDownloadDatasetSuccess() throws JsonProcessingException {
-        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any()))
+        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(ResponseEntity.ok("Job submitted with ID: test-job-id"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
@@ -65,7 +65,7 @@ public class RestApiTest {
 
     @Test
     public void testExecuteDownloadDatasetError() throws JsonProcessingException {
-        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any()))
+        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any()))
                 .thenThrow(new RuntimeException("Error while getting dataset"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
