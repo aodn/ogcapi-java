@@ -30,7 +30,7 @@ public enum CQLFields implements CQLFieldsInterface {
             StacSummeries.DatasetGroup.displayField,
             (literal) -> TermsQuery.of(t ->
                     t.field(StacSummeries.DatasetGroup.searchField)
-                            .terms(tf -> tf.value(List.of(FieldValue.of(literal)))))._toQuery(),
+                            .terms(tf -> tf.value(List.of(FieldValue.of(literal.toLowerCase().trim())))))._toQuery(),
             null
     ),
     update_frequency(
