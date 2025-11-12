@@ -36,7 +36,7 @@ public class SummariesModel {
     protected String updateFrequency;
 
     @JsonProperty("dataset_group")
-    protected String datasetGroup;
+    protected List<String> datasetGroup;
 
     @JsonProperty("ai:description")
     protected String aiDescription;

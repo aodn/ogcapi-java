@@ -104,7 +104,7 @@ public class StacToCollectionTest {
         assets.put("vessel_satellite_radiance_derived_product.zarr", asset);
         var citationString = "{\"suggestedCitation\":\"this is suggested Citation\",\"useLimitations\":[\"this is useLimitations1\",\"this is useLimitations2\"],\"otherConstraints\":[\"this is otherConstraints1\",\"this is otherConstraints2\"]}";
         var statement = "This is the statement of this record";
-        var datasetGroup = "group_test";
+        var datasetGroup = List.of("group_test");
         var aiDescription = "AI-generated description for testing";
 
         StacCollectionModel model = StacCollectionModel

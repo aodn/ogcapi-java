@@ -64,7 +64,7 @@
     "statement": "XBT real-time data contains only RAW data. The data has not been quality controlled.",
     "creation": "2019-12-15T05:00:19",
     "revision": "2024-06-23T20:35:52",
-    "dataset_group": "imos",
+    "dataset_group": ["imos"],
     "dataset_provider": "IMOS",
     "update_frequency": "real-time",
     "proj:geometry": {

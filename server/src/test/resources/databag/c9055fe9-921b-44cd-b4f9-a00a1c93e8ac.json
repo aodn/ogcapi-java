@@ -35,7 +35,7 @@
     ],
     "statement": "Data source: original field data  Data processing and quality control: according to current CMR Data Centre Underway processing manual  GPS: The standard 1 minute positions have been archived and will be subsequently available in the underway file.<BR> 10 second values of latitude and longitude derived directly from the nmea strings will also be available in a netcdf file.<BR> MET:  For full details, refer to documentation.",
     "revision": "2009-11-26T11:07:59",
-    "dataset_group": "csiro oceans and atmosphere",
+    "dataset_group": ["csiro oceans and atmosphere"],
     "update_frequency": "completed",
     "proj:geometry": {
       "geometries": [
