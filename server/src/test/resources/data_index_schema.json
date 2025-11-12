@@ -1,76 +1,32 @@
 {
   "mappings": {
     "properties": {
-      "id": {
-        "type": "keyword"
-      },
-      "stac_version": {
-        "type": "text"
-      },
-      "stac_extensions": {
-        "type": "text"
-      },
       "type": {
-        "type": "text"
-      },
-      "collection": {
         "type": "keyword"
       },
-      "geometry": {
-        "type": "geo_shape"
-      },
-      "bbox": {
-        "type": "double"
-      },
-      "dataset_group": {
-        "type": "text"
-      },
-      "ai:description": {
-        "type": "text"
-      },
-      "properties": {
+      "features": {
         "type": "nested",
         "properties": {
-          "lng": {
-            "type": "double"
+          "type": {
+            "type": "keyword"
           },
-          "lat": {
-            "type": "double"
+          "geometry": {
+            "type": "geo_shape"
           },
-          "depth": {
-            "type": "double"
-          },
-          "count": {
-            "type": "double"
-          },
-          "time": {
-            "type": "date"
-          }
-        }
-      },
-      "links": {
-        "type": "nested",
-        "properties": {
-          "link": {
-            "type": "nested",
+          "properties": {
+            "type": "object",
             "properties": {
-              "href": {
-                "type": "text"
+              "date": {
+                "type": "date"
               },
-              "rel": {
-                "type": "text"
+              "count": {
+                "type": "double"
               },
-              "type": {
-                "type": "text"
+              "collection": {
+                "type": "keyword"
               },
-              "title": {
-                "type": "text"
-              },
-              "description": {
-                "type": "text"
-              },
-              "ai:group": {
-                "type": "text"
+              "key": {
+                "type": "keyword"
               }
             }
           }

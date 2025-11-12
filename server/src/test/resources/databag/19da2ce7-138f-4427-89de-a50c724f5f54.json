@@ -40,7 +40,7 @@
     },
     "creation": "2020-07-13T15:13:12",
     "revision": "2023-12-08T04:33:13",
-    "dataset_group": "imos",
+    "dataset_group": ["imos"],
     "dataset_provider": "IMOS",
     "proj:geometry": {
       "geometries": [

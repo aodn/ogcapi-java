@@ -88,7 +88,7 @@
     "statement": "Statement: The central-west Pacific samples were collected by Dr Gary Williams and preserved in 70% ethanol. Carlos Sanchez, Gary Williams and Katharina Fabricius performed the identification of all samples. Leen van Ofwegen confirmed the identity of Stereonephthya sp. 1 from the GBR.",
     "creation": "2009-11-11T00:00:00",
     "revision": "2017-11-20T00:00:00",
-    "dataset_group": "aims",
+    "dataset_group": ["aims"],
     "update_frequency": "completed",
     "proj:geometry": {
       "geometries": [

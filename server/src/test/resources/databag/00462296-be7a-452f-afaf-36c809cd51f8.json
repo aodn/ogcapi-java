@@ -35,7 +35,7 @@
     ],
     "statement": "Data source: original field data  the 3 min ensemble files returned from the ship were processed in the usual way.<BR> Data processing and quality control: according to current CMR Data Centre ADCP data processing manual.   For full details, refer to documentation.",
     "revision": "2004-04-16T15:44:25",
-    "dataset_group": "csiro oceans and atmosphere",
+    "dataset_group": ["csiro oceans and atmosphere"],
     "update_frequency": "completed",
     "proj:geometry": {
       "geometries": [

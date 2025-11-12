@@ -172,7 +172,7 @@
     "statement": "Data sampling is being conducted as part of a larger IMOS monitoring program. The silk is removed from the CPR cassette and processed as described in Richardson et al 2006. The phytoplankton colour index (PCI) and the phytoplankton data are also analysed as per Richardson et al 2006. The zooplankton analysis is conducted differently to that described in Richardson et al 2006 as it is counted off the silk in a bogorov tray. This is accomplished by rinsing the silks in water and straining through a 10 micron mesh sieve. The collected plankton is transferred to a bogorov tray and counted under a disecting scope. This is done to retain the phytoplankton. AusCPR decided to analyse the zooplankton this way as it provides a more accurate analysis of the zooplankton present. It is easy to miss zooplankton when it is still on the silk and it is harder to identify. After counting the zooplankton and phytoplankton are transferred onto a preweighed filter and dried in an oven at 60 degrees C for 24-48 hours. Once dried the sample is reweighed to attain dry weight.",
     "creation": "2021-11-01T12:00:00",
     "revision": "2022-12-07T04:40:34",
-    "dataset_group": "imos",
+    "dataset_group": ["imos"],
     "dataset_provider": "IMOS",
     "proj:geometry": {
       "geometries": [
