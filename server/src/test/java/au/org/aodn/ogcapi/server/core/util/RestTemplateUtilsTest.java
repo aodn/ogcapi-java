@@ -85,6 +85,6 @@ public class RestTemplateUtilsTest {
 
         // Assert
         verify(restTemplate, times(1))
-                .exchange(eq(redirectUrl.replace("%20", " ")), eq(HttpMethod.GET), any(), eq(String.class), anyMap());
+                .exchange(eq(redirectUrl.replace("%20", " ")), eq(HttpMethod.GET), any(), eq(String.class));
     }
 }
