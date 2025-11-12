@@ -19,9 +19,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -63,6 +66,10 @@ public class DownloadableFieldsServiceTest {
 
     @Autowired
     private WfsServer wfsServer;
+
+    @Autowired
+    @Qualifier("pretendUserEntity")
+    private HttpEntity<?> entity;
 
     @MockitoBean
     private DasService dasService;
@@ -133,7 +140,7 @@ public class DownloadableFieldsServiceTest {
 
         String id = "id";
 
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
 
         when(search.searchCollections(eq(id)))
@@ -203,7 +210,7 @@ public class DownloadableFieldsServiceTest {
 
         String id = "id2";
 
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.NOT_FOUND));
 
         when(search.searchCollections(eq(id)))
@@ -244,7 +251,7 @@ public class DownloadableFieldsServiceTest {
         when(search.searchCollections(eq(id)))
                 .thenReturn(stac);
 
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
 
         DownloadableFieldsNotFoundException exception = assertThrows(
@@ -280,7 +287,7 @@ public class DownloadableFieldsServiceTest {
                 .thenReturn(stac);
 
         // Mock network error
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenThrow(new RuntimeException("Connection timeout"));
 
         RuntimeException exception = assertThrows(

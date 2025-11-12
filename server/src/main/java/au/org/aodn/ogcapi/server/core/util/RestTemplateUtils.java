@@ -1,11 +1,12 @@
 package au.org.aodn.ogcapi.server.core.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URISyntaxException;
-import java.util.Collections;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -27,7 +28,7 @@ public class RestTemplateUtils {
      * @param <T> The type of the return type
      * @throws URISyntaxException - Not expect to throw
      */
-    public <T> ResponseEntity<T> handleRedirect(String sourceUrl, ResponseEntity<T> response, Class<T> type) throws URISyntaxException {
+    public <T> ResponseEntity<T> handleRedirect(String sourceUrl, ResponseEntity<T> response, Class<T> type, HttpEntity<?> entity) throws URISyntaxException {
         // Redirect should happen automatically but it does not so here is a safe-guard
         // the reason happens because http is use but redirect to https
         if(response != null && response.getStatusCode().is3xxRedirection() && response.getHeaders().getLocation() != null) {
@@ -44,7 +45,7 @@ public class RestTemplateUtils {
             if(haveSameHost(sourceUrl, redirect)) {
                 // Only allow redirect to same server.
                 log.info("Redirect from {} to {}", sourceUrl , redirect);
-                return restTemplate.getForEntity(redirect, type, Collections.emptyMap());
+                return restTemplate.exchange(redirect, HttpMethod.GET, entity, type);
             }
             else {
                 log.error("Redirect to different host not allowed, from {} to {}", sourceUrl , redirect);

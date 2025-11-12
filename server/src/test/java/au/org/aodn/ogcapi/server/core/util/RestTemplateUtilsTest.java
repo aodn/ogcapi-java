@@ -6,14 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -43,16 +40,16 @@ public class RestTemplateUtilsTest {
         ResponseEntity<String> response = new ResponseEntity<>(null, headers, HttpStatus.MOVED_PERMANENTLY);
         ResponseEntity<String> redirectResponse = new ResponseEntity<>("Redirected content", HttpStatus.OK);
 
-        when(restTemplate.getForEntity(eq(redirectUrl.replace("%20", " ")), eq(String.class), eq(Collections.emptyMap())))
+        when(restTemplate.exchange(eq(redirectUrl.replace("%20", " ")), eq(HttpMethod.GET), any(), eq(String.class)))
                 .thenReturn(redirectResponse);
 
         // Act
-        ResponseEntity<String> result = restTemplateUtils.handleRedirect(sourceUrl, response, String.class);
+        ResponseEntity<String> result = restTemplateUtils.handleRedirect(sourceUrl, response, String.class, new HttpEntity<>(null));
 
         // Assert
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("Redirected content", result.getBody());
-        verify(restTemplate, times(1)).getForEntity(eq(redirectUrl.replace("%20", " ")), eq(String.class), eq(Collections.emptyMap()));
+        verify(restTemplate, times(1)).exchange(eq(redirectUrl.replace("%20", " ")), eq(HttpMethod.GET), any(), eq(String.class));
     }
 
     @Test
@@ -65,7 +62,7 @@ public class RestTemplateUtilsTest {
         ResponseEntity<String> response = new ResponseEntity<>(null, headers, HttpStatus.FOUND);
 
         // Act
-        ResponseEntity<String> result = restTemplateUtils.handleRedirect(sourceUrl, response, String.class);
+        ResponseEntity<String> result = restTemplateUtils.handleRedirect(sourceUrl, response, String.class, new HttpEntity<>(null));
 
         // Assert
         assertEquals(response, result);
@@ -84,10 +81,10 @@ public class RestTemplateUtilsTest {
         ResponseEntity<String> response = new ResponseEntity<>(null, headers, HttpStatus.MOVED_PERMANENTLY);
 
         // Act
-        restTemplateUtils.handleRedirect(sourceUrl, response, String.class);
+        restTemplateUtils.handleRedirect(sourceUrl, response, String.class, new HttpEntity<>(null));
 
         // Assert
         verify(restTemplate, times(1))
-                .getForEntity(eq(redirectUrl.replace("%20", " ")), eq(String.class), anyMap());
+                .exchange(eq(redirectUrl.replace("%20", " ")), eq(HttpMethod.GET), any(), eq(String.class));
     }
 }
