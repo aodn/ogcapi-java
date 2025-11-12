@@ -13,6 +13,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
@@ -35,6 +38,10 @@ public class WfsServerTest {
     @Mock
     RestTemplate restTemplate;
 
+    @Autowired
+    @Qualifier("pretendUserEntity")
+    private HttpEntity<?> entity;
+
     AutoCloseable closeableMock;
 
     @BeforeEach
@@ -55,7 +62,7 @@ public class WfsServerTest {
         result.setCollections(Collections.emptyList());
         when(mockSearch.searchCollections(anyString())).thenReturn(result);
 
-        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate));
+        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate), entity);
 
         List<LayerInfo> layers = Collections.singletonList(LayerInfo.builder().build());
         assertEquals(Collections.emptyList(), server.filterLayersByWfsLinks("id", layers));
@@ -71,7 +78,7 @@ public class WfsServerTest {
 
         when(mockSearch.searchCollections(anyString())).thenReturn(result);
 
-        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate));
+        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate), entity);
 
         List<LayerInfo> layers = Collections.singletonList(LayerInfo.builder().build());
         assertEquals(Collections.emptyList(), server.filterLayersByWfsLinks("id", layers));
@@ -96,7 +103,7 @@ public class WfsServerTest {
         result.setCollections(List.of(model));
         when(mockSearch.searchCollections(anyString())).thenReturn(result);
 
-        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate));
+        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate), entity);
 
         List<LayerInfo> info = server.filterLayersByWfsLinks("id", layers);
         assertEquals(1, info.size(), "Layer count match");
@@ -124,7 +131,7 @@ public class WfsServerTest {
         result.setCollections(List.of(model));
         when(mockSearch.searchCollections(anyString())).thenReturn(result);
 
-        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate));
+        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate), entity);
 
         List<LayerInfo> info = server.filterLayersByWfsLinks("id", layers);
         assertEquals(1, info.size(), "Layer count match");

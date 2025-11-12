@@ -16,6 +16,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -39,11 +41,13 @@ public class WfsServer {
     protected RestTemplateUtils restTemplateUtils;
     protected RestTemplate restTemplate;
     protected Search search;
+    protected HttpEntity<?> pretendUserEntity;
 
     public WfsServer(Search search,
                      DownloadableFieldsService downloadableFieldsService,
                      RestTemplate restTemplate,
-                     RestTemplateUtils restTemplateUtils) {
+                     RestTemplateUtils restTemplateUtils,
+                     HttpEntity<?> entity) {
 
         xmlMapper = new XmlMapper();
         xmlMapper.registerModule(new JavaTimeModule()); // Add JavaTimeModule
@@ -53,6 +57,7 @@ public class WfsServer {
         this.restTemplate = restTemplate;
         this.restTemplateUtils = restTemplateUtils;
         this.downloadableFieldsService = downloadableFieldsService;
+        this.pretendUserEntity = entity;
     }
 
     /**
@@ -77,7 +82,12 @@ public class WfsServer {
                 try {
                     if (uri != null) {
                         log.debug("Try Url to wfs {}", uri);
-                        ResponseEntity<String> response = restTemplateUtils.handleRedirect(uri, restTemplate.getForEntity(uri, String.class), String.class);
+                        ResponseEntity<String> response = restTemplateUtils.handleRedirect(
+                                uri,
+                                restTemplate.exchange(uri, HttpMethod.GET, pretendUserEntity, String.class),
+                                String.class,
+                                pretendUserEntity
+                        );
 
                         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                             return DownloadableFieldsService.convertWfsResponseToDownloadableFields(

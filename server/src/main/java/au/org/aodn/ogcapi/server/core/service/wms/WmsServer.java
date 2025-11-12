@@ -21,8 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
@@ -61,10 +60,14 @@ public class WmsServer {
     @Autowired
     protected WmsServer self;
 
-    public WmsServer() {
+    protected final HttpEntity<?> pretendUserEntity;
+
+    public WmsServer(HttpEntity<?> entity) {
         xmlMapper = new XmlMapper();
         xmlMapper.registerModule(new JavaTimeModule()); // Add JavaTimeModule
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+        pretendUserEntity = entity;
     }
     /**
      * This function is used to append the CQL filter to the geonetwork query, it will guess the correct dataTime field by
@@ -425,7 +428,7 @@ public class WmsServer {
             List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for (String url : urls) {
-                ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
+                ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class, pretendUserEntity);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     // Now try to unify the return
                     if (MediaType.TEXT_HTML.isCompatibleWith(response.getHeaders().getContentType())) {
@@ -456,7 +459,7 @@ public class WmsServer {
             // Try one by one, we exit when any works
             for (String url : urls) {
                 try {
-                    ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class);
+                    ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class), String.class, pretendUserEntity);
                     if (response.getStatusCode().is2xxSuccessful()) {
                         DescribeLayerResponse layer = xmlMapper.readValue(response.getBody(), DescribeLayerResponse.class);
                         if (layer.getLayerDescription() != null) {
@@ -489,7 +492,7 @@ public class WmsServer {
             // Try one by one, we exit when any works
             for (String url : urls) {
                 log.debug("map tile request for layer name {} url {} ", request.getLayerName(), url);
-                ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, byte[].class, Collections.emptyMap()), byte[].class);
+                ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, byte[].class), byte[].class, pretendUserEntity);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     return response.getBody();
                 }
@@ -531,7 +534,7 @@ public class WmsServer {
             // Build GetCapabilities URL
             UriComponentsBuilder builder = UriComponentsBuilder
                     .newInstance()
-                    .scheme(components.getScheme())
+                    .scheme("https")        // hardcode to be https to avoid redirect
                     .port(components.getPort())
                     .host(components.getHost())
                     .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
@@ -541,12 +544,8 @@ public class WmsServer {
             String url = builder.build().toUriString();
             log.debug("GetCapabilities URL: {}", url);
 
-            // Make the HTTP call
-            ResponseEntity<String> response = restTemplateUtils.handleRedirect(
-                    url,
-                    restTemplate.getForEntity(url, String.class, Collections.emptyMap()),
-                    String.class
-            );
+            // Make the HTTPS call
+            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // Parse XML response
@@ -569,7 +568,7 @@ public class WmsServer {
                     return layers;
                 }
             }
-        } catch (RestClientException | URISyntaxException | JsonProcessingException e) {
+        } catch (RestClientException | JsonProcessingException e) {
             log.error("Error fetching GetCapabilities for URL: {}", wmsServerUrl, e);
             throw new RuntimeException(e);
         }
