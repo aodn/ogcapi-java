@@ -287,7 +287,7 @@ public class DownloadableFieldsServiceTest {
                 .thenReturn(stac);
 
         // Mock network error
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenThrow(new RuntimeException("Connection timeout"));
 
         RuntimeException exception = assertThrows(

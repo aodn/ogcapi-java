@@ -11,7 +11,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -50,7 +49,7 @@ public class RestTemplateUtilsTest {
         // Assert
         assertEquals(HttpStatus.OK, result.getStatusCode());
         assertEquals("Redirected content", result.getBody());
-        verify(restTemplate, times(1)).getForEntity(eq(redirectUrl.replace("%20", " ")), eq(String.class), eq(Collections.emptyMap()));
+        verify(restTemplate, times(1)).exchange(eq(redirectUrl.replace("%20", " ")), eq(HttpMethod.GET), any(), eq(String.class));
     }
 
     @Test
