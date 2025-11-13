@@ -7,6 +7,8 @@ import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -25,17 +27,20 @@ public class DownloadWfsDataService {
     private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
     private final WfsDefaultParam wfsDefaultParam;
+    private final HttpEntity<?> pretendUserEntity;
 
     public DownloadWfsDataService(
             WmsServer wmsServer,
             WfsServer wfsServer,
             RestTemplate restTemplate,
-            WfsDefaultParam wfsDefaultParam
+            WfsDefaultParam wfsDefaultParam,
+            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity
     ) {
         this.wmsServer = wmsServer;
         this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
         this.wfsDefaultParam = wfsDefaultParam;
+        this.pretendUserEntity = pretendUserEntity;
     }
 
     /**
@@ -174,7 +179,10 @@ public class DownloadWfsDataService {
         restTemplate.execute(
                 wfsRequestUrl,
                 HttpMethod.GET,
-                null,
+                request -> {
+                    // Set headers from pretendUserEntity
+                    request.getHeaders().addAll(pretendUserEntity.getHeaders());
+                },
                 clientHttpResponse -> {
                     // WFS server has responded!
                     wfsServerResponded.set(true);
