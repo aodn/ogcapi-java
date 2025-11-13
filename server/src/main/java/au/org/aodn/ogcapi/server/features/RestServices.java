@@ -118,16 +118,15 @@ public class RestServices extends OGCApiService {
         }
 
         // Temp block and show only white list uuid, the other uuid need QA check before release.
-        if (wmsDefaultParam.getAllowId().contains(collectionId) && request.isEnableGeoServerWhiteList()) {
-
+        if (request.isEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        else {
             List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
 
             return result.isEmpty() ?
                     ResponseEntity.notFound().build() :
                     ResponseEntity.ok(result);
-        }
-        else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
     }
 
