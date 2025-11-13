@@ -3,3 +3,28 @@ management:
     web:
       exposure:
         include: "health,info,env,beans,logfile"
+
+wms-default-param:
+  allow-id: # Shorter list to give different to compare with other env
+    - 4402cb50-e20a-44ee-93e6-4728259250d2
+    - ae86e2f5-eaaf-459e-a405-e654d85adb9c
+    - ca15915b-38c5-4e95-8d25-9cc42c4dd485
+    - 006bb7dc-860b-4b89-bf4c-6bd930bd35b7
+    - 006bb7dc-860b-4b89-bf4c-6bd930bd35b7
+    - c317b0fe-02e8-4ff9-96c9-563fd58e82ac
+    - 97b9fe73-ee44-437f-b2ae-5b8613f81042
+    - e850651b-d65d-495b-8182-5dde35919616
+    - 7e13b5f3-4a70-4e31-9e95-335efa491c5c
+    - 8964658c-6ee1-4015-9bae-2937dfcc6ab9
+    - 7b901002-b1dc-46c3-89f2-b4951cedca48
+    - 4a97bd11-e821-4682-8b20-cb69201f3223
+    - 8edf509b-1481-48fd-b9c5-b95b42247f82
+    - af5d0ff9-bb9c-4b7c-a63c-854a630b6984
+    - 78d588ed-79dd-47e2-b806-d39025194e7e
+    - 13b3900f-2623-463c-98a7-ea60ac8e61ae
+    - 28f8bfed-ca6a-472a-84e4-42563ce4df3f
+    - 72dbe843-2fb1-4b2e-8b7e-4661d857affb
+    - 63db5801-cc19-40ef-83b3-85ccba884cf7
+    - 35234913-aa3c-48ec-b9a4-77f822f66ef8
+    - aaad092c-c3af-42e6-87e0-bdaef945f522
+    - a681fdba-c6d9-44ab-90b9-113b0ed03536
