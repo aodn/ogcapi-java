@@ -12,6 +12,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.features.RestApi;
 import au.org.aodn.ogcapi.server.features.RestServices;
@@ -46,6 +47,7 @@ import static org.mockito.Mockito.when;
         RestServices.class,
         WfsServer.class,
         WfsDefaultParam.class,
+        WmsDefaultParam.class,
         DownloadableFieldsService.class,
         JacksonAutoConfiguration.class,
         CacheAutoConfiguration.class
