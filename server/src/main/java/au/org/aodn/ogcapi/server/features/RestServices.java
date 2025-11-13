@@ -118,7 +118,7 @@ public class RestServices extends OGCApiService {
         }
 
         // Temp block and show only white list uuid, the other uuid need QA check before release.
-        if (wmsDefaultParam.getAllowId().contains(collectionId)) {
+        if (wmsDefaultParam.getAllowId().contains(collectionId) && request.isEnableGeoServerWhiteList()) {
 
             List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
 

@@ -40,4 +40,8 @@ public class FeatureRequest implements Serializable {
 
     @Schema(description = "Wave buoy name")
     private String waveBuoy;
+
+    @Schema(description = "Enable or disable geoserver whitelist")
+    @Builder.Default
+    private boolean isEnableGeoServerWhiteList = true;
 }
