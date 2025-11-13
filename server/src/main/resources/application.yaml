@@ -93,6 +93,53 @@ wms-default-param:
     CRS: "EPSG:3857"
     WIDTH: 256
     HEIGHT: 256
+  allow-id: # A shorter list compare with the prod one, to give us diff for debug
+    - 4402cb50-e20a-44ee-93e6-4728259250d2
+    - ae86e2f5-eaaf-459e-a405-e654d85adb9c
+    - ca15915b-38c5-4e95-8d25-9cc42c4dd485
+    - 006bb7dc-860b-4b89-bf4c-6bd930bd35b7
+    - 006bb7dc-860b-4b89-bf4c-6bd930bd35b7
+    - c317b0fe-02e8-4ff9-96c9-563fd58e82ac
+    - 97b9fe73-ee44-437f-b2ae-5b8613f81042
+    - e850651b-d65d-495b-8182-5dde35919616
+    - 7e13b5f3-4a70-4e31-9e95-335efa491c5c
+    - 8964658c-6ee1-4015-9bae-2937dfcc6ab9
+    - 7b901002-b1dc-46c3-89f2-b4951cedca48
+    - 4a97bd11-e821-4682-8b20-cb69201f3223
+    - 8edf509b-1481-48fd-b9c5-b95b42247f82
+    - af5d0ff9-bb9c-4b7c-a63c-854a630b6984
+    - 78d588ed-79dd-47e2-b806-d39025194e7e
+    - 13b3900f-2623-463c-98a7-ea60ac8e61ae
+    - 28f8bfed-ca6a-472a-84e4-42563ce4df3f
+    - 72dbe843-2fb1-4b2e-8b7e-4661d857affb
+    - 63db5801-cc19-40ef-83b3-85ccba884cf7
+    - 35234913-aa3c-48ec-b9a4-77f822f66ef8
+    - aaad092c-c3af-42e6-87e0-bdaef945f522
+    - a681fdba-c6d9-44ab-90b9-113b0ed03536
+    - d7a14921-8f3f-4522-9a54-e7d1df969c8a
+    - 4260aa0a-0d0a-4dd0-9ebc-74d2bf937e21
+    - f3910f5c-c568-4af0-b773-13c0e57ada6b
+    - 911f6b96-fa33-4621-9d8c-4d1cc14d94d0
+    - 9436802f-ed93-4660-be50-e77c3c07bd09
+    - 723a3e85-04ae-40e6-ac2a-237a93d84abe
+    - 52f09a23-63a2-4c14-8b3b-1fc7c8167281
+    - 27cc65c0-d453-4ba3-a0d6-55e4449fee8c
+    - 8af21108-c535-43bf-8dab-c1f45a26088c
+    - 67f0b6ea-518f-4af5-9d21-dd3c08c7cb5c
+    - 4d3d4aca-472e-4616-88a5-df0f5ab401ba
+    - 468f550b-bbd8-42b1-91b5-313d5898d9e6
+    - 89b495cc-7382-43c0-abef-d1e66738a924
+    - f7e49e83-4579-413c-b092-2187dca8395d
+    - d83ef640-827e-4990-8c35-7c1a1aa587a9
+    - d24d26cc-cd8c-4c5b-94e5-809051043d7e
+    - c117a4a5-32b8-488a-8b98-ac3b7a0abc2a
+    - a136eee7-a990-4c06-a4f6-915657a2464e
+    - 0c9eb39c-9cbe-4c6a-8a10-5867087e703a
+    - 07818819-2e5c-4a12-9395-0082b57b2fe8
+    - f73daf07-eb81-4995-a72a-ca903834509f
+    - aaebf991-b79d-4670-a1c5-a0de9bf649ce
+    - 8b469535-eb48-4f1f-9612-bdf2e83cdce8
+    - bbd0c85b-7218-4065-8180-421b1c1d6bbe
 
 api:
   host: http://localhost:${server.port}
