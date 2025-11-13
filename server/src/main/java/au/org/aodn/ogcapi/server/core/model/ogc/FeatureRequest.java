@@ -43,5 +43,5 @@ public class FeatureRequest implements Serializable {
 
     @Schema(description = "Enable or disable geoserver whitelist")
     @Builder.Default
-    private boolean isEnableGeoServerWhiteList = true;
+    private Boolean enableGeoServerWhiteList = Boolean.TRUE;
 }
