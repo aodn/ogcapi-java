@@ -507,6 +507,7 @@ public class WmsServer {
      * @return - The fields contained in this WMS layer, we are particular interest in the date time field for subsetting
      */
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
+
         DescribeLayerResponse response = this.describeLayer(collectionId, request);
 
         if (response != null && response.getLayerDescription().getWfs() != null) {
