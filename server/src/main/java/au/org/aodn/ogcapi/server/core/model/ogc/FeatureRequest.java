@@ -44,4 +44,11 @@ public class FeatureRequest implements Serializable {
     @Schema(description = "Enable or disable geoserver whitelist")
     @Builder.Default
     private Boolean enableGeoServerWhiteList = Boolean.TRUE;
+    /**
+     * Make sure if json indicate null, we still return true by default
+     * @return - Utility function with default
+     */
+    public Boolean getEnableGeoServerWhiteList() {
+        return enableGeoServerWhiteList != null ? enableGeoServerWhiteList : Boolean.TRUE;
+    }
 }
