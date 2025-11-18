@@ -11,6 +11,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -39,6 +40,9 @@ public class RestServices extends OGCApiService {
 
     @Autowired
     protected WmsServer wmsServer;
+
+    @Autowired
+    protected WmsDefaultParam wmsDefaultParam;
 
     @Override
     public List<String> getConformanceDeclaration() {
@@ -113,11 +117,17 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
         }
 
-        List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
+        // Temp block and show only white list uuid, the other uuid need QA check before release.
+        if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+        else {
+            List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
 
-        return result.isEmpty() ?
-                ResponseEntity.notFound().build() :
-                ResponseEntity.ok(result);
+            return result.isEmpty() ?
+                    ResponseEntity.notFound().build() :
+                    ResponseEntity.ok(result);
+        }
     }
 
     /**
@@ -136,9 +146,9 @@ public class RestServices extends OGCApiService {
     }
 
     /**
-     * @param collectionID
-     * @param from
-     * @return
+     * @param collectionID - uuid
+     * @param from -
+     * @return -
      */
     public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
         if (!dasService.isCollectionSupported(collectionID)) {

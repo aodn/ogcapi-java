@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -38,12 +39,15 @@ public class DownloadWfsDataServiceTest {
     @Mock
     private WfsDefaultParam wfsDefaultParam;
 
+    @Mock
+    private HttpEntity<?> pretendUserEntity;
+
     private DownloadWfsDataService downloadWfsDataService;
 
     @BeforeEach
     public void setUp() {
         downloadWfsDataService = new DownloadWfsDataService(
-                wmsServer, wfsServer, restTemplate, wfsDefaultParam
+                wmsServer, wfsServer, restTemplate, wfsDefaultParam, pretendUserEntity
         );
     }
 

@@ -201,7 +201,7 @@
             "type": "text"
           },
           "dataset_group": {
-            "type": "text"
+            "type": "keyword"
           },
           "creation": {
             "type": "date"

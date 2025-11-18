@@ -499,6 +499,32 @@ public class RestApiTest extends BaseTestClass {
                 "UUID matches");
     }
     /**
+     * Show that in case of dataset falls in multiple group, it works too
+     * @throws IOException - Not expected to throw
+     */
+    @Test
+    public void verifyCQLPropertyMultiDatasetGroup() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",   // dataset_group null
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",             // dataset_group is IMOS,
+                "b9bf6b57-54a0-44b3-bd17-30ccfb2b246f.json"              //  dataset_group aims, imas
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='imas'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "b9bf6b57-54a0-44b3-bd17-30ccfb2b246f",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='AIMS'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
+        assertEquals(
+                "b9bf6b57-54a0-44b3-bd17-30ccfb2b246f",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+    }
+    /**
      * You can use the score to tune the return result's relevancy, at this moment, only >= make sense other value
      * will be ignored.
      * @throws IOException - Not expected

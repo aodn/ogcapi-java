@@ -7,6 +7,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
 import java.util.List;
 import java.util.Map;
@@ -17,7 +19,8 @@ import java.util.Map;
  */
 @Slf4j
 public class CacheWarm {
-    // Hardcode server list as not expect to change much overtime, add more if needed
+    // Hardcode server list as not expect to change much overtime, add more if needed, the operation is
+    // heavy so we warm the cache when start
     protected List<String> getCapabilitiesUrls = List.of(
             "https://data.aad.gov.au/geoserver/underway/wms",
             "https://www.cmar.csiro.au/geoserver/caab/wms",
@@ -25,7 +28,9 @@ public class CacheWarm {
             "https://www.cmar.csiro.au/geoserver/ea-be/wms",
             "https://www.cmar.csiro.au/geoserver/gsfm/wms",
             "https://www.cmar.csiro.au/geoserver/nerp/wms",
-            "https://www.cmar.csiro.au/geoserver/AusSeabed/wms"
+            "https://www.cmar.csiro.au/geoserver/AusSeabed/wms",
+            "https://geoserver.apps.aims.gov.au/aims/wms",
+            "https://geoserver.apps.aims.gov.au/reefcloud/wms"
     );
     protected WmsServer wmsServer;
     protected GeometryUtils geometryUtils;
@@ -73,6 +78,7 @@ public class CacheWarm {
         );
     }
 
+    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000))
     protected void warmGetCapabilities(String url) {
         try {
             // Call and warm cache

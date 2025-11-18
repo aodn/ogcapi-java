@@ -5,23 +5,38 @@ import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
 public class WfsWmsConfig {
 
+    @ConditionalOnMissingBean(name="pretendUserEntity")
+    @Bean("pretendUserEntity")
+    public HttpEntity<?> createPretendUserEntity() {
+        // Some server do not allow program to scrap the content, so we need to pretend to be a client
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
+
+        return new HttpEntity<>(headers);
+    }
+
     @Bean
     public WfsServer createWfsServer(Search search,
                                      DownloadableFieldsService downloadableFieldsService,
                                      RestTemplate restTemplate,
-                                     RestTemplateUtils restTemplateUtils) {
-        return new WfsServer(search, downloadableFieldsService, restTemplate, restTemplateUtils);
+                                     RestTemplateUtils restTemplateUtils,
+                                     @Qualifier("pretendUserEntity") HttpEntity<?> entity) {
+        return new WfsServer(search, downloadableFieldsService, restTemplate, restTemplateUtils, entity);
     }
 
     @Bean
-    public WmsServer createWmsServer() {
-        return new WmsServer();
+    public WmsServer createWmsServer(@Qualifier("pretendUserEntity") HttpEntity<?> entity) {
+        return new WmsServer(entity);
     }
 }

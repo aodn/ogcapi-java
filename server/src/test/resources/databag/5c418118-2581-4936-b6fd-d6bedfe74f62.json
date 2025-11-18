@@ -246,7 +246,7 @@
   "summaries": {
     "score": 90,
     "dataset_provider": null,
-    "dataset_group": "aodn",
+    "dataset_group": ["aodn"],
     "proj:geometry": {
       "coordinates": [
         [

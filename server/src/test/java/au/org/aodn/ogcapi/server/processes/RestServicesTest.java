@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -49,7 +50,7 @@ public class RestServicesTest {
 
         // Act
         ResponseEntity<String> response = restServices.downloadData(
-                "test-uuid", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
+                "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com", "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).");
 
         // Assert
         assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
@@ -63,9 +64,32 @@ public class RestServicesTest {
 
         // Act & Assert
         try {
-            restServices.downloadData("test-uuid", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com");
+            restServices.downloadData("test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com","Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).");
         } catch (JsonProcessingException e) {
             assertEquals("Error", e.getMessage());
         }
+    }
+
+    @Test
+    public void testDownloadDataCapturesSubmitJobRequest() throws JsonProcessingException {
+        // Arrange
+        String jobId = "12345";
+        SubmitJobResponse submitJobResponse = SubmitJobResponse.builder().jobId(jobId).build();
+        when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(submitJobResponse);
+        when(objectMapper.writeValueAsString(any())).thenReturn("test-multipolygon");
+
+        // Act
+        ResponseEntity<String> response = restServices.downloadData(
+                "test-uuid", "test-dname","2023-01-01", "2023-01-31", "non-specified", "test@example.com", "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).");
+
+        // Capture the submitted request
+        ArgumentCaptor<SubmitJobRequest> captor =
+                ArgumentCaptor.forClass(SubmitJobRequest.class);
+        verify(batchClient, times(1)).submitJob(captor.capture());
+        SubmitJobRequest captured = captor.getValue();
+
+        // Assert relevant parameters
+        assertEquals("non-specified", captured.parameters().get("multi_polygon"));
+        assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
     }
 }

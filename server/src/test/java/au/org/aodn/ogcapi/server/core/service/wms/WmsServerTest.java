@@ -15,9 +15,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
@@ -26,9 +29,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
@@ -59,6 +60,10 @@ public class WmsServerTest {
 
     @Autowired
     protected WmsServer wmsServer;
+
+    @Autowired
+    @Qualifier("pretendUserEntity")
+    private HttpEntity<?> entity;
 
     @BeforeEach
     public void before() {
@@ -255,7 +260,7 @@ public class WmsServerTest {
                 "</ServiceException>\n" +
                 "</ServiceExceptionReport>";
 
-        when(restTemplate.getForEntity(anyString(), eq(String.class), eq(Collections.emptyMap())))
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(r));
 
         String id = "id";
@@ -332,8 +337,10 @@ public class WmsServerTest {
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
 
-        when(restTemplate.getForEntity(
+        when(restTemplate.exchange(
                 anyString(),
+                eq(HttpMethod.GET),
+                eq(entity),
                 eq(String.class))
         ).thenReturn(ResponseEntity.ok(value));
 
@@ -391,8 +398,10 @@ public class WmsServerTest {
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
 
-        when(restTemplate.getForEntity(
+        when(restTemplate.exchange(
                 anyString(),
+                eq(HttpMethod.GET),
+                eq(entity),
                 eq(String.class))
         ).thenReturn(ResponseEntity.ok(value));
 
@@ -483,8 +492,10 @@ public class WmsServerTest {
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
 
-        when(restTemplate.getForEntity(
+        when(restTemplate.exchange(
                 anyString(),
+                eq(HttpMethod.GET),
+                eq(entity),
                 eq(String.class))
         ).thenReturn(ResponseEntity.ok(value));
 
@@ -575,8 +586,10 @@ public class WmsServerTest {
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
 
-        when(restTemplate.getForEntity(
+        when(restTemplate.exchange(
                 anyString(),
+                eq(HttpMethod.GET),
+                eq(entity),
                 eq(String.class))
         ).thenReturn(ResponseEntity.ok(value));
 

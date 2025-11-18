@@ -12,6 +12,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.features.RestApi;
 import au.org.aodn.ogcapi.server.features.RestServices;
@@ -19,9 +20,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
@@ -43,6 +47,7 @@ import static org.mockito.Mockito.when;
         RestServices.class,
         WfsServer.class,
         WfsDefaultParam.class,
+        WmsDefaultParam.class,
         DownloadableFieldsService.class,
         JacksonAutoConfiguration.class,
         CacheAutoConfiguration.class
@@ -63,6 +68,10 @@ public class DownloadableFieldsServiceTest {
 
     @Autowired
     private WfsServer wfsServer;
+
+    @Autowired
+    @Qualifier("pretendUserEntity")
+    private HttpEntity<?> entity;
 
     @MockitoBean
     private DasService dasService;
@@ -133,7 +142,7 @@ public class DownloadableFieldsServiceTest {
 
         String id = "id";
 
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
 
         when(search.searchCollections(eq(id)))
@@ -203,7 +212,7 @@ public class DownloadableFieldsServiceTest {
 
         String id = "id2";
 
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.NOT_FOUND));
 
         when(search.searchCollections(eq(id)))
@@ -244,7 +253,7 @@ public class DownloadableFieldsServiceTest {
         when(search.searchCollections(eq(id)))
                 .thenReturn(stac);
 
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
 
         DownloadableFieldsNotFoundException exception = assertThrows(
@@ -280,7 +289,7 @@ public class DownloadableFieldsServiceTest {
                 .thenReturn(stac);
 
         // Mock network error
-        when(restTemplate.getForEntity(any(String.class), eq(String.class)))
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenThrow(new RuntimeException("Connection timeout"));
 
         RuntimeException exception = assertThrows(
