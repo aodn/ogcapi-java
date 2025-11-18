@@ -170,10 +170,47 @@ public class WmsServer {
                 if (!pathSegments.isEmpty()) {
                     Map<String, String> param = new HashMap<>();
 
+                    // Detect if this is ncWMS or regular WMS
+                    // https://geoserver-123.aodn.org.au/geoserver/ncwms?LAYERS=srs_ghrsst_l3s_M_1d_ngt_url/sea_surface_temperature&TRANSPARENT=TRUE&VERSION=1.3.0&FORMAT=image/png&EXCEPTIONS=application/vnd.ogc.se_xml&TILED=true&SERVICE=ncwms&REQUEST=GetMap&STYLES=&QUERYABLE=true&CRS=EPSG:4326&NUMCOLORBANDS=253&TIME=2018-06-02T15:20:00.000Z&BBOX=-45,110,-20,145&WIDTH=256&HEIGHT=256
+                    boolean isNcwms = pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms");
+
                     if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("wms")) {
                         param.putAll(wmsDefaultParam.getWms());
-                    } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
+                    } else if (isNcwms) {
                         param.putAll(wmsDefaultParam.getNcwms());
+
+                        // ncWMS requires specific parameters not needed by regular WMS
+                        param.put("NUMCOLORBANDS", "253");
+
+                        // ncWMS uses TIME parameter instead of CQL_FILTER for temporal filtering
+                        // It requires exact timestamps, not date ranges
+                        String timeValue;
+
+                        if (request.getDatetime() != null) {
+                            String datetime = request.getDatetime();
+
+                            if (datetime.contains("/")) {
+                                // User selected a date range (e.g., "2015-01-01T00:00:00Z/2020-12-31T00:00:00Z")
+                                // ncWMS only accepts single timestamps, so we use the END date
+                                String[] parts = datetime.split("/");
+                                String endDate = parts[1];  // Take the end of the range
+                                String datePart = endDate.substring(0, 10);  // Extract YYYY-MM-DD
+                                // This layer uses 15:20:00.000Z as the standard time of day
+                                timeValue = datePart + "T15:20:00.000Z";
+                                log.debug("ncWMS: Converted date range {} to timestamp {}", datetime, timeValue);
+                            } else {
+                                // Single date provided
+                                String datePart = datetime.substring(0, 10);
+                                timeValue = datePart + "T15:20:00.000Z";
+                                log.debug("ncWMS: Using timestamp {}", timeValue);
+                            }
+                        } else {
+                            // No date selected - use the most recent available date as default
+                            timeValue = "2025-11-01T15:20:00.000Z";
+                            log.debug("ncWMS: No datetime provided, using default {}", timeValue);
+                        }
+
+                        param.put("TIME", timeValue);
                     }
 
                     // Now we add the missing argument from the request
