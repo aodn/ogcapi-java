@@ -21,6 +21,7 @@ public class EmailUtils {
 
     /**
      * Read a base64 encoded image from resources
+     *
      * @param filename - the filename in /img/ directory
      * @return base64 encoded image as data URL
      * @throws IOException if resource not found
@@ -93,6 +94,7 @@ public class EmailUtils {
 
     /**
      * Generate HTML content for bounding box data only (without wrapper)
+     *
      * @param multipolygon - the multipolygon object
      * @param objectMapper - Jackson ObjectMapper for JSON processing
      * @return HTML string for bbox data rows
@@ -293,95 +295,183 @@ public class EmailUtils {
      * Build the subsetting section header
      */
     private static String buildSubsettingHeader() {
-        return "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"1280px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:1264px;\" width=\"1264\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->" +
-                "<div class=\"r e y\" style=\"background:#ffffff;background-color:#ffffff;margin:0px auto;max-width:1264px;\">" +
-                "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"background:#ffffff;background-color:#ffffff;width:100%;\">" +
-                "<tbody><tr><td style=\"border:none;direction:ltr;font-size:0;padding:4px 24px 4px 22px;text-align:center;\">" +
-                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:middle;width:592px;\"><![endif]-->" +
-                "<div class=\"m h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;\">" +
+        return "<!--[if mso | IE]><tr><td width=\"600px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:568px;\" width=\"568\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->" +
+                "<div class=\"r e y\" style=\"background:#fffffe;background-color:#fffffe;margin:0px auto;max-width:568px;\">" +
+                "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"background:#fffffe;background-color:#fffffe;width:100%;\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td style=\"border:none;direction:ltr;font-size:0;padding:16px 20px 4px 20px;text-align:center;\">" +
+                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:middle;width:528px;\"><![endif]-->" +
+                "<div class=\"l h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;\">" +
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"border:none;vertical-align:middle;\" width=\"100%\">" +
-                "<tbody><tr><td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
                 "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
-                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 16px; font-weight: 400; line-height: 150%; text-align: left; color: #090c02\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:24px;font-size:16px;line-height:150%;\">Subsetting for this collection:</p>" +
-                "</div></td></tr></table></td></tr></table></td></tr></tbody></table></div>" +
-                "<!--[if mso | IE]></td></tr></table><![endif]--></td></tr></tbody></table></div>" +
-                "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"1280px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:1264px;\" width=\"1264\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->" +
-                "<div style=\"margin:0px auto;max-width:1264px;\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:100%;\">" +
-                "<tbody><tr><td style=\"direction:ltr;font-size:0;padding:0;text-align:center;\">" +
-                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:top;width:1264px;\"><![endif]-->" +
-                "<div class=\"o h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr><td style=\"vertical-align:top;padding:0;\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr>" +
-                "<td style=\"font-size:0;padding:0;word-break:break-word;\" aria-hidden=\"true\"><div style=\"height:0;line-height:0;\">&#8202;</div></td>" +
-                "</tr></tbody></table></td></tr></tbody></table></div>" +
-                "<!--[if mso | IE]></td></tr></table><![endif]--></td></tr></tbody></table></div>";
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
+                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 17px; font-weight: 500; line-height: 141%; text-align: left; color: #090c02\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:24px;font-size:17px;line-height:141%;\">Subsetting for this collection</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table><![endif]-->" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"600px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:568px;\" width=\"568\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->";
     }
 
     /**
      * Build bbox wrapper with table structure
      */
     private static String buildBboxWrapper(String bboxContent) {
-        return "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"1280px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:1264px;\" width=\"1264\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->" +
-                "<div class=\"r e y\" style=\"background:#ffffff;background-color:#ffffff;margin:0px auto;max-width:1264px;\">" +
-                "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"background:#ffffff;background-color:#ffffff;width:100%;\">" +
-                "<tbody><tr><td style=\"border:none;direction:ltr;font-size:0;padding:10px 20px 10px 20px;text-align:center;\">" +
-                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:middle;width:600px;\"><![endif]-->" +
-                "<div class=\"c h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;\">" +
+        return "<div class=\"r e y\" style=\"background:#fffffe;background-color:#fffffe;margin:0px auto;max-width:568px;\">" +
+                "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"background:#fffffe;background-color:#fffffe;width:100%;\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td style=\"border:none;direction:ltr;font-size:0;padding:10px 20px 10px 20px;text-align:center;\">" +
+                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:middle;width:528px;\"><![endif]-->" +
+                "<div class=\"l h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;\">" +
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"border:none;vertical-align:middle;\" width=\"100%\">" +
-                "<tbody>" + bboxContent + "</tbody></table></div>" +
-                "<!--[if mso | IE]></td></tr></table><![endif]--></td></tr></tbody></table></div>";
+                "<tbody>" + bboxContent + "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table><![endif]-->" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"600px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:568px;\" width=\"568\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->";
     }
 
     /**
      * Build spacer section between bbox and time range
      */
     private static String buildSpacerSection() {
-        return "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"1280px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:1264px;\" width=\"1264\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->" +
-                "<div style=\"margin:0px auto;max-width:1264px;\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:100%;\">" +
-                "<tbody><tr><td style=\"direction:ltr;font-size:0;padding:0;text-align:center;\">" +
-                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:top;width:1264px;\"><![endif]-->" +
+        return "<div style=\"margin:0px auto;max-width:568px;\">" +
+                "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:100%;\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td style=\"direction:ltr;font-size:0;padding:0;text-align:center;\">" +
+                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:top;width:568px;\"><![endif]-->" +
                 "<div class=\"o h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr><td style=\"vertical-align:top;padding:0;\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\"><tbody><tr>" +
-                "<td style=\"font-size:0;padding:0;word-break:break-word;\" aria-hidden=\"true\"><div style=\"height:0;line-height:0;\">&#8202;</div></td>" +
-                "</tr></tbody></table></td></tr></tbody></table></div>" +
-                "<!--[if mso | IE]></td></tr></table><![endif]--></td></tr></tbody></table></div>";
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td style=\"vertical-align:top;padding:0;\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" width=\"100%\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;word-break:break-word;\" aria-hidden=\"true\">" +
+                "<div style=\"height:0;line-height:0;\">&#8202;</div>" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table><![endif]-->" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"600px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:568px;\" width=\"568\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->";
     }
 
     /**
      * Build time range wrapper with content
      */
     private static String buildTimeRangeWrapper(String startDate, String endDate) {
-        return "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"1280px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:1264px;\" width=\"1264\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->" +
-                "<div class=\"r e y\" style=\"background:#ffffff;background-color:#ffffff;margin:0px auto;max-width:1264px;\">" +
-                "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"background:#ffffff;background-color:#ffffff;width:100%;\">" +
-                "<tbody><tr><td style=\"border:none;direction:ltr;font-size:0;padding:10px 20px 10px 20px;text-align:center;\">" +
-                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:middle;width:600px;\"><![endif]-->" +
-                "<div class=\"c h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;\">" +
+        return "<div class=\"r e y\" style=\"background:#fffffe;background-color:#fffffe;margin:0px auto;max-width:568px;\">" +
+                "<table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"background:#fffffe;background-color:#fffffe;width:100%;\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td style=\"border:none;direction:ltr;font-size:0;padding:10px 20px 10px 20px;text-align:center;\">" +
+                "<!--[if mso | IE]><table role=\"presentation\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\"><tr><td style=\"vertical-align:middle;width:528px;\"><![endif]-->" +
+                "<div class=\"l h\" style=\"font-size:0;text-align:left;direction:ltr;display:inline-block;vertical-align:middle;width:100%;\">" +
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"border:none;vertical-align:middle;\" width=\"100%\">" +
-                "<tbody><tr><td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
+                "<tbody>" +
+                "<tr>" +
+                "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
                 "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"32\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
-                "<img alt width=\"32\" style=\"display:block;width:32px;height:32px;\" src=\"{{TIME_RANGE_IMG}}\"></td></tr></table></td>" +
-                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\">&#8203;</td>" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"32\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\"> <img alt width=\"32\" style=\"display:block;width:32px;height:32px;\" src=\"{{TIME_RANGE_IMG}}\"></td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\"></td>" +
                 "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 500; line-height: 157%; text-align: left; color: #090c02\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">Time Range</p></div></td></tr></table></td></tr>" +
-                "</table></td></tr>" +
-                "<tr><td style=\"font-size:0;padding:0;word-break:break-word;\"><div style=\"height:8px;line-height:8px;\">&#8202;</div></td></tr>" +
-                "<tr><td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0px 48px 0px 48px;word-break:break-word;\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">Time Range</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;word-break:break-word;\">" +
+                "<div style=\"height:8px;line-height:8px;\">&#8202;</div>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0px 48px 0px 48px;word-break:break-word;\">" +
                 "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"500\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 500; line-height: 157%; text-align: left; color: #090c02\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">"+startDate+" - "+endDate+"</p></div></td></tr></table></td></tr>" +
-                "</table></td></tr></tbody></table></div>" +
-                "<!--[if mso | IE]></td></tr></table><![endif]--></td></tr></tbody></table></div>";
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">" + startDate + " - " + endDate + "</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table><![endif]-->" +
+                "</td>" +
+                "</tr>" +
+                "</tbody>" +
+                "</table>" +
+                "</div>" +
+                "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"600px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:568px;\" width=\"568\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->";
     }
 
     protected static String buildBboxSection(String north, String south, String west, String east, int index) {
@@ -390,41 +480,107 @@ public class EmailUtils {
         return "<tr>" +
                 "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
                 "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"32\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
-                "<img alt width=\"32\" style=\"display:block;width:32px;height:32px;\" src=\"{{BBOX_IMG}}\"></td></tr></table></td>" +
-                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\">&#8203;</td>" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"32\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\"> <img alt width=\"32\" style=\"display:block;width:32px;height:32px;\" src=\"{{BBOX_IMG}}\"></td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\"></td>" +
                 "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 500; line-height: 157%; text-align: left; color: #090c02\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">" + title + "</p></div></td></tr></table></td></tr>" +
-                "</table></td></tr>" +
-                "<tr><td style=\"font-size:0;padding:0;word-break:break-word;\"><div style=\"height:8px;line-height:8px;\">&#8202;</div></td></tr>" +
-                "<tr><td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0px 48px 0px 48px;word-break:break-word;\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">" + title + "</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;word-break:break-word;\">" +
+                "<div style=\"height:8px;line-height:8px;\">&#8202;</div>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0px 48px 0px 48px;word-break:break-word;\">" +
                 "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"500\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">N: " + north + "</p></div></td></tr></table></td></tr>" +
-                "<tr><td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
-                "<div style=\"height:8px;line-height:8px;\">&#8203;</div></td></tr>" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"500\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">N: " + north + " </p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
+                "<div style=\"height:8px;line-height:8px;\">&#8203;</div>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">S: " + south + "</p></div></td></tr></table></td></tr>" +
-                "<tr><td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
-                "<div style=\"height:8px;line-height:8px;\">&#8203;</div></td></tr>" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"500\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">S: " + south + "</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
+                "<div style=\"height:8px;line-height:8px;\">&#8203;</div>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">W: " + west + "</p></div></td></tr></table></td></tr>" +
-                "<tr><td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
-                "<div style=\"height:8px;line-height:8px;\">&#8203;</div></td></tr>" +
-                "<tr><td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"500\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr><td align=\"left\" width=\"100%\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">W: " + west + "</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
+                "<div style=\"height:8px;line-height:8px;\">&#8203;</div>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">E: " + east + "</p></div></td></tr></table></td></tr>" +
-                "</table></td></tr>" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">E: " + east + "</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
                 "</tr>";
     }
 }
