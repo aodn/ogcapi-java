@@ -422,7 +422,7 @@ public class EmailUtils {
                 "</tr>" +
                 "</table>" +
                 "</td>" +
-                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\">&#8203;</td>" +
+                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\"></td>" +
                 "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
                 "<tr>" +
@@ -488,7 +488,7 @@ public class EmailUtils {
                 "</tr>" +
                 "</table>" +
                 "</td>" +
-                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\">&#8203;</td>" +
+                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\"></td>" +
                 "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
                 "<tr>" +
