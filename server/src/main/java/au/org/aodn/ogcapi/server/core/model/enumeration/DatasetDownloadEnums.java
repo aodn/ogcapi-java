@@ -42,7 +42,7 @@ public class DatasetDownloadEnums {
 
     @Getter
     public enum JobDefinition {
-        GENERATE_CSV_DATA_FILE("generate-csv-data-file-dev");
+        GENERATE_CSV_DATA_FILE("generate-csv-data-file");
 
         private final String value;
 
