@@ -193,7 +193,7 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Subsetting for this collection"));
         assertTrue(result.contains("Bounding Box"));
         assertTrue(result.contains("Time Range"));
     }
@@ -208,7 +208,7 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Subsetting for this collection"));
         assertTrue(result.contains("Time Range"));
         assertFalse(result.contains("Bounding Box"));
     }
@@ -238,7 +238,7 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Subsetting for this collection:"));
+        assertTrue(result.contains("Subsetting for this collection"));
         assertTrue(result.contains("Bounding Box"));
         assertFalse(result.contains("Time Range"));
     }

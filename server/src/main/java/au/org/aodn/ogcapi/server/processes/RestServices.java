@@ -157,20 +157,17 @@ public class RestServices {
 
             // Replace all variables in one chain
             return template
-                    .replace("{{uuid}}", uuid)
-                    .replace("{{collectionTitle}}", collectionTitle != null ? collectionTitle : "")
-                    .replace("{{fullMetadataLink}}", fullMetadataLink != null ? fullMetadataLink : "")
-                    .replace("{{suggestedCitation}}", suggestedCitation != null ? suggestedCitation : "")
-                    .replace("{{subsettingSection}}", subsettingSection)
                     .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
-                    .replace("{{DOWNLOAD_ICON}}", EmailUtils.readBase64Image("download.txt"))
+                    .replace("{{collectionTitle}}", collectionTitle != null ? collectionTitle : "")
+                    .replace("{{subsettingSection}}", subsettingSection)
                     .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))
                     .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
                     .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
-                    .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
+                    .replace("{{fullMetadataLink}}", fullMetadataLink != null ? fullMetadataLink : "")
+                    .replace("{{suggestedCitation}}", suggestedCitation != null ? suggestedCitation : "")
                     .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
+                    .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
                     .replace("{{BLUESKY_IMG}}", EmailUtils.readBase64Image("bluesky.txt"))
-                    .replace("{{CONTACT_IMG}}", EmailUtils.readBase64Image("email.txt"))
                     .replace("{{LINKEDIN_IMG}}", EmailUtils.readBase64Image("linkedin.txt"));
 
         } catch (IOException e) {
