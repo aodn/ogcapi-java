@@ -108,7 +108,7 @@ public class RestServices extends OGCApiService {
      *
      * @param collectionId - The uuid of dataset
      * @param request      - Request to get field given a WMS layer name
-     * @return - The downloadable field name
+     * @return - The downloadable field name, or UNAUTHORIZED if it is not in white list
      */
     public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
 
@@ -119,7 +119,7 @@ public class RestServices extends OGCApiService {
 
         // Temp block and show only white list uuid, the other uuid need QA check before release.
         if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         else {
             List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
