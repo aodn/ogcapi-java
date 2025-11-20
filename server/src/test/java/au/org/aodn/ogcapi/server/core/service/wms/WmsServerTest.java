@@ -28,13 +28,13 @@ import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -596,5 +596,246 @@ public class WmsServerTest {
         String result = wmsServer.createCQLFilter(uuid, request);
 
         assertEquals("CQL_FILTER=start_juld >= 2023-01-01 AND end_juld <= 2023-12-31 AND set_code=1234", result);
+    }
+
+    @Test
+    public void verifyNcwmsValidDateRange() {
+        // Mock the search service
+        ElasticSearchBase.SearchResult<StacCollectionModel> emptyResult = new ElasticSearchBase.SearchResult<>();
+        emptyResult.setCollections(new ArrayList<>());
+        when(search.searchCollections(anyString())).thenReturn(emptyResult);
+
+        FeatureRequest featureRequest = FeatureRequest
+                .builder()
+                .layerName("srs_ghrsst_l3s_M_1d_ngt_url/sea_surface_temperature")
+                .datetime("2020-01-01T00:00:00Z/2020-12-31T23:59:59Z")
+                .bbox(List.of(
+                        BigDecimal.valueOf(-45.0),
+                        BigDecimal.valueOf(110.0),
+                        BigDecimal.valueOf(-20.0),
+                        BigDecimal.valueOf(145.0)))
+                .build();
+
+        List<String> urls = wmsServer.createMapQueryUrl(
+                "https://geoserver-123.aodn.org.au/geoserver/ncwms",
+                "d3e3bce3-adb4-433a-a192-93abc91899d3",
+                featureRequest
+        );
+
+        // 1. Test URL format result
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+
+        // 2. Validate date and time - should use end date with standard time
+        assertEquals("2020-12-31T15:20:00.000Z", result.getQueryParams().getFirst("TIME"));
+        assertEquals("253", result.getQueryParams().getFirst("NUMCOLORBANDS"));
+    }
+
+    @Test
+    public void verifyNcwmsSingleDate() {
+        // Mock the search service
+        ElasticSearchBase.SearchResult<StacCollectionModel> emptyResult = new ElasticSearchBase.SearchResult<>();
+        emptyResult.setCollections(new ArrayList<>());
+        when(search.searchCollections(anyString())).thenReturn(emptyResult);
+
+        FeatureRequest featureRequest = FeatureRequest
+                .builder()
+                .layerName("srs_ghrsst_l3s_M_1d_ngt_url/sea_surface_temperature")
+                .datetime("2020-06-15T00:00:00Z")
+                .bbox(List.of(
+                        BigDecimal.valueOf(-45.0),
+                        BigDecimal.valueOf(110.0),
+                        BigDecimal.valueOf(-20.0),
+                        BigDecimal.valueOf(145.0)))
+                .build();
+
+        List<String> urls = wmsServer.createMapQueryUrl(
+                "https://geoserver-123.aodn.org.au/geoserver/ncwms",
+                "d3e3bce3-adb4-433a-a192-93abc91899d3",
+                featureRequest
+        );
+
+        // 1. Test URL format result
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+
+        // 2. Validate date and time - should add standard time to single date
+        assertEquals("2020-06-15T15:20:00.000Z", result.getQueryParams().getFirst("TIME"));
+    }
+
+    @Test
+    public void verifyNcwmsFutureDateCorrection() {
+        // Mock the search service
+        ElasticSearchBase.SearchResult<StacCollectionModel> emptyResult = new ElasticSearchBase.SearchResult<>();
+        emptyResult.setCollections(new ArrayList<>());
+        when(search.searchCollections(anyString())).thenReturn(emptyResult);
+
+        LocalDate futureDate = LocalDate.now().plusDays(10);
+        String futureDateStr = futureDate.toString() + "T00:00:00Z";
+
+        FeatureRequest featureRequest = FeatureRequest
+                .builder()
+                .layerName("srs_ghrsst_l3s_M_1d_ngt_url/sea_surface_temperature")
+                .datetime("2020-01-01T00:00:00Z/" + futureDateStr)
+                .bbox(List.of(
+                        BigDecimal.valueOf(-45.0),
+                        BigDecimal.valueOf(110.0),
+                        BigDecimal.valueOf(-20.0),
+                        BigDecimal.valueOf(145.0)))
+                .build();
+
+        List<String> urls = wmsServer.createMapQueryUrl(
+                "https://geoserver-123.aodn.org.au/geoserver/ncwms",
+                "d3e3bce3-adb4-433a-a192-93abc91899d3",
+                featureRequest
+        );
+
+        // 1. Test URL format result
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+
+        // 2. Validate date and time - should correct future date to safe default (today - 3 days)
+        LocalDate expectedDate = LocalDate.now().minusDays(3);
+        String expectedTime = expectedDate.toString() + "T15:20:00.000Z";
+        assertEquals(expectedTime, result.getQueryParams().getFirst("TIME"));
+    }
+
+    @Test
+    public void verifyNcwmsOldDateCorrection() {
+        // Mock the search service
+        ElasticSearchBase.SearchResult<StacCollectionModel> emptyResult = new ElasticSearchBase.SearchResult<>();
+        emptyResult.setCollections(new ArrayList<>());
+        when(search.searchCollections(anyString())).thenReturn(emptyResult);
+
+        FeatureRequest featureRequest = FeatureRequest
+                .builder()
+                .layerName("srs_ghrsst_l3s_M_1d_ngt_url/sea_surface_temperature")
+                .datetime("2010-01-01T00:00:00Z/2010-12-31T23:59:59Z")
+                .bbox(List.of(
+                        BigDecimal.valueOf(-45.0),
+                        BigDecimal.valueOf(110.0),
+                        BigDecimal.valueOf(-20.0),
+                        BigDecimal.valueOf(145.0)))
+                .build();
+
+        List<String> urls = wmsServer.createMapQueryUrl(
+                "https://geoserver-123.aodn.org.au/geoserver/ncwms",
+                "d3e3bce3-adb4-433a-a192-93abc91899d3",
+                featureRequest
+        );
+
+        // 1. Test URL format result
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+
+        // 2. Validate date and time - should correct old date to minimum date (2012-01-01)
+        assertEquals("2012-01-01T15:20:00.000Z", result.getQueryParams().getFirst("TIME"));
+    }
+
+    @Test
+    public void verifyNcwmsNoDatetime() {
+        // Mock the search service
+        ElasticSearchBase.SearchResult<StacCollectionModel> emptyResult = new ElasticSearchBase.SearchResult<>();
+        emptyResult.setCollections(new ArrayList<>());
+        when(search.searchCollections(anyString())).thenReturn(emptyResult);
+
+        FeatureRequest featureRequest = FeatureRequest
+                .builder()
+                .layerName("srs_ghrsst_l3s_M_1d_ngt_url/sea_surface_temperature")
+                .bbox(List.of(
+                        BigDecimal.valueOf(-45.0),
+                        BigDecimal.valueOf(110.0),
+                        BigDecimal.valueOf(-20.0),
+                        BigDecimal.valueOf(145.0)))
+                .build();
+
+        List<String> urls = wmsServer.createMapQueryUrl(
+                "https://geoserver-123.aodn.org.au/geoserver/ncwms",
+                "d3e3bce3-adb4-433a-a192-93abc91899d3",
+                featureRequest
+        );
+
+        // 1. Test URL format result
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+
+        // 2. Validate date and time - should use safe default (today - 3 days)
+        LocalDate expectedDate = LocalDate.now().minusDays(3);
+        String expectedTime = expectedDate.toString() + "T15:20:00.000Z";
+        assertEquals(expectedTime, result.getQueryParams().getFirst("TIME"));
+    }
+
+    @Test
+    public void verifyNcwmsEmptyDatetime() {
+        // Mock the search service
+        ElasticSearchBase.SearchResult<StacCollectionModel> emptyResult = new ElasticSearchBase.SearchResult<>();
+        emptyResult.setCollections(new ArrayList<>());
+        when(search.searchCollections(anyString())).thenReturn(emptyResult);
+
+        FeatureRequest featureRequest = FeatureRequest
+                .builder()
+                .layerName("srs_ghrsst_l3s_M_1d_ngt_url/sea_surface_temperature")
+                .datetime("")
+                .bbox(List.of(
+                        BigDecimal.valueOf(-45.0),
+                        BigDecimal.valueOf(110.0),
+                        BigDecimal.valueOf(-20.0),
+                        BigDecimal.valueOf(145.0)))
+                .build();
+
+        List<String> urls = wmsServer.createMapQueryUrl(
+                "https://geoserver-123.aodn.org.au/geoserver/ncwms",
+                "d3e3bce3-adb4-433a-a192-93abc91899d3",
+                featureRequest
+        );
+
+        // 1. Test URL format result
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+
+        // 2. Validate date and time - should use safe default (today - 3 days)
+        LocalDate expectedDate = LocalDate.now().minusDays(3);
+        String expectedTime = expectedDate.toString() + "T15:20:00.000Z";
+        assertEquals(expectedTime, result.getQueryParams().getFirst("TIME"));
+    }
+
+    @Test
+    public void verifyRegularWmsNoTimeParameter() {
+        // Mock the search service
+        ElasticSearchBase.SearchResult<StacCollectionModel> emptyResult = new ElasticSearchBase.SearchResult<>();
+        emptyResult.setCollections(new ArrayList<>());
+        when(search.searchCollections(anyString())).thenReturn(emptyResult);
+
+        FeatureRequest featureRequest = FeatureRequest
+                .builder()
+                .layerName("imos:argo_profile_map")
+                .datetime("2020-01-01T00:00:00Z/2020-12-31T23:59:59Z")
+                .bbox(List.of(
+                        BigDecimal.valueOf(-111.86719179153421),
+                        BigDecimal.valueOf(-69.03714171275249),
+                        BigDecimal.valueOf(111.8671917915342),
+                        BigDecimal.valueOf(69.03714171275138)))
+                .build();
+
+        List<String> urls = wmsServer.createMapQueryUrl(
+                "http://geoserver-123.aodn.org.au/geoserver/wms",
+                "uuid1",
+                featureRequest
+        );
+
+        // 1. Test URL format result
+        assertNotNull(urls);
+        assertEquals(2, urls.size());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(1)).build();
+
+        // 2. Validate date and time - regular WMS should NOT have TIME parameter
+        assertNull(result.getQueryParams().getFirst("TIME"));
+        assertNull(result.getQueryParams().getFirst("NUMCOLORBANDS"));
     }
 }
