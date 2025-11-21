@@ -38,7 +38,8 @@ public class CacheNoLandGeometry {
                 null,
                 null,
                 null,
-                null);
+                null,
+                false);
 
         return result.collections
                 .stream()

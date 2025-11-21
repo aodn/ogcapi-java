@@ -211,7 +211,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 null,
                 createSortOptions(sortBy, CQLFields.class),
                 null,
-                null);
+                null,
+                false);
     }
 
     @Override
@@ -240,6 +241,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
+    /***
+     * This function is used for searching by user input query. In such case, the sorting is from two impactors: the relavance score (powered by Elasticsearch) in the `._score` field,
+     * and the importance score (powered by IMOS internal ranking, which has a maximum value of 106).
+     * The final score is relavance_score * (importance_score / max(importance_score))
+     */
     @Override
     public ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
@@ -333,6 +339,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         .toList();
             }
 
+            boolean useScriptScore = false;
+            if (sortBy != null && !sortBy.isEmpty()) {
+                // only use script_score if sortby contains "score" and should field is not empty
+                if (sortBy.toLowerCase().contains("score") && should != null && !should.isEmpty()) {
+                    useScriptScore = true;
+                }
+            }
+
             return searchCollectionBy(
                     null,
                     should,
@@ -341,7 +355,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     searchAfter,
                     createSortOptions(sortBy, CQLFields.class),
                     score,
-                    maxSize
+                    maxSize,
+                    useScriptScore
             );
         }
     }
