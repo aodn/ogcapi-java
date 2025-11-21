@@ -9,6 +9,8 @@ import org.geotools.geojson.geom.GeometryJSON;
 import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.geotools.geometry.jts.ReferencedEnvelope;
 import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
+import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
 import org.locationtech.jts.io.WKTWriter;
@@ -29,6 +31,7 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.STRING_TO_GEOMETRY;
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.STRING_TO_PREPARE_GEOMETRY;
 
 public class GeometryUtils {
 
@@ -211,7 +214,26 @@ public class GeometryUtils {
             return r;
         }
     }
-
+    /**
+     * Many code require static access to this function, hence we will init it somewhere as bean and then
+     * set it to the static instance for sharing
+     *
+     * @param input - A geometry text input
+     * @return - The converted geometry
+     */
+    public static Optional<PreparedGeometry> readPreparedGeometry(Object input) {
+        return self.readCachedPreparedGeometry(input);
+    }
+    /**
+     * Please use this function as it contains the parser with enough decimal to make it work.
+     *
+     * @param input - A Json of GeoJson
+     * @return - A prepared geometry for fast intersect calculation
+     */
+    @Cacheable(STRING_TO_PREPARE_GEOMETRY)
+    public Optional<PreparedGeometry> readCachedPreparedGeometry(Object input) {
+        return self.readCachedGeometry(input).map(PreparedGeometryFactory::prepare);
+    }
     /**
      * Many code require static access to this function, hence we will init it somewhere as bean and then
      * set it to the static instance for sharing
@@ -222,7 +244,6 @@ public class GeometryUtils {
     public static Optional<Geometry> readGeometry(Object input) {
         return self.readCachedGeometry(input);
     }
-
     /**
      * Please use this function as it contains the parser with enough decimal to make it work.
      *
@@ -244,7 +265,6 @@ public class GeometryUtils {
         }
         return Optional.empty();
     }
-
     /**
      * Normalize a polygon by adjusting longitudes to the range [-180, 180], and return both parts as a GeometryCollection.
      *

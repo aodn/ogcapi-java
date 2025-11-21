@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.server.core.model.CitationModel;
-import au.org.aodn.ogcapi.server.core.model.AssetModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.ExtendedLink;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
@@ -15,6 +14,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.opengis.filter.Filter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,11 +156,11 @@ public interface Converter<F, T> {
             Map<?, ?> noLand = m.getSummaries().getGeometryNoLand();
             if (noLand != null) {
                 // Geometry from elastic search always store in EPSG4326
-                GeometryUtils.readGeometry(noLand)
+                GeometryUtils.readPreparedGeometry(noLand)
                         .ifPresent(input -> {
                             // filter have values if user CQL contains BBox, hence our centroid point needs to be
                             // the noland geometry intersect with BBox and centroid point will be within the BBox
-                            Geometry g = filter != null ? (Geometry) filter.accept(visitor, input) : input;
+                            Geometry g = filter != null ? ((PreparedGeometry) filter.accept(visitor, input)).getGeometry() : input.getGeometry();
                             collection.getProperties().put(
                                     CollectionProperty.centroid,
                                     createCentroid(g)
