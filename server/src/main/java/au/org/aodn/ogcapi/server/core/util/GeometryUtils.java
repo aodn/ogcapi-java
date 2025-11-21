@@ -238,7 +238,7 @@ public class GeometryUtils {
             } else {
                 j = (String) input;
             }
-            return Optional.of(json.read(j));
+            return Optional.of(GeometryUtils.normalizePolygon(json.read(j)));
         } catch (IOException e) {
             // Do nothing
         }
