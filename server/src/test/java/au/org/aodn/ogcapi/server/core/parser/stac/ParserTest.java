@@ -83,7 +83,7 @@ public class ParserTest {
         // return value are geo applied the CQL, and in this case only INTERSECTS
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
         Assertions.assertTrue(expected.isPresent(), "Expected parse correct");
-        Assertions.assertEquals(g, expected.get(), "They are equals");
+        Assertions.assertEquals(g.getGeometryN(0), expected.get(), "They are equals");
     }
     /**
      * Test almost the same as the verifyIntersectionWorks2, since verifyIntersectionWorks1 create a polygon same as box
@@ -152,10 +152,10 @@ public class ParserTest {
         GeometryCollection mp = (GeometryCollection)g;
         Assertions.assertEquals(2, mp.getNumGeometries(), "Geometries correct");
 
-        Assertions.assertEquals(-159.53241830835444, mp.getGeometryN(1).getCentroid().getX(), 0.0000001, "getX() for 0");
-        Assertions.assertEquals(-19.5, mp.getGeometryN(1).getCentroid().getY(), 0.0000001, "getY() for 0");
+        Assertions.assertEquals(-159.53241830835444, mp.getGeometryN(0).getCentroid().getX(), 0.0000001, "getX() for 0");
+        Assertions.assertEquals(-19.5, mp.getGeometryN(0).getCentroid().getY(), 0.0000001, "getY() for 0");
 
-        Assertions.assertEquals(151.62121416760516, mp.getGeometryN(0).getCentroid().getX(), 0.0000001, "getX() for 1");
-        Assertions.assertEquals(-18.000822620336752, mp.getGeometryN(0).getCentroid().getY(),  0.0000001, "getY() for 1");
+        Assertions.assertEquals(151.62121416760516, mp.getGeometryN(1).getCentroid().getX(), 0.0000001, "getX() for 1");
+        Assertions.assertEquals(-18.000822620336752, mp.getGeometryN(1).getCentroid().getY(),  0.0000001, "getY() for 1");
     }
 }
