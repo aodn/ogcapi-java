@@ -160,7 +160,19 @@ public interface Converter<F, T> {
                         .ifPresent(input -> {
                             // filter have values if user CQL contains BBox, hence our centroid point needs to be
                             // the noland geometry intersect with BBox and centroid point will be within the BBox
-                            Geometry g = filter != null ? ((PreparedGeometry) filter.accept(visitor, input)).getGeometry() : input.getGeometry();
+                            Geometry g;
+                            if(filter != null) {
+                                Object geo = filter.accept(visitor, input);
+                                if (geo instanceof PreparedGeometry) {
+                                    g = ((PreparedGeometry) geo).getGeometry();
+                                }
+                                else {
+                                    g = (Geometry) geo;
+                                }
+                            }
+                            else {
+                                g = input.getGeometry();
+                            }
                             collection.getProperties().put(
                                     CollectionProperty.centroid,
                                     createCentroid(g)
