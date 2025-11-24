@@ -211,8 +211,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 null,
                 createSortOptions(sortBy, CQLFields.class),
                 null,
-                null,
-                false);
+                null);
     }
 
     @Override
@@ -339,14 +338,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         .toList();
             }
 
-            boolean useScriptScore = false;
-            if (sortBy != null && !sortBy.isEmpty()) {
-                // only use script_score if sortby contains "score" and should field is not empty
-                if (sortBy.toLowerCase().contains("score") && should != null && !should.isEmpty()) {
-                    useScriptScore = true;
-                }
-            }
-
             return searchCollectionBy(
                     null,
                     should,
@@ -355,8 +346,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     searchAfter,
                     createSortOptions(sortBy, CQLFields.class),
                     score,
-                    maxSize,
-                    useScriptScore
+                    maxSize
             );
         }
     }

@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
+import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.aggregations.*;
@@ -156,8 +157,7 @@ public abstract class ElasticSearchBase {
                                                            final List<FieldValue> searchAfter,
                                                            final List<SortOptions> sortOptions,
                                                            final Double score,
-                                                           final Long maxSize,
-                                                           final boolean useScriptScore) {
+                                                           final Long maxSize) {
         Supplier<SearchRequest.Builder> builderSupplier = () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(indexName)
@@ -169,7 +169,17 @@ public abstract class ElasticSearchBase {
 
             // use script score if search with text, in such case, the final score depends on both relevance and metadata quality
             // put query in script block
+            // determine to use script score block or not
+            boolean useScriptScore = false;
+            if (sortOptions != null && !sortOptions.isEmpty()) {
+                // only use script_score if sortby contains "score" and should field is not empty
+                if (should != null && !should.isEmpty()) {
+                    useScriptScore = true;
+                }
+            }
+
             if (useScriptScore) {
+                String summaryScore = StacSummeries.Score.searchField;
                 builder.query(q -> q.scriptScore(ss -> ss
                         // to get the original _score from ELasticsearch
                         .query(bq -> bq.bool(createBoolQueryForProperties(queries, should, filters)))
@@ -178,8 +188,8 @@ public abstract class ElasticSearchBase {
                                 .source(
                                         // Step 1: Retrieve internal quality score from summaries.score field
                                         // Default to 0 if field doesn't exist or is empty
-                                        "double internalScore = doc.containsKey('summaries.score') && " +
-                                                "!doc['summaries.score'].empty ? doc['summaries.score'].value : 0.0; " +
+                                        "double internalScore = doc.containsKey('"+summaryScore+"') && " +
+                                                "!doc['"+summaryScore+"'].empty ? doc['"+summaryScore+"'].value : 0.0; " +
 
                                                 // Step 2: Normalize internal score to 0-1 range
                                                 // Assuming summaries.score is in range 0-106
