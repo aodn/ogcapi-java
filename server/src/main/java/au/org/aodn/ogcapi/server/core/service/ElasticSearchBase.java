@@ -170,13 +170,8 @@ public abstract class ElasticSearchBase {
             // use script score if search with text, in such case, the final score depends on both relevance and metadata quality
             // put query in script block
             // determine to use script score block or not
-            boolean useScriptScore = false;
-            if (sortOptions != null && !sortOptions.isEmpty()) {
-                // only use script_score if sortby contains "score" and should field is not empty
-                if (should != null && !should.isEmpty()) {
-                    useScriptScore = true;
-                }
-            }
+            // only use script_score if sortby contains "score" and should field is not empty
+            boolean useScriptScore = (sortOptions != null && !sortOptions.isEmpty()) && (should != null && !should.isEmpty());
 
             if (useScriptScore) {
                 String summaryScore = StacSummeries.Score.searchField;

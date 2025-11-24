@@ -240,11 +240,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
-    /***
-     * This function is used for searching by user input query. In such case, the sorting is from two impactors: the relavance score (powered by Elasticsearch) in the `._score` field,
-     * and the importance score (powered by IMOS internal ranking, which has a maximum value of 106).
-     * The final score is relavance_score * (importance_score / max(importance_score))
-     */
     @Override
     public ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
