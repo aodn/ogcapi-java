@@ -17,8 +17,8 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Geometry;
-import org.locationtech.jts.geom.MultiPolygon;
-import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.GeometryCollection;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.filter.Filter;
 import org.opengis.referencing.FactoryException;
@@ -74,7 +74,7 @@ public class ParserTest {
         StacCollectionModel model = mapper.readValue(json, StacCollectionModel.class);
 
         Filter filter = CompilerUtil.parseFilter(Language.CQL, param.getFilter(), factory);
-        Optional<Geometry> geo = GeometryUtils.readGeometry(model.getSummaries().getGeometryNoLand());
+        Optional<PreparedGeometry> geo = GeometryUtils.readPreparedGeometry(model.getSummaries().getGeometryNoLand());
 
         Assertions.assertTrue(geo.isPresent(), "Parse no land correct");
         GeometryVisitor visitor = GeometryVisitor.builder()
@@ -83,7 +83,7 @@ public class ParserTest {
         // return value are geo applied the CQL, and in this case only INTERSECTS
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
         Assertions.assertTrue(expected.isPresent(), "Expected parse correct");
-        Assertions.assertEquals(g, expected.get(), "They are equals");
+        Assertions.assertEquals(g.getGeometryN(0), expected.get(), "They are equals");
     }
     /**
      * Test almost the same as the verifyIntersectionWorks2, since verifyIntersectionWorks1 create a polygon same as box
@@ -104,7 +104,7 @@ public class ParserTest {
                 "score>=1.5 AND BBOX(geometry,-203.16603491348164,-60.248194404495756,-86.85117538227594,15.902738674628525)",
                 factory);
 
-        Optional<Geometry> geo = GeometryUtils.readGeometry(model.getSummaries().getGeometryNoLand());
+        Optional<PreparedGeometry> geo = GeometryUtils.readPreparedGeometry(model.getSummaries().getGeometryNoLand());
 
         Assertions.assertTrue(geo.isPresent(), "Parse no land correct");
         GeometryVisitor visitor = GeometryVisitor.builder()
@@ -114,7 +114,7 @@ public class ParserTest {
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
 
         Assertions.assertFalse(g.isEmpty());
-        Assertions.assertInstanceOf(Polygon.class, g);
+        Assertions.assertInstanceOf(GeometryCollection.class, g);
 
         Assertions.assertEquals(168.30090846621448, g.getCentroid().getX(), 0.0000001, "getX()");
         Assertions.assertEquals(-33.95984804960966, g.getCentroid().getY(), 0.0000001, "getY()");
@@ -138,7 +138,7 @@ public class ParserTest {
                 "score>=1.5 AND BBOX(geometry,-209.8851491167079,-45.44715475181477,-149.06483661670887,-5.632766095762394)",
                 factory);
 
-        Optional<Geometry> geo = GeometryUtils.readGeometry(model.getSummaries().getGeometryNoLand());
+        Optional<PreparedGeometry> geo = GeometryUtils.readPreparedGeometry(model.getSummaries().getGeometryNoLand());
 
         Assertions.assertTrue(geo.isPresent(), "Parse no land correct");
         GeometryVisitor visitor = GeometryVisitor.builder()
@@ -147,15 +147,15 @@ public class ParserTest {
         // return value are geo applied the CQL, and in this case only BBOX intersected
         Geometry g = (Geometry)filter.accept(visitor, geo.get());
 
-        Assertions.assertInstanceOf(MultiPolygon.class, g);
+        Assertions.assertInstanceOf(GeometryCollection.class, g);
 
-        MultiPolygon mp = (MultiPolygon)g;
+        GeometryCollection mp = (GeometryCollection)g;
         Assertions.assertEquals(2, mp.getNumGeometries(), "Geometries correct");
 
-        Assertions.assertEquals(-159.53241830835444, mp.getGeometryN(1).getCentroid().getX(), 0.0000001, "getX() for 0");
-        Assertions.assertEquals(-19.5, mp.getGeometryN(1).getCentroid().getY(), 0.0000001, "getY() for 0");
+        Assertions.assertEquals(-159.53241830835444, mp.getGeometryN(0).getCentroid().getX(), 0.0000001, "getX() for 0");
+        Assertions.assertEquals(-19.5, mp.getGeometryN(0).getCentroid().getY(), 0.0000001, "getY() for 0");
 
-        Assertions.assertEquals(151.62121416760516, mp.getGeometryN(0).getCentroid().getX(), 0.0000001, "getX() for 1");
-        Assertions.assertEquals(-18.000822620336752, mp.getGeometryN(0).getCentroid().getY(),  0.0000001, "getY() for 1");
+        Assertions.assertEquals(151.62121416760516, mp.getGeometryN(1).getCentroid().getX(), 0.0000001, "getX() for 1");
+        Assertions.assertEquals(-18.000822620336752, mp.getGeometryN(1).getCentroid().getY(),  0.0000001, "getY() for 1");
     }
 }

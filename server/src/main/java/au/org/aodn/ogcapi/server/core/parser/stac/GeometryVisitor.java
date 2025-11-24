@@ -4,6 +4,7 @@ import lombok.Builder;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.visitor.DefaultFilterVisitor;
 import org.locationtech.jts.geom.*;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.opengis.filter.spatial.*;
 
 @Slf4j
@@ -116,14 +117,14 @@ public class GeometryVisitor extends DefaultFilterVisitor {
     @Override
     public Object visit(BBOX filter, Object data) {
         if(filter instanceof BBoxImpl<?> impl) {
-            if(impl.getGeometry() != null && (data instanceof Polygon || data instanceof GeometryCollection)) {
-                Geometry input = (Geometry) data;
+            if(impl.getGeometry() != null && (data instanceof Polygon || data instanceof PreparedGeometry)) {
+                PreparedGeometry input = (PreparedGeometry) data;
                 // buffer is expensive
                 try {
-                    return impl.getGeometry().intersection(input);
+                    return input.getGeometry().intersection(impl.getGeometry());
                 }
                 catch(Exception e) {
-                    return impl.getGeometry().intersection(input.buffer(0.0));
+                    return impl.getGeometry().intersection(input.getGeometry().buffer(0.0));
                 }
                 //return impl.getGeometry().intersection(input.buffer(0.0));
             }

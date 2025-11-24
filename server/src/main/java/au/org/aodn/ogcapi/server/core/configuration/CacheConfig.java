@@ -8,6 +8,7 @@ import org.ehcache.config.builders.*;
 import org.ehcache.config.units.MemoryUnit;
 import org.ehcache.jsr107.EhcacheCachingProvider;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +34,7 @@ public class CacheConfig {
     public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
     public static final String ELASTIC_SEARCH_UUID_ONLY = "elastic-search-uuid-only";
     public static final String STRING_TO_GEOMETRY = "string-to-geometry";
+    public static final String STRING_TO_PREPARE_GEOMETRY = "string-to-prepared-geometry";
 
     @Bean
     public CacheNoLandGeometry createCacheNoLandGeometry() {
@@ -86,6 +88,12 @@ public class CacheConfig {
                 .withCache(STRING_TO_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Map.class, Geometry.class,
+                                ResourcePoolsBuilder.heap(20000)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(24)))
+                )
+                .withCache(STRING_TO_PREPARE_GEOMETRY,
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Map.class, PreparedGeometry.class,
                                 ResourcePoolsBuilder.heap(20000)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(24)))
                 )
