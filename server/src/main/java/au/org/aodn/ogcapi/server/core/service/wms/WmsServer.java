@@ -577,7 +577,9 @@ public class WmsServer {
         return Collections.emptyList();
     }
     /**
-     * Get filtered layers from WMS GetCapabilities for a specific collection
+     * Get filtered layers from WMS GetCapabilities for a specific collection, we use this function because we do not
+     * trust the WMS layer value because it can be wrong, we use the WFS link to infer the layer and therefore the layer
+     * name return will be operational with WFS function.
      * First fetches all layers (cached by URL), then filters by WFS links (cached by UUID)
      *
      * @param collectionId - The uuid
