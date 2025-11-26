@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
+import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
@@ -122,14 +123,18 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
         else {
-            List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
+            try {
+                List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
 
-            return result.isEmpty() ?
-                    ResponseEntity.notFound().build() :
-                    ResponseEntity.ok(result);
+                return result.isEmpty() ?
+                        ResponseEntity.notFound().build() :
+                        ResponseEntity.ok(result);
+            }
+            catch(DownloadableFieldsNotFoundException nfe) {
+                return ResponseEntity.notFound().build();
+            }
         }
     }
-
     /**
      * This is used to get all available layers from WMS GetCapabilities
      *
@@ -144,7 +149,6 @@ public class RestServices extends OGCApiService {
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
-
     /**
      * @param collectionID - uuid
      * @param from -
