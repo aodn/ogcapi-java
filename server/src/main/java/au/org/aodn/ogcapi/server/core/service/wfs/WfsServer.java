@@ -261,11 +261,6 @@ public class WfsServer {
                 .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
                 .toList();
 
-        if (wfsLinks.isEmpty()) {
-            log.warn("Return empty layers if as no WFS links found for collection {}", collectionId);
-            return Collections.emptyList();
-        }
-
         // Filter WMS layers based on matching with WFS links
         List<LayerInfo> filteredLayers = new ArrayList<>();
 

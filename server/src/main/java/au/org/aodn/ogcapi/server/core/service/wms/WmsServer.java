@@ -577,7 +577,9 @@ public class WmsServer {
         return Collections.emptyList();
     }
     /**
-     * Get filtered layers from WMS GetCapabilities for a specific collection
+     * Get filtered layers from WMS GetCapabilities for a specific collection, we use this function because we do not
+     * trust the WMS layer value because it can be wrong, we use the WFS link to infer the layer and therefore the layer
+     * name return will be operational with WFS function.
      * First fetches all layers (cached by URL), then filters by WFS links (cached by UUID)
      *
      * @param collectionId - The uuid
@@ -585,7 +587,7 @@ public class WmsServer {
      * @return - List of LayerInfo objects filtered by WFS link matching
      */
     public List<LayerInfo> getCapabilitiesLayers(String collectionId, FeatureRequest request) {
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+        Optional<String> mapServerUrl = getMapServerUrl(collectionId, null);
 
         if (mapServerUrl.isPresent()) {
             // Fetch all layers from GetCapabilities (this call is cached by URL)
@@ -594,7 +596,23 @@ public class WmsServer {
             if (!allLayers.isEmpty()) {
                 // Filter layers based on WFS link matching
                 List<LayerInfo> filteredLayers = wfsServer.filterLayersByWfsLinks(collectionId, allLayers);
-                log.debug("Returning filteredLayers {}", filteredLayers);
+
+                // If filteredLayers empty, that means no layer have wfs operation, but that does not mean
+                // the layer cannot serve for display only.
+                if(filteredLayers.isEmpty() && request.getLayerName() != null) {
+                    DescribeLayerResponse dr = describeLayer(collectionId, request);
+                    if(dr != null) {
+                        // That means at least layer is valid just not operational
+                        return List.of(
+                                LayerInfo.builder()
+                                        .name(dr.getLayerDescription().getName())
+                                        .title(dr.getLayerDescription().getName())
+                                        .queryable("0")
+                                        .build()
+                        );
+                    }
+                }
+                log.debug("Returning layers {}", filteredLayers);
 
                 return filteredLayers;
             }
