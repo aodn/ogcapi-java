@@ -29,6 +29,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -165,23 +166,90 @@ public class WmsServer {
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
             if (components.getPath() != null) {
-                // Now depends on the service, we need to have different arguments
                 List<String> pathSegments = components.getPathSegments();
                 if (!pathSegments.isEmpty()) {
                     Map<String, String> param = new HashMap<>();
 
+                    // ncWMS is a specialized WMS for NetCDF time-series data that only accepts single timestamps
+                    boolean isNcwms = pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms");
+
                     if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("wms")) {
                         param.putAll(wmsDefaultParam.getWms());
-                    } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
+                    } else if (isNcwms) {
                         param.putAll(wmsDefaultParam.getNcwms());
+                        param.put("NUMCOLORBANDS", "253");
+
+                        // ncWMS uses TIME parameter (single timestamp only) instead of CQL_FILTER
+                        // Note: This specific ncWMS layer uses T15:20:00.000Z as the standard time for daily snapshots
+                        String timeValue;
+
+                        if (request.getDatetime() != null && !request.getDatetime().isEmpty()) {
+                            String datetime = request.getDatetime();
+
+                            if (datetime.contains("/")) {
+                                // Date range provided - use end date to show displaying snapshot for current solution
+                                String[] parts = datetime.split("/");
+                                String endDate = parts[1].trim();
+                                String datePart = endDate.substring(0, 10);
+
+                                // Validate: check if date is in the future or too far in the past
+                                LocalDate requestedDate = LocalDate.parse(datePart);
+                                LocalDate today = LocalDate.now();
+                                LocalDate safeMaxDate = today.minusDays(3); // Account for data processing delay
+                                LocalDate minDate = LocalDate.of(2012, 1, 1); // Todo: Layer's earliest data should not be hardcoded
+
+                                if (requestedDate.isAfter(safeMaxDate)) {
+                                    // Date is too recent - use safe default
+                                    log.warn("ncWMS: Requested end date {} is beyond available data (processing delay ~3 days), using {} instead",
+                                            requestedDate, safeMaxDate);
+                                    timeValue = safeMaxDate.toString() + "T15:20:00.000Z";
+                                } else if (requestedDate.isBefore(minDate)) {
+                                    // Date is before data availability
+                                    log.warn("ncWMS: Requested end date {} is before layer start date {}, using {} instead",
+                                            requestedDate, minDate, minDate);
+                                    timeValue = minDate.toString() + "T15:20:00.000Z";
+                                } else {
+                                    // Date is valid
+                                    timeValue = datePart + "T15:20:00.000Z";
+                                    log.debug("ncWMS: Converted date range {} to timestamp {}", datetime, timeValue);
+                                }
+                            } else {
+                                // Single date provided
+                                String datePart = datetime.substring(0, 10);
+
+                                // Validate single date
+                                LocalDate requestedDate = LocalDate.parse(datePart);
+                                LocalDate today = LocalDate.now();
+                                LocalDate safeMaxDate = today.minusDays(3);
+                                LocalDate minDate = LocalDate.of(2015, 1, 1);
+
+                                if (requestedDate.isAfter(safeMaxDate)) {
+                                    log.warn("ncWMS: Requested date {} is beyond available data, using {} instead",
+                                            requestedDate, safeMaxDate);
+                                    timeValue = safeMaxDate.toString() + "T15:20:00.000Z";
+                                } else if (requestedDate.isBefore(minDate)) {
+                                    log.warn("ncWMS: Requested date {} is before layer start date, using {} instead",
+                                            requestedDate, minDate);
+                                    timeValue = minDate.toString() + "T15:20:00.000Z";
+                                } else {
+                                    timeValue = datePart + "T15:20:00.000Z";
+                                    log.debug("ncWMS: Using timestamp {}", timeValue);
+                                }
+                            }
+                        } else {
+                            // No datetime provided - use date 3 days ago as safe default
+                            // (ncWMS data typically has 2-3 day processing delay)
+                            LocalDate safeDate = LocalDate.now().minusDays(3);
+                            timeValue = safeDate.toString() + "T15:20:00.000Z";
+                            log.debug("ncWMS: No datetime provided, using safe default {} (3 days ago)", timeValue);
+                        }
+
+                        param.put("TIME", timeValue);
                     }
 
-                    // Now we add the missing argument from the request
                     param.put("LAYERS", request.getLayerName());
                     param.put("BBOX", request.getBbox().stream().map(BigDecimal::toString).collect(Collectors.joining(",")));
 
-                    // Very specific to IMOS, if we see geoserver-123.aodn.org.au/geoserver/wms, then
-                    // we should try cache server -> https://tilecache.aodn.org.au/geowebcache/service/wms, if not work fall back
                     List<String> urls = new ArrayList<>();
                     if (components.getHost() != null
                             && components.getHost().equalsIgnoreCase("geoserver-123.aodn.org.au")
@@ -195,14 +263,11 @@ public class WmsServer {
                                 builder.queryParam(key, value);
                             }
                         });
-                        // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
-                        // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
-                        // build() call, we append the cql after the construction.
                         String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
                         log.debug("Cache url to wms geoserver {}", target);
                         urls.add(target);
                     }
-                    // This is the normal route
+
                     UriComponentsBuilder builder = UriComponentsBuilder
                             .newInstance()
                             .scheme("https")
@@ -215,9 +280,6 @@ public class WmsServer {
                             builder.queryParam(key, value);
                         }
                     });
-                    // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
-                    // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
-                    // build() call, we append the cql after the construction.
                     String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
                     log.debug("Url to wms geoserver {}", target);
                     urls.add(target);
