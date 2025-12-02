@@ -228,6 +228,19 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    // Fields for training ML keyword classification model and delivery mode classification model
+    themes(
+            StacBasicField.Themes.searchField,
+            StacBasicField.Themes.searchField,
+            null,
+            null
+    ),
+    statement(
+            StacSummeries.Statement.searchField,
+            StacSummeries.Statement.displayField,
+            null,
+            null
+    ),
     ;
     private final String searchField;
 
