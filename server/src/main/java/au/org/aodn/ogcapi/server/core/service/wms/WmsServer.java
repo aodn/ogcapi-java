@@ -344,7 +344,7 @@ public class WmsServer {
                     // This is the normal route
                     UriComponentsBuilder builder = UriComponentsBuilder
                             .newInstance()
-                            .scheme(components.getScheme())
+                            .scheme("https")
                             .port(components.getPort())
                             .host(components.getHost())
                             .path(components.getPath());
@@ -428,15 +428,15 @@ public class WmsServer {
             List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
             for (String url : urls) {
-                ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.getForEntity(url, String.class, Collections.emptyMap()), String.class, pretendUserEntity);
+                ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class), String.class, pretendUserEntity);
                 if (response.getStatusCode().is2xxSuccessful()) {
                     // Now try to unify the return
                     if (MediaType.TEXT_HTML.isCompatibleWith(response.getHeaders().getContentType())) {
                         String html = response.getBody();
                         // This is a simple trick to check if the html is in fact empty body, if empty
                         // try another url
-                        if (html != null && html.contains("<div class=\"feature\">")) {
-                            return FeatureInfoResponse.builder().html(response.getBody()).build();
+                        if (html != null && (html.contains("class=\"feature\"") || html.contains("class=\"featureInfo\""))) {
+                            return FeatureInfoResponse.builder().html(html).build();
                         }
                     } else if (MediaType.APPLICATION_XML.isCompatibleWith(response.getHeaders().getContentType())) {
                         FeatureInfoResponse r = xmlMapper.readValue(response.getBody(), FeatureInfoResponse.class);
