@@ -344,7 +344,7 @@ public class WmsServer {
                     // This is the normal route
                     UriComponentsBuilder builder = UriComponentsBuilder
                             .newInstance()
-                            .scheme("https")
+                            .scheme(components.getScheme())
                             .port(components.getPort())
                             .host(components.getHost())
                             .path(components.getPath());
@@ -535,7 +535,7 @@ public class WmsServer {
             // Build GetCapabilities URL
             UriComponentsBuilder builder = UriComponentsBuilder
                     .newInstance()
-                    .scheme(components.getScheme())        // hardcode to be https to avoid redirect
+                    .scheme("https")        // hardcode to be https to avoid redirect
                     .port(components.getPort())
                     .host(components.getHost())
                     .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
