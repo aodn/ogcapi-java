@@ -404,6 +404,29 @@ wms-default-param:
     - fd3d74b0-0234-4864-bbc6-751c44e41f5e
     - 46c810e8-40fd-4e5f-b950-b2393d862455
     - 881a99c0-c0ce-441d-991c-122ded6dacaf
+    - 4567616b-ee03-467b-b3dd-532d90444795
+    - f0df1c23-455f-4520-bd4f-fd06d8ef60a1
+    - 6eb8ab22-6ba4-4c5a-8454-73e279f751f0
+    - 3a083248-a4a0-4429-9bef-63e6acbabb14
+    - 0985c77d-5b2e-498b-9016-bfcce78df2da
+    - e1ca78ee-8b4f-42d3-b60a-13bf44faf95b
+    - eb7a16ff-9283-4418-a92a-50493dd8c4d6
+    - 9ada4f7f-abf2-468b-a158-e1c7dba11b92
+    - 36e7e8e5-6ec4-4a3a-9382-b244f0f062e1
+    - 3c5eb22d-b359-4f2f-ad68-8fef6e563514
+    - dc4c761f-eb4d-4fe4-b071-e110bbe7c8f3
+    - 68ccd9e6-6fd0-441c-9d97-63350a059658
+    - 58a75cc3-e2e8-4519-b188-7456f6c6ffdf
+    - 528cf781-6c28-414d-ac27-412399a4304b
+    - 7a6751e0-1ad5-11dc-9e36-00188b4c0af8
+    - 39fbb324-b184-4ac5-8d3e-9a2994bbecb9
+    - 029a5df5-04da-4c64-a73d-d15f1201965d
+    - fa2dbc70-44ab-11dc-8cd0-00188b4c0af8
+    - 9aee213b-ab23-4321-9994-f7db2f6b2e78
+    - b8dde99d-86e4-48f8-b6f4-7e3a857fe8f8
+    - 75fc95bf-e4b4-4d39-9ac3-0433669648de
+    - caf7220a-19e0-4a7f-9af6-eade6c79a47a
+    - 8f007712-6a2b-4007-9529-9bd72dd37ca0
 
 api:
   host: http://localhost:${server.port}
