@@ -555,6 +555,7 @@ public class WmsServer {
             // This is likely the only case for imos custom ncwms server
             FeatureRequest test = FeatureRequest.builder()
                     .layerName(request.getLayerName())
+                    .bbox(List.of(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ONE))
                     .datetime("2020-01-01/2020-01-03")  // Date value not important, with "/" indicate range
                     .build();
             try {
