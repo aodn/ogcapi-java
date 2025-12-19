@@ -507,7 +507,7 @@ public class WmsServer {
     @Cacheable(value = CACHE_WMS_MAP_TILE)
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-        log.debug("map tile request for uuid {} layername {}", collectionId, request.getLayerName());
+        log.debug("map tile request for uuid {} layer name {}", collectionId, request.getLayerName());
         if (mapServerUrl.isPresent()) {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
@@ -536,15 +536,46 @@ public class WmsServer {
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
 
         DescribeLayerResponse response = this.describeLayer(collectionId, request);
+        List<DownloadableFieldModel> result;
 
         if (response != null && response.getLayerDescription().getWfs() != null) {
             // If we are able to find the wfs server and real layer name based on wms layer, then use it
             FeatureRequest modified = FeatureRequest.builder().layerName(response.getLayerDescription().getQuery().getTypeName()).build();
-            return wfsServer.getDownloadableFields(collectionId, modified, response.getLayerDescription().getWfs());
+            result = wfsServer.getDownloadableFields(collectionId, modified, response.getLayerDescription().getWfs());
         } else {
             // We trust what is found inside the elastic search metadata
-            return wfsServer.getDownloadableFields(collectionId, request, null);
+            result = wfsServer.getDownloadableFields(collectionId, request, null);
         }
+
+        Optional<String> wmsUrl = getMapServerUrl(collectionId, request);
+        if (wmsUrl.isPresent() && wmsUrl.get().contains("/ncwms")) {
+            // Special case for ncWMS where it is a gridded data and support TIME param, not CQL_FILTERS which only works
+            // for wms, we need to test if this TIME field is a single time=2012-01-01 .. or support range
+            // time=2012-01-01/2022-01-01, the only way to do it now is to issue a query and test it.
+            // This is likely the only case for imos custom ncwms server
+            FeatureRequest test = FeatureRequest.builder()
+                    .layerName(request.getLayerName())
+                    .datetime("2020-01-01/2020-01-03")  // Date value not important, with "/" indicate range
+                    .build();
+            try {
+                // Post this to ncwms, if this is not a range TIME, then it will
+                self.getMapTile(collectionId, test);
+                // Mark the time field dimension to RANGE
+                result.stream()
+                        .filter(f -> f.getName().equalsIgnoreCase("time"))
+                        .findFirst()
+                        .ifPresent(a -> a.setViewDimension(DownloadableFieldModel.Dimension.range));
+            }
+            catch(Exception uriSyntaxException) {
+                // Not support range
+                result.stream()
+                        .filter(f -> f.getName().equalsIgnoreCase("time"))
+                        .findFirst()
+                        .ifPresent(a -> a.setViewDimension(DownloadableFieldModel.Dimension.single));
+            }
+        }
+
+        return result;
     }
     /**
      * Fetch raw layers from WMS GetCapabilities - cached by URL, that is query all layer supported by this WMS server.
