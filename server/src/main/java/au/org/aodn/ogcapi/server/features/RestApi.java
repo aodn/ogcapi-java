@@ -129,7 +129,7 @@ public class RestApi implements CollectionsApi {
             case wms_downloadable_fields -> {
                 return (request.getLayerName() == null || request.getLayerName().isEmpty()) ?
                         ResponseEntity.badRequest().build() :
-                        featuresService.getWmsDownloadableFields(collectionId, request);
+                        featuresService.getWmsFieldsProperties(collectionId, request);
             }
             case wms_map_tile -> {
                 return featuresService.getWmsMapTile(collectionId, request);

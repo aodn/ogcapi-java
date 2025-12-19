@@ -29,6 +29,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -174,6 +175,8 @@ public class WmsServer {
                         param.putAll(wmsDefaultParam.getWms());
                     } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwms());
+                        // Specific for ncWMS, check comment below related to CQL_FILTER
+                        param.put("TIME", request.getDatetime());
                     }
 
                     // Now we add the missing argument from the request
@@ -215,12 +218,23 @@ public class WmsServer {
                             builder.queryParam(key, value);
                         }
                     });
-                    // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
-                    // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
-                    // build() call, we append the cql after the construction.
-                    String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
-                    log.debug("Url to wms geoserver {}", target);
-                    urls.add(target);
+                    if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("wms")) {
+                        // No, ncWMS (including GeoServer extension) does not support CQL_FILTER.
+                        // It focuses on NetCDF gridded data with parameters like TIME, ELEVATION, COLORSCALERANGE,
+                        // STYLES (palettes), NUMCOLORBANDS. CQL_FILTER is a GeoServer vendor parameter for vector
+                        // filtering, not implemented in ncWMS. So we only add CQL if it is WMS
+
+                        // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
+                        // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
+                        // build() call, we append the cql after the construction.
+                        String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
+                        log.debug("Url to wms geoserver {}", target);
+                        urls.add(target);
+                    } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
+                        String target = builder.build().toUriString();
+                        log.debug("Url to ncWms geoserver {}", target);
+                        urls.add(target);
+                    }
 
                     return urls;
                 }
@@ -419,7 +433,14 @@ public class WmsServer {
             return Optional.empty();
         }
     }
-
+    /**
+     * Fetch the popup content when use click on the map, so it is kind of features associated with the map
+     * @param collectionId - The uuid
+     * @param request - The request object for the query
+     * @return - Usually an HTML or JSON from the server, not a good type of return type but this is from legacy system
+     * @throws JsonProcessingException - Not expected
+     * @throws URISyntaxException - Not expected
+     */
     public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException, URISyntaxException {
 
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
@@ -494,7 +515,13 @@ public class WmsServer {
                 log.debug("map tile request for layer name {} url {} ", request.getLayerName(), url);
                 ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, byte[].class), byte[].class, pretendUserEntity);
                 if (response.getStatusCode().is2xxSuccessful()) {
-                    return response.getBody();
+                    if (response.getHeaders().getContentType() != null && response.getHeaders().getContentType().getType().equals("image")) {
+                        return response.getBody();
+                    }
+                    else {
+                        // Something wrong from the server likely syntax error
+                        throw new URISyntaxException(response.getBody() != null ? new String(response.getBody(), StandardCharsets.UTF_8) : "", url);
+                    }
                 }
             }
         }

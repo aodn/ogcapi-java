@@ -78,6 +78,7 @@ public class RestServices extends OGCApiService {
     public ResponseEntity<byte[]> getWmsMapTile(String collectionId, FeatureRequest request) {
         try {
             return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
                     .body(wmsServer.getMapTile(collectionId, request));
         } catch (Throwable e) {
             throw new RuntimeException(e);
@@ -103,15 +104,14 @@ public class RestServices extends OGCApiService {
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
-
     /**
-     * This is used to get the downloadable fields from wfs given a wms layer
+     * This is used to get the downloadable fields / viewable fields given a wms layer
      *
      * @param collectionId - The uuid of dataset
      * @param request      - Request to get field given a WMS layer name
      * @return - The downloadable field name, or UNAUTHORIZED if it is not in white list
      */
-    public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
+    public ResponseEntity<?> getWmsFieldsProperties(String collectionId, FeatureRequest request) {
 
         if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
             log.info("Layer name cannot be null or empty");
