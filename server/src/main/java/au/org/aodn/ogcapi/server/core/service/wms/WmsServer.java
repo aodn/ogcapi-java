@@ -115,8 +115,8 @@ public class WmsServer {
                         if (range.size() == 2) {
                             // Due to no standard name, we try our best to guess if 2 dateTime field, range mean we found start/end date
                             String[] d = request.getDatetime().split("/");
-                            String guess1 = target.get(0).getName();
-                            String guess2 = target.get(1).getName();
+                            String guess1 = range.get(0).getName();
+                            String guess2 = range.get(1).getName();
 
                             if ((guess1.contains("start") || guess1.contains("min")) && (guess2.contains("end") || guess2.contains("max"))) {
                                 String timeCql = String.format("CQL_FILTER=%s >= %s AND %s <= %s", guess1, d[0], guess2, d[1]);
@@ -507,7 +507,6 @@ public class WmsServer {
     @Cacheable(value = CACHE_WMS_MAP_TILE)
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-        log.debug("map tile request for uuid {} layer name {}", collectionId, request.getLayerName());
         if (mapServerUrl.isPresent()) {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
