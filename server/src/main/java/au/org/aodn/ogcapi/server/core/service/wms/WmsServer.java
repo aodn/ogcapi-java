@@ -29,6 +29,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -114,8 +115,8 @@ public class WmsServer {
                         if (range.size() == 2) {
                             // Due to no standard name, we try our best to guess if 2 dateTime field, range mean we found start/end date
                             String[] d = request.getDatetime().split("/");
-                            String guess1 = target.get(0).getName();
-                            String guess2 = target.get(1).getName();
+                            String guess1 = range.get(0).getName();
+                            String guess2 = range.get(1).getName();
 
                             if ((guess1.contains("start") || guess1.contains("min")) && (guess2.contains("end") || guess2.contains("max"))) {
                                 String timeCql = String.format("CQL_FILTER=%s >= %s AND %s <= %s", guess1, d[0], guess2, d[1]);
@@ -174,6 +175,8 @@ public class WmsServer {
                         param.putAll(wmsDefaultParam.getWms());
                     } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwms());
+                        // Specific for ncWMS, check comment below related to CQL_FILTER
+                        param.put("TIME", request.getDatetime());
                     }
 
                     // Now we add the missing argument from the request
@@ -215,12 +218,23 @@ public class WmsServer {
                             builder.queryParam(key, value);
                         }
                     });
-                    // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
-                    // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
-                    // build() call, we append the cql after the construction.
-                    String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
-                    log.debug("Url to wms geoserver {}", target);
-                    urls.add(target);
+                    if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("wms")) {
+                        // No, ncWMS (including GeoServer extension) does not support CQL_FILTER.
+                        // It focuses on NetCDF gridded data with parameters like TIME, ELEVATION, COLORSCALERANGE,
+                        // STYLES (palettes), NUMCOLORBANDS. CQL_FILTER is a GeoServer vendor parameter for vector
+                        // filtering, not implemented in ncWMS. So we only add CQL if it is WMS
+
+                        // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
+                        // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
+                        // build() call, we append the cql after the construction.
+                        String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
+                        log.debug("Url to wms geoserver {}", target);
+                        urls.add(target);
+                    } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
+                        String target = builder.build().toUriString();
+                        log.debug("Url to ncWms geoserver {}", target);
+                        urls.add(target);
+                    }
 
                     return urls;
                 }
@@ -419,7 +433,14 @@ public class WmsServer {
             return Optional.empty();
         }
     }
-
+    /**
+     * Fetch the popup content when use click on the map, so it is kind of features associated with the map
+     * @param collectionId - The uuid
+     * @param request - The request object for the query
+     * @return - Usually an HTML or JSON from the server, not a good type of return type but this is from legacy system
+     * @throws JsonProcessingException - Not expected
+     * @throws URISyntaxException - Not expected
+     */
     public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException, URISyntaxException {
 
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
@@ -486,7 +507,6 @@ public class WmsServer {
     @Cacheable(value = CACHE_WMS_MAP_TILE)
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-        log.debug("map tile request for uuid {} layername {}", collectionId, request.getLayerName());
         if (mapServerUrl.isPresent()) {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
@@ -494,7 +514,13 @@ public class WmsServer {
                 log.debug("map tile request for layer name {} url {} ", request.getLayerName(), url);
                 ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, byte[].class), byte[].class, pretendUserEntity);
                 if (response.getStatusCode().is2xxSuccessful()) {
-                    return response.getBody();
+                    if (response.getHeaders().getContentType() != null && response.getHeaders().getContentType().getType().equals("image")) {
+                        return response.getBody();
+                    }
+                    else {
+                        // Something wrong from the server likely syntax error
+                        throw new URISyntaxException(response.getBody() != null ? new String(response.getBody(), StandardCharsets.UTF_8) : "", url);
+                    }
                 }
             }
         }
@@ -509,15 +535,47 @@ public class WmsServer {
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
 
         DescribeLayerResponse response = this.describeLayer(collectionId, request);
+        List<DownloadableFieldModel> result;
 
         if (response != null && response.getLayerDescription().getWfs() != null) {
             // If we are able to find the wfs server and real layer name based on wms layer, then use it
             FeatureRequest modified = FeatureRequest.builder().layerName(response.getLayerDescription().getQuery().getTypeName()).build();
-            return wfsServer.getDownloadableFields(collectionId, modified, response.getLayerDescription().getWfs());
+            result = wfsServer.getDownloadableFields(collectionId, modified, response.getLayerDescription().getWfs());
         } else {
             // We trust what is found inside the elastic search metadata
-            return wfsServer.getDownloadableFields(collectionId, request, null);
+            result = wfsServer.getDownloadableFields(collectionId, request, null);
         }
+
+        Optional<String> wmsUrl = getMapServerUrl(collectionId, request);
+        if (wmsUrl.isPresent() && wmsUrl.get().contains("/ncwms")) {
+            // Special case for ncWMS where it is a gridded data and support TIME param, not CQL_FILTERS which only works
+            // for wms, we need to test if this TIME field is a single time=2012-01-01 .. or support range
+            // time=2012-01-01/2022-01-01, the only way to do it now is to issue a query and test it.
+            // This is likely the only case for imos custom ncwms server
+            FeatureRequest test = FeatureRequest.builder()
+                    .layerName(request.getLayerName())
+                    .bbox(List.of(BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ONE, BigDecimal.ONE))
+                    .datetime("2020-01-01/2020-01-03")  // Date value not important, with "/" indicate range
+                    .build();
+            try {
+                // Post this to ncwms, if this is not a range TIME, then it will
+                self.getMapTile(collectionId, test);
+                // Mark the time field dimension to RANGE
+                result.stream()
+                        .filter(f -> f.getName().equalsIgnoreCase("time"))
+                        .findFirst()
+                        .ifPresent(a -> a.setViewDimension(DownloadableFieldModel.Dimension.range));
+            }
+            catch(Exception uriSyntaxException) {
+                // Not support range
+                result.stream()
+                        .filter(f -> f.getName().equalsIgnoreCase("time"))
+                        .findFirst()
+                        .ifPresent(a -> a.setViewDimension(DownloadableFieldModel.Dimension.single));
+            }
+        }
+
+        return result;
     }
     /**
      * Fetch raw layers from WMS GetCapabilities - cached by URL, that is query all layer supported by this WMS server.

@@ -91,6 +91,7 @@ wms-default-param:
     STYLES: ""
     QUERYABLE: "true"
     CRS: "EPSG:3857"
+    NUMCOLORBANDS: "253"
     WIDTH: 256
     HEIGHT: 256
   allow-id: # Full list
