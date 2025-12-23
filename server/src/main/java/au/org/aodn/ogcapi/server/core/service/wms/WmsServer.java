@@ -176,7 +176,9 @@ public class WmsServer {
                         param.putAll(wmsDefaultParam.getWms());
                     } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwms());
-                        param.put("TIME", request.getDatetime());
+                        if(request.getDatetime() != null) {
+                            param.put("TIME", request.getDatetime());
+                        }
                     }
 
                     // Now we add the missing argument from the request
