@@ -48,4 +48,6 @@ public class LayerInfo {
 
     @JacksonXmlProperty(localName = "Style")
     private Style style;
+
+    protected NcWmsLayerInfo ncWmsLayerInfo;
 }

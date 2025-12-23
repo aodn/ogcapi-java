@@ -252,13 +252,14 @@ public class WmsServerTest {
                         .build()
         );
 
-        String r = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?>\n" +
-                "<!DOCTYPE ServiceExceptionReport SYSTEM \"https://geoserver-123.aodn.org.au/geoserver/schemas/wms/1.1.1/WMS_exception_1_1_1.dtd\">\n" +
-                "<ServiceExceptionReport version=\"1.1.1\" >\n" +
-                "    <ServiceException code=\"LayerNotDefined\" locator=\"MapLayerInfoKvpParser\">\n" +
-                "      srs_ghrsst_l4_gamssa_url/: no such layer on this server\n" +
-                "</ServiceException>\n" +
-                "</ServiceExceptionReport>";
+        String r = """
+                <?xml version="1.0" encoding="UTF-8" standalone="no"?>
+                <!DOCTYPE ServiceExceptionReport SYSTEM "https://geoserver-123.aodn.org.au/geoserver/schemas/wms/1.1.1/WMS_exception_1_1_1.dtd">
+                <ServiceExceptionReport version="1.1.1" >
+                    <ServiceException code="LayerNotDefined" locator="MapLayerInfoKvpParser">
+                      srs_ghrsst_l4_gamssa_url/: no such layer on this server
+                </ServiceException>
+                </ServiceExceptionReport>""";
 
         when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), eq(entity), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(r));
@@ -275,13 +276,14 @@ public class WmsServerTest {
     @Test
     public void verifyParseCorrect() throws JsonProcessingException {
         DescribeLayerResponse value = wmsServer.xmlMapper.readValue(
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<!DOCTYPE WMS_DescribeLayerResponse SYSTEM \"https://geoserver-123.aodn.org.au/geoserver/schemas/wms/1.1.1/WMS_DescribeLayerResponse.dtd\">\n" +
-                "<WMS_DescribeLayerResponse version=\"1.1.1\">\n" +
-                "    <LayerDescription name=\"imos:srs_ghrsst_l4_gamssa_url\" wfs=\"https://geoserver-123.aodn.org.au/geoserver/wfs?\" owsURL=\"https://geoserver-123.aodn.org.au/geoserver/wfs?\" owsType=\"WFS\">\n" +
-                "        <Query typeName=\"imos:srs_ghrsst_l4_gamssa_url\"/>\n" +
-                "    </LayerDescription>\n" +
-                "</WMS_DescribeLayerResponse>", DescribeLayerResponse.class);
+                """
+                        <?xml version="1.0" encoding="UTF-8"?>
+                        <!DOCTYPE WMS_DescribeLayerResponse SYSTEM "https://geoserver-123.aodn.org.au/geoserver/schemas/wms/1.1.1/WMS_DescribeLayerResponse.dtd">
+                        <WMS_DescribeLayerResponse version="1.1.1">
+                            <LayerDescription name="imos:srs_ghrsst_l4_gamssa_url" wfs="https://geoserver-123.aodn.org.au/geoserver/wfs?" owsURL="https://geoserver-123.aodn.org.au/geoserver/wfs?" owsType="WFS">
+                                <Query typeName="imos:srs_ghrsst_l4_gamssa_url"/>
+                            </LayerDescription>
+                        </WMS_DescribeLayerResponse>""", DescribeLayerResponse.class);
 
         assertEquals("imos:srs_ghrsst_l4_gamssa_url", value.getLayerDescription().getName());
         assertEquals("https://geoserver-123.aodn.org.au/geoserver/wfs?", value.getLayerDescription().getWfs());
@@ -289,10 +291,9 @@ public class WmsServerTest {
     }
     /**
      * Test with only one dateTime field in the describe layer
-     * @throws JsonProcessingException - Not expected
      */
     @Test
-    public void verifyCreateCQLSingleDateTime() throws JsonProcessingException {
+    public void verifyCreateCQLSingleDateTime() {
         String uuid = "uuid1";
         String layer = "imos:srs_ghrsst_l4_gamssa_url";
         FeatureRequest request = FeatureRequest.builder()
@@ -316,23 +317,24 @@ public class WmsServerTest {
         );
         // This sample contains 1 dateTime field
         String value =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsd:schema xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:imos=\"imos.mod\" xmlns:wfs=\"http://www.opengis.net/wfs/2.0\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" targetNamespace=\"imos.mod\">\n" +
-                        "  <xsd:import namespace=\"http://www.opengis.net/gml/3.2\" schemaLocation=\"https://geoserver-123.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd\"/>\n" +
-                        "  <xsd:complexType name=\"srs_ghrsst_l4_gamssa_urlType\">\n" +
-                        "    <xsd:complexContent>\n" +
-                        "      <xsd:extension base=\"gml:AbstractFeatureType\">\n" +
-                        "        <xsd:sequence>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"timestep_id\" nillable=\"true\" type=\"xsd:long\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"collection_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"file_url\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"size\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"time\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "        </xsd:sequence>\n" +
-                        "      </xsd:extension>\n" +
-                        "    </xsd:complexContent>\n" +
-                        "  </xsd:complexType>\n" +
-                        "  <xsd:element name=\"srs_ghrsst_l4_gamssa_url\" substitutionGroup=\"gml:AbstractFeature\" type=\"imos:srs_ghrsst_l4_gamssa_urlType\"/>\n" +
-                        "</xsd:schema>";
+                """
+                        <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:imos="imos.mod" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="imos.mod">
+                          <xsd:import namespace="http://www.opengis.net/gml/3.2" schemaLocation="https://geoserver-123.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd"/>
+                          <xsd:complexType name="srs_ghrsst_l4_gamssa_urlType">
+                            <xsd:complexContent>
+                              <xsd:extension base="gml:AbstractFeatureType">
+                                <xsd:sequence>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="timestep_id" nillable="true" type="xsd:long"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="collection_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="file_url" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="size" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="time" nillable="true" type="xsd:dateTime"/>
+                                </xsd:sequence>
+                              </xsd:extension>
+                            </xsd:complexContent>
+                          </xsd:complexType>
+                          <xsd:element name="srs_ghrsst_l4_gamssa_url" substitutionGroup="gml:AbstractFeature" type="imos:srs_ghrsst_l4_gamssa_urlType"/>
+                        </xsd:schema>""";
 
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
@@ -350,10 +352,9 @@ public class WmsServerTest {
     }
     /**
      * Test with only one dateTime field in the describe layer with predefined cql
-     * @throws JsonProcessingException - Not expected
      */
     @Test
-    public void verifyCreateCQLSingleDateTimeWithCQL() throws JsonProcessingException {
+    public void verifyCreateCQLSingleDateTimeWithCQL() {
         String uuid = "uuid1";
         String layer = "imos:srs_ghrsst_l4_gamssa_url";
         FeatureRequest request = FeatureRequest.builder()
@@ -377,23 +378,24 @@ public class WmsServerTest {
         );
         // This sample contains 1 dateTime field
         String value =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsd:schema xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:imos=\"imos.mod\" xmlns:wfs=\"http://www.opengis.net/wfs/2.0\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" targetNamespace=\"imos.mod\">\n" +
-                        "  <xsd:import namespace=\"http://www.opengis.net/gml/3.2\" schemaLocation=\"https://geoserver-123.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd\"/>\n" +
-                        "  <xsd:complexType name=\"srs_ghrsst_l4_gamssa_urlType\">\n" +
-                        "    <xsd:complexContent>\n" +
-                        "      <xsd:extension base=\"gml:AbstractFeatureType\">\n" +
-                        "        <xsd:sequence>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"timestep_id\" nillable=\"true\" type=\"xsd:long\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"collection_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"file_url\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"size\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"time\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "        </xsd:sequence>\n" +
-                        "      </xsd:extension>\n" +
-                        "    </xsd:complexContent>\n" +
-                        "  </xsd:complexType>\n" +
-                        "  <xsd:element name=\"srs_ghrsst_l4_gamssa_url\" substitutionGroup=\"gml:AbstractFeature\" type=\"imos:srs_ghrsst_l4_gamssa_urlType\"/>\n" +
-                        "</xsd:schema>";
+                """
+                        <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:imos="imos.mod" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="imos.mod">
+                          <xsd:import namespace="http://www.opengis.net/gml/3.2" schemaLocation="https://geoserver-123.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd"/>
+                          <xsd:complexType name="srs_ghrsst_l4_gamssa_urlType">
+                            <xsd:complexContent>
+                              <xsd:extension base="gml:AbstractFeatureType">
+                                <xsd:sequence>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="timestep_id" nillable="true" type="xsd:long"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="collection_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="file_url" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="size" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="time" nillable="true" type="xsd:dateTime"/>
+                                </xsd:sequence>
+                              </xsd:extension>
+                            </xsd:complexContent>
+                          </xsd:complexType>
+                          <xsd:element name="srs_ghrsst_l4_gamssa_url" substitutionGroup="gml:AbstractFeature" type="imos:srs_ghrsst_l4_gamssa_urlType"/>
+                        </xsd:schema>""";
 
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
@@ -411,10 +413,9 @@ public class WmsServerTest {
     }
     /**
      * Test with only two or more dateTime field in the describe layer with predefined cql
-     * @throws JsonProcessingException - Not expected
      */
     @Test
-    public void verifyCreateCQLMultiDateTimeWithCQL() throws JsonProcessingException {
+    public void verifyCreateCQLMultiDateTimeWithCQL() {
         String uuid = "uuid1";
         String layer = "aatams_sattag_qc_ctd_profile_map";
         FeatureRequest request = FeatureRequest.builder()
@@ -438,56 +439,57 @@ public class WmsServerTest {
         );
         // This sample contains 1 dateTime field
         String value =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsd:schema xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:imos=\"imos.mod\" xmlns:wfs=\"http://www.opengis.net/wfs/2.0\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" targetNamespace=\"imos.mod\">\n" +
-                        "  <xsd:import namespace=\"http://www.opengis.net/gml/3.2\" schemaLocation=\"https://geoserver-portal.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd\"/>\n" +
-                        "  <xsd:complexType name=\"aatams_sattag_qc_ctd_profile_mapType\">\n" +
-                        "    <xsd:complexContent>\n" +
-                        "      <xsd:extension base=\"gml:AbstractFeatureType\">\n" +
-                        "        <xsd:sequence>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"file_id\" nillable=\"true\" type=\"xsd:long\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_no\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"platform_number\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"project_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"pi_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"cycle_number\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"direction\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"data_centre\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"dc_reference\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"data_state_indicator\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"data_mode\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"inst_reference\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"wmo_inst_type\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"juld\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"juld_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"juld_location\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"latitude\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"longitude\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"position_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"positioning_system\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_pres_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_temp_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_psal_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"position\" nillable=\"true\" type=\"gml:GeometryPropertyType\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"smru_platform_code\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"wmo_platform_code\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"species_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"release_location\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"id\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"job_id\" nillable=\"true\" type=\"xsd:long\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"url\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"created\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"modified\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"first_indexed\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"last_indexed\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"last_indexed_run\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"size\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"deleted\" nillable=\"true\" type=\"xsd:boolean\"/>\n" +
-                        "        </xsd:sequence>\n" +
-                        "      </xsd:extension>\n" +
-                        "    </xsd:complexContent>\n" +
-                        "  </xsd:complexType>\n" +
-                        "  <xsd:element name=\"aatams_sattag_qc_ctd_profile_map\" substitutionGroup=\"gml:AbstractFeature\" type=\"imos:aatams_sattag_qc_ctd_profile_mapType\"/>\n" +
-                        "</xsd:schema>";
+                """
+                        <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:imos="imos.mod" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="imos.mod">
+                          <xsd:import namespace="http://www.opengis.net/gml/3.2" schemaLocation="https://geoserver-portal.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd"/>
+                          <xsd:complexType name="aatams_sattag_qc_ctd_profile_mapType">
+                            <xsd:complexContent>
+                              <xsd:extension base="gml:AbstractFeatureType">
+                                <xsd:sequence>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="file_id" nillable="true" type="xsd:long"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_no" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="platform_number" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="project_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="pi_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="cycle_number" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="direction" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="data_centre" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="dc_reference" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="data_state_indicator" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="data_mode" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="inst_reference" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="wmo_inst_type" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="juld" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="juld_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="juld_location" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="latitude" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="longitude" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="position_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="positioning_system" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_pres_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_temp_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_psal_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="position" nillable="true" type="gml:GeometryPropertyType"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="smru_platform_code" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="wmo_platform_code" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="species_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="release_location" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="id" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="job_id" nillable="true" type="xsd:long"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="url" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="created" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="modified" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="first_indexed" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="last_indexed" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="last_indexed_run" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="size" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="deleted" nillable="true" type="xsd:boolean"/>
+                                </xsd:sequence>
+                              </xsd:extension>
+                            </xsd:complexContent>
+                          </xsd:complexType>
+                          <xsd:element name="aatams_sattag_qc_ctd_profile_map" substitutionGroup="gml:AbstractFeature" type="imos:aatams_sattag_qc_ctd_profile_mapType"/>
+                        </xsd:schema>""";
 
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
@@ -505,10 +507,9 @@ public class WmsServerTest {
     }
     /**
      * Test where dateTime is a range start_xxx end_xxx
-     * @throws JsonProcessingException - Not expected
      */
     @Test
-    public void verifyCreateCQLRangeDateTimeWithCQL() throws JsonProcessingException {
+    public void verifyCreateCQLRangeDateTimeWithCQL() {
         String uuid = "uuid1";
         String layer = "aatams_sattag_qc_ctd_profile_map";
         FeatureRequest request = FeatureRequest.builder()
@@ -532,56 +533,57 @@ public class WmsServerTest {
         );
         // This sample contains 1 dateTime field
         String value =
-                "<?xml version=\"1.0\" encoding=\"UTF-8\"?><xsd:schema xmlns:gml=\"http://www.opengis.net/gml/3.2\" xmlns:imos=\"imos.mod\" xmlns:wfs=\"http://www.opengis.net/wfs/2.0\" xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" elementFormDefault=\"qualified\" targetNamespace=\"imos.mod\">\n" +
-                        "  <xsd:import namespace=\"http://www.opengis.net/gml/3.2\" schemaLocation=\"https://geoserver-portal.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd\"/>\n" +
-                        "  <xsd:complexType name=\"aatams_sattag_qc_ctd_profile_mapType\">\n" +
-                        "    <xsd:complexContent>\n" +
-                        "      <xsd:extension base=\"gml:AbstractFeatureType\">\n" +
-                        "        <xsd:sequence>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"file_id\" nillable=\"true\" type=\"xsd:long\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_no\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"platform_number\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"project_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"pi_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"cycle_number\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"direction\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"data_centre\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"dc_reference\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"data_state_indicator\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"data_mode\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"inst_reference\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"wmo_inst_type\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"start_juld\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"juld_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"end_juld\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"latitude\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"longitude\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"position_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"positioning_system\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_pres_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_temp_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"profile_psal_qc\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"position\" nillable=\"true\" type=\"gml:GeometryPropertyType\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"smru_platform_code\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"wmo_platform_code\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"species_name\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"release_location\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"id\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"job_id\" nillable=\"true\" type=\"xsd:long\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"url\" nillable=\"true\" type=\"xsd:string\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"created\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"modified\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"first_indexed\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"last_indexed\" nillable=\"true\" type=\"xsd:dateTime\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"last_indexed_run\" nillable=\"true\" type=\"xsd:int\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"size\" nillable=\"true\" type=\"xsd:double\"/>\n" +
-                        "          <xsd:element maxOccurs=\"1\" minOccurs=\"0\" name=\"deleted\" nillable=\"true\" type=\"xsd:boolean\"/>\n" +
-                        "        </xsd:sequence>\n" +
-                        "      </xsd:extension>\n" +
-                        "    </xsd:complexContent>\n" +
-                        "  </xsd:complexType>\n" +
-                        "  <xsd:element name=\"aatams_sattag_qc_ctd_profile_map\" substitutionGroup=\"gml:AbstractFeature\" type=\"imos:aatams_sattag_qc_ctd_profile_mapType\"/>\n" +
-                        "</xsd:schema>";
+                """
+                        <?xml version="1.0" encoding="UTF-8"?><xsd:schema xmlns:gml="http://www.opengis.net/gml/3.2" xmlns:imos="imos.mod" xmlns:wfs="http://www.opengis.net/wfs/2.0" xmlns:xsd="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified" targetNamespace="imos.mod">
+                          <xsd:import namespace="http://www.opengis.net/gml/3.2" schemaLocation="https://geoserver-portal.aodn.org.au/geoserver/schemas/gml/3.2.1/gml.xsd"/>
+                          <xsd:complexType name="aatams_sattag_qc_ctd_profile_mapType">
+                            <xsd:complexContent>
+                              <xsd:extension base="gml:AbstractFeatureType">
+                                <xsd:sequence>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="file_id" nillable="true" type="xsd:long"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_no" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="platform_number" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="project_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="pi_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="cycle_number" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="direction" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="data_centre" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="dc_reference" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="data_state_indicator" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="data_mode" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="inst_reference" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="wmo_inst_type" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="start_juld" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="juld_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="end_juld" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="latitude" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="longitude" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="position_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="positioning_system" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_pres_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_temp_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="profile_psal_qc" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="position" nillable="true" type="gml:GeometryPropertyType"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="smru_platform_code" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="wmo_platform_code" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="species_name" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="release_location" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="id" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="job_id" nillable="true" type="xsd:long"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="url" nillable="true" type="xsd:string"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="created" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="modified" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="first_indexed" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="last_indexed" nillable="true" type="xsd:dateTime"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="last_indexed_run" nillable="true" type="xsd:int"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="size" nillable="true" type="xsd:double"/>
+                                  <xsd:element maxOccurs="1" minOccurs="0" name="deleted" nillable="true" type="xsd:boolean"/>
+                                </xsd:sequence>
+                              </xsd:extension>
+                            </xsd:complexContent>
+                          </xsd:complexType>
+                          <xsd:element name="aatams_sattag_qc_ctd_profile_map" substitutionGroup="gml:AbstractFeature" type="imos:aatams_sattag_qc_ctd_profile_mapType"/>
+                        </xsd:schema>""";
 
         when(search.searchCollections(eq(uuid)))
                 .thenReturn(stac);
