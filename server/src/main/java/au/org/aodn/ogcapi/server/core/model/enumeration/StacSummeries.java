@@ -13,7 +13,8 @@ public enum StacSummeries {
     DatasetProvider("summaries.dataset_provider", "summaries.dataset_provider"),
     DatasetGroup("summaries.dataset_group", "summaries.dataset_group"),
     Status("summaries.status", "summaries.status"),
-    Statement("summaries.statement", "summaries.statement")
+    Statement("summaries.statement", "summaries.statement"),
+    Credits("summaries.credits", "summaries.credits")
     ;
 
     public final String sortField;

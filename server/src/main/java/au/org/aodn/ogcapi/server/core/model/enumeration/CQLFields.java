@@ -176,6 +176,16 @@ public enum CQLFields implements CQLFieldsInterface {
             )._toQuery(),
             null
     ),
+    credit_contains(
+            StacSummeries.Credits.searchField,
+            StacSummeries.Credits.displayField,
+            (literal) -> MatchQuery.of(m -> m
+                    // We want the words exact so need to add space in front and end
+                    .field(StacSummeries.Credits.searchField)
+                    .query(literal)
+            )._toQuery(),
+            null
+    ),
     status(
             StacSummeries.Status.searchField,
             StacSummeries.Status.displayField,
