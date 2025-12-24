@@ -78,6 +78,7 @@ public class RestServices extends OGCApiService {
     public ResponseEntity<byte[]> getWmsMapTile(String collectionId, FeatureRequest request) {
         try {
             return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
                     .body(wmsServer.getMapTile(collectionId, request));
         } catch (Throwable e) {
             throw new RuntimeException(e);

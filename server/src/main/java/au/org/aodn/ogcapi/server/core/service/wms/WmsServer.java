@@ -5,16 +5,14 @@ import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
-import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
-import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
-import au.org.aodn.ogcapi.server.core.model.ogc.wms.GetCapabilitiesResponse;
-import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.*;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,6 +54,9 @@ public class WmsServer {
 
     @Autowired
     protected WmsDefaultParam wmsDefaultParam;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     @Lazy
     @Autowired
@@ -114,8 +116,8 @@ public class WmsServer {
                         if (range.size() == 2) {
                             // Due to no standard name, we try our best to guess if 2 dateTime field, range mean we found start/end date
                             String[] d = request.getDatetime().split("/");
-                            String guess1 = target.get(0).getName();
-                            String guess2 = target.get(1).getName();
+                            String guess1 = range.get(0).getName();
+                            String guess2 = range.get(1).getName();
 
                             if ((guess1.contains("start") || guess1.contains("min")) && (guess2.contains("end") || guess2.contains("max"))) {
                                 String timeCql = String.format("CQL_FILTER=%s >= %s AND %s <= %s", guess1, d[0], guess2, d[1]);
@@ -174,6 +176,9 @@ public class WmsServer {
                         param.putAll(wmsDefaultParam.getWms());
                     } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwms());
+                        if(request.getDatetime() != null) {
+                            param.put("TIME", request.getDatetime());
+                        }
                     }
 
                     // Now we add the missing argument from the request
@@ -215,12 +220,23 @@ public class WmsServer {
                             builder.queryParam(key, value);
                         }
                     });
-                    // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
-                    // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
-                    // build() call, we append the cql after the construction.
-                    String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
-                    log.debug("Url to wms geoserver {}", target);
-                    urls.add(target);
+                    if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
+                        // ncWMS (including GeoServer extension) does not support CQL_FILTER.
+                        // It focuses on NetCDF gridded data with parameters like TIME, ELEVATION, COLORSCALERANGE,
+                        // STYLES (palettes), NUMCOLORBANDS. CQL_FILTER is a GeoServer vendor parameter for vector
+                        // filtering, not implemented in ncWMS. So we only add CQL if it is WMS
+                        String target = builder.build().toUriString();
+                        log.debug("Url to ncWms geoserver {}", target);
+                        urls.add(target);
+                    }
+                    else {
+                        // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
+                        // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
+                        // build() call, we append the cql after the construction.
+                        String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
+                        log.debug("Url to wms geoserver {}", target);
+                        urls.add(target);
+                    }
 
                     return urls;
                 }
@@ -494,7 +510,13 @@ public class WmsServer {
                 log.debug("map tile request for layer name {} url {} ", request.getLayerName(), url);
                 ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, byte[].class), byte[].class, pretendUserEntity);
                 if (response.getStatusCode().is2xxSuccessful()) {
-                    return response.getBody();
+                    if (response.getHeaders().getContentType() != null && response.getHeaders().getContentType().getType().equals("image")) {
+                        return response.getBody();
+                    }
+                    else {
+                        // Something wrong from the server likely syntax error
+                        throw new URISyntaxException(response.getBody() != null ? new String(response.getBody(), StandardCharsets.UTF_8) : "", url);
+                    }
                 }
             }
         }
@@ -602,15 +624,42 @@ public class WmsServer {
                 if(filteredLayers.isEmpty() && request.getLayerName() != null) {
                     DescribeLayerResponse dr = describeLayer(collectionId, request);
                     if(dr != null) {
-                        // That means at least layer is valid just not operational
-                        return List.of(
+                        // That means at least layer is valid just not works with wfs, we should keep the
+                        // original layername instead showing the lookup name as it can be different from
+                        // what is mentioned in the metadata which people get confused.
+                        filteredLayers = List.of(
                                 LayerInfo.builder()
-                                        .name(dr.getLayerDescription().getName())
-                                        .title(dr.getLayerDescription().getName())
+                                        .name(request.getLayerName())
+                                        .title(request.getLayerName())
                                         .queryable("0")
                                         .build()
                         );
                     }
+                }
+
+                // Special case for NCWMS layer where we need to call GetMetadata to find the related points for gridded data
+                if(mapServerUrl.get().contains("/ncwms")) {
+                    filteredLayers.forEach(layer -> {
+                        // For each ncwms layer, we attach the metadata
+                        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(mapServerUrl.get());
+                        builder.scheme("https"); // Force https
+
+                        wmsDefaultParam.getNcmetadata().forEach((key, value) -> {
+                            if (value != null) {
+                                builder.queryParam(key, value);
+                            }
+                        });
+                        builder.queryParam("layerName", layer.getName());
+
+                        ResponseEntity<String> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET, pretendUserEntity, String.class);
+                        if(response.getStatusCode().is2xxSuccessful()) {
+                            try {
+                                layer.setNcWmsLayerInfo(objectMapper.readValue(response.getBody(), NcWmsLayerInfo.class));
+                            } catch (JsonProcessingException e) {
+                                // Save to ignore
+                            }
+                        }
+                    });
                 }
                 log.debug("Returning layers {}", filteredLayers);
 

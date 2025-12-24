@@ -183,10 +183,11 @@ public class WfsServer {
     /**
      * Fuzzy match utility to compare layer names, ignoring namespace prefixes
      * For example: "underway:nuyina_underway_202122020" matches "nuyina_underway_202122020"
+     * For example: "abc/cde" matches "abc"
      *
      * @param text1 - First text to compare
      * @param text2 - Second text to compare
-     * @return true if texts match (after removing namespace prefix)
+     * @return true if texts match (after removing namespace prefix) and subfix
      */
     protected boolean roughlyMatch(String text1, String text2) {
         if (text1 == null || text2 == null) {
@@ -197,13 +198,11 @@ public class WfsServer {
         String normalized1 = text1.contains(":") ? text1.substring(text1.indexOf(":") + 1) : text1;
         String normalized2 = text2.contains(":") ? text2.substring(text2.indexOf(":") + 1) : text2;
 
-        if (normalized1.length() < normalized2.length()) {
-            // Swap the text so that compare startsWith using longer text.
-            String temp = normalized1;
-            normalized1 = normalized2;
-            normalized2 = temp;
-        }
-        return normalized1.startsWith(normalized2);
+        // Remove "/" and anything follows
+        normalized1 = normalized1.split("/")[0];
+        normalized2 = normalized2.split("/")[0];
+
+        return normalized1.equals(normalized2);
     }
     /**
      * Extract typename from WFS URL query parameters

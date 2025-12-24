@@ -135,6 +135,6 @@ public class WfsServerTest {
 
         List<LayerInfo> info = server.filterLayersByWfsLinks("id", layers);
         assertEquals(1, info.size(), "Layer count match");
-        assertEquals(layers.get(1), info.get(0), "Layer layer:test_layer_aodn_map found");
+        assertEquals(layers.get(0), info.get(0), "Layer layer:test_layer_aodn_map found");
     }
 }
