@@ -599,4 +599,33 @@ public class WmsServerTest {
 
         assertEquals("CQL_FILTER=start_juld >= 2023-01-01 AND end_juld <= 2023-12-31 AND set_code=1234", result);
     }
+
+    @Test
+    void testRewriteUrlWithWorkSpace() {
+        FeatureRequest req = FeatureRequest.builder()
+                .layerName("xxx:yyy")
+                .build();
+
+        // Case 1: Layer with workspace, URL without workspace
+        String url1 = "https://example.com/geoserver/wms?service=WMS";
+        String result1 = WmsServer.rewriteUrlWithWorkSpace(url1, req);
+        assertEquals("https://example.com/geoserver/xxx/wms?service=WMS", result1);
+
+        // Case 2: No workspace in layer name
+        req.setLayerName("yyy");
+        String result2 = WmsServer.rewriteUrlWithWorkSpace(url1, req);
+        assertEquals(url1, result2);
+
+        // Case 3: Workspace already in URL
+        req.setLayerName("xxx:yyy");
+        String url3 = "https://example.com/geoserver/xxx/wms";
+        String result3 = WmsServer.rewriteUrlWithWorkSpace(url3, req);
+        assertEquals(url3, result3);
+
+        // Case 4: Different service (wfs)
+        req.setLayerName("xxx:yyy");
+        String url4 = "https://example.com/geoserver/wfs";
+        String result4 = WmsServer.rewriteUrlWithWorkSpace(url4, req);
+        assertEquals("https://example.com/geoserver/xxx/wfs", result4);
+    }
 }
