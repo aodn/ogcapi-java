@@ -311,7 +311,44 @@ public class WmsServer {
         }
         return null;
     }
+    /**
+     * Some URL provided will miss the workspace in url event the layername is xxx:yyy where xxx is workspace
+     * it is a typo in the metadata but manual fix will be very time consuming, so we can safely assume rewrite
+     * the URL will work as it is a geoserver standard.
+     * @param url - URl that may or may not missing the work space
+     * @param request - Request that contains layer name
+     * @return - A rewrite URL or original URL depends on logic
+     */
+    protected static String rewriteUrlWithWorkSpace(String url, FeatureRequest request) {
+        if(request.getLayerName().contains(":")) {
+            String workspace = request.getLayerName().split(":")[0];
+            UriComponents components = UriComponentsBuilder.fromUriString(url).build();
 
+            String workspacePatternInURL = String.format("/%s/", workspace);
+            if(components.getPath() != null && !components.getPath().contains(workspacePatternInURL)) {
+                // Need rewrite, get a writable list
+                List<String> segments = new ArrayList<>(components.getPathSegments());
+                segments.add(segments.size() - 1, workspace);
+
+                return UriComponentsBuilder.newInstance()
+                        .scheme(components.getScheme())
+                        .host(components.getHost())
+                        .path("/" + String.join("/", segments))
+                        .queryParams(components.getQueryParams())
+                        .build()
+                        .toUriString();
+            }
+        }
+        return url;
+    }
+    /**
+     * Create the URL to WMS to get the map feature, in this case it will be the content of the popup when you click
+     * the map.
+     * @param url - URL to WMS
+     * @param uuid - UUID of record
+     * @param request - Feature requested
+     * @return - List of URL point to the wms queuing map features
+     */
     protected List<String> createMapFeatureQueryUrl(String url, String uuid, FeatureRequest request) {
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
@@ -490,7 +527,6 @@ public class WmsServer {
         }
         return null;
     }
-
     /**
      * Get the wms image/png tile
      *
@@ -602,7 +638,13 @@ public class WmsServer {
      * Get filtered layers from WMS GetCapabilities for a specific collection, we use this function because we do not
      * trust the WMS layer value because it can be wrong, we use the WFS link to infer the layer and therefore the layer
      * name return will be operational with WFS function.
+     * <p />
      * First fetches all layers (cached by URL), then filters by WFS links (cached by UUID)
+     * <p />
+     * Sometimes the URL provided by WMS link is not optimal, for example
+     * <a href="https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27FR199410%27">...</a>
+     * will result in timeout due to too big query, if layername inside request have format xxx:yyyy then
+     * we can use xxx as the workspace name and rewrite the URL to https://www.cmar.csiro.au/geoserver/xxx/wms
      *
      * @param collectionId - The uuid
      * @param request      - The request param
@@ -613,7 +655,9 @@ public class WmsServer {
 
         if (mapServerUrl.isPresent()) {
             // Fetch all layers from GetCapabilities (this call is cached by URL)
-            List<LayerInfo> allLayers = self.fetchCapabilitiesLayersByUrl(mapServerUrl.get());
+            // Special rewrite to speed up query
+            String url = rewriteUrlWithWorkSpace(mapServerUrl.get(), request);
+            List<LayerInfo> allLayers = self.fetchCapabilitiesLayersByUrl(url);
 
             if (!allLayers.isEmpty()) {
                 // Filter layers based on WFS link matching

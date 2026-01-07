@@ -27,6 +27,8 @@ public class CacheWarm {
             "https://www.cmar.csiro.au/geoserver/ereefs/wms",
             "https://www.cmar.csiro.au/geoserver/ea-be/wms",
             "https://www.cmar.csiro.au/geoserver/gsfm/wms",
+            "https://www.cmar.csiro.au/geoserver/local/wms",
+            "https://www.cmar.csiro.au/geoserver/mnf/wms",
             "https://www.cmar.csiro.au/geoserver/nerp/wms",
             "https://www.cmar.csiro.au/geoserver/AusSeabed/wms",
             "https://geoserver.apps.aims.gov.au/aims/wms",
@@ -78,7 +80,7 @@ public class CacheWarm {
         );
     }
 
-    @Retryable(maxAttempts = 3, backoff = @Backoff(delay = 1000))
+    @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000))
     protected void warmGetCapabilities(String url) {
         try {
             // Call and warm cache
