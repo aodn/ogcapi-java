@@ -22,6 +22,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.*;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -489,7 +490,10 @@ public class WmsServer {
                         // This is a simple trick to check if the html is in fact empty body, if empty
                         // try another url
                         if (html != null && (html.contains("class=\"feature\"") || html.contains("class=\"featureInfo\""))) {
-                            return FeatureInfoResponse.builder().html(html).build();
+                            // Some source strangely encode the html tags
+                            return FeatureInfoResponse.builder()
+                                    .html(HtmlUtils.htmlUnescape(html))
+                                    .build();
                         }
                     } else if (MediaType.APPLICATION_XML.isCompatibleWith(response.getHeaders().getContentType())) {
                         FeatureInfoResponse r = xmlMapper.readValue(response.getBody(), FeatureInfoResponse.class);
