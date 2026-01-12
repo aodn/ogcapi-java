@@ -650,7 +650,40 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             for (var hit : response.hits().hits()) {
                 EsFeatureCollectionModel hitFeatureCollection = hit.source();
                 if (hitFeatureCollection != null && hitFeatureCollection.getFeatures() != null) {
-                    features.addAll(hitFeatureCollection.toFeatureCollectionGeoJSON().getFeatures());
+                    // A collectionID may map to several dataset key. So we need to group features by dataset keys. TO get a dataset key which sits in hit.properties.key. For example:
+                    // "properties": {
+                    //            "date": "2011-04",
+                    //            "collection": "4d3d4aca-472e-4616-88a5-df0f5ab401ba",
+                    //            "key": "mooring_acidification_realtime_qc.parquet"
+                    //          }
+                    String datasetKey = null;
+                    if (hitFeatureCollection.getProperties() != null) {
+                        Object keyObj = hitFeatureCollection.getProperties().get("key");
+                        if (keyObj != null) {
+                            datasetKey = keyObj.toString();
+                        }
+                    }
+
+                    List<FeatureGeoJSON> documentFeatures =
+                            hitFeatureCollection.toFeatureCollectionGeoJSON().getFeatures();
+
+                    for (FeatureGeoJSON feature : documentFeatures) {
+                        // add key in property field for each feature
+                        if (datasetKey != null) {
+                            Object featurePropsObj = feature.getProperties();
+
+                            if (featurePropsObj instanceof Map) {
+                                @SuppressWarnings("unchecked")
+                                Map<String, Object> featurePropsMap = (Map<String, Object>) featurePropsObj;
+                                featurePropsMap.put("key", datasetKey);
+                            } else {
+                                Map<String, Object> newPropsMap = new HashMap<>();
+                                newPropsMap.put("key", datasetKey);
+                                feature.setProperties(newPropsMap);
+                            }
+                        }
+                        features.add(feature);
+                    }
                 }
             }
 

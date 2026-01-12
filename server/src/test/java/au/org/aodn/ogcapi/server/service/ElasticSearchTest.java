@@ -13,6 +13,7 @@ import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.HitsMetadata;
 import co.elastic.clients.elasticsearch.core.search.TotalHits;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -25,8 +26,10 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.*;
 
+@Slf4j
 public class ElasticSearchTest {
     private ElasticsearchClient mockClient;
     private ElasticSearch elasticSearch;
@@ -61,10 +64,22 @@ public class ElasticSearchTest {
         featureCollectionProperties.put("key", "satellite_ghrsst_l4_gamssa_1day_multi_sensor_world.zarr");
         esFeatureCollection.setProperties(featureCollectionProperties);
         var coords = new ArrayList<List<List<BigDecimal>>>();
+        var esFeature = new EsFeatureModel();
+
+        // mock a single point [147.338884, -43.190779]
+        List<List<BigDecimal>> ring = new ArrayList<>();
+        List<BigDecimal> point = List.of(
+                new BigDecimal("147.338884"),
+                new BigDecimal("-43.190779")
+        );
+        ring.add(point);
+        coords.add(ring);
+
         var polygon = new EsPolygonModel();
         polygon.setCoordinates(coords);
-        var esFeature = new EsFeatureModel();
+
         esFeature.setGeometry(polygon);
+
         esFeatureCollection.setFeatures(List.of(esFeature));
 
         when(hit.source()).thenReturn(esFeatureCollection);
@@ -88,7 +103,18 @@ public class ElasticSearchTest {
         assertNotNull(result);
         assertEquals(1, result.getCollections().size());
         assertEquals(1L, result.getTotal());
-        assertEquals(esFeature.toFeatureGeoJSON(), result.getCollections().get(0));
+        // validate geometry keeps same after adding key property
+        assertEquals(esFeature.toFeatureGeoJSON().getGeometry(),
+                result.getCollections().get(0).getGeometry());
+
+        // validate key is in properties
+        FeatureGeoJSON returnedFeature = result.getCollections().get(0);
+        @SuppressWarnings("unchecked")
+        Map<String, Object> featureProps = (Map<String, Object>) returnedFeature.getProperties();
+
+        assertTrue(featureProps.containsKey("key"));
+        assertEquals("satellite_ghrsst_l4_gamssa_1day_multi_sensor_world.zarr",
+                featureProps.get("key"));
     }
 
 
