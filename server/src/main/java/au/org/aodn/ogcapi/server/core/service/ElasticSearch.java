@@ -650,7 +650,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             for (var hit : response.hits().hits()) {
                 EsFeatureCollectionModel hitFeatureCollection = hit.source();
                 if (hitFeatureCollection != null && hitFeatureCollection.getFeatures() != null) {
-                    // A collectionID may map to several dataset key. So we need to group features by dataset keys. TO get a dataset key which sits in hit.properties.key. For example:
+                    // A collectionID may map to several dataset key. So we need to identify features with dataset keys. TO get a dataset key which sits in hit.properties.key. For example:
                     // "properties": {
                     //            "date": "2011-04",
                     //            "collection": "4d3d4aca-472e-4616-88a5-df0f5ab401ba",
