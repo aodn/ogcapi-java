@@ -136,7 +136,7 @@
         "type": "text"
       },
       "license": {
-        "type": "text"
+        "type": "keyword"
       },
       "links": {
         "type": "nested",
@@ -170,12 +170,12 @@
         "type": "flattened"
       },
       "sci:citation": {
-        "type": "text"
+        "type": "keyword"
       },
       "summaries": {
         "properties": {
           "ai:description": {
-            "type": "text"
+            "type": "keyword"
           },
           "score": {
             "type": "long"
@@ -250,10 +250,10 @@
                 "type": "nested",
                 "properties": {
                   "value": {
-                    "type": "text"
+                    "type": "keyword"
                   },
                   "roles": {
-                    "type": "text"
+                    "type": "keyword"
                   }
                 }
               },
@@ -261,10 +261,10 @@
                 "type": "nested",
                 "properties": {
                   "value": {
-                    "type": "text"
+                    "type": "keyword"
                   },
                   "roles": {
-                    "type": "text"
+                    "type": "keyword"
                   }
                 }
               },
@@ -272,19 +272,19 @@
                 "type": "nested",
                 "properties": {
                   "delivery_point": {
-                    "type": "text"
+                    "type": "keyword"
                   },
                   "city": {
-                    "type": "text"
+                    "type": "keyword"
                   },
                   "administrative_area": {
-                    "type": "text"
+                    "type": "keyword"
                   },
                   "postal_code": {
-                    "type": "text"
+                    "type": "keyword"
                   },
                   "country": {
-                    "type": "text"
+                    "type": "keyword"
                   }
                 }
               },
@@ -295,19 +295,19 @@
                     "type": "nested",
                     "properties": {
                       "href": {
-                        "type": "text"
+                        "type": "keyword"
                       },
                       "rel": {
-                        "type": "text"
+                        "type": "keyword"
                       },
                       "type": {
-                        "type": "text"
+                        "type": "keyword"
                       },
                       "title": {
-                        "type": "text"
+                        "type": "keyword"
                       },
                       "description": {
-                        "type": "text"
+                        "type": "keyword"
                       }
                     }
                   }
