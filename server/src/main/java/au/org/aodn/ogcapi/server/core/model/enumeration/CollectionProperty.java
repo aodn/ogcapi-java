@@ -22,7 +22,8 @@ public enum CollectionProperty {
     centroid("centroid"),
     pace("pace"),
     datasetGroup("dataset_group"),
-    aiDescription("ai:description");
+    aiDescription("ai:description"),
+    scope("scope");
 
     private final String value;
 

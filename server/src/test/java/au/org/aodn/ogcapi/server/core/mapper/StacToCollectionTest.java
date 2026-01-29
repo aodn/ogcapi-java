@@ -107,6 +107,10 @@ public class StacToCollectionTest {
         var datasetGroup = List.of("group_test");
         var aiDescription = "AI-generated description for testing";
 
+        Map<String, String> scope = new HashMap<>();
+        scope.put("code", "document");
+        scope.put("name", "IMOS publication");
+
         StacCollectionModel model = StacCollectionModel
                 .builder()
                 .summaries(
@@ -120,6 +124,7 @@ public class StacToCollectionTest {
                                 .statement(statement)
                                 .datasetGroup(datasetGroup)
                                 .aiDescription(aiDescription)
+                                .scope(scope)
                                 .build()
                 )
                 .license("Attribution 4.0")
@@ -147,6 +152,8 @@ public class StacToCollectionTest {
         Assertions.assertEquals("revision date", collection.getProperties().get(CollectionProperty.revision));
         Assertions.assertEquals(datasetGroup, collection.getProperties().get(CollectionProperty.datasetGroup));
         Assertions.assertEquals(aiDescription, collection.getProperties().get(CollectionProperty.aiDescription));
+        Assertions.assertEquals("document",
+                ((Map<String, String>) collection.getProperties().get(CollectionProperty.scope)).get("code"));
         Assertions.assertNotNull(collection.getLinks());
         Assertions.assertEquals(3, collection.getLinks().size());
     }
