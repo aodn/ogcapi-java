@@ -41,5 +41,8 @@ public class SummariesModel {
     @JsonProperty("ai:description")
     protected String aiDescription;
 
+    @JsonProperty("scope")
+    protected Map<String, String> scope;
+
     protected String statement;
 }
