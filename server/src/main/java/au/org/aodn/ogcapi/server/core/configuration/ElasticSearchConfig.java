@@ -56,7 +56,7 @@ public class ElasticSearchConfig {
      * @param indexName - The elastic index name that store the STAC from es-indexer
      * @param pageSize - Do not set this value too high, say 5000 will crash elastic search
      * @param searchAsYouTypeSize - The number of search result return for search as you type
-     * @return
+     * @return The search object
      */
     @Bean
     public Search createElasticSearch(ElasticsearchClient client,
