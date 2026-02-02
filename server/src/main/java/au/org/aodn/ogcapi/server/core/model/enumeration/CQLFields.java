@@ -192,6 +192,12 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    scope(
+            StacSummeries.Scope.searchField,
+            StacSummeries.Scope.displayField,
+            null,
+            null
+    ),
     score(
             CQLElasticSetting.score.getSetting(),
             CQLElasticSetting.score.getSetting(),

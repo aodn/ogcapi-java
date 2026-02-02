@@ -14,7 +14,8 @@ public enum StacSummeries {
     DatasetGroup("summaries.dataset_group", "summaries.dataset_group"),
     Status("summaries.status", "summaries.status"),
     Statement("summaries.statement", "summaries.statement"),
-    Credits("summaries.credits", "summaries.credits")
+    Credits("summaries.credits", "summaries.credits"),
+    Scope("summaries.scope", "summaries.scope")
     ;
 
     public final String sortField;
