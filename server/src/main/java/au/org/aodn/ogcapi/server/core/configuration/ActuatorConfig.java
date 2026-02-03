@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.ErrorCode;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
+import co.elastic.clients.elasticsearch._types.HealthStatus;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
@@ -22,7 +23,7 @@ public class ActuatorConfig {
             try {
                 // Is elastic up and run?
                 String status = client.cluster().health(r -> r).status().toString();
-                if ("yellow".equalsIgnoreCase(status) || "red".equalsIgnoreCase(status)) {
+                if (HealthStatus.Yellow.name().equalsIgnoreCase(status) || HealthStatus.Red.name().equalsIgnoreCase(status)) {
                     return Health.status(ErrorCode.ELASTICSEARCH_UNAVAILABLE.getStatus())
                             .withDetail("reason", ErrorCode.ELASTICSEARCH_UNAVAILABLE.getMessage())
                             .withDetail("code", ErrorCode.ELASTICSEARCH_UNAVAILABLE.getCode())
