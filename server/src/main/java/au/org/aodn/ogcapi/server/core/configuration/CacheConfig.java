@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
 import au.org.aodn.ogcapi.server.core.service.CacheWarm;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import org.ehcache.config.builders.*;
@@ -29,6 +30,7 @@ public class CacheConfig {
 
     public static final String CACHE_WMS_MAP_TILE = "cache-wms-map_tile";
     public static final String GET_CAPABILITIES_WMS_LAYERS = "get-capabilities-wms-layers";
+    public static final String GET_CAPABILITIES_WFS_FEATURE_TYPES = "get-capabilities-wfs-feature-types";
     public static final String DOWNLOADABLE_FIELDS = "downloadable-fields";
     public static final String ALL_NO_LAND_GEOMETRY = "all-noland-geometry";
     public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
@@ -103,6 +105,12 @@ public class CacheConfig {
                                 ResourcePoolsBuilder.heap(20)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
+                .withCache(GET_CAPABILITIES_WFS_FEATURE_TYPES,
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(20)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
                 .build();
 
 
@@ -119,8 +127,8 @@ public class CacheConfig {
     }
 
     @Bean
-    public CacheWarm createCacheWarm(WmsServer wmsServer, CacheNoLandGeometry cacheNoLandGeometry, GeometryUtils geometryUtils) {
+    public CacheWarm createCacheWarm(WmsServer wmsServer, WfsServer wfsServer, CacheNoLandGeometry cacheNoLandGeometry, GeometryUtils geometryUtils) {
         GeometryUtils.setSelf(geometryUtils);
-        return new CacheWarm(wmsServer, cacheNoLandGeometry, geometryUtils);
+        return new CacheWarm(wmsServer, wfsServer, cacheNoLandGeometry, geometryUtils);
     }
 }

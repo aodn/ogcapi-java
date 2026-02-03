@@ -8,7 +8,8 @@ public enum FeatureId {
     wms_downloadable_fields("wms_downloadable_fields"), // Query field based on value from wms describe layer query
     wms_map_tile("wms_map_tile"),
     wms_map_feature("wms_map_feature"),
-    wms_layers("wms_layers"); // Get all available layers from WMS GetCapabilities
+    wms_layers("wms_layers"), // Get all available layers from WMS GetCapabilities
+    wfs_layers("wfs_layers"); // Get all available feature types from WFS GetCapabilities
 
     public final String featureId;
 
