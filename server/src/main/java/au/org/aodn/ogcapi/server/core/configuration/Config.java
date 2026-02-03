@@ -21,7 +21,7 @@ public class Config {
     ObjectMapper mapper;
 
     @Autowired
-    public void initConstrucUtils(ObjectMapper mapper) {
+    public void initConstructUtils(ObjectMapper mapper) {
         ConstructUtils.setObjectMapper(mapper);
     }
 

@@ -456,12 +456,16 @@ management:
   health:
     elasticsearch:
       enabled: false
+    diskspace:
+      enabled: false
   endpoints:
     web:
       base-path: /api/v1/ogc/manage
       exposure:
         include: "health,info"
   endpoint:
+    health:
+      show-details: always
     logfile:
       external-file: /tmp/logs/ogcapi.log
 # Actuator info point
