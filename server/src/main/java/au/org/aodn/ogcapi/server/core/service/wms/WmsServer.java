@@ -655,11 +655,11 @@ public class WmsServer {
      * Filter WMS layers based on matching with WFS links
      * Matching logic:
      * 1. Primary: link.title matches layer.name OR layer.title (fuzzy match)
-     * 2. Fallback: extract typename from link URI, then typename matches layer.name OR layer.title (fuzzy match)
+     * 2. Fallback: extract layername from link URI, then layername matches layer.name OR layer.title (fuzzy match)
      *
      * @param collectionId - The uuid
      * @param layers       - List of layers to filter
-     * @return Filtered list of WMS layers that have matching WFS links
+     * @return Filtered list of WMS layers that have matching metadata WMS links
      */
     public List<LayerInfo> filterLayersByWmsLinks(String collectionId, List<LayerInfo> layers) {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
@@ -724,12 +724,8 @@ public class WmsServer {
     }
 
     /**
-     * Get filtered layers from WMS GetCapabilities for a specific collection, we use this function because we do not
-     * trust the WMS layer value because it can be wrong, we use the WFS link to infer the layer and therefore the layer
-     * name return will be operational with WFS function.
-     * <p/>
-     * First fetches all layers (cached by URL), then filters by WFS links (cached by UUID)
-     * <p/>
+     * Get filtered layers from WMS GetCapabilities for a specific collection
+     * First fetches all layers (cached by URL), then filters by WMS links
      * Sometimes the URL provided by WMS link is not optimal, for example
      * <a href="https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27FR199410%27">...</a>
      * will result in timeout due to too big query, if layername inside request have format xxx:yyyy then
