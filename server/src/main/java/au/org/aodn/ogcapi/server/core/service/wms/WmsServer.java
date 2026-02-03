@@ -35,6 +35,8 @@ import java.util.stream.Stream;
 
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.CACHE_WMS_MAP_TILE;
 import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
+import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.extractLayernameOrTypenameFromUrl;
+import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.roughlyMatch;
 
 @Slf4j
 public class WmsServer {
@@ -72,11 +74,13 @@ public class WmsServer {
 
         pretendUserEntity = entity;
     }
+
     /**
      * This function is used to append the CQL filter to the geonetwork query, it will guess the correct dataTime field by
      * some logic, so that if user select filter by range, it works. In case of issue please debug the logic as we are
      * dealing with different non-standard name
-     * @param uuid - The uuid of metadata
+     *
+     * @param uuid    - The uuid of metadata
      * @param request - The request object to the map
      * @return - The CQL combined the wfs cql and the dateTime query.
      */
@@ -85,13 +89,12 @@ public class WmsServer {
 
         // If the metadata record have wfs url query, we will use it and analysis it and extract the CQL part if exist
         Optional<String> wfsUrl = wfsServer.getFeatureServerUrlByTitleOrQueryParam(uuid, request.getLayerName());
-        if(wfsUrl.isPresent()) {
+        if (wfsUrl.isPresent()) {
             UriComponents wfsUrlComponents = UriComponentsBuilder.fromUriString(wfsUrl.get()).build();
             // Extract the CQL if existing in the WFS, we need to apply it to the WMS as well
-            if(wfsUrlComponents.getQueryParams().get("cql_filter") != null) {
+            if (wfsUrlComponents.getQueryParams().get("cql_filter") != null) {
                 cql = wfsUrlComponents.getQueryParams().get("cql_filter").get(0);
-            }
-            else if(wfsUrlComponents.getQueryParams().get("CQL_FILTER") != null) {
+            } else if (wfsUrlComponents.getQueryParams().get("CQL_FILTER") != null) {
                 cql = wfsUrlComponents.getQueryParams().get("CQL_FILTER").get(0);
             }
         }
@@ -136,31 +139,31 @@ public class WmsServer {
                                     .filter(v -> Stream.of("juld", "time").anyMatch(k -> v.getName().equalsIgnoreCase(k)))
                                     .toList();
 
-                            if(individual.size() == 1) {
+                            if (individual.size() == 1) {
                                 log.debug("Map datetime field to name to [{}]", individual.get(0).getName());
                                 String timeCql = String.format("CQL_FILTER=%s DURING %s", individual.get(0).getName(), request.getDatetime());
                                 return "".equalsIgnoreCase(cql) ? timeCql : timeCql + " AND " + cql;
                             }
                         }
-                    }
-                    else if(target.size() == 1) {
+                    } else if (target.size() == 1) {
                         log.debug("Map datetime field to name to the only dateTime field [{}]", target.get(0).getName());
                         String timeCql = String.format("CQL_FILTER=%s DURING %s", target.get(0).getName(), request.getDatetime());
                         return "".equalsIgnoreCase(cql) ? timeCql : timeCql + " AND " + cql;
                     }
                 }
                 log.error("No date time field found for uuid {}, result will not be bounded by date time even specified", uuid);
-            }
-            catch (DownloadableFieldsNotFoundException dfnf) {
+            } catch (DownloadableFieldsNotFoundException dfnf) {
                 // Without field, we cannot create a valid CQL filte targeting a dateTime, so just return existing CQL if exist
             }
         }
         return "".equalsIgnoreCase(cql) ? "" : String.format("CQL_FILTER=%s", cql);
     }
+
     /**
      * Create the full WMS url to fetch the tiles image
-     * @param url - The url from the metadata, it may point to the wms server only without specifying the remain details, this function will do a smart lookup
-     * @param uuid - The UUID of the metadata which use to find the WFS links
+     *
+     * @param url     - The url from the metadata, it may point to the wms server only without specifying the remain details, this function will do a smart lookup
+     * @param uuid    - The UUID of the metadata which use to find the WFS links
      * @param request - The request like bbox and other param say datetime, layerName (where layerName is not reliable and need lookup internally)
      * @return - The final URl to do the query
      */
@@ -177,7 +180,7 @@ public class WmsServer {
                         param.putAll(wmsDefaultParam.getWms());
                     } else if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms")) {
                         param.putAll(wmsDefaultParam.getNcwms());
-                        if(request.getDatetime() != null) {
+                        if (request.getDatetime() != null) {
                             param.put("TIME", request.getDatetime());
                         }
                     }
@@ -229,8 +232,7 @@ public class WmsServer {
                         String target = builder.build().toUriString();
                         log.debug("Url to ncWms geoserver {}", target);
                         urls.add(target);
-                    }
-                    else {
+                    } else {
                         // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
                         // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
                         // build() call, we append the cql after the construction.
@@ -296,7 +298,7 @@ public class WmsServer {
                     log.debug("Url to wms geoserver for describe layer {}", target);
                     urls.add(target);
 
-                    if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms") && request.getLayerName().contains("/")) {
+                    if (pathSegments.get(pathSegments.size() - 1).equalsIgnoreCase("ncwms") && request.getLayerName() != null && request.getLayerName().contains("/")) {
                         // Special handle for ncwms, the layer name may be incorrect with /xxx suffix
                         // for example srs_ghrsst_l4_gamssa_url/analysed_sst, we need to remove the /xxxx
                         // Generate more url to test which one works
@@ -312,21 +314,24 @@ public class WmsServer {
         }
         return null;
     }
+
     /**
      * Some URL provided will miss the workspace in url event the layername is xxx:yyy where xxx is workspace
      * it is a typo in the metadata but manual fix will be very time consuming, so we can safely assume rewrite
      * the URL will work as it is a geoserver standard.
-     * @param url - URl that may or may not missing the work space
+     *
+     * @param url     - URl that may or may not missing the work space
      * @param request - Request that contains layer name
      * @return - A rewrite URL or original URL depends on logic
      */
+    // TODO: get wms link by uuid and extract layername for workspace
     protected static String rewriteUrlWithWorkSpace(String url, FeatureRequest request) {
-        if(request.getLayerName().contains(":")) {
+        if (request.getLayerName() != null && request.getLayerName().contains(":")) {
             String workspace = request.getLayerName().split(":")[0];
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
 
             String workspacePatternInURL = String.format("/%s/", workspace);
-            if(components.getPath() != null && !components.getPath().contains(workspacePatternInURL)) {
+            if (components.getPath() != null && !components.getPath().contains(workspacePatternInURL)) {
                 // Need rewrite, get a writable list
                 List<String> segments = new ArrayList<>(components.getPathSegments());
                 segments.add(segments.size() - 1, workspace);
@@ -340,13 +345,16 @@ public class WmsServer {
                         .toUriString();
             }
         }
+
         return url;
     }
+
     /**
      * Create the URL to WMS to get the map feature, in this case it will be the content of the popup when you click
      * the map.
-     * @param url - URL to WMS
-     * @param uuid - UUID of record
+     *
+     * @param url     - URL to WMS
+     * @param uuid    - UUID of record
      * @param request - Feature requested
      * @return - List of URL point to the wms queuing map features
      */
@@ -531,6 +539,7 @@ public class WmsServer {
         }
         return null;
     }
+
     /**
      * Get the wms image/png tile
      *
@@ -552,8 +561,7 @@ public class WmsServer {
                 if (response.getStatusCode().is2xxSuccessful()) {
                     if (response.getHeaders().getContentType() != null && response.getHeaders().getContentType().getType().equals("image")) {
                         return response.getBody();
-                    }
-                    else {
+                    } else {
                         // Something wrong from the server likely syntax error
                         throw new URISyntaxException(response.getBody() != null ? new String(response.getBody(), StandardCharsets.UTF_8) : "", url);
                     }
@@ -562,10 +570,12 @@ public class WmsServer {
         }
         return null;
     }
+
     /**
      * Query the field using WMS's DescriberLayer function to find out the associated WFS layer and fields
+     *
      * @param collectionId - The uuid of the metadata that hold this WMS link
-     * @param request - Request item for this WMS layer, usually layer name, size, etc.
+     * @param request      - Request item for this WMS layer, usually layer name, size, etc.
      * @return - The fields contained in this WMS layer, we are particular interest in the date time field for subsetting
      */
     public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request) {
@@ -581,6 +591,7 @@ public class WmsServer {
             return wfsServer.getDownloadableFields(collectionId, request, null);
         }
     }
+
     /**
      * Fetch raw layers from WMS GetCapabilities - cached by URL, that is query all layer supported by this WMS server.
      * This allows multiple collections sharing the same WMS server to use cached results
@@ -638,13 +649,95 @@ public class WmsServer {
 
         return Collections.emptyList();
     }
+
+    /**
+     * Filter WMS layers based on matching with WFS links
+     * Matching logic:
+     * 1. Primary: link.title matches layer.name OR layer.title (fuzzy match)
+     * 2. Fallback: extract typename from link URI, then typename matches layer.name OR layer.title (fuzzy match)
+     *
+     * @param collectionId - The uuid
+     * @param layers       - List of layers to filter
+     * @return Filtered list of WMS layers that have matching WFS links
+     */
+    public List<LayerInfo> filterLayersByWmsLinks(String collectionId, List<LayerInfo> layers) {
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
+
+        if (result.getCollections().isEmpty()) {
+            log.info("Return empty layers if as no collection found for collectionId: {}", collectionId);
+            return Collections.emptyList();
+        }
+
+        StacCollectionModel model = result.getCollections().get(0);
+
+        // Filter WMS links where ai:group == "Data Access > wms"
+        List<LinkModel> wmsLinks = model.getLinks()
+                .stream()
+                .filter(link -> link.getAiGroup() != null)
+                .filter(link -> link.getAiGroup().contains(WMS_LINK_MARKER))
+                .toList();
+
+        // Filter WMS layers based on matching with WFS links
+        List<LayerInfo> filteredLayers = new ArrayList<>();
+
+        log.debug("=== Starting to match {} layers ===", layers.size());
+        for (LayerInfo layer : layers) {
+            boolean matched = false;
+
+            for (LinkModel wmsLink : wmsLinks) {
+                // Primary match: link.title matches layer.name OR layer.title
+                if (wmsLink.getTitle() != null) {
+                    if (roughlyMatch(wmsLink.getTitle(), layer.getName()) ||
+                            roughlyMatch(wmsLink.getTitle(), layer.getTitle())) {
+                        log.debug("  ✓ Primary match found - WMS title '{}' matches layer '{}'",
+                                wmsLink.getTitle(), layer.getName());
+                        matched = true;
+                        break;  // This will skip the next if block
+                    }
+                }
+
+                // Sometimes the wms link.title is wrong but the link.url contains all information
+                // Fallback match: extract layername from link URI
+                if (wmsLink.getHref() != null) {
+                    Optional<String> layername = extractLayernameOrTypenameFromUrl(wmsLink.getHref());
+                    if (layername.isPresent()) {
+                        if (roughlyMatch(layername.get(), layer.getName()) ||
+                                roughlyMatch(layername.get(), layer.getTitle())) {
+                            log.debug("  ✓ Fallback match found - layername '{}' matches layer '{}'",
+                                    layername.get(), layer.getName());
+                            matched = true;
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (matched) {
+                filteredLayers.add(layer);
+            }
+        }
+
+//        // Very specific logic for AODN, we favor any layer name ends with _aodn_map, so we display
+//        // map layer similar to old portal, if we cannot find any then display what we have
+//        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l ->
+//                l.getName().endsWith("_aodn_map") || l.getTitle().endsWith("_aodn_map")
+//        ).toList();
+//        if (!aodn_map.isEmpty()) {
+//            filteredLayers = aodn_map;
+//        }
+
+        log.info("Filtered {} wms layers out of {} based on WMS link matching",
+                filteredLayers.size(), layers.size());
+        return filteredLayers;
+    }
+
     /**
      * Get filtered layers from WMS GetCapabilities for a specific collection, we use this function because we do not
      * trust the WMS layer value because it can be wrong, we use the WFS link to infer the layer and therefore the layer
      * name return will be operational with WFS function.
-     * <p />
+     * <p/>
      * First fetches all layers (cached by URL), then filters by WFS links (cached by UUID)
-     * <p />
+     * <p/>
      * Sometimes the URL provided by WMS link is not optimal, for example
      * <a href="https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27FR199410%27">...</a>
      * will result in timeout due to too big query, if layername inside request have format xxx:yyyy then
@@ -664,29 +757,29 @@ public class WmsServer {
             List<LayerInfo> allLayers = self.fetchCapabilitiesLayersByUrl(url);
 
             if (!allLayers.isEmpty()) {
-                // Filter layers based on WFS link matching
-                List<LayerInfo> filteredLayers = wfsServer.filterLayersByWfsLinks(collectionId, allLayers);
+                // Filter layers based on WMS link matching
+                List<LayerInfo> filteredLayers = filterLayersByWmsLinks(collectionId, allLayers);
 
-                // If filteredLayers empty, that means no layer have wfs operation, but that does not mean
-                // the layer cannot serve for display only.
-                if(filteredLayers.isEmpty() && request.getLayerName() != null) {
-                    DescribeLayerResponse dr = describeLayer(collectionId, request);
-                    if(dr != null) {
-                        // That means at least layer is valid just not works with wfs, we should keep the
-                        // original layername instead showing the lookup name as it can be different from
-                        // what is mentioned in the metadata which people get confused.
-                        filteredLayers = List.of(
-                                LayerInfo.builder()
-                                        .name(request.getLayerName())
-                                        .title(request.getLayerName())
-                                        .queryable("0")
-                                        .build()
-                        );
-                    }
-                }
+//                // If filteredLayers empty, that means no layer have wfs operation, but that does not mean
+//                // the layer cannot serve for display only.
+//                if (filteredLayers.isEmpty() && request.getLayerName() != null) {
+//                    DescribeLayerResponse dr = describeLayer(collectionId, request);
+//                    if (dr != null) {
+//                        // That means at least layer is valid just not works with wfs, we should keep the
+//                        // original layername instead showing the lookup name as it can be different from
+//                        // what is mentioned in the metadata which people get confused.
+//                        filteredLayers = List.of(
+//                                LayerInfo.builder()
+//                                        .name(request.getLayerName())
+//                                        .title(request.getLayerName())
+//                                        .queryable("0")
+//                                        .build()
+//                        );
+//                    }
+//                }
 
                 // Special case for NCWMS layer where we need to call GetMetadata to find the related points for gridded data
-                if(mapServerUrl.get().contains("/ncwms")) {
+                if (mapServerUrl.get().contains("/ncwms")) {
                     filteredLayers.forEach(layer -> {
                         // For each ncwms layer, we attach the metadata
                         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(mapServerUrl.get());
@@ -700,7 +793,7 @@ public class WmsServer {
                         builder.queryParam("layerName", layer.getName());
 
                         ResponseEntity<String> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET, pretendUserEntity, String.class);
-                        if(response.getStatusCode().is2xxSuccessful()) {
+                        if (response.getStatusCode().is2xxSuccessful()) {
                             try {
                                 layer.setNcWmsLayerInfo(objectMapper.readValue(response.getBody(), NcWmsLayerInfo.class));
                             } catch (JsonProcessingException e) {

@@ -21,17 +21,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-import org.springframework.web.util.UriUtils;
 
 import java.net.URISyntaxException;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
+import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.extractLayernameOrTypenameFromUrl;
+import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.roughlyMatch;
 
 @Slf4j
 public class WfsServer {
@@ -133,6 +133,7 @@ public class WfsServer {
             return Optional.empty();
         }
     }
+
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group
      *
@@ -154,6 +155,7 @@ public class WfsServer {
             return Optional.empty();
         }
     }
+
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group
      *
@@ -170,7 +172,7 @@ public class WfsServer {
                     .filter(link -> link.getAiGroup() != null)
                     .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
                     .filter(link -> {
-                        Optional<String> name = extractTypenameFromUrl(link.getHref());
+                        Optional<String> name = extractLayernameOrTypenameFromUrl(link.getHref());
                         return link.getTitle().equalsIgnoreCase(layerName) ||
                                 (name.isPresent() && roughlyMatch(name.get(), layerName));
                     })
@@ -180,59 +182,7 @@ public class WfsServer {
             return Optional.empty();
         }
     }
-    /**
-     * Fuzzy match utility to compare layer names, ignoring namespace prefixes
-     * For example: "underway:nuyina_underway_202122020" matches "nuyina_underway_202122020"
-     * For example: "abc/cde" matches "abc"
-     *
-     * @param text1 - First text to compare
-     * @param text2 - Second text to compare
-     * @return true if texts match (after removing namespace prefix) and subfix
-     */
-    protected boolean roughlyMatch(String text1, String text2) {
-        if (text1 == null || text2 == null) {
-            return false;
-        }
 
-        // Remove namespace prefix (text before ":")
-        String normalized1 = text1.contains(":") ? text1.substring(text1.indexOf(":") + 1) : text1;
-        String normalized2 = text2.contains(":") ? text2.substring(text2.indexOf(":") + 1) : text2;
-
-        // Remove "/" and anything follows
-        normalized1 = normalized1.split("/")[0];
-        normalized2 = normalized2.split("/")[0];
-
-        return normalized1.equals(normalized2);
-    }
-    /**
-     * Extract typename from WFS URL query parameters
-     *
-     * @param url - The WFS URL
-     * @return typename if found, empty otherwise
-     */
-    protected Optional<String> extractTypenameFromUrl(String url) {
-        try {
-            UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(url);
-            var queryParams = builder.build().getQueryParams();
-
-            // Try different parameter name variations
-            List<String> typeNames = queryParams.get("typeName");
-            if (typeNames == null || typeNames.isEmpty()) {
-                typeNames = queryParams.get("TYPENAME");
-            }
-            if (typeNames == null || typeNames.isEmpty()) {
-                typeNames = queryParams.get("typename");
-            }
-            if (typeNames != null && !typeNames.isEmpty()) {
-                // URL decode the typename (e.g., "underway%3Aunderway_60" -> "underway:underway_60")
-                String typename = UriUtils.decode(typeNames.get(0), StandardCharsets.UTF_8);
-                return Optional.of(typename);
-            }
-        } catch (Exception e) {
-            log.debug("Failed to extract typename from URL: {}", url, e);
-        }
-        return Optional.empty();
-    }
     /**
      * Filter WMS layers based on matching with WFS links
      * Matching logic:
@@ -281,7 +231,7 @@ public class WfsServer {
 
                 // Fallback match: extract typename from link URI
                 if (wfsLink.getHref() != null) {
-                    Optional<String> typename = extractTypenameFromUrl(wfsLink.getHref());
+                    Optional<String> typename = extractLayernameOrTypenameFromUrl(wfsLink.getHref());
                     if (typename.isPresent()) {
                         if (roughlyMatch(typename.get(), layer.getName()) ||
                                 roughlyMatch(typename.get(), layer.getTitle())) {
@@ -299,14 +249,14 @@ public class WfsServer {
             }
         }
 
-        // Very specific logic for AODN, we favor any layer name ends with _aodn_map, so we display
-        // map layer similar to old portal, if we cannot find any then display what we have
-        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l ->
-                l.getName().endsWith("_aodn_map") || l.getTitle().endsWith("_aodn_map")
-        ).toList();
-        if(!aodn_map.isEmpty()) {
-            filteredLayers = aodn_map;
-        }
+//        // Very specific logic for AODN, we favor any layer name ends with _aodn_map, so we display
+//        // map layer similar to old portal, if we cannot find any then display what we have
+//        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l ->
+//                l.getName().endsWith("_aodn_map") || l.getTitle().endsWith("_aodn_map")
+//        ).toList();
+//        if (!aodn_map.isEmpty()) {
+//            filteredLayers = aodn_map;
+//        }
 
         log.info("Filtered {} layers out of {} based on WFS link matching",
                 filteredLayers.size(), layers.size());
