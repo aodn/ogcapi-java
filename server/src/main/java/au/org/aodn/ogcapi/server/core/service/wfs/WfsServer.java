@@ -34,7 +34,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
-import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WFS_LAYERS;
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WFS_FEATURE_TYPES;
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.extractLayernameOrTypenameFromUrl;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.roughlyMatch;
@@ -200,7 +200,7 @@ public class WfsServer {
      * @param wfsServerUrl - The WFS server base URL
      * @return - List of all FeatureTypeInfo objects from GetCapabilities (unfiltered)
      */
-    @Cacheable(value = GET_CAPABILITIES_WFS_LAYERS)
+    @Cacheable(value = GET_CAPABILITIES_WFS_FEATURE_TYPES)
     public List<FeatureTypeInfo> fetchCapabilitiesFeatureTypesByUrl(String wfsServerUrl) {
         try {
             // Parse the base URL to construct GetCapabilities request

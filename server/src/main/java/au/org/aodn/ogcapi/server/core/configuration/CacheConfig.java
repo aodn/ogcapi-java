@@ -30,7 +30,7 @@ public class CacheConfig {
 
     public static final String CACHE_WMS_MAP_TILE = "cache-wms-map_tile";
     public static final String GET_CAPABILITIES_WMS_LAYERS = "get-capabilities-wms-layers";
-    public static final String GET_CAPABILITIES_WFS_LAYERS = "get-capabilities-wfs-layers";
+    public static final String GET_CAPABILITIES_WFS_FEATURE_TYPES = "get-capabilities-wfs-feature-types";
     public static final String DOWNLOADABLE_FIELDS = "downloadable-fields";
     public static final String ALL_NO_LAND_GEOMETRY = "all-noland-geometry";
     public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
@@ -105,7 +105,7 @@ public class CacheConfig {
                                 ResourcePoolsBuilder.heap(20)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
-                .withCache(GET_CAPABILITIES_WFS_LAYERS,
+                .withCache(GET_CAPABILITIES_WFS_FEATURE_TYPES,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(20)

@@ -15,7 +15,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import java.util.List;
 import java.util.Map;
 
-import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WFS_LAYERS;
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WFS_FEATURE_TYPES;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WMS_LAYERS;
 
 /**
@@ -123,10 +123,10 @@ public class CacheWarm {
 
     // ==================== WFS Cache Methods ====================
 
-    @CacheEvict(value = GET_CAPABILITIES_WFS_LAYERS, key = "#key")
+    @CacheEvict(value = GET_CAPABILITIES_WFS_FEATURE_TYPES, key = "#key")
     public void evictWfsGetCapabilities(String key) {
         // @CacheEvict handles the eviction
-        log.info("Evicting WFS cache {} for key {}", GET_CAPABILITIES_WFS_LAYERS, key);
+        log.info("Evicting WFS cache {} for key {}", GET_CAPABILITIES_WFS_FEATURE_TYPES, key);
     }
 
     @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000))
