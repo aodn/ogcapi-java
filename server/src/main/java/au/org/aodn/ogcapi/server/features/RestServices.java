@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.DasService;
@@ -145,6 +146,21 @@ public class RestServices extends OGCApiService {
      */
     public ResponseEntity<?> getWmsLayers(String collectionId, FeatureRequest request) {
         List<LayerInfo> result = wmsServer.getCapabilitiesLayers(collectionId, request);
+
+        return result.isEmpty() ?
+                ResponseEntity.notFound().build() :
+                ResponseEntity.ok(result);
+    }
+
+    /**
+     * This is used to get all available feature types from WFS GetCapabilities
+     *
+     * @param collectionId - The uuid of dataset
+     * @param request      - Request to get feature types
+     * @return - List of available feature types with name, title, abstract, etc.
+     */
+    public ResponseEntity<?> getWfsLayers(String collectionId, FeatureRequest request) {
+        List<FeatureTypeInfo> result = wfsServer.getCapabilitiesFeatureTypes(collectionId, request);
 
         return result.isEmpty() ?
                 ResponseEntity.notFound().build() :

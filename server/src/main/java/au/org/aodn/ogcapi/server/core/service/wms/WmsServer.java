@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.CACHE_WMS_MAP_TILE;
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WMS_LAYERS;
 import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.extractLayernameOrTypenameFromUrl;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.roughlyMatch;
@@ -599,7 +600,7 @@ public class WmsServer {
      * @param wmsServerUrl - The WMS server base URL
      * @return - List of all LayerInfo objects from GetCapabilities (unfiltered)
      */
-    @Cacheable(value = au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WMS_LAYERS)
+    @Cacheable(value = GET_CAPABILITIES_WMS_LAYERS)
     public List<LayerInfo> fetchCapabilitiesLayersByUrl(String wmsServerUrl) {
         try {
             // Parse the base URL to construct GetCapabilities request
@@ -717,15 +718,6 @@ public class WmsServer {
             }
         }
 
-//        // Very specific logic for AODN, we favor any layer name ends with _aodn_map, so we display
-//        // map layer similar to old portal, if we cannot find any then display what we have
-//        List<LayerInfo> aodn_map = filteredLayers.stream().filter(l ->
-//                l.getName().endsWith("_aodn_map") || l.getTitle().endsWith("_aodn_map")
-//        ).toList();
-//        if (!aodn_map.isEmpty()) {
-//            filteredLayers = aodn_map;
-//        }
-
         log.info("Filtered {} wms layers out of {} based on WMS link matching",
                 filteredLayers.size(), layers.size());
         return filteredLayers;
@@ -759,24 +751,6 @@ public class WmsServer {
             if (!allLayers.isEmpty()) {
                 // Filter layers based on WMS link matching
                 List<LayerInfo> filteredLayers = filterLayersByWmsLinks(collectionId, allLayers);
-
-//                // If filteredLayers empty, that means no layer have wfs operation, but that does not mean
-//                // the layer cannot serve for display only.
-//                if (filteredLayers.isEmpty() && request.getLayerName() != null) {
-//                    DescribeLayerResponse dr = describeLayer(collectionId, request);
-//                    if (dr != null) {
-//                        // That means at least layer is valid just not works with wfs, we should keep the
-//                        // original layername instead showing the lookup name as it can be different from
-//                        // what is mentioned in the metadata which people get confused.
-//                        filteredLayers = List.of(
-//                                LayerInfo.builder()
-//                                        .name(request.getLayerName())
-//                                        .title(request.getLayerName())
-//                                        .queryable("0")
-//                                        .build()
-//                        );
-//                    }
-//                }
 
                 // Special case for NCWMS layer where we need to call GetMetadata to find the related points for gridded data
                 if (mapServerUrl.get().contains("/ncwms")) {

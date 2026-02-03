@@ -140,6 +140,9 @@ public class RestApi implements CollectionsApi {
             case wms_layers -> {
                 return featuresService.getWmsLayers(collectionId, request);
             }
+            case wfs_layers -> {
+                return featuresService.getWfsLayers(collectionId, request);
+            }
             default -> {
                 return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
             }
