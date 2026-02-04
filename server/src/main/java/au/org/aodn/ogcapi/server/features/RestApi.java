@@ -118,6 +118,9 @@ public class RestApi implements CollectionsApi {
             case first_data_available -> {
                 return featuresService.getWaveBuoys(collectionId, request.getDatetime());
             }
+            case latest_date -> {
+                return featuresService.getWaveBuoysLatestDate(collectionId);
+            }
             case timeseries -> {
                 return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }

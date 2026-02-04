@@ -43,6 +43,19 @@ public class DasService {
         return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,entity,byte[].class,params).getBody();
     }
 
+    public byte[] getWaveBuoysLatestDate(){
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.set("X-API-KEY", dasConfig.secret);
+        HttpEntity<?> entity = new HttpEntity<>(headers);
+
+        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/latest")
+                .encode()
+                .toUriString();
+
+        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,entity,byte[].class).getBody();
+    }
+
     public byte[] getWaveBuoyData(String from, String to, String buoy){
         String encodedBuoy = URLEncoder.encode(buoy, java.nio.charset.StandardCharsets.UTF_8);
 

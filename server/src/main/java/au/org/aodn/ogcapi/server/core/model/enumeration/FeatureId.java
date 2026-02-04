@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 public enum FeatureId {
     summary("summary"),
     first_data_available("first_data_available"),
+    latest_date("latest_date"),
     timeseries("timeseries"),
     wfs_downloadable_fields("wfs_downloadable_fields"), // Query field based on pure wfs and given layer
     wms_downloadable_fields("wms_downloadable_fields"), // Query field based on value from wms describe layer query
