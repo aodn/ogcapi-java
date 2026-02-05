@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.util;
 
+import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;
@@ -82,5 +83,29 @@ public class GeoserverUtils {
         return Optional.empty();
     }
 
+    /**
+     * Extract layer name or typename from a LinkModel.
+     * First tries link.title, then falls back to extracting from link.href URL query parameters.
+     *
+     * @param link - The LinkModel object
+     * @return layer name/typename if found, empty otherwise
+     */
+    public static Optional<String> extractLayernameOrTypenameFromLink(LinkModel link) {
+        if (link == null) {
+            return Optional.empty();
+        }
+
+        // Try to get layer name from link title first
+        if (link.getTitle() != null && !link.getTitle().isEmpty()) {
+            return Optional.of(link.getTitle());
+        }
+
+        // Fallback: extract layer name from URL query parameters
+        if (link.getHref() != null) {
+            return extractLayernameOrTypenameFromUrl(link.getHref());
+        }
+
+        return Optional.empty();
+    }
 
 }

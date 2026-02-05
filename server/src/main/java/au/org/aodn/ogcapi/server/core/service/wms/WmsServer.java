@@ -36,8 +36,7 @@ import java.util.stream.Stream;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.CACHE_WMS_MAP_TILE;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WMS_LAYERS;
 import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
-import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.extractLayernameOrTypenameFromUrl;
-import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.roughlyMatch;
+import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.*;
 
 @Slf4j
 public class WmsServer {
@@ -652,36 +651,58 @@ public class WmsServer {
     }
 
     /**
-     * Filter WMS layers based on matching with WFS links
-     * Matching logic:
-     * 1. Primary: link.title matches layer.name OR layer.title (fuzzy match)
-     * 2. Fallback: extract layername from link URI, then layername matches layer.name OR layer.title (fuzzy match)
+     * Get all WMS links from a collection.
      *
      * @param collectionId - The uuid
-     * @param layers       - List of layers to filter
-     * @return Filtered list of WMS layers that have matching metadata WMS links
+     * @return - List of WMS LinkModel objects from the collection
      */
-    public List<LayerInfo> filterLayersByWmsLinks(String collectionId, List<LayerInfo> layers) {
+    protected List<LinkModel> getWmsLinks(String collectionId) {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
 
         if (result.getCollections().isEmpty()) {
-            log.info("Return empty layers if as no collection found for collectionId: {}", collectionId);
+            log.info("No collection found for collectionId: {}", collectionId);
             return Collections.emptyList();
         }
 
         StacCollectionModel model = result.getCollections().get(0);
 
-        // Filter WMS links where ai:group == "Data Access > wms"
-        List<LinkModel> wmsLinks = model.getLinks()
+        // Filter WMS links where ai:group contains WMS_LINK_MARKER
+        return model.getLinks()
                 .stream()
                 .filter(link -> link.getAiGroup() != null)
                 .filter(link -> link.getAiGroup().contains(WMS_LINK_MARKER))
                 .toList();
+    }
 
-        // Filter WMS layers based on matching with WFS links
+    /**
+     * Filter layers based on matching with WMS links or given layername
+     * Primary matching logic:
+     * Direct match by requested layer name (fuzzy match)
+     * Fallback matching logic:
+     * 1. Primary: link.title matches layer.name OR layer.title (fuzzy match)
+     * 2. Fallback: extract layername from link URI, then layername matches layer.name OR layer.title (fuzzy match)
+     *
+     * @param collectionId - Collection uuid
+     * @param layers       - List of layers to filter
+     * @return Filtered list of WMS layers that have matching metadata WMS links
+     */
+    protected List<LayerInfo> filterLayers(String collectionId, FeatureRequest request, List<LayerInfo> layers) {
+        // Direct match by requested layer name
+        if (request != null && request.getLayerName() != null && !request.getLayerName().isEmpty()) {
+            log.debug("=== Starting to match {} layers by layername {} ===", layers.size(), request.getLayerName());
+            String requestLayerName = request.getLayerName();
+            return layers.stream()
+                    .filter(layer ->
+                            roughlyMatch(requestLayerName, layer.getName()) ||
+                                    roughlyMatch(requestLayerName, layer.getTitle()))
+                    .toList();
+        }
+
+        // Fallback to matching by WMS links
+        List<LinkModel> wmsLinks = getWmsLinks(collectionId);
         List<LayerInfo> filteredLayers = new ArrayList<>();
 
-        log.debug("=== Starting to match {} layers ===", layers.size());
+        log.debug("=== Starting to match {} layers by WMS links ===", layers.size());
         for (LayerInfo layer : layers) {
             boolean matched = false;
 
@@ -724,6 +745,38 @@ public class WmsServer {
     }
 
     /**
+     * Fetch NCWMS Metadata from call GetMetadata in WMS server NCWMS service
+     *
+     * @param mapServerUrl - WMS server url
+     * @param layername    - NCWMS layername
+     * @return NCWMS metadata that could be attached to layers
+     */
+    protected Optional<NcWmsLayerInfo> fetchNCWMSMetadata(String mapServerUrl, String layername) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(mapServerUrl);
+        builder.scheme("https"); // Force https
+
+        wmsDefaultParam.getNcmetadata().forEach((key, value) -> {
+            if (value != null) {
+                builder.queryParam(key, value);
+            }
+        });
+        builder.queryParam("layerName", layername);
+
+        ResponseEntity<String> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET, pretendUserEntity, String.class);
+        if (response.getStatusCode().is2xxSuccessful()) {
+            try {
+                return Optional.of(objectMapper.readValue(response.getBody(), NcWmsLayerInfo.class));
+            } catch (JsonProcessingException e) {
+                // Save to ignore
+            }
+        } else {
+            return Optional.empty();
+        }
+
+        return Optional.empty();
+    }
+
+    /**
      * Get filtered layers from WMS GetCapabilities for a specific collection
      * First fetches all layers (cached by URL), then filters by WMS links
      * Sometimes the URL provided by WMS link is not optimal, for example
@@ -732,11 +785,11 @@ public class WmsServer {
      * we can use xxx as the workspace name and rewrite the URL to https://www.cmar.csiro.au/geoserver/xxx/wms
      *
      * @param collectionId - The uuid
-     * @param request      - The request param
-     * @return - List of LayerInfo objects filtered by WFS link matching
+     * @param request      - The request param (can be null)
+     * @return - List of LayerInfo objects filtered by WMS link matching
      */
     public List<LayerInfo> getCapabilitiesLayers(String collectionId, FeatureRequest request) {
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, null);
+        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
 
         if (mapServerUrl.isPresent()) {
             // Fetch all layers from GetCapabilities (this call is cached by URL)
@@ -744,38 +797,45 @@ public class WmsServer {
             String url = rewriteUrlWithWorkSpace(mapServerUrl.get(), request);
             List<LayerInfo> allLayers = self.fetchCapabilitiesLayersByUrl(url);
 
-            if (!allLayers.isEmpty()) {
-                // Filter layers based on WMS link matching
-                List<LayerInfo> filteredLayers = filterLayersByWmsLinks(collectionId, allLayers);
+            List<LayerInfo> filteredLayers = filterLayers(collectionId, request, allLayers);
 
-                // Special case for NCWMS layer where we need to call GetMetadata to find the related points for gridded data
-                if (mapServerUrl.get().contains("/ncwms")) {
-                    filteredLayers.forEach(layer -> {
-                        // For each ncwms layer, we attach the metadata
-                        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(mapServerUrl.get());
-                        builder.scheme("https"); // Force https
+            // Special case for NCWMS layer where we need to call GetMetadata to find the related points for gridded data
+            if (mapServerUrl.get().contains("/ncwms")) {
+                if (filteredLayers.isEmpty()) {
+                    // Most of the time the NCWMS layer does not match any WMS capability layers,
+                    // we trust the NCWMS layernames from the metadata and try fetching NCWMS metadata for each
+                    List<LinkModel> wmsLinks = getWmsLinks(collectionId);
+                    for (LinkModel wmsLink : wmsLinks) {
+                        Optional<String> layerName = extractLayernameOrTypenameFromLink(wmsLink);
 
-                        wmsDefaultParam.getNcmetadata().forEach((key, value) -> {
-                            if (value != null) {
-                                builder.queryParam(key, value);
-                            }
-                        });
-                        builder.queryParam("layerName", layer.getName());
+                        if (layerName.isPresent()) {
+                            Optional<NcWmsLayerInfo> ncWmsLayerInfo = fetchNCWMSMetadata(mapServerUrl.get(), layerName.get());
 
-                        ResponseEntity<String> response = restTemplate.exchange(builder.toUriString(), HttpMethod.GET, pretendUserEntity, String.class);
-                        if (response.getStatusCode().is2xxSuccessful()) {
-                            try {
-                                layer.setNcWmsLayerInfo(objectMapper.readValue(response.getBody(), NcWmsLayerInfo.class));
-                            } catch (JsonProcessingException e) {
-                                // Save to ignore
+                            // Build LayerInfo with ncWmsLayerInfo
+                            if (ncWmsLayerInfo.isPresent()) {
+                                filteredLayers = List.of(
+                                        LayerInfo.builder()
+                                                .name(layerName.get())
+                                                .title(layerName.get())
+                                                .queryable("0")
+                                                .ncWmsLayerInfo(ncWmsLayerInfo.get())
+                                                .build()
+                                );
                             }
                         }
-                    });
+                    }
                 }
-                log.debug("Returning layers {}", filteredLayers);
 
-                return filteredLayers;
+                filteredLayers.forEach(layer -> {
+                    // For each ncwms layer, we attach the metadata
+                    Optional<NcWmsLayerInfo> ncWmsLayerInfo = fetchNCWMSMetadata(mapServerUrl.get(), layer.getName());
+                    ncWmsLayerInfo.ifPresent(layer::setNcWmsLayerInfo);
+                });
             }
+
+            log.debug("Returning layers {}", filteredLayers);
+
+            return filteredLayers;
         }
 
         return Collections.emptyList();
