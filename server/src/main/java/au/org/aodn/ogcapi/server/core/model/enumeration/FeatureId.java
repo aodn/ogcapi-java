@@ -2,8 +2,9 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 
 public enum FeatureId {
     summary("summary"),
-    first_data_available("first_data_available"),
-    timeseries("timeseries"),
+    wave_buoy_first_data_available("wave_buoy_first_data_available"),
+    wave_buoy_latest_date("wave_buoy_latest_date"),
+    wave_buoy_timeseries("wave_buoy_timeseries"),
     wfs_downloadable_fields("wfs_downloadable_fields"), // Query field based on pure wfs and given layer
     wms_downloadable_fields("wms_downloadable_fields"), // Query field based on value from wms describe layer query
     wms_map_tile("wms_map_tile"),
