@@ -5,7 +5,6 @@ import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsDescribeFeatureTypeResponse;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsGetCapabilitiesResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
@@ -16,6 +15,9 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
+import org.geotools.data.DataStoreFinder;
+import org.geotools.data.store.ContentFeatureSource;
+import org.geotools.data.wfs.WFSDataStore;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
@@ -27,14 +29,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponents;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
-import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
-import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WFS_FEATURE_TYPES;
+import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.*;
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.extractLayernameOrTypenameFromUrl;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.roughlyMatch;
@@ -193,6 +192,30 @@ public class WfsServer {
         }
     }
 
+    public WFSDataStore createDataStore(String wfsServerUrl) throws IOException {
+        // Parse the base URL to construct GetCapabilities request
+        UriComponents components = UriComponentsBuilder.fromUriString(wfsServerUrl).build();
+
+        // Build GetCapabilities URL
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .newInstance()
+                .scheme("https")        // hardcode to be https to avoid redirect
+                .port(components.getPort())
+                .host(components.getHost())
+                .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
+                .queryParam("service", "wfs")
+                .queryParam("request", "GetCapabilities");
+
+        String url = builder.build().toUriString();
+        Map<String, Object> params = new HashMap<>();
+        params.put("WFSDataStoreFactory:GET_CAPABILITIES_URL", url);
+        params.put("WFSDataStoreFactory:PROTOCOL", "1.1.0");
+        params.put("WFSDataStoreFactory:HTTP_HEADERS", pretendUserEntity.getHeaders().toSingleValueMap());
+
+        log.debug("WFS GetCapabilities URL: {}", url);
+
+        return (WFSDataStore)DataStoreFinder.getDataStore(params);
+    }
     /**
      * Fetch raw feature types from WFS GetCapabilities - cached by URL.
      * This allows multiple collections sharing the same WFS server to use cached results.
@@ -203,49 +226,28 @@ public class WfsServer {
     @Cacheable(value = GET_CAPABILITIES_WFS_FEATURE_TYPES)
     public List<FeatureTypeInfo> fetchCapabilitiesFeatureTypesByUrl(String wfsServerUrl) {
         try {
-            // Parse the base URL to construct GetCapabilities request
-            UriComponents components = UriComponentsBuilder.fromUriString(wfsServerUrl).build();
+            WFSDataStore ds = self.createDataStore(wfsServerUrl);
+            String[] typeNames = ds.getTypeNames();
+            List<FeatureTypeInfo> schemas = new ArrayList<>();
 
-            // Build GetCapabilities URL
-            UriComponentsBuilder builder = UriComponentsBuilder
-                    .newInstance()
-                    .scheme("https")        // hardcode to be https to avoid redirect
-                    .port(components.getPort())
-                    .host(components.getHost())
-                    .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
-                    .queryParam("service", "wfs")
-                    .queryParam("request", "GetCapabilities");
+            for (String typeName : typeNames) {
+                ContentFeatureSource c = ds.getFeatureSource(typeName);
 
-            String url = builder.build().toUriString();
-            log.debug("WFS GetCapabilities URL: {}", url);
-
-            // Make the HTTPS call
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class);
-
-            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                // Parse XML response
-                WfsGetCapabilitiesResponse capabilitiesResponse = xmlMapper.readValue(
-                        response.getBody(),
-                        WfsGetCapabilitiesResponse.class
+                schemas.add(
+                        FeatureTypeInfo.builder()
+                                .name(c.getInfo().getName())
+                                .title(c.getInfo().getTitle())
+                                .build()
                 );
-
-                // Extract all feature types
-                if (capabilitiesResponse != null
-                        && capabilitiesResponse.getFeatureTypeList() != null
-                        && capabilitiesResponse.getFeatureTypeList().getFeatureTypes() != null) {
-
-                    List<FeatureTypeInfo> featureTypes = capabilitiesResponse.getFeatureTypeList().getFeatureTypes();
-
-                    log.info("Fetched and cached WFS get-capabilities feature types: {} ", featureTypes.size());
-                    return featureTypes;
-                }
             }
-        } catch (RestClientException | JsonProcessingException e) {
+
+            log.info("Fetched {} WFS feature types", schemas.size());
+            return schemas;
+
+        } catch (RestClientException | IOException e) {
             log.error("Error fetching WFS GetCapabilities for URL: {}", wfsServerUrl, e);
             throw new RuntimeException(e);
         }
-
-        return Collections.emptyList();
     }
 
     /**
