@@ -1,0 +1,2440 @@
+{
+  "title": "KRILLPODYM modelled estimates of Antarctic krill circumpolar distribution",
+  "description": "Robust prediction of population responses to changing environments requires the integration of factors controlling population dynamics with processes affecting distribution. This is true everywhere but especially in polar pelagic environments. Biological cycles for many polar species are synchronised to extreme seasonality, while their distributions may be influenced by both the prevailing oceanic circulation and sea-ice distribution. Antarctic krill (𝘌𝘶𝘱𝘩𝘢𝘶𝘴𝘪𝘢 𝘴𝘶𝘱𝘦𝘳𝘣𝘢) is one such species exhibiting a complex life history that is finely tuned to the extreme seasonality of the Southern Ocean. Dependencies on the timing of optimal seasonal conditions has led to concerns over the effects of future climate on krill’s population status, particularly given the species’ important role within Southern Ocean ecosystems. Under a changing climate, established correlations between environment and species may breakdown. Developing the capacity for predicting krill responses to climate change therefore requires methods that can explicitly consider the interplay between life history, biological conditions, and transport. The Spatial Ecosystem And Population Dynamics Model (SEAPODYM) is one such framework that integrates population and general circulation modelling to simulate the spatial dynamics of key organisms. Here, we describe a modification to SEAPODYM, creating a novel model – KRILLPODYM – that generates spatially resolved estimates of krill biomass and demographics. This new model consists of three major components: (1) an age-structured population consisting of five key life stages, each with multiple age classes, which undergo age-dependent growth and mortality, (2) six key habitats that mediate the production of larvae and life stage survival, and (3) spatial dynamics driven by both the underlying circulation of ocean currents and advection of sea-ice. Here we present the first results of KRILLPODYM, using published deterministic functions of population processes and habitat suitability  rules. Initialising from a non-informative uniform density across the Southern Ocean our model independently develops a circumpolar population distribution of krill that  approximates  observations. The model framework lends itself to applied experiments aimed at resolving key population parameters, life-stage specific habitat requirements, and dominant transport regimes, ultimately informing sustainable fishery management. ____ This dataset represents KRILLPODYM modelled estimates of Antarctic krill circumpolar biomass distribution for the final year of a 12-year spin up. Biomass distributions are given for each of the five key life stages outlined above. The accompanying background, model framework and initialisation description can be found in the following reference paper: 𝗚𝗿𝗲𝗲𝗻 𝗗𝗕, 𝗧𝗶𝘁𝗮𝘂𝗱 𝗢, 𝗕𝗲𝘀𝘁𝗹𝗲𝘆 𝗦, 𝗖𝗼𝗿𝗻𝗲𝘆 𝗦𝗣, 𝗛𝗶𝗻𝗱𝗲𝗹𝗹 𝗠𝗔, 𝗧𝗿𝗲𝗯𝗶𝗹𝗰𝗼 𝗥, 𝗖𝗼𝗻𝗰𝗵𝗼𝗻 𝗔, & 𝗟𝗲𝗵𝗼𝗱𝗲𝘆 𝗣. (2023) KRILLPODYM: a mechanistic, spatially resolved model of Antarctic krill distribution and abundance. 𝘍𝘳𝘰𝘯𝘵𝘪𝘦𝘳𝘴 𝘪𝘯 𝘔𝘢𝘳𝘪𝘯𝘦 𝘚𝘤𝘪𝘦𝘯𝘤𝘦, 10 Article 1218003. https://doi.org/10.3389/fmars.2023.1218003",
+  "extent": {
+    "bbox": [
+      [
+        180,
+        -80,
+        180,
+        -40
+      ],
+      [
+        -180,
+        -80,
+        180,
+        -40
+      ]
+    ],
+    "temporal": [
+      [
+        "2009-12-31T13:00:00Z",
+        "2010-12-31T12:59:59Z"
+      ],
+      [
+        "2009-12-31T13:00:00Z",
+        "2010-12-31T12:59:59Z"
+      ]
+    ]
+  },
+  "summaries": {
+    "score": 106,
+    "status": "completed",
+    "credits": [
+      "This research was supported by the Australian Research Council Special Research Initiative, Australian Centre for Excellence in Antarctic Science (ACEAS) (Project Number SR200100008). DG received funding through a Tasmania Graduate Research Scholarship. SB was supported by the Australian Research Council under DECRA award DE180100828. Further funding was provided through the European H2020 International Cooperation project Mesopelagic Southern Ocean Prey and Predators No 692173."
+    ],
+    "scope": {
+      "code": "dataset",
+      "name": "IMAS Dataset level record"
+    },
+    "statement": "A full description of the model background, framework, and implementation can be found in the following paper: 𝗚𝗿𝗲𝗲𝗻 𝗗𝗕, 𝗧𝗶𝘁𝗮𝘂𝗱 𝗢, 𝗕𝗲𝘀𝘁𝗹𝗲𝘆 𝗦, 𝗖𝗼𝗿𝗻𝗲𝘆 𝗦𝗣, 𝗛𝗶𝗻𝗱𝗲𝗹𝗹 𝗠𝗔, 𝗧𝗿𝗲𝗯𝗶𝗹𝗰𝗼 𝗥, 𝗖𝗼𝗻𝗰𝗵𝗼𝗻 𝗔, & 𝗟𝗲𝗵𝗼𝗱𝗲𝘆 𝗣. (2023) KRILLPODYM: a mechanistic, spatially resolved model of Antarctic krill distribution and abundance. 𝘍𝘳𝘰𝘯𝘵𝘪𝘦𝘳𝘴 𝘪𝘯 𝘔𝘢𝘳𝘪𝘯𝘦 𝘚𝘤𝘪𝘦𝘯𝘤𝘦, 10 Article 1218003. https://doi.org/10.3389/fmars.2023.1218003",
+    "creation": "2023-06-08T00:00:00",
+    "revision": "2025-10-17T18:31:02",
+    "dataset_group": [
+      "imas"
+    ],
+    "update_frequency": "completed",
+    "proj:geometry": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -180,
+                -80
+              ],
+              [
+                180,
+                -80
+              ],
+              [
+                180,
+                -40
+              ],
+              [
+                -180,
+                -40
+              ],
+              [
+                -180,
+                -80
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "proj:geometry_noland": {
+      "geometries": [
+        {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -180,
+                -80
+              ],
+              [
+                -147,
+                -80
+              ],
+              [
+                -156.5,
+                -78.75
+              ],
+              [
+                -153.75,
+                -78.25
+              ],
+              [
+                -158.25,
+                -78
+              ],
+              [
+                -158.25,
+                -77
+              ],
+              [
+                -149.75,
+                -77.25
+              ],
+              [
+                -145.5,
+                -77.5
+              ],
+              [
+                -146.5,
+                -77
+              ],
+              [
+                -145.5,
+                -76.75
+              ],
+              [
+                -149.75,
+                -76.5
+              ],
+              [
+                -145.25,
+                -76.5
+              ],
+              [
+                -146.5,
+                -76
+              ],
+              [
+                -140.75,
+                -75.75
+              ],
+              [
+                -141.25,
+                -75.5
+              ],
+              [
+                -135.5,
+                -74.5
+              ],
+              [
+                -121.75,
+                -74.75
+              ],
+              [
+                -114.75,
+                -74.5
+              ],
+              [
+                -114.25,
+                -73.75
+              ],
+              [
+                -113.25,
+                -74.5
+              ],
+              [
+                -114,
+                -75
+              ],
+              [
+                -111.5,
+                -74.75
+              ],
+              [
+                -111.5,
+                -74.25
+              ],
+              [
+                -110,
+                -74.5
+              ],
+              [
+                -111.25,
+                -75.25
+              ],
+              [
+                -98.5,
+                -75.25
+              ],
+              [
+                -103,
+                -73.5
+              ],
+              [
+                -98.75,
+                -73.5
+              ],
+              [
+                -102.75,
+                -73.25
+              ],
+              [
+                -103,
+                -72.75
+              ],
+              [
+                -91.5,
+                -73.25
+              ],
+              [
+                -91,
+                -73.25
+              ],
+              [
+                -89.25,
+                -72.75
+              ],
+              [
+                -82.25,
+                -74
+              ],
+              [
+                -80.25,
+                -73.5
+              ],
+              [
+                -80.5,
+                -73
+              ],
+              [
+                -76.75,
+                -73.5
+              ],
+              [
+                -77,
+                -74
+              ],
+              [
+                -68.75,
+                -73
+              ],
+              [
+                -66.75,
+                -72
+              ],
+              [
+                -68.75,
+                -69.5
+              ],
+              [
+                -66.75,
+                -69
+              ],
+              [
+                -67.5,
+                -68.75
+              ],
+              [
+                -66.5,
+                -67.5
+              ],
+              [
+                -67.5,
+                -67.5
+              ],
+              [
+                -67.5,
+                -67
+              ],
+              [
+                -66.5,
+                -67.25
+              ],
+              [
+                -66.5,
+                -66.75
+              ],
+              [
+                -63.75,
+                -65.5
+              ],
+              [
+                -63.75,
+                -65
+              ],
+              [
+                -57.25,
+                -63.25
+              ],
+              [
+                -56.75,
+                -63.5
+              ],
+              [
+                -62.25,
+                -65.25
+              ],
+              [
+                -62,
+                -66
+              ],
+              [
+                -60.5,
+                -66
+              ],
+              [
+                -61,
+                -66.25
+              ],
+              [
+                -63.75,
+                -66.25
+              ],
+              [
+                -63.75,
+                -67
+              ],
+              [
+                -65.5,
+                -67.25
+              ],
+              [
+                -65.75,
+                -68.25
+              ],
+              [
+                -64.75,
+                -68
+              ],
+              [
+                -65.25,
+                -68.75
+              ],
+              [
+                -62.75,
+                -68.5
+              ],
+              [
+                -64,
+                -69
+              ],
+              [
+                -61,
+                -71.25
+              ],
+              [
+                -62,
+                -71.75
+              ],
+              [
+                -62.5,
+                -72
+              ],
+              [
+                -60.75,
+                -72
+              ],
+              [
+                -61.5,
+                -72.75
+              ],
+              [
+                -60,
+                -73
+              ],
+              [
+                -62,
+                -73.25
+              ],
+              [
+                -60.75,
+                -73.5
+              ],
+              [
+                -62,
+                -74.25
+              ],
+              [
+                -61,
+                -74.5
+              ],
+              [
+                -70,
+                -76.75
+              ],
+              [
+                -77.75,
+                -76.5
+              ],
+              [
+                -75.5,
+                -77.5
+              ],
+              [
+                -72.75,
+                -77.5
+              ],
+              [
+                -74,
+                -78.25
+              ],
+              [
+                -80.75,
+                -77.75
+              ],
+              [
+                -81.75,
+                -77.75
+              ],
+              [
+                -77.25,
+                -78.5
+              ],
+              [
+                -84,
+                -78.5
+              ],
+              [
+                -80.5,
+                -79.5
+              ],
+              [
+                -76,
+                -79.5
+              ],
+              [
+                -79.75,
+                -80
+              ],
+              [
+                -76.25,
+                -80
+              ],
+              [
+                -60.75,
+                -80
+              ],
+              [
+                -60,
+                -79.75
+              ],
+              [
+                -59.5,
+                -80
+              ],
+              [
+                -51.75,
+                -80
+              ],
+              [
+                -50.25,
+                -79.5
+              ],
+              [
+                -50.25,
+                -78.75
+              ],
+              [
+                -49,
+                -78
+              ],
+              [
+                -47.25,
+                -77.75
+              ],
+              [
+                -43.75,
+                -78.25
+              ],
+              [
+                -45.25,
+                -78.75
+              ],
+              [
+                -43,
+                -79.5
+              ],
+              [
+                -43.25,
+                -80
+              ],
+              [
+                -22.5,
+                -80
+              ],
+              [
+                -36.5,
+                -78.75
+              ],
+              [
+                -34.25,
+                -77.5
+              ],
+              [
+                -28.75,
+                -76.25
+              ],
+              [
+                -18.25,
+                -75.5
+              ],
+              [
+                -18.75,
+                -75.25
+              ],
+              [
+                -17.5,
+                -74.25
+              ],
+              [
+                -14.25,
+                -73.75
+              ],
+              [
+                -16.5,
+                -73.5
+              ],
+              [
+                -10.75,
+                -71.75
+              ],
+              [
+                -12.25,
+                -71.25
+              ],
+              [
+                -10.75,
+                -71.5
+              ],
+              [
+                -10,
+                -71
+              ],
+              [
+                -7.75,
+                -71.75
+              ],
+              [
+                -8,
+                -70.75
+              ],
+              [
+                -6,
+                -70.75
+              ],
+              [
+                -6.25,
+                -71.25
+              ],
+              [
+                0,
+                -71.5
+              ],
+              [
+                9.25,
+                -70
+              ],
+              [
+                11.25,
+                -70.75
+              ],
+              [
+                13,
+                -70
+              ],
+              [
+                27.25,
+                -71
+              ],
+              [
+                32.75,
+                -70
+              ],
+              [
+                32.5,
+                -69
+              ],
+              [
+                33.25,
+                -68.75
+              ],
+              [
+                35.25,
+                -69.75
+              ],
+              [
+                39,
+                -70.25
+              ],
+              [
+                39.75,
+                -68.75
+              ],
+              [
+                46.5,
+                -67.25
+              ],
+              [
+                48.5,
+                -68
+              ],
+              [
+                49.5,
+                -67.25
+              ],
+              [
+                48.25,
+                -67
+              ],
+              [
+                51,
+                -67.25
+              ],
+              [
+                50.25,
+                -66.5
+              ],
+              [
+                53.75,
+                -65.75
+              ],
+              [
+                57.25,
+                -66.5
+              ],
+              [
+                56,
+                -66.5
+              ],
+              [
+                56.75,
+                -67
+              ],
+              [
+                56.25,
+                -67.5
+              ],
+              [
+                69.75,
+                -67.75
+              ],
+              [
+                69.75,
+                -69.25
+              ],
+              [
+                67.25,
+                -70.25
+              ],
+              [
+                69.25,
+                -70.5
+              ],
+              [
+                66.25,
+                -73.25
+              ],
+              [
+                67.25,
+                -73.25
+              ],
+              [
+                71.5,
+                -71.5
+              ],
+              [
+                73.5,
+                -69.75
+              ],
+              [
+                75.5,
+                -70
+              ],
+              [
+                79.25,
+                -68.25
+              ],
+              [
+                88,
+                -66.75
+              ],
+              [
+                98.75,
+                -67
+              ],
+              [
+                102.75,
+                -65.75
+              ],
+              [
+                108.75,
+                -67
+              ],
+              [
+                113.25,
+                -65.75
+              ],
+              [
+                115.75,
+                -66.75
+              ],
+              [
+                113.75,
+                -67.5
+              ],
+              [
+                126,
+                -66.25
+              ],
+              [
+                129,
+                -67.25
+              ],
+              [
+                130,
+                -66.25
+              ],
+              [
+                133.25,
+                -66
+              ],
+              [
+                143.5,
+                -66.75
+              ],
+              [
+                144.75,
+                -67
+              ],
+              [
+                144,
+                -68
+              ],
+              [
+                146,
+                -67.5
+              ],
+              [
+                147,
+                -68.5
+              ],
+              [
+                151,
+                -68.25
+              ],
+              [
+                151.5,
+                -69
+              ],
+              [
+                153.75,
+                -68.25
+              ],
+              [
+                159.75,
+                -69.5
+              ],
+              [
+                162.25,
+                -71
+              ],
+              [
+                162,
+                -70.5
+              ],
+              [
+                162.5,
+                -70.25
+              ],
+              [
+                170.25,
+                -71.25
+              ],
+              [
+                171,
+                -71.75
+              ],
+              [
+                169.75,
+                -72.25
+              ],
+              [
+                170.25,
+                -72.5
+              ],
+              [
+                168.25,
+                -72.25
+              ],
+              [
+                170,
+                -72.75
+              ],
+              [
+                169.25,
+                -73.25
+              ],
+              [
+                168,
+                -73.25
+              ],
+              [
+                165.75,
+                -74
+              ],
+              [
+                164.5,
+                -73.25
+              ],
+              [
+                165.5,
+                -74.75
+              ],
+              [
+                163.5,
+                -74.25
+              ],
+              [
+                162.5,
+                -75.25
+              ],
+              [
+                160.5,
+                -75.5
+              ],
+              [
+                163,
+                -75.75
+              ],
+              [
+                162,
+                -76.25
+              ],
+              [
+                163,
+                -76.5
+              ],
+              [
+                162.25,
+                -77
+              ],
+              [
+                164.5,
+                -78
+              ],
+              [
+                163.75,
+                -78.25
+              ],
+              [
+                167.25,
+                -78.75
+              ],
+              [
+                161.5,
+                -78.5
+              ],
+              [
+                162,
+                -79
+              ],
+              [
+                159.5,
+                -79.75
+              ],
+              [
+                161.5,
+                -80
+              ],
+              [
+                180,
+                -80
+              ],
+              [
+                180,
+                -40
+              ],
+              [
+                176.75,
+                -40
+              ],
+              [
+                176,
+                -41.25
+              ],
+              [
+                174.5,
+                -41.25
+              ],
+              [
+                175.25,
+                -40.25
+              ],
+              [
+                175,
+                -40
+              ],
+              [
+                -62.25,
+                -40
+              ],
+              [
+                -62.25,
+                -40.75
+              ],
+              [
+                -65.25,
+                -40.75
+              ],
+              [
+                -65,
+                -42
+              ],
+              [
+                -63.75,
+                -42
+              ],
+              [
+                -63.5,
+                -42.75
+              ],
+              [
+                -65,
+                -42.75
+              ],
+              [
+                -64.25,
+                -43
+              ],
+              [
+                -65.25,
+                -43.75
+              ],
+              [
+                -65.5,
+                -45
+              ],
+              [
+                -67.5,
+                -46
+              ],
+              [
+                -65.75,
+                -47.25
+              ],
+              [
+                -66.5,
+                -47.75
+              ],
+              [
+                -65.75,
+                -48
+              ],
+              [
+                -68,
+                -50
+              ],
+              [
+                -69,
+                -50
+              ],
+              [
+                -68.25,
+                -50.25
+              ],
+              [
+                -69.5,
+                -51.75
+              ],
+              [
+                -68.25,
+                -52.25
+              ],
+              [
+                -69.25,
+                -52.5
+              ],
+              [
+                -65.25,
+                -54.75
+              ],
+              [
+                -69,
+                -54.5
+              ],
+              [
+                -70.25,
+                -53.75
+              ],
+              [
+                -69.25,
+                -53.25
+              ],
+              [
+                -70.5,
+                -53.25
+              ],
+              [
+                -69.5,
+                -52.5
+              ],
+              [
+                -70.75,
+                -52.75
+              ],
+              [
+                -71.25,
+                -54
+              ],
+              [
+                -72.25,
+                -53.5
+              ],
+              [
+                -73.25,
+                -53.25
+              ],
+              [
+                -71.5,
+                -52.75
+              ],
+              [
+                -73.75,
+                -52.75
+              ],
+              [
+                -73.75,
+                -52
+              ],
+              [
+                -72.5,
+                -52.5
+              ],
+              [
+                -72.5,
+                -51.75
+              ],
+              [
+                -74,
+                -51.75
+              ],
+              [
+                -74.25,
+                -51
+              ],
+              [
+                -74,
+                -50.75
+              ],
+              [
+                -74.75,
+                -50.25
+              ],
+              [
+                -73.75,
+                -50.25
+              ],
+              [
+                -74.25,
+                -50
+              ],
+              [
+                -73.75,
+                -49
+              ],
+              [
+                -74.5,
+                -49
+              ],
+              [
+                -74,
+                -48.5
+              ],
+              [
+                -74.75,
+                -48
+              ],
+              [
+                -73.25,
+                -48
+              ],
+              [
+                -74.75,
+                -47.75
+              ],
+              [
+                -74,
+                -47.5
+              ],
+              [
+                -74.25,
+                -46.75
+              ],
+              [
+                -75.75,
+                -46.75
+              ],
+              [
+                -74.25,
+                -45.75
+              ],
+              [
+                -73.75,
+                -46.5
+              ],
+              [
+                -72.5,
+                -44.5
+              ],
+              [
+                -73.25,
+                -44.25
+              ],
+              [
+                -72.25,
+                -41.5
+              ],
+              [
+                -73.5,
+                -41.75
+              ],
+              [
+                -74,
+                -41
+              ],
+              [
+                -73.5,
+                -40
+              ],
+              [
+                -180,
+                -40
+              ],
+              [
+                -180,
+                -80
+              ]
+            ],
+            [
+              [
+                -74.25,
+                -43.25
+              ],
+              [
+                -73.5,
+                -41.75
+              ],
+              [
+                -73.5,
+                -43.25
+              ],
+              [
+                -74.25,
+                -43.25
+              ]
+            ],
+            [
+              [
+                -74.75,
+                -49.25
+              ],
+              [
+                -74.5,
+                -49
+              ],
+              [
+                -74.5,
+                -50
+              ],
+              [
+                -74.75,
+                -49.25
+              ]
+            ],
+            [
+              [
+                -91,
+                -72.75
+              ],
+              [
+                -91.5,
+                -73.25
+              ],
+              [
+                -91.75,
+                -72.5
+              ],
+              [
+                -91,
+                -72.75
+              ]
+            ],
+            [
+              [
+                -149.25,
+                -77
+              ],
+              [
+                -149.75,
+                -77.25
+              ],
+              [
+                -150.75,
+                -77
+              ],
+              [
+                -149.25,
+                -77
+              ]
+            ],
+            [
+              [
+                -73.25,
+                -72.5
+              ],
+              [
+                -70,
+                -72.25
+              ],
+              [
+                -71.5,
+                -72.75
+              ],
+              [
+                -73.25,
+                -72.5
+              ]
+            ],
+            [
+              [
+                -68.25,
+                -71.75
+              ],
+              [
+                -70,
+                -72.25
+              ],
+              [
+                -75.5,
+                -71.75
+              ],
+              [
+                -69.75,
+                -71.25
+              ],
+              [
+                -71.25,
+                -70.75
+              ],
+              [
+                -69.5,
+                -70.5
+              ],
+              [
+                -71.75,
+                -70
+              ],
+              [
+                -72.25,
+                -69
+              ],
+              [
+                -70.5,
+                -68.75
+              ],
+              [
+                -68.25,
+                -71.75
+              ]
+            ],
+            [
+              [
+                -59.75,
+                -52
+              ],
+              [
+                -59.25,
+                -51.5
+              ],
+              [
+                -59,
+                -51.25
+              ],
+              [
+                -57.75,
+                -51.75
+              ],
+              [
+                -59.75,
+                -52
+              ]
+            ],
+            [
+              [
+                -60.75,
+                -51.25
+              ],
+              [
+                -59.25,
+                -51.5
+              ],
+              [
+                -59.75,
+                -51.75
+              ],
+              [
+                -60,
+                -51.75
+              ],
+              [
+                -60.75,
+                -51.25
+              ]
+            ],
+            [
+              [
+                -66.75,
+                -78.5
+              ],
+              [
+                -69.75,
+                -79.5
+              ],
+              [
+                -71.75,
+                -79.5
+              ],
+              [
+                -66.75,
+                -78.5
+              ]
+            ],
+            [
+              [
+                -20.25,
+                -74.5
+              ],
+              [
+                -22,
+                -74
+              ],
+              [
+                -20.75,
+                -73.5
+              ],
+              [
+                -20.25,
+                -74.5
+              ]
+            ],
+            [
+              [
+                -69,
+                -67.75
+              ],
+              [
+                -67.75,
+                -66.75
+              ],
+              [
+                -68,
+                -67.5
+              ],
+              [
+                -69,
+                -67.75
+              ]
+            ],
+            [
+              [
+                -68,
+                -55.75
+              ],
+              [
+                -70,
+                -55.25
+              ],
+              [
+                -69,
+                -55
+              ],
+              [
+                -68,
+                -55.75
+              ]
+            ],
+            [
+              [
+                -68,
+                -55.25
+              ],
+              [
+                -68.25,
+                -55
+              ],
+              [
+                -67,
+                -55
+              ],
+              [
+                -68,
+                -55.25
+              ]
+            ],
+            [
+              [
+                70.5,
+                -49.25
+              ],
+              [
+                68.75,
+                -49.75
+              ],
+              [
+                69,
+                -48.75
+              ],
+              [
+                70.5,
+                -49.25
+              ]
+            ],
+            [
+              [
+                -74.75,
+                -72.75
+              ],
+              [
+                -74.5,
+                -73.5
+              ],
+              [
+                -76.25,
+                -73.25
+              ],
+              [
+                -74.75,
+                -72.75
+              ]
+            ],
+            [
+              [
+                -159.75,
+                -79.25
+              ],
+              [
+                -159,
+                -79.75
+              ],
+              [
+                -164.25,
+                -79.25
+              ],
+              [
+                -163.25,
+                -78.75
+              ],
+              [
+                -159.75,
+                -79.25
+              ]
+            ],
+            [
+              [
+                -120.25,
+                -74
+              ],
+              [
+                -122.25,
+                -74.5
+              ],
+              [
+                -123.25,
+                -73.75
+              ],
+              [
+                -120.25,
+                -74
+              ]
+            ],
+            [
+              [
+                172.75,
+                -43.25
+              ],
+              [
+                173,
+                -43.75
+              ],
+              [
+                171.25,
+                -44.25
+              ],
+              [
+                169.75,
+                -46.5
+              ],
+              [
+                166.5,
+                -46
+              ],
+              [
+                172.75,
+                -40.5
+              ],
+              [
+                173,
+                -41.25
+              ],
+              [
+                174.25,
+                -41.25
+              ],
+              [
+                172.75,
+                -43.25
+              ]
+            ],
+            [
+              [
+                148,
+                -43.25
+              ],
+              [
+                147.25,
+                -42.75
+              ],
+              [
+                147,
+                -43.5
+              ],
+              [
+                146,
+                -43.5
+              ],
+              [
+                144.75,
+                -40.75
+              ],
+              [
+                148.25,
+                -40.75
+              ],
+              [
+                148,
+                -43.25
+              ]
+            ]
+          ]
+        }
+      ],
+      "type": "GeometryCollection"
+    },
+    "temporal": [
+      {
+        "start": "2009-12-31T13:00:00Z",
+        "end": "2010-12-31T12:59:59Z"
+      }
+    ],
+    "parameter_vocabs": [
+      "biological"
+    ],
+    "platform_vocabs": [],
+    "organisation_vocabs": []
+  },
+  "contacts": [
+    {
+      "roles": [
+        "pointOfContact",
+        "about"
+      ],
+      "organization": "Institute for Marine and Antarctic Studies",
+      "name": "Green, David",
+      "emails": [
+        "david.green@utas.edu.au"
+      ],
+      "addresses": [
+        {
+          "country": "Australia",
+          "administrative_area": "Tasmania"
+        }
+      ],
+      "links": [
+        {
+          "href": "https://orcid.org/0000-0002-0346-3129",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "ORCID"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "distributor",
+        "metadata"
+      ],
+      "organization": "Institute for Marine and Antarctic Studies",
+      "position": "IMAS Data Manager",
+      "emails": [
+        "IMAS.DataManager@utas.edu.au"
+      ],
+      "links": [
+        {
+          "href": "https://imas.utas.edu.au/",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "IMAS website"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "resourceProvider",
+        "citation"
+      ],
+      "organization": "Institute for Marine and Antarctic Studies",
+      "emails": [
+        "IMAS.DataManager@utas.edu.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "Private Bag 129"
+          ],
+          "city": "Hobart",
+          "country": "Australia",
+          "postal_code": "7001",
+          "administrative_area": "Tasmania"
+        }
+      ]
+    },
+    {
+      "roles": [
+        "principalInvestigator",
+        "citation"
+      ],
+      "organization": "Institute for Marine and Antarctic Studies",
+      "name": "Green, David",
+      "emails": [
+        "david.green@utas.edu.au"
+      ],
+      "addresses": [
+        {
+          "delivery_point": [
+            "University of Tasmania"
+          ]
+        }
+      ],
+      "links": [
+        {
+          "href": "https://orcid.org/0000-0002-0346-3129",
+          "type": "WWW:LINK-1.0-http--link",
+          "title": "ORCID"
+        }
+      ]
+    }
+  ],
+  "languages": [
+    {
+      "code": "eng",
+      "name": "English"
+    }
+  ],
+  "links": [
+    {
+      "href": "https://data.imas.utas.edu.au/attachments/d14f679c-41d0-442f-a080-aa1947cefd6d/krill_biomass_allfiles.zip",
+      "rel": "data",
+      "type": "",
+      "title": "{\"title\":\"DATA ACCESS - Krill biomass all .NC files (.zip)\",\"description\":\"\"}"
+    },
+    {
+      "href": "https://data.imas.utas.edu.au/attachments/d14f679c-41d0-442f-a080-aa1947cefd6d/files/",
+      "rel": "data",
+      "type": "",
+      "title": "{\"title\":\"DATA ACCESS - browse and download individual files\",\"description\":\"\"}"
+    },
+    {
+      "href": "https://doi.org/10.3389/fmars.2023.1218003",
+      "rel": "WWW:LINK-1.0-http--publication",
+      "type": "",
+      "title": "{\"title\":\"Associated Publication\",\"description\":\"Green DB, Titaud O, Bestley S, Corney SP, Hindell MA, Trebilco R, Conchon A and Lehodey P (2023) KRILLPODYM: a mechanistic, spatially resolved model of Antarctic krill distribution and abundance. Front. Mar. Sci. 10:1218003. doi:10.3389/fmars.2023.1218003\"}"
+    },
+    {
+      "href": "https://geonetwork.edge.aodn.org.au:443/geonetwork/images/logos/1bb8f09c-99d6-431f-b902-4d3e4cef02df.png",
+      "rel": "icon",
+      "type": "image/png",
+      "title": "Suggest icon for dataset"
+    },
+    {
+      "href": "https://metadata.imas.utas.edu.au/geonetwork/srv/eng/catalog.search#/metadata/d14f679c-41d0-442f-a080-aa1947cefd6d",
+      "rel": "describedby",
+      "type": "text/html",
+      "title": "Full metadata link"
+    },
+    {
+      "href": "https://licensebuttons.net/l/by-nc/4.0/88x31.png",
+      "rel": "license",
+      "type": "image/png"
+    },
+    {
+      "href": "https://creativecommons.org/licenses/by-nc/4.0/",
+      "rel": "license",
+      "type": "text/html"
+    }
+  ],
+  "license": "Creative Commons Attribution-NonCommercial 4.0 International License",
+  "providers": [
+    {
+      "name": "Institute for Marine and Antarctic Studies",
+      "roles": [
+        "distributor"
+      ]
+    }
+  ],
+  "themes": [
+    {
+      "concepts": [
+        {
+          "id": "Southern Ocean",
+          "url": null,
+          "title": "Keywords (Theme)",
+          "description": ""
+        },
+        {
+          "id": "Ecosystem modelling",
+          "url": null,
+          "title": "Keywords (Theme)",
+          "description": ""
+        },
+        {
+          "id": "Earth systems",
+          "url": null,
+          "title": "Keywords (Theme)",
+          "description": ""
+        },
+        {
+          "id": "Population connectivity",
+          "url": null,
+          "title": "Keywords (Theme)",
+          "description": ""
+        },
+        {
+          "id": "Fisheries",
+          "url": null,
+          "title": "Keywords (Theme)",
+          "description": ""
+        },
+        {
+          "id": "Mid-trophic pelagic prey",
+          "url": null,
+          "title": "Keywords (Theme)",
+          "description": ""
+        },
+        {
+          "id": "Spatial processes",
+          "url": null,
+          "title": "Keywords (Theme)",
+          "description": ""
+        }
+      ],
+      "scheme": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "Antarctic krill",
+          "url": null,
+          "title": "Keywords (Taxon)",
+          "description": ""
+        },
+        {
+          "id": "Euphausia superba",
+          "url": null,
+          "title": "Keywords (Taxon)",
+          "description": ""
+        }
+      ],
+      "scheme": ""
+    },
+    {
+      "concepts": [
+        {
+          "id": "ECOLOGICAL DYNAMICS",
+          "url": "https://gcmd.earthdata.nasa.gov/kms/concept/6bef0291-a9ca-4832-bbb4-80459dc1493f",
+          "title": "Global Change Master Directory Earth Science Keywords, Version 8.5",
+          "description": "GCMD"
+        },
+        {
+          "id": "FISHERIES",
+          "url": "https://gcmd.earthdata.nasa.gov/kms/concept/c7112a64-be39-414a-9125-f63ab44ecb5b",
+          "title": "Global Change Master Directory Earth Science Keywords, Version 8.5",
+          "description": "GCMD"
+        },
+        {
+          "id": "MARINE ECOSYSTEMS",
+          "url": "https://gcmd.earthdata.nasa.gov/kms/concept/f6350232-b1c7-458c-bc43-bda357ebb6db",
+          "title": "Global Change Master Directory Earth Science Keywords, Version 8.5",
+          "description": "GCMD"
+        },
+        {
+          "id": "OCEAN GENERAL CIRCULATION MODELS (OGCM)/REGIONAL OCEAN MODELS",
+          "url": "https://gcmd.earthdata.nasa.gov/kms/concept/c61a56a3-c08f-4989-92f3-0f0787688424",
+          "title": "Global Change Master Directory Earth Science Keywords, Version 8.5",
+          "description": "GCMD"
+        }
+      ],
+      "scheme": "theme"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Global / Oceans | Global / Oceans | Southern Ocean",
+          "url": "http://vocab.aodn.org.au/def/geographicextents/entity/6",
+          "title": "AODN Geographic Extents Vocabulary",
+          "description": ""
+        }
+      ],
+      "scheme": "place"
+    },
+    {
+      "concepts": [
+        {
+          "id": "Population Ecology",
+          "url": "http://purl.org/au-research/vocabulary/anzsrc-for/2008/060207",
+          "title": "Australian and New Zealand Standard Research Classification (ANZSRC): Fields of Research",
+          "description": ""
+        },
+        {
+          "id": "Invertebrate Biology",
+          "url": "http://purl.org/au-research/vocabulary/anzsrc-for/2008/060808",
+          "title": "Australian and New Zealand Standard Research Classification (ANZSRC): Fields of Research",
+          "description": ""
+        },
+        {
+          "id": "Ecological Impacts of Climate Change",
+          "url": "http://purl.org/au-research/vocabulary/anzsrc-for/2008/050101",
+          "title": "Australian and New Zealand Standard Research Classification (ANZSRC): Fields of Research",
+          "description": ""
+        },
+        {
+          "id": "Marine and Estuarine Ecology (incl. Marine Ichthyology)",
+          "url": "http://purl.org/au-research/vocabulary/anzsrc-for/2008/060205",
+          "title": "Australian and New Zealand Standard Research Classification (ANZSRC): Fields of Research",
+          "description": ""
+        }
+      ],
+      "scheme": "theme"
+    },
+    {
+      "concepts": [
+        {
+          "id": "biota",
+          "url": null,
+          "title": null,
+          "description": null
+        },
+        {
+          "id": "oceans",
+          "url": null,
+          "title": null,
+          "description": null
+        }
+      ],
+      "scheme": "Categories"
+    }
+  ],
+  "id": "d14f679c-41d0-442f-a080-aa1947cefd6d",
+  "search_suggestions": {
+    "abstract_phrases": [
+      "prevailing",
+      "habitat",
+      "optimal",
+      "seasonal conditions has",
+      "functions",
+      "year",
+      "age structured population consisting",
+      "ultimately informing sustainable fishery",
+      "important role within southern",
+      "habitat requirements",
+      "pelagic environments biological cycles",
+      "species may breakdown developing",
+      "our model independently develops",
+      "processes affecting distribution",
+      "stages outlined above",
+      "species important role",
+      "sustainable fishery management",
+      "complex",
+      "life stage survival",
+      "oceanic",
+      "ecosystems under",
+      "krillpodym using published deterministic",
+      "circumpolar",
+      "southern ocean ecosystems",
+      "informative uniform density across",
+      "history biological",
+      "using published",
+      "krillpodym",
+      "spatially resolved",
+      "regimes ultimately informing",
+      "factors controlling population",
+      "population dynamics model",
+      "population",
+      "important role",
+      "rules initialising from",
+      "dataset represents krillpodym",
+      "key life stages",
+      "distribution antarctic krill",
+      "age classes",
+      "established correlations between",
+      "southern",
+      "life stage specific habitat",
+      "role",
+      "sustainable",
+      "seapodym creating",
+      "within southern ocean",
+      "sea",
+      "currents",
+      "represents krillpodym modelled estimates",
+      "stage survival",
+      "dependent growth",
+      "age classes which undergo",
+      "develops",
+      "dominant transport regimes ultimately",
+      "resolved",
+      "here we present",
+      "represents krillpodym modelled",
+      "climate change therefore",
+      "density",
+      "krill responses",
+      "population distribution",
+      "organisms here",
+      "sea ice distribution",
+      "consisting",
+      "age dependent",
+      "stage",
+      "initialisation description",
+      "spin",
+      "ocean ecosystems",
+      "modelled estimates",
+      "under",
+      "many polar species",
+      "novel",
+      "may breakdown developing",
+      "ice here we present",
+      "stage specific habitat",
+      "role within southern",
+      "stages each",
+      "applied experiments",
+      "generates",
+      "factors controlling population dynamics",
+      "our model independently",
+      "population responses",
+      "controlling population",
+      "mechanistic spatially resolved model",
+      "which undergo age dependent",
+      "spin up biomass",
+      "requires methods",
+      "undergo age dependent",
+      "conditions has",
+      "which",
+      "model krillpodym",
+      "three major components",
+      "polar pelagic environments",
+      "here we",
+      "climate established",
+      "informative",
+      "conditions has led",
+      "key population parameters life",
+      "five key life",
+      "environments requires",
+      "article",
+      "species may breakdown",
+      "resolving key population",
+      "final",
+      "therefore",
+      "life history biological",
+      "habitat suitability",
+      "krill distribution",
+      "concerns over",
+      "status particularly given",
+      "production",
+      "applied",
+      "breakdown",
+      "polar species",
+      "specific habitat requirements",
+      "finely",
+      "interplay between life",
+      "population dynamics model seapodym",
+      "southern ocean ecosystems under",
+      "climate established correlations between",
+      "spatial dynamics driven",
+      "over",
+      "pelagic environments",
+      "six",
+      "established correlations",
+      "change therefore requires methods",
+      "rules initialising",
+      "distributions may",
+      "multiple",
+      "concerns",
+      "parameters life",
+      "environment",
+      "management",
+      "finely tuned",
+      "krillpodym modelled",
+      "age",
+      "framework lends",
+      "model framework lends itself",
+      "changing",
+      "population processes",
+      "extreme seasonality while",
+      "factors controlling",
+      "ocean our",
+      "biomass distributions",
+      "life history biological conditions",
+      "southern ocean our model",
+      "lends itself",
+      "model",
+      "https",
+      "spatial",
+      "generates spatially resolved",
+      "independently develops",
+      "dominant transport regimes",
+      "advection",
+      "biomass distribution",
+      "resolved estimates",
+      "underlying",
+      "aimed",
+      "informing sustainable",
+      "outlined above",
+      "distributions",
+      "major components",
+      "integration",
+      "driven",
+      "biological",
+      "important role within",
+      "final year",
+      "status",
+      "generates spatially resolved estimates",
+      "mechanistic",
+      "environments biological cycles",
+      "species important role within",
+      "optimal seasonal conditions",
+      "mediate",
+      "krillpodym using published",
+      "stage specific habitat requirements",
+      "regimes ultimately informing sustainable",
+      "polar pelagic environments biological",
+      "distribution antarctic",
+      "antarctic krill",
+      "structured population consisting",
+      "five key life stages",
+      "modelled",
+      "ultimately informing sustainable",
+      "ice distribution antarctic krill",
+      "density across",
+      "krill circumpolar biomass distribution",
+      "antarctic",
+      "predicting",
+      "polar",
+      "may breakdown",
+      "interplay between life history",
+      "robust",
+      "particularly",
+      "following reference paper",
+      "may",
+      "dominant",
+      "within",
+      "which undergo",
+      "change",
+      "mechanistic spatially",
+      "antarctic krill circumpolar biomass",
+      "controlling population dynamics",
+      "seasonal conditions has led",
+      "framework",
+      "species",
+      "future",
+      "fishery",
+      "model consists",
+      "using published deterministic functions",
+      "parameters life stage",
+      "suitability rules",
+      "general circulation",
+      "mechanistic spatially resolved",
+      "undergo age",
+      "environments",
+      "exhibiting",
+      "larvae",
+      "while",
+      "prevailing oceanic circulation",
+      "initialising",
+      "parameters life stage specific",
+      "dynamics driven",
+      "population parameters life stage",
+      "life stages outlined above",
+      "which undergo age",
+      "environments biological",
+      "initialisation description can",
+      "new",
+      "life stage specific",
+      "ocean ecosystems under",
+      "life stages outlined",
+      "informing",
+      "year spin",
+      "age structured population",
+      "specific habitat",
+      "background",
+      "prediction",
+      "true",
+      "organisms",
+      "new model",
+      "present",
+      "between life",
+      "ice distribution antarctic",
+      "underlying circulation",
+      "model framework lends",
+      "influenced",
+      "changing climate",
+      "ice here we",
+      "transport regimes ultimately informing",
+      "abundance",
+      "can explicitly",
+      "multiple age",
+      "seapodym",
+      "can explicitly consider",
+      "using published deterministic",
+      "represents",
+      "circumpolar biomass distribution",
+      "predicting krill responses",
+      "climate change therefore requires",
+      "model framework",
+      "applied experiments aimed",
+      "spatially resolved estimates",
+      "reference paper",
+      "processes",
+      "prevailing oceanic",
+      "key habitats",
+      "pelagic environments biological",
+      "resolving key",
+      "between life history",
+      "changing environments",
+      "transport",
+      "fmars",
+      "specific",
+      "framework lends itself",
+      "spatially",
+      "ocean our model",
+      "tuned",
+      "circulation",
+      "ecosystems",
+      "consists",
+      "first results",
+      "age dependent growth",
+      "structured population",
+      "published deterministic",
+      "non informative uniform",
+      "correlations between environment",
+      "new model consists",
+      "model seapodym",
+      "led",
+      "key life stages outlined",
+      "dynamics",
+      "within southern",
+      "sea ice",
+      "above",
+      "key organisms",
+      "life stage",
+      "seasonality while",
+      "spatially resolved model",
+      "model independently develops",
+      "affecting distribution",
+      "dynamics model seapodym",
+      "using",
+      "correlations",
+      "each",
+      "up biomass",
+      "status particularly",
+      "creating",
+      "multiple age classes",
+      "antarctic krill distribution",
+      "conditions",
+      "dominant transport",
+      "habitat suitability rules initialising",
+      "components",
+      "experiments",
+      "deterministic",
+      "change therefore requires",
+      "habitat suitability rules",
+      "informative uniform density",
+      "resolving key population parameters",
+      "found",
+      "synchronised",
+      "structured",
+      "complex life history",
+      "ocean dependencies",
+      "key",
+      "population status",
+      "explicitly consider",
+      "biomass",
+      "southern ocean",
+      "non informative",
+      "pelagic",
+      "extreme seasonality",
+      "one",
+      "established correlations between environment",
+      "population consisting",
+      "therefore requires methods",
+      "dataset represents",
+      "many",
+      "population dynamics",
+      "organisms here we describe",
+      "species exhibiting",
+      "undergo age dependent growth",
+      "mortality",
+      "describe",
+      "accompanying background model framework",
+      "year spin up",
+      "dataset",
+      "key life",
+      "sustainable fishery",
+      "resolved model",
+      "particularly given",
+      "developing",
+      "ice",
+      "rules",
+      "breakdown developing",
+      "population parameters life",
+      "southern ocean dependencies",
+      "predicting krill",
+      "spatial ecosystem",
+      "represents krillpodym",
+      "has",
+      "up",
+      "five",
+      "results",
+      "extreme",
+      "estimates",
+      "given",
+      "history biological conditions",
+      "accompanying background model",
+      "therefore requires",
+      "southern ocean our",
+      "future climate",
+      "model independently",
+      "modelling",
+      "modification",
+      "ice distribution",
+      "krillpodym using",
+      "stage specific",
+      "changing climate established correlations",
+      "key organisms here",
+      "uniform density",
+      "spatial dynamics",
+      "especially",
+      "ocean",
+      "everywhere",
+      "general circulation modelling",
+      "parameters",
+      "classes which undergo",
+      "krill circumpolar",
+      "classes",
+      "description",
+      "non",
+      "complex life",
+      "life",
+      "we",
+      "following reference",
+      "five key",
+      "antarctic krill circumpolar",
+      "ice here",
+      "seasonal conditions",
+      "spin up biomass distributions",
+      "transport regimes",
+      "key organisms here we",
+      "key life stages each",
+      "non informative uniform density",
+      "resolving",
+      "accompanying background",
+      "approximates observations",
+      "has led",
+      "background model framework",
+      "species important",
+      "up biomass distributions",
+      "krill",
+      "within southern ocean ecosystems",
+      "ocean currents",
+      "multiple age classes which",
+      "ecosystem",
+      "description can",
+      "stages outlined",
+      "three",
+      "sea ice here",
+      "polar pelagic",
+      "biological conditions",
+      "dataset represents krillpodym modelled",
+      "life history",
+      "controlling",
+      "simulate",
+      "dependent",
+      "between",
+      "changing climate established",
+      "dynamics model",
+      "population parameters",
+      "novel model",
+      "dependencies",
+      "informing sustainable fishery management",
+      "itself",
+      "robust prediction",
+      "key population parameters",
+      "following",
+      "we present",
+      "regimes ultimately",
+      "approximates",
+      "requires",
+      "correlations between",
+      "classes which",
+      "six key habitats",
+      "initialisation",
+      "explicitly",
+      "habitats",
+      "transport regimes ultimately",
+      "seasonal",
+      "lends",
+      "methods",
+      "distribution",
+      "our",
+      "capacity",
+      "uniform",
+      "across",
+      "year spin up biomass",
+      "we describe",
+      "published deterministic functions",
+      "fishery management",
+      "undergo",
+      "established",
+      "age structured",
+      "six key",
+      "informing sustainable fishery",
+      "experiments aimed",
+      "climate",
+      "role within",
+      "ultimately informing",
+      "population status particularly",
+      "optimal seasonal",
+      "circumpolar population distribution",
+      "responses",
+      "krillpodym modelled estimates",
+      "seasonality",
+      "first",
+      "suitability rules initialising",
+      "many polar",
+      "sea ice here we",
+      "krill circumpolar biomass",
+      "cycles",
+      "circulation modelling",
+      "reference",
+      "life stages",
+      "outlined",
+      "major",
+      "from",
+      "consider",
+      "climate established correlations",
+      "species may",
+      "climate change",
+      "population status particularly given",
+      "suitability",
+      "true everywhere",
+      "timing",
+      "generates spatially",
+      "survival",
+      "here we describe",
+      "initialising from",
+      "history",
+      "published",
+      "processes affecting",
+      "both",
+      "important",
+      "effects",
+      "classes which undergo age",
+      "life stages each",
+      "age classes which",
+      "deterministic functions",
+      "integrates population",
+      "spin up",
+      "our model",
+      "optimal seasonal conditions has",
+      "here",
+      "interplay between",
+      "biological cycles",
+      "background model",
+      "affecting",
+      "sea ice distribution antarctic",
+      "between life history biological",
+      "can",
+      "general",
+      "three major",
+      "paper",
+      "uniform density across",
+      "observations",
+      "regimes",
+      "oceanic circulation",
+      "accompanying",
+      "suitability rules initialising from",
+      "requirements",
+      "changing environments requires",
+      "role within southern ocean",
+      "interplay",
+      "informative uniform",
+      "organisms here we",
+      "ultimately",
+      "change therefore",
+      "factors",
+      "ocean our model independently",
+      "circumpolar biomass",
+      "krill biomass",
+      "circumpolar population",
+      "stages",
+      "between environment",
+      "independently",
+      "growth",
+      "key population",
+      "integrates",
+      "novel model krillpodym",
+      "demographics"
+    ],
+    "parameter_vocabs_sayt": [
+      "biological"
+    ],
+    "platform_vocabs_sayt": [],
+    "organisation_vocabs_sayt": []
+  },
+  "sci:citation": "{\"suggestedCitation\":\"Cite data as: Green, D. (2023). KRILLPODYM modelled estimates of Antarctic krill circumpolar distribution [Data set]. Institute for Marine and Antarctic Studies. https://doi.org/10.25959/895K-K978\",\"useLimitations\":null,\"otherConstraints\":null}",
+  "type": "Collection",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/scientific/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/contacts/v0.1.1/schema.json",
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/language/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/themes/v1.0.0/schema.json",
+    "https://stac-extensions.github.io/web-map-links/v1.2.0/schema.json"
+  ]
+}
