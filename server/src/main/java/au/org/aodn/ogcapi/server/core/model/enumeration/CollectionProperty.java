@@ -23,6 +23,7 @@ public enum CollectionProperty {
     pace("pace"),
     datasetGroup("dataset_group"),
     aiDescription("ai:description"),
+    aiUpdateFrequency("ai:update_frequency"),
     scope("scope");
 
     private final String value;

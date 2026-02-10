@@ -375,6 +375,7 @@
       "name": ""
     },
     "update_frequency": null,
+    "ai:update_frequency": "delayed",
     "temporal": [
       {
         "start": "1991-12-31T13:00:00Z",

@@ -693,4 +693,25 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
         assertEquals("35234913-aa3c-48ec-b9a4-77f822f66ef8", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "asset.summary exist 35234913-aa3c-48ec-b9a4-77f822f66ef8");
     }
+
+    public void verifyAiUpdateFrequencyWorks() throws IOException {
+        super.insertJsonToElasticRecordIndex("caf7220a-19e0-4a7f-9af6-eade6c79a47a.json"); // this record is assumed to have a delayed mode with AI enhanced ai:update_frequency field
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=(ai_update_frequency='delayed')",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=(ai_update_frequency='real-time')",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "no real-time records found");
+        assertEquals("caf7220a-19e0-4a7f-9af6-eade6c79a47a", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "ai:update_frequency exist caf7220a-19e0-4a7f-9af6-eade6c79a47a");
+    }
 }
