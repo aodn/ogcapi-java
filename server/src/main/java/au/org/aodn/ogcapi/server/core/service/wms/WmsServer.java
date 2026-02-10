@@ -103,14 +103,20 @@ public class WmsServer {
             // Special handle for date time field, the field name will be diff across dataset. So we need
             // to look it up
             try {
-                List<WFSFieldModel> m = this.getWMSFields(uuid, request);
-                List<WFSFieldModel> target = m.stream()
+                List<WFSFieldModel> wfsFieldModels = this.getWMSFields(uuid, request);
+                // Flatten all fields from all WFSFieldModels
+                List<WFSFieldModel.Field> allFields = wfsFieldModels.stream()
+                        .filter(m -> m.getFields() != null)
+                        .flatMap(m -> m.getFields().stream())
+                        .toList();
+
+                List<WFSFieldModel.Field> target = allFields.stream()
                         .filter(value -> "dateTime".equalsIgnoreCase(value.getType()))
                         .toList();
 
                 if (!target.isEmpty()) {
 
-                    List<WFSFieldModel> range;
+                    List<WFSFieldModel.Field> range;
                     if (target.size() > 2) {
                         // Try to find possible fields where it contains start end min max
                         range = target.stream()
@@ -135,7 +141,7 @@ public class WmsServer {
                         } else {
                             // There are more than 1 dateTime field, it is not range type, so we try to guess the individual one
                             // based on some common name. Add more if needed
-                            List<WFSFieldModel> individual = target.stream()
+                            List<WFSFieldModel.Field> individual = target.stream()
                                     .filter(v -> Stream.of("juld", "time").anyMatch(k -> v.getName().equalsIgnoreCase(k)))
                                     .toList();
 
@@ -575,7 +581,7 @@ public class WmsServer {
      *
      * @param collectionId - The uuid of the metadata that hold this WMS link
      * @param request      - Request item for this WMS layer, usually layer name, size, etc.
-     * @return - The fields contained in this WMS layer, we are particular interest in the date time field for subsetting
+     * @return - List of WFSFieldModel containing typename and fields for each WMS layer
      */
     public List<WFSFieldModel> getWMSFields(String collectionId, FeatureRequest request) {
         List<WFSFieldModel> wmsFields = new ArrayList<>();
@@ -591,16 +597,15 @@ public class WmsServer {
                     if (response != null && response.getLayerDescription().getWfs() != null) {
                         // Use describe layer to find the layername and wfs server for fields
                         FeatureRequest requestWithDescribeLayer = FeatureRequest.builder().layerName(response.getLayerDescription().getQuery().getTypeName()).build();
-                        List<WFSFieldModel> res = wfsServer.getDownloadableFields(collectionId, requestWithDescribeLayer, response.getLayerDescription().getWfs());
-                        if (res != null && !res.isEmpty()) {
-                            wmsFields.addAll(res);
+                        WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, requestWithDescribeLayer, response.getLayerDescription().getWfs());
+                        if (res != null) {
+                            wmsFields.add(res);
                         }
-
                     } else {
                         // We trust what is found inside the elastic search metadata
-                        List<WFSFieldModel> res = wfsServer.getDownloadableFields(collectionId, request, null);
-                        if (res != null && !res.isEmpty()) {
-                            wmsFields.addAll(res);
+                        WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, request, null);
+                        if (res != null) {
+                            wmsFields.add(res);
                         }
                     }
                 }
@@ -610,15 +615,15 @@ public class WmsServer {
             if (response != null && response.getLayerDescription().getWfs() != null) {
                 // If we are able to find the wfs server and real layer name based on wms layer, then use it
                 FeatureRequest modifiedRequest = FeatureRequest.builder().layerName(response.getLayerDescription().getQuery().getTypeName()).build();
-                List<WFSFieldModel> res = wfsServer.getDownloadableFields(collectionId, modifiedRequest, response.getLayerDescription().getWfs());
-                if (res != null && !res.isEmpty()) {
-                    wmsFields.addAll(res);
+                WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, modifiedRequest, response.getLayerDescription().getWfs());
+                if (res != null) {
+                    wmsFields.add(res);
                 }
             } else {
                 // We trust what is found inside the elastic search metadata
-                List<WFSFieldModel> res = wfsServer.getDownloadableFields(collectionId, request, null);
-                if (res != null && !res.isEmpty()) {
-                    wmsFields.addAll(res);
+                WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, request, null);
+                if (res != null) {
+                    wmsFields.add(res);
                 }
             }
         }

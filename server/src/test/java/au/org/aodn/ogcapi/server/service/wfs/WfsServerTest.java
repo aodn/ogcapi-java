@@ -1,11 +1,14 @@
 package au.org.aodn.ogcapi.server.service.wfs;
 
+import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import org.junit.jupiter.api.AfterEach;
@@ -13,17 +16,19 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.anyString;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -33,20 +38,25 @@ public class WfsServerTest {
     Search mockSearch;
 
     @Mock
-    DownloadableFieldsService downloadableFieldsService;
-
-    @Mock
     RestTemplate restTemplate;
 
-    @Autowired
-    @Qualifier("pretendUserEntity")
-    private HttpEntity<?> entity;
+    @Mock
+    HttpEntity<?> entity;
+
+    @Mock
+    WfsDefaultParam wfsDefaultParam;
 
     AutoCloseable closeableMock;
 
     @BeforeEach
     public void setUp() {
         closeableMock = MockitoAnnotations.openMocks(this);
+        // Setup default param mock
+        when(wfsDefaultParam.getFields()).thenReturn(Map.of(
+                "service", "WFS",
+                "version", "2.0.0",
+                "request", "DescribeFeatureType"
+        ));
     }
 
     @AfterEach
@@ -63,7 +73,7 @@ public class WfsServerTest {
         result.setCollections(Collections.emptyList());
         when(mockSearch.searchCollections(anyString())).thenReturn(result);
 
-        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate), entity);
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
 
         List<FeatureTypeInfo> featureTypes = Collections.singletonList(FeatureTypeInfo.builder().build());
         assertEquals(Collections.emptyList(), server.filterFeatureTypesByWfsLinks("id", featureTypes));
@@ -79,7 +89,7 @@ public class WfsServerTest {
 
         when(mockSearch.searchCollections(anyString())).thenReturn(result);
 
-        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate), entity);
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
 
         List<FeatureTypeInfo> featureTypes = Collections.singletonList(FeatureTypeInfo.builder().build());
         assertEquals(Collections.emptyList(), server.filterFeatureTypesByWfsLinks("id", featureTypes));
@@ -105,10 +115,221 @@ public class WfsServerTest {
         result.setCollections(List.of(model));
         when(mockSearch.searchCollections(anyString())).thenReturn(result);
 
-        WfsServer server = new WfsServer(mockSearch, downloadableFieldsService, restTemplate, new RestTemplateUtils(restTemplate), entity);
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
 
         List<FeatureTypeInfo> info = server.filterFeatureTypesByWfsLinks("id", featureTypes);
         assertEquals(1, info.size(), "FeatureType count match");
         assertEquals(featureTypes.get(0), info.get(0), "FeatureType test_feature_type found");
+    }
+
+    @Test
+    public void testGetDownloadableFieldsSuccess() {
+        // Mock successful WFS response with geometry and datetime fields
+        String mockWfsResponse = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema"
+                            xmlns:gml="http://www.opengis.net/gml/3.2"
+                            xmlns:test="test.namespace"
+                            targetNamespace="test.namespace">
+                    <xsd:complexType name="testLayerType">
+                        <xsd:complexContent>
+                            <xsd:extension base="gml:AbstractFeatureType">
+                                <xsd:sequence>
+                                    <xsd:element name="geom" type="gml:GeometryPropertyType"/>
+                                    <xsd:element name="timestamp" type="xsd:dateTime"/>
+                                    <xsd:element name="name" type="xsd:string"/>
+                                </xsd:sequence>
+                            </xsd:extension>
+                        </xsd:complexContent>
+                    </xsd:complexType>
+                    <xsd:element name="testLayer" type="test:testLayerType"/>
+                </xsd:schema>
+                """;
+
+        FeatureRequest request = FeatureRequest.builder().layerName("test:layer").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(List.of(
+                StacCollectionModel.builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .href("http://geoserver-123.aodn.org.au/geoserver/ows")
+                                        .title(request.getLayerName())
+                                        .aiGroup(WFS_LINK_MARKER)
+                                        .build())
+                        )
+                        .build()
+        ));
+
+        String id = "id";
+
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
+                .thenReturn(new ResponseEntity<>(mockWfsResponse, HttpStatus.OK));
+
+        when(mockSearch.searchCollections(eq(id)))
+                .thenReturn(stac);
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+        WFSFieldModel result = server.getDownloadableFields(id, request, null);
+
+        assertNotNull(result);
+        assertNotNull(result.getFields());
+        assertEquals("testLayer", result.getTypename());
+        assertEquals(3, result.getFields().size());
+
+        // Check geometry field
+        WFSFieldModel.Field geomField = result.getFields().stream()
+                .filter(f -> "geom".equals(f.getName()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(geomField);
+        assertEquals("geom", geomField.getLabel());
+        assertEquals("GeometryPropertyType", geomField.getType());
+
+        // Check datetime field
+        WFSFieldModel.Field timeField = result.getFields().stream()
+                .filter(f -> "timestamp".equals(f.getName()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(timeField);
+        assertEquals("timestamp", timeField.getLabel());
+        assertEquals("dateTime", timeField.getType());
+
+        // Check string field
+        WFSFieldModel.Field nameField = result.getFields().stream()
+                .filter(f -> "name".equals(f.getName()))
+                .findFirst()
+                .orElse(null);
+        assertNotNull(nameField);
+        assertEquals("name", nameField.getLabel());
+        assertEquals("string", nameField.getType());
+    }
+
+    @Test
+    public void testGetDownloadableFieldsNotFoundResponse() {
+        // Mock WFS response with NOT_FOUND status
+        FeatureRequest request = FeatureRequest.builder().layerName("test:layer2").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(List.of(
+                StacCollectionModel.builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .href("http://geoserver-123.aodn.org.au/geoserver/ows")
+                                        .title(request.getLayerName())
+                                        .aiGroup(WFS_LINK_MARKER)
+                                        .build())
+                        )
+                        .build()
+        ));
+
+        String id = "id2";
+
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
+                .thenReturn(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+
+        when(mockSearch.searchCollections(eq(id)))
+                .thenReturn(stac);
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+
+        DownloadableFieldsNotFoundException exception = assertThrows(
+                DownloadableFieldsNotFoundException.class,
+                () -> server.getDownloadableFields(id, request, null)
+        );
+
+        assertEquals("No downloadable fields found for all url",
+                exception.getMessage(),
+                "Exception not match"
+        );
+    }
+
+    @Test
+    public void testGetDownloadableFieldsWfsError() {
+        FeatureRequest request = FeatureRequest.builder().layerName("invalid:layer").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(List.of(
+                StacCollectionModel.builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .href("http://geoserver-123.aodn.org.au/geoserver/ows")
+                                        .title(request.getLayerName())
+                                        .aiGroup(WFS_LINK_MARKER)
+                                        .build())
+                        )
+                        .build()
+        ));
+
+        String id = "id3";
+
+        when(mockSearch.searchCollections(eq(id)))
+                .thenReturn(stac);
+
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
+                .thenReturn(new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR));
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+
+        DownloadableFieldsNotFoundException exception = assertThrows(
+                DownloadableFieldsNotFoundException.class,
+                () -> server.getDownloadableFields(id, request, null)
+        );
+
+        assertTrue(exception.getMessage().contains("No downloadable fields found"));
+    }
+
+    @Test
+    public void testGetDownloadableFieldsNetworkError() {
+        FeatureRequest request = FeatureRequest.builder().layerName("test:layer").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(List.of(
+                StacCollectionModel.builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .href("http://geoserver-123.aodn.org.au/geoserver/ows")
+                                        .title(request.getLayerName())
+                                        .aiGroup(WFS_LINK_MARKER)
+                                        .build())
+                        )
+                        .build()
+        ));
+
+        String id = "id4";
+
+        when(mockSearch.searchCollections(eq(id)))
+                .thenReturn(stac);
+
+        // Mock network error
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
+                .thenThrow(new RuntimeException("Connection timeout"));
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+
+        RuntimeException exception = assertThrows(
+                RuntimeException.class,
+                () -> server.getDownloadableFields(id, request, null)
+        );
+
+        assertTrue(exception.getMessage().contains("Connection timeout"));
+    }
+
+    @Test
+    public void testGetDownloadableFieldsNoCollection() {
+        FeatureRequest request = FeatureRequest.builder().layerName("test:layer").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(Collections.emptyList());
+        String id = "id5";
+
+        when(mockSearch.searchCollections(eq(id)))
+                .thenReturn(stac);
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+
+        WFSFieldModel result = server.getDownloadableFields(id, request, null);
+
+        assertNull(result, "Should return null when no collection found");
     }
 }

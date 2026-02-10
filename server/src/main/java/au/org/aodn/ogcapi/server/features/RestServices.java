@@ -99,9 +99,9 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
         }
 
-        List<WFSFieldModel> result = wfsServer.getDownloadableFields(collectionId, request, null);
+        WFSFieldModel result = wfsServer.getDownloadableFields(collectionId, request, null);
 
-        return result.isEmpty() ?
+        return result == null ?
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }

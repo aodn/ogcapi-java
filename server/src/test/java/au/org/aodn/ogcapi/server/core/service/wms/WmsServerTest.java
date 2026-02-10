@@ -9,7 +9,6 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.*;
@@ -45,7 +44,6 @@ import static org.mockito.Mockito.when;
                 WfsWmsConfig.class,
                 WmsDefaultParam.class,
                 WfsDefaultParam.class,
-                DownloadableFieldsService.class,
                 JacksonAutoConfiguration.class,
                 CacheAutoConfiguration.class}
 )

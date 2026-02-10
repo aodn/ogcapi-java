@@ -46,11 +46,17 @@ public class DownloadWfsDataService {
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, List<WFSFieldModel> downloadableFields) {
+    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WFSFieldModel wfsFieldModel) {
         StringBuilder cqlFilter = new StringBuilder();
 
+        if (wfsFieldModel == null || wfsFieldModel.getFields() == null) {
+            return cqlFilter.toString();
+        }
+
+        List<WFSFieldModel.Field> fields = wfsFieldModel.getFields();
+
         // Find temporal field
-        Optional<WFSFieldModel> temporalField = downloadableFields.stream()
+        Optional<WFSFieldModel.Field> temporalField = fields.stream()
                 .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
                 .findFirst();
 
@@ -64,7 +70,7 @@ public class DownloadWfsDataService {
         }
 
         // Find geometry field
-        Optional<WFSFieldModel> geometryField = downloadableFields.stream()
+        Optional<WFSFieldModel.Field> geometryField = fields.stream()
                 .filter(field -> "geometrypropertytype".equals(field.getType()))
                 .findFirst();
 
@@ -131,23 +137,23 @@ public class DownloadWfsDataService {
 
         String wfsServerUrl;
         String wfsTypeName;
-        List<WFSFieldModel> downloadableFields;
+        WFSFieldModel wfsFieldModel;
 
         // Try to get WFS details from DescribeLayer first, then fallback to searching by layer name
         if (describeLayerResponse != null && describeLayerResponse.getLayerDescription().getWfs() != null) {
             wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
             wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
 
-            downloadableFields = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
-            log.info("DownloadableFields by describeLayer: {}", downloadableFields);
+            wfsFieldModel = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+            log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
         } else {
             Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitle(uuid, layerName);
 
             if (featureServerUrl.isPresent()) {
                 wfsServerUrl = featureServerUrl.get();
                 wfsTypeName = layerName;
-                downloadableFields = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
-                log.info("DownloadableFields by wfs typename: {}", downloadableFields);
+                wfsFieldModel = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+                log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
             } else {
                 throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
             }
@@ -158,7 +164,7 @@ public class DownloadWfsDataService {
         String validEndDate = DatetimeUtils.validateAndFormatDate(endDate, false);
 
         // Build CQL filter
-        String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, downloadableFields);
+        String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, wfsFieldModel);
 
         // Build final WFS request URL
         String wfsRequestUrl = buildWfsRequestUrl(wfsServerUrl, wfsTypeName, cqlFilter);

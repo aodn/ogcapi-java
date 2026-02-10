@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -16,7 +16,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 public class WfsWmsConfig {
 
-    @ConditionalOnMissingBean(name="pretendUserEntity")
+    @ConditionalOnMissingBean(name = "pretendUserEntity")
     @Bean("pretendUserEntity")
     public HttpEntity<?> createPretendUserEntity() {
         // Some server do not allow program to scrap the content, so we need to pretend to be a client
@@ -28,11 +28,11 @@ public class WfsWmsConfig {
 
     @Bean
     public WfsServer createWfsServer(Search search,
-                                     DownloadableFieldsService downloadableFieldsService,
                                      RestTemplate restTemplate,
                                      RestTemplateUtils restTemplateUtils,
-                                     @Qualifier("pretendUserEntity") HttpEntity<?> entity) {
-        return new WfsServer(search, downloadableFieldsService, restTemplate, restTemplateUtils, entity);
+                                     @Qualifier("pretendUserEntity") HttpEntity<?> entity,
+                                     WfsDefaultParam wfsDefaultParam) {
+        return new WfsServer(search, restTemplate, restTemplateUtils, entity, wfsDefaultParam);
     }
 
     @Bean
