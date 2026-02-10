@@ -41,6 +41,9 @@ public class SummariesModel {
     @JsonProperty("ai:description")
     protected String aiDescription;
 
+    @JsonProperty("ai:update_frequency")
+    protected String aiUpdateFrequency;
+
     @JsonProperty("scope")
     protected Map<String, String> scope;
 
