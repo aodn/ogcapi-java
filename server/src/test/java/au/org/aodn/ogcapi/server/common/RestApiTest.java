@@ -478,7 +478,25 @@ public class RestApiTest extends BaseTestClass {
 
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit none");
     }
+    /**
+     * People who provide funds for the data often store in credit, the free text search given the funder, in this test
+     * ACEAS is the funder of d14f679c-41d0-442f-a080-aa1947cefd6d
+     * @throws IOException - Not expected
+     */
+    @Test
+    public void verifyFunderCorrect() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "d14f679c-41d0-442f-a080-aa1947cefd6d.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"
+        );
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=ACEAS", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
+        assertEquals(
+                "d14f679c-41d0-442f-a080-aa1947cefd6d",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+    }
     /**
      * Verify filter on attribute dataset_group works
      *
