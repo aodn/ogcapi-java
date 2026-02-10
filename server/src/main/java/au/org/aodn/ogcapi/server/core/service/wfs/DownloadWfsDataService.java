@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
@@ -46,11 +46,11 @@ public class DownloadWfsDataService {
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, List<DownloadableFieldModel> downloadableFields) {
+    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, List<WFSFieldModel> downloadableFields) {
         StringBuilder cqlFilter = new StringBuilder();
 
         // Find temporal field
-        Optional<DownloadableFieldModel> temporalField = downloadableFields.stream()
+        Optional<WFSFieldModel> temporalField = downloadableFields.stream()
                 .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
                 .findFirst();
 
@@ -64,7 +64,7 @@ public class DownloadWfsDataService {
         }
 
         // Find geometry field
-        Optional<DownloadableFieldModel> geometryField = downloadableFields.stream()
+        Optional<WFSFieldModel> geometryField = downloadableFields.stream()
                 .filter(field -> "geometrypropertytype".equals(field.getType()))
                 .findFirst();
 
@@ -131,7 +131,7 @@ public class DownloadWfsDataService {
 
         String wfsServerUrl;
         String wfsTypeName;
-        List<DownloadableFieldModel> downloadableFields;
+        List<WFSFieldModel> downloadableFields;
 
         // Try to get WFS details from DescribeLayer first, then fallback to searching by layer name
         if (describeLayerResponse != null && describeLayerResponse.getLayerDescription().getWfs() != null) {

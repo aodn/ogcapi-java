@@ -8,7 +8,7 @@ import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
@@ -148,13 +148,13 @@ public class DownloadableFieldsServiceTest {
         when(search.searchCollections(eq(id)))
                 .thenReturn(stac);
 
-        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(id, request, null);
+        List<WFSFieldModel> result = wfsServer.getDownloadableFields(id, request, null);
 
         assertNotNull(result);
         assertEquals(2, result.size());
 
         // Check geometry field
-        DownloadableFieldModel geomField = result.stream()
+        WFSFieldModel geomField = result.stream()
                 .filter(f -> "geom".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -163,7 +163,7 @@ public class DownloadableFieldsServiceTest {
         assertEquals("geometrypropertytype", geomField.getType());
 
         // Check datetime field
-        DownloadableFieldModel timeField = result.stream()
+        WFSFieldModel timeField = result.stream()
                 .filter(f -> "timestamp".equals(f.getName()))
                 .findFirst()
                 .orElse(null);

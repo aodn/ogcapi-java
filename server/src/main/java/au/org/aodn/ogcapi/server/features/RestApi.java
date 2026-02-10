@@ -119,7 +119,7 @@ public class RestApi implements CollectionsApi {
                 return featuresService.getWaveBuoys(collectionId, request.getDatetime());
             }
             case timeseries -> {
-                return  featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
+                return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wfs_downloadable_fields -> {
                 return (request.getLayerName() == null || request.getLayerName().isEmpty()) ?
@@ -127,9 +127,7 @@ public class RestApi implements CollectionsApi {
                         featuresService.getWfsDownloadableFields(collectionId, request);
             }
             case wms_downloadable_fields -> {
-                return (request.getLayerName() == null || request.getLayerName().isEmpty()) ?
-                        ResponseEntity.badRequest().build() :
-                        featuresService.getWmsDownloadableFields(collectionId, request);
+                return featuresService.getWmsDownloadableFields(collectionId, request);
             }
             case wms_map_tile -> {
                 return featuresService.getWmsMapTile(collectionId, request);
@@ -148,6 +146,7 @@ public class RestApi implements CollectionsApi {
             }
         }
     }
+
     /**
      * @param collectionId - The collection id
      * @param limit        - Limit of result return

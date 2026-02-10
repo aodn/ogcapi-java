@@ -9,7 +9,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
@@ -99,7 +99,7 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
         }
 
-        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(collectionId, request, null);
+        List<WFSFieldModel> result = wfsServer.getDownloadableFields(collectionId, request, null);
 
         return result.isEmpty() ?
                 ResponseEntity.notFound().build() :
@@ -115,28 +115,27 @@ public class RestServices extends OGCApiService {
      */
     public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
 
-        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
-            log.info("Layer name cannot be null or empty");
-            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
-        }
+//        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
+//            log.info("Layer name cannot be null or empty");
+//            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
+//        }
 
         // Temp block and show only white list uuid, the other uuid need QA check before release.
         if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        else {
+        } else {
             try {
-                List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
+                List<WFSFieldModel> result = wmsServer.getWMSFields(collectionId, request);
 
                 return result.isEmpty() ?
                         ResponseEntity.notFound().build() :
                         ResponseEntity.ok(result);
-            }
-            catch(DownloadableFieldsNotFoundException nfe) {
+            } catch (DownloadableFieldsNotFoundException nfe) {
                 return ResponseEntity.notFound().build();
             }
         }
     }
+
     /**
      * This is used to get all available layers from WMS GetCapabilities
      *
@@ -166,9 +165,10 @@ public class RestServices extends OGCApiService {
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
+
     /**
      * @param collectionID - uuid
-     * @param from -
+     * @param from         -
      * @return -
      */
     public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {

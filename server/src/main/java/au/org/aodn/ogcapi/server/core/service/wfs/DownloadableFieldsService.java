@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsDescribeFeatureTypeResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public class DownloadableFieldsService {
 
     protected String createFeatureFieldQueryUrl(String url, FeatureRequest request) {
         UriComponents components = UriComponentsBuilder.fromUriString(url).build();
-        if(components.getPath() != null) {
+        if (components.getPath() != null) {
             // Now depends on the service, we need to have different arguments
             List<String> pathSegments = components.getPathSegments();
             if (!pathSegments.isEmpty()) {
@@ -40,7 +40,7 @@ public class DownloadableFieldsService {
                         .path(components.getPath());
 
                 param.forEach((key, value) -> {
-                    if(value != null) {
+                    if (value != null) {
                         builder.queryParam(key, value);
                     }
                 });
@@ -52,10 +52,19 @@ public class DownloadableFieldsService {
         }
         return null;
     }
+
     /**
-     * Convert WFS response to downloadable fields (geometry and date/time fields)
+     * Convert WFS response to downloadable fields.
+     * The typename is extracted from the top-level xsd:element (e.g., <xsd:element name="aatams_sattag_dm_profile_map" .../>)
      */
-    protected static List<DownloadableFieldModel> convertWfsResponseToDownloadableFields(WfsDescribeFeatureTypeResponse wfsResponse) {
+    protected static List<WFSFieldModel> convertWfsResponseToDownloadableFields(WfsDescribeFeatureTypeResponse wfsResponse) {
+        String typename;
+        if (wfsResponse.getTopLevelElements() != null && !wfsResponse.getTopLevelElements().isEmpty()) {
+            typename = wfsResponse.getTopLevelElements().get(0).getName();
+        } else {
+            typename = null;
+        }
+
         return wfsResponse.getComplexTypes() != null ?
                 wfsResponse.getComplexTypes().stream()
                         .filter(complexType -> complexType.getComplexContent() != null)
@@ -67,43 +76,37 @@ public class DownloadableFieldsService {
                             return elements != null ? elements.stream() : Stream.empty();
                         })
                         .filter(element -> element.getName() != null && element.getType() != null)
-                        .map(DownloadableFieldsService::createDownloadableField)
-                        .filter(Objects::nonNull)
+                        .map(element -> WFSFieldModel.builder()
+                                .label(element.getName())
+                                .name(element.getName())
+                                .type(normalizeType(element.getType()))
+                                .typename(typename)
+                                .build())
                         .collect(Collectors.toList()) : new ArrayList<>();
     }
+
     /**
-     * Create a downloadable field based on the element type
+     * Normalize the XSD type to a simpler type name
+     *
+     * @param xsdType - The XSD type (e.g., "xsd:dateTime", "gml:GeometryPropertyType")
+     * @return - Normalized type name
      */
-    protected static DownloadableFieldModel createDownloadableField(WfsDescribeFeatureTypeResponse.Element element) {
-        String elementType = element.getType();
-        if (elementType == null) {
+    protected static String normalizeType(String xsdType) {
+        if (xsdType == null) {
             return null;
         }
-
-        DownloadableFieldModel field = DownloadableFieldModel
-                .builder()
-                .label(element.getName())
-                .name(element.getName())
-                .build();
-
-        return switch (elementType) {
-            case "gml:GeometryPropertyType" -> {
-                field.setType("geometrypropertytype");
-                yield field;
-            }
-            case "xsd:dateTime" -> {
-                field.setType("dateTime");
-                yield field;
-            }
-            case "xsd:date" -> {
-                field.setType("date");
-                yield field;
-            }
-            case "xsd:time" -> {
-                field.setType("time");
-                yield field;
-            }
-            default -> null; // Ignore other types
+        return switch (xsdType) {
+            case "gml:GeometryPropertyType" -> "geometrypropertytype";
+            case "xsd:dateTime" -> "dateTime";
+            case "xsd:date" -> "date";
+            case "xsd:time" -> "time";
+            case "xsd:long" -> "long";
+            case "xsd:int" -> "int";
+            case "xsd:double" -> "double";
+            case "xsd:float" -> "float";
+            case "xsd:string" -> "string";
+            case "xsd:boolean" -> "boolean";
+            default -> xsdType.contains(":") ? xsdType.substring(xsdType.indexOf(":") + 1) : xsdType;
         };
     }
 }

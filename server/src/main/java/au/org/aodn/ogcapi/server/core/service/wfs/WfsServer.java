@@ -7,7 +7,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsDescribeFeatureTypeResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsGetCapabilitiesResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -79,7 +79,7 @@ public class WfsServer {
      * @return - A list of downloadable fields
      */
     @Cacheable(value = DOWNLOADABLE_FIELDS)
-    public List<DownloadableFieldModel> getDownloadableFields(String collectionId, FeatureRequest request, String assumedWfsServer) {
+    public List<WFSFieldModel> getDownloadableFields(String collectionId, FeatureRequest request, String assumedWfsServer) {
 
         Optional<List<String>> mapFeatureUrl = assumedWfsServer != null ?
                 Optional.of(List.of(assumedWfsServer)) :

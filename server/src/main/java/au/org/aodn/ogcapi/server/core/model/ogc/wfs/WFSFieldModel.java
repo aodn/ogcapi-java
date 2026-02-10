@@ -6,7 +6,7 @@ import lombok.Data;
 
 @Data
 @Builder
-public class DownloadableFieldModel {
+public class WFSFieldModel {
     @JsonProperty("label")
     private String label;
 
@@ -15,4 +15,7 @@ public class DownloadableFieldModel {
 
     @JsonProperty("name")
     private String name;
+
+    @JsonProperty("typename")
+    private String typename;
 }
