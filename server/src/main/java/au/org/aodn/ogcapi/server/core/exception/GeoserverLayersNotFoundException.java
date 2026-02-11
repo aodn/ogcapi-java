@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ResponseStatus;
 
 @ResponseStatus(HttpStatus.NOT_FOUND)
-public class DownloadableFieldsNotFoundException extends RuntimeException {
-    public DownloadableFieldsNotFoundException(String message) {
+public class GeoserverLayersNotFoundException extends RuntimeException {
+    public GeoserverLayersNotFoundException(String message) {
         super(message);
     }
 }

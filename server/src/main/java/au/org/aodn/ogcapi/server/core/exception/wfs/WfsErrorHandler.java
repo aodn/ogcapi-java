@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.exception.wfs;
 
-import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -120,7 +120,7 @@ public class WfsErrorHandler {
         }
 
         // Downloadable fields not found error
-        if (e instanceof DownloadableFieldsNotFoundException) {
+        if (e instanceof GeoserverFieldsNotFoundException) {
             return ErrorType.DOWNLOADABLE_FIELDS_ERROR;
         }
 

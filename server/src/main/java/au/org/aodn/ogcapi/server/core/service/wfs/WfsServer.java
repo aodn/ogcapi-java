@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
-import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
@@ -178,7 +178,7 @@ public class WfsServer {
         } else {
             return null;
         }
-        throw new DownloadableFieldsNotFoundException("No downloadable fields found for all url");
+        throw new GeoserverFieldsNotFoundException("No downloadable fields found for all url");
     }
 
     /**

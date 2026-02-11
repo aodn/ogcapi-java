@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
@@ -107,32 +107,22 @@ public class RestServices extends OGCApiService {
     }
 
     /**
-     * This is used to get the downloadable fields from wfs given a wms layer
+     * This is used to get the WMS fields from the describe wfs layer given a wms layer
      *
      * @param collectionId - The uuid of dataset
-     * @param request      - Request to get field given a WMS layer name
-     * @return - The downloadable field name, or UNAUTHORIZED if it is not in white list
+     * @param request      - Request to get field given a WMS layer name; if no layer name provided, it will return fields for all WMS links in the collection
+     * @return - The WMS fields, or UNAUTHORIZED if it is not in white list
      */
-    public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
-
-//        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
-//            log.info("Layer name cannot be null or empty");
-//            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
-//        }
-
+    public ResponseEntity<?> getWmsFields(String collectionId, FeatureRequest request) {
         // Temp block and show only white list uuid, the other uuid need QA check before release.
         if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } else {
-            try {
-                List<WFSFieldModel> result = wmsServer.getWMSFields(collectionId, request);
+            List<WFSFieldModel> result = wmsServer.getWMSFields(collectionId, request);
 
-                return result.isEmpty() ?
-                        ResponseEntity.notFound().build() :
-                        ResponseEntity.ok(result);
-            } catch (DownloadableFieldsNotFoundException nfe) {
-                return ResponseEntity.notFound().build();
-            }
+            return result.isEmpty() ?
+                    ResponseEntity.notFound().build() :
+                    ResponseEntity.ok(result);
         }
     }
 

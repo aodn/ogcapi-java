@@ -121,13 +121,13 @@ public class RestApi implements CollectionsApi {
             case timeseries -> {
                 return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
-            case wfs_downloadable_fields -> {
+            case wfs_fields -> {
                 return (request.getLayerName() == null || request.getLayerName().isEmpty()) ?
                         ResponseEntity.badRequest().build() :
                         featuresService.getWfsDownloadableFields(collectionId, request);
             }
-            case wms_downloadable_fields -> {
-                return featuresService.getWmsDownloadableFields(collectionId, request);
+            case wms_fields -> {
+                return featuresService.getWmsFields(collectionId, request);
             }
             case wms_map_tile -> {
                 return featuresService.getWmsMapTile(collectionId, request);

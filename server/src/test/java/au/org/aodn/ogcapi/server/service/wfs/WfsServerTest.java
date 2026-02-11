@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.service.wfs;
 
-import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
@@ -233,8 +233,8 @@ public class WfsServerTest {
 
         WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
 
-        DownloadableFieldsNotFoundException exception = assertThrows(
-                DownloadableFieldsNotFoundException.class,
+        GeoserverFieldsNotFoundException exception = assertThrows(
+                GeoserverFieldsNotFoundException.class,
                 () -> server.getDownloadableFields(id, request, null)
         );
 
@@ -271,8 +271,8 @@ public class WfsServerTest {
 
         WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
 
-        DownloadableFieldsNotFoundException exception = assertThrows(
-                DownloadableFieldsNotFoundException.class,
+        GeoserverFieldsNotFoundException exception = assertThrows(
+                GeoserverFieldsNotFoundException.class,
                 () -> server.getDownloadableFields(id, request, null)
         );
 

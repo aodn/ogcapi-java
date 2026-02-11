@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.wms;
 
-import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
@@ -158,7 +158,7 @@ public class WmsServer {
                     }
                 }
                 log.error("No date time field found for uuid {}, result will not be bounded by date time even specified", uuid);
-            } catch (DownloadableFieldsNotFoundException dfnf) {
+            } catch (GeoserverFieldsNotFoundException dfnf) {
                 // Without field, we cannot create a valid CQL filte targeting a dateTime, so just return existing CQL if exist
             }
         }
@@ -522,29 +522,6 @@ public class WmsServer {
         return null;
     }
 
-    public DescribeLayerResponse describeLayer(String collectionId, FeatureRequest request) {
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-        if (mapServerUrl.isPresent()) {
-            List<String> urls = createMapDescribeUrl(mapServerUrl.get(), collectionId, request);
-            // Try one by one, we exit when any works
-            for (String url : urls) {
-                try {
-                    ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class), String.class, pretendUserEntity);
-                    if (response.getStatusCode().is2xxSuccessful()) {
-                        DescribeLayerResponse layer = xmlMapper.readValue(response.getBody(), DescribeLayerResponse.class);
-                        if (layer.getLayerDescription() != null) {
-                            return layer;
-                        }
-                    }
-                } catch (RestClientException | URISyntaxException | JsonProcessingException pe) {
-                    log.debug("Exception ignored it as we will retry{} , failed url {}", pe, url);
-                    throw new RuntimeException(pe);
-                }
-            }
-        }
-        return null;
-    }
-
     /**
      * Get the wms image/png tile
      *
@@ -577,56 +554,96 @@ public class WmsServer {
     }
 
     /**
-     * Query the field using WMS's DescriberLayer function to find out the associated WFS layer and fields
+     * Query by using WMS's DescriberLayer function to find out the associated WFS layer and fields
+     *
+     * @param collectionId - The uuid
+     * @param request      - The request containing layer name
+     * @return - DescribeLayerResponse containing the layer and associated wfs info, this is used to find the real layer name and wfs server url for the field query
+     */
+    public DescribeLayerResponse describeLayer(String collectionId, FeatureRequest request) {
+        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+        if (mapServerUrl.isPresent()) {
+            List<String> urls = createMapDescribeUrl(mapServerUrl.get(), collectionId, request);
+            // Try one by one, we exit when any works
+            for (String url : urls) {
+                try {
+                    ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class), String.class, pretendUserEntity);
+                    if (response.getStatusCode().is2xxSuccessful()) {
+                        DescribeLayerResponse layer = xmlMapper.readValue(response.getBody(), DescribeLayerResponse.class);
+                        if (layer.getLayerDescription() != null) {
+                            return layer;
+                        }
+                    }
+                } catch (RestClientException | URISyntaxException | JsonProcessingException pe) {
+                    log.debug("Exception ignored it as we will retry, failed url {}", url, pe);
+                }
+            }
+            // All URLs tried, none worked
+            log.debug("No describe layer is found after trying all URLs for collectionId: {}", collectionId);
+            throw new GeoserverFieldsNotFoundException("No describe layer found for uuid " + collectionId);
+        }
+        return null;
+    }
+
+    /**
+     * Fetch fields for a single layer using WFS.getDownloadableFields
+     *
+     * @param collectionId - The uuid of the metadata
+     * @param layerName    - The layer name to fetch fields for
+     * @return - WFSFieldModel containing typename and fields, or null if not found
+     */
+    private WFSFieldModel fetchFieldsForLayer(String collectionId, String layerName) {
+        FeatureRequest layerRequest = FeatureRequest.builder().layerName(layerName).build();
+
+        DescribeLayerResponse response = this.describeLayer(collectionId, layerRequest);
+
+        if (response != null && response.getLayerDescription().getWfs() != null) {
+            // Use describe layer to find the real layer name and wfs server for fields
+            FeatureRequest requestWithDescribeLayer = FeatureRequest.builder()
+                    .layerName(response.getLayerDescription().getQuery().getTypeName())
+                    .build();
+            return wfsServer.getDownloadableFields(collectionId, requestWithDescribeLayer, response.getLayerDescription().getWfs());
+        } else {
+            // Fallback: trust what is found inside the elastic search metadata
+            return wfsServer.getDownloadableFields(collectionId, layerRequest, null);
+        }
+    }
+
+    /**
+     * Query by using WMS's DescriberLayer function to find out the associated WFS layer and fields
      *
      * @param collectionId - The uuid of the metadata that hold this WMS link
-     * @param request      - Request item for this WMS layer, usually layer name, size, etc.
+     * @param request      - Request item for this WMS layer, usually layer name
      * @return - List of WFSFieldModel containing typename and fields for each WMS layer
      */
     public List<WFSFieldModel> getWMSFields(String collectionId, FeatureRequest request) {
         List<WFSFieldModel> wmsFields = new ArrayList<>();
-        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
-            log.debug("No layer name provided in request, get fields for all WMS links ");
+
+        List<String> layerNamesToProcess = new ArrayList<>();
+        // If layer name is provided, use it directly
+        // No layer name provided, get all layer names from WMS links
+        if (request.getLayerName() != null && !request.getLayerName().isEmpty()) {
+            layerNamesToProcess.add(request.getLayerName());
+        } else {
+            log.debug("No layer name provided in request, get fields for all WMS links");
             List<LinkModel> wmsLinks = this.getWmsLinks(collectionId);
             for (LinkModel wmsLink : wmsLinks) {
-                log.debug("Try to get fields for wms link with name {} ", wmsLink.getTitle());
-                Optional<String> layerName = extractLayernameOrTypenameFromLink(wmsLink);
-                if (layerName.isPresent()) {
-                    FeatureRequest modifiedRequest = FeatureRequest.builder().layerName(layerName.get()).build();
-                    DescribeLayerResponse response = this.describeLayer(collectionId, modifiedRequest);
-                    if (response != null && response.getLayerDescription().getWfs() != null) {
-                        // Use describe layer to find the layername and wfs server for fields
-                        FeatureRequest requestWithDescribeLayer = FeatureRequest.builder().layerName(response.getLayerDescription().getQuery().getTypeName()).build();
-                        WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, requestWithDescribeLayer, response.getLayerDescription().getWfs());
-                        if (res != null) {
-                            wmsFields.add(res);
-                        }
-                    } else {
-                        // We trust what is found inside the elastic search metadata
-                        WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, request, null);
-                        if (res != null) {
-                            wmsFields.add(res);
-                        }
-                    }
-                }
-            }
-        } else {
-            DescribeLayerResponse response = this.describeLayer(collectionId, request);
-            if (response != null && response.getLayerDescription().getWfs() != null) {
-                // If we are able to find the wfs server and real layer name based on wms layer, then use it
-                FeatureRequest modifiedRequest = FeatureRequest.builder().layerName(response.getLayerDescription().getQuery().getTypeName()).build();
-                WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, modifiedRequest, response.getLayerDescription().getWfs());
-                if (res != null) {
-                    wmsFields.add(res);
-                }
-            } else {
-                // We trust what is found inside the elastic search metadata
-                WFSFieldModel res = wfsServer.getDownloadableFields(collectionId, request, null);
-                if (res != null) {
-                    wmsFields.add(res);
-                }
+                extractLayernameOrTypenameFromLink(wmsLink).ifPresent(layerNamesToProcess::add);
             }
         }
+
+        // Fetch fields for each layer name
+        for (String layerName : layerNamesToProcess) {
+            WFSFieldModel fieldModel = fetchFieldsForLayer(collectionId, layerName);
+            if (fieldModel != null) {
+                wmsFields.add(fieldModel);
+            }
+        }
+
+        if (wmsFields.isEmpty()) {
+            throw new GeoserverFieldsNotFoundException("No downloadable fields found for uuid " + collectionId);
+        }
+
         return wmsFields;
     }
 
