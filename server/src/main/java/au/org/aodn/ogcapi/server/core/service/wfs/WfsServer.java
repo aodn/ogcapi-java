@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverLayersNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
@@ -407,11 +408,15 @@ public class WfsServer {
                 // Filter feature types based on WFS link matching
                 List<FeatureTypeInfo> filteredFeatureTypes = filterFeatureTypesByWfsLinks(collectionId, allFeatureTypes);
 
+                if (filteredFeatureTypes.isEmpty()) {
+                    throw new GeoserverLayersNotFoundException("No WFS layer is found for uuid " + collectionId);
+                }
+
                 log.debug("Returning feature types {}", filteredFeatureTypes);
                 return filteredFeatureTypes;
             }
         }
 
-        return Collections.emptyList();
+        throw new GeoserverLayersNotFoundException("No valid WFS server url is found for uuid " + collectionId);
     }
 }

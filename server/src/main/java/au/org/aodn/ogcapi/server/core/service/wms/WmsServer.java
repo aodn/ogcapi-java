@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.wms;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverLayersNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
@@ -889,11 +890,15 @@ public class WmsServer {
                 });
             }
 
-            log.debug("Returning layers {}", filteredLayers);
 
+            if (filteredLayers.isEmpty()) {
+                throw new GeoserverLayersNotFoundException("No WMS layer is found for uuid " + collectionId);
+            }
+
+            log.debug("Returning layers {}", filteredLayers);
             return filteredLayers;
         }
 
-        return Collections.emptyList();
+        throw new GeoserverLayersNotFoundException("No valid WMS server url is found for uuid " + collectionId);
     }
 }
