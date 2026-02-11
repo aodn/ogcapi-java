@@ -115,10 +115,13 @@ public class RestApi implements CollectionsApi {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 }
             }
-            case first_data_available -> {
+            case wave_buoy_first_data_available -> {
                 return featuresService.getWaveBuoys(collectionId, request.getDatetime());
             }
-            case timeseries -> {
+            case wave_buoy_latest_date -> {
+                return featuresService.getWaveBuoysLatestDate(collectionId);
+            }
+            case wave_buoy_timeseries -> {
                 return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wfs_fields -> {

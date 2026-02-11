@@ -39,6 +39,12 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    ai_update_frequency(
+            StacSummeries.AiUpdateFrequency.searchField,
+            StacSummeries.AiUpdateFrequency.displayField,
+            null,
+            null
+    ),
     geometry(
             StacSummeries.Geometry.searchField,
             StacSummeries.Geometry.searchField,

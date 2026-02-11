@@ -1,7 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
-import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -11,6 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import jakarta.annotation.PostConstruct;
 
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -25,12 +25,17 @@ public class DasService {
     @Autowired
     protected RestTemplate httpClient;
 
-    public byte[] getWaveBuoys(String from, String to){
+    private HttpEntity<?> httpEntity;
+
+    @PostConstruct
+    public void init() {
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         headers.set("X-API-KEY", dasConfig.secret);
-        HttpEntity<?> entity = new HttpEntity<>(headers);
+        httpEntity = new HttpEntity<>(headers);
+    }
 
+    public byte[] getWaveBuoys(String from, String to){
         String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy")
                 .queryParam("start_date","{start_date}")
                 .queryParam("end_date","{end_date}")
@@ -40,16 +45,19 @@ public class DasService {
         params.put("start_date", from);
         params.put("end_date",to);
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,entity,byte[].class,params).getBody();
+        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class,params).getBody();
+    }
+
+    public byte[] getWaveBuoysLatestDate(){
+        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/latest")
+                .encode()
+                .toUriString();
+
+        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
     }
 
     public byte[] getWaveBuoyData(String from, String to, String buoy){
         String encodedBuoy = URLEncoder.encode(buoy, java.nio.charset.StandardCharsets.UTF_8);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("X-API-KEY", dasConfig.secret);
-        HttpEntity<?> entity = new HttpEntity<>(headers);
 
         String waveBuoyDataUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/" + encodedBuoy)
                 .queryParam("start_date","{start_date}")
@@ -60,7 +68,7 @@ public class DasService {
         params.put("start_date", from);
         params.put("end_date",to);
 
-        return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,entity,byte[].class,params).getBody();
+        return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,httpEntity,byte[].class,params).getBody();
     }
 
     public boolean isCollectionSupported(String collectionId){

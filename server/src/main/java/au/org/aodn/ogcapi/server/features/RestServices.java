@@ -184,6 +184,23 @@ public class RestServices extends OGCApiService {
         }
     }
 
+    public ResponseEntity<?> getWaveBuoysLatestDate(String collectionID) {
+        if (!dasService.isCollectionSupported(collectionID)) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
+
+        try {
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getWaveBuoysLatestDate());
+
+        } catch (Exception e) {
+            log.error("Error fetching wave buoys latest date: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     public ResponseEntity<?> getWaveBuoyData(String collectionID, String datetime, String buoy) {
         if (!dasService.isCollectionSupported(collectionID)) {
             return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
