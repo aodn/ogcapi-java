@@ -96,7 +96,7 @@ public class GeoserverUtils {
         }
 
         Optional<String> extractedName = extractLayernameOrTypenameFromUrl(link.getHref());
-        
+
         if (link.getTitle() != null && !link.getTitle().isEmpty()) {
             if (extractedName.isPresent() && !roughlyMatch(link.getTitle(), extractedName.get())) {
                 log.debug("Link title '{}' does not match type/layer name extracted from URL, return the extracted layer/type name {}", link.getTitle(), extractedName.get());
