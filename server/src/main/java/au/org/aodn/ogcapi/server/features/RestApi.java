@@ -125,9 +125,7 @@ public class RestApi implements CollectionsApi {
                 return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wfs_fields -> {
-                return (request.getLayerName() == null || request.getLayerName().isEmpty()) ?
-                        ResponseEntity.badRequest().build() :
-                        featuresService.getWfsDownloadableFields(collectionId, request);
+                return featuresService.getWfsFields(collectionId, request);
             }
             case wms_fields -> {
                 return featuresService.getWmsFields(collectionId, request);

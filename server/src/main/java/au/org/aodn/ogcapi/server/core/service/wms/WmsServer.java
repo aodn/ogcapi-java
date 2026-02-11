@@ -622,7 +622,7 @@ public class WmsServer {
 
         List<String> layerNamesToProcess = new ArrayList<>();
         // If layer name is provided, use it directly
-        // No layer name provided, get all layer names from WMS links
+        // No layer name provided, get fields for all layer from collection WMS links
         if (request.getLayerName() != null && !request.getLayerName().isEmpty()) {
             layerNamesToProcess.add(request.getLayerName());
         } else {
@@ -642,7 +642,7 @@ public class WmsServer {
         }
 
         if (wmsFields.isEmpty()) {
-            throw new GeoserverFieldsNotFoundException("No downloadable fields found for uuid " + collectionId);
+            throw new GeoserverFieldsNotFoundException("No fields found for uuid " + collectionId);
         }
 
         return wmsFields;

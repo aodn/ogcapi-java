@@ -36,8 +36,8 @@ import java.util.stream.Stream;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WFS_FEATURE_TYPES;
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
-import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.extractLayernameOrTypenameFromUrl;
-import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.roughlyMatch;
+import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
+import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.*;
 
 @Slf4j
 public class WfsServer {
@@ -69,6 +69,31 @@ public class WfsServer {
         this.pretendUserEntity = entity;
         this.wfsDefaultParam = wfsDefaultParam;
     }
+
+    /**
+     * Get all WFS links from a collection.
+     *
+     * @param collectionId - The uuid
+     * @return - List of WFS LinkModel objects from the collection
+     */
+    protected List<LinkModel> getWfsLinks(String collectionId) {
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
+
+        if (result.getCollections().isEmpty()) {
+            log.info("No collection found for collectionId: {}", collectionId);
+            return Collections.emptyList();
+        }
+
+        StacCollectionModel model = result.getCollections().get(0);
+
+        // Filter WMS links where ai:group contains WMS_LINK_MARKER
+        return model.getLinks()
+                .stream()
+                .filter(link -> link.getAiGroup() != null)
+                .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
+                .toList();
+    }
+
 
     protected String createFeatureFieldQueryUrl(String url, FeatureRequest request) {
         UriComponents components = UriComponentsBuilder.fromUriString(url).build();
@@ -127,6 +152,7 @@ public class WfsServer {
                         .map(element -> WFSFieldModel.Field.builder()
                                 .label(element.getName())
                                 .name(element.getName())
+                                // The type can be in format of "xsd:date", we only want the actual type name "date"
                                 .type(element.getType().contains(":") ? element.getType().split(":")[1] : element.getType())
                                 .build())
                         .collect(Collectors.toList()) : new ArrayList<>();
@@ -180,6 +206,46 @@ public class WfsServer {
             return null;
         }
         throw new GeoserverFieldsNotFoundException("No downloadable fields found for all url");
+    }
+
+    public List<WFSFieldModel> getWFSFields(String collectionId, FeatureRequest request) {
+        List<WFSFieldModel> wfsFields = new ArrayList<>();
+
+        // If typename is provided, use it directly
+        // If no typename provided, get fields for all layers from collection WFS links
+        if (request.getLayerName() != null && !request.getLayerName().isEmpty()) {
+            wfsFields.add(self.getDownloadableFields(collectionId, request, null));
+        } else {
+            log.debug("No layer name provided in request, get fields for all WFS links");
+            List<String> typeNamesToProcess = new ArrayList<>();
+
+            // Get all wfs links and extract typename from the link
+            List<LinkModel> wfsLinks = this.getWfsLinks(collectionId);
+            for (LinkModel wfsLink : wfsLinks) {
+                extractLayernameOrTypenameFromLink(wfsLink).ifPresent(typeNamesToProcess::add);
+            }
+            // fetch downloadable fields for each typename
+            for (String typeName : typeNamesToProcess) {
+                FeatureRequest requestModified = FeatureRequest.builder()
+                        .layerName(typeName)
+                        .build();
+
+                try {
+                    WFSFieldModel fields = self.getDownloadableFields(collectionId, requestModified, null);
+                    if (fields != null) {
+                        wfsFields.add(fields);
+                    }
+                } catch (GeoserverFieldsNotFoundException e) {
+                    log.debug("No fields found for typename {}, continue with other typename", typeName);
+                }
+            }
+        }
+
+        if (wfsFields.isEmpty()) {
+            throw new GeoserverFieldsNotFoundException("No downloadable fields found for uuid " + collectionId);
+        }
+
+        return wfsFields;
     }
 
     /**

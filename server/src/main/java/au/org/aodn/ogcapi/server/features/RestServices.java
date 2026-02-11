@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
@@ -87,19 +86,14 @@ public class RestServices extends OGCApiService {
     }
 
     /**
-     * This is used to get the downloadable fields from wfs where layer name is not mentioned in wms
+     * This is used to get the WFS fields given a WFS layer
      *
      * @param collectionId - The uuid of dataset
-     * @param request      - Request to get field given a layer name
-     * @return - The downloadable field name
+     * @param request      -Request to get field given a WFS layer name; if no layer name provided, it will return fields for all WFS links in the collection
+     * @return - The WFS fields
      */
-    public ResponseEntity<?> getWfsDownloadableFields(String collectionId, FeatureRequest request) {
-
-        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
-            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
-        }
-
-        WFSFieldModel result = wfsServer.getDownloadableFields(collectionId, request, null);
+    public ResponseEntity<?> getWfsFields(String collectionId, FeatureRequest request) {
+        List<WFSFieldModel> result = wfsServer.getWFSFields(collectionId, request);
 
         return result == null ?
                 ResponseEntity.notFound().build() :
