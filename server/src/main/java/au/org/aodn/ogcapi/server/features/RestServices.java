@@ -143,11 +143,16 @@ public class RestServices extends OGCApiService {
      * @return - List of available feature types with name, title, abstract, etc.
      */
     public ResponseEntity<?> getWfsLayers(String collectionId, FeatureRequest request) {
-        List<FeatureTypeInfo> result = wfsServer.getCapabilitiesFeatureTypes(collectionId, request);
+        if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } else {
+            List<FeatureTypeInfo> result = wfsServer.getCapabilitiesFeatureTypes(collectionId, request);
 
-        return result.isEmpty() ?
-                ResponseEntity.notFound().build() :
-                ResponseEntity.ok(result);
+            return result.isEmpty() ?
+                    ResponseEntity.notFound().build() :
+                    ResponseEntity.ok(result);
+        }
+
     }
 
     /**
