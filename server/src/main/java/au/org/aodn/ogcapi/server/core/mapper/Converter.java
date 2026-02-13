@@ -220,6 +220,10 @@ public interface Converter<F, T> {
                 collection.getProperties().put(CollectionProperty.aiDescription, m.getSummaries().getAiDescription());
             }
 
+            if (m.getSummaries().getAiUpdateFrequency() != null) {
+                collection.getProperties().put(CollectionProperty.aiUpdateFrequency, m.getSummaries().getAiUpdateFrequency());
+            }
+
             if(m.getSummaries().getScope() != null) {
                 collection.getProperties().put(CollectionProperty.scope, m.getSummaries().getScope());
             }
