@@ -42,6 +42,8 @@ jobs:
           cache: 'maven'
 
       - name: Build with Maven
+        env:
+          DOCKER_API_VERSION: '1.44'
         run: mvn clean -B verify --file pom.xml
 
       - name: Build Docker Image
