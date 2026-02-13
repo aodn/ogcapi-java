@@ -17,6 +17,11 @@ public class WfsDescribeFeatureTypeResponse {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<ComplexType> complexTypes;
 
+    // Top-level element like <xsd:element name="aatams_sattag_dm_profile_map" .../>
+    @JacksonXmlProperty(localName = "element")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    private List<TopLevelElement> topLevelElements;
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class ComplexType {
@@ -57,5 +62,19 @@ public class WfsDescribeFeatureTypeResponse {
 
         @JacksonXmlProperty(isAttribute = true)
         private String type;
+    }
+
+    // Top-level element: <xsd:element name="aatams_sattag_dm_profile_map" substitutionGroup="gml:AbstractFeature" type="imos:aatams_sattag_dm_profile_mapType"/>
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class TopLevelElement {
+        @JacksonXmlProperty(isAttribute = true)
+        private String name;
+
+        @JacksonXmlProperty(isAttribute = true)
+        private String type;
+
+        @JacksonXmlProperty(isAttribute = true)
+        private String substitutionGroup;
     }
 }

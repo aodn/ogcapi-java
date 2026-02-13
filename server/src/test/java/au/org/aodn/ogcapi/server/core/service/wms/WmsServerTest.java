@@ -3,13 +3,13 @@ package au.org.aodn.ogcapi.server.core.service.wms;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.configuration.WfsWmsConfig;
+import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadableFieldsService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.*;
@@ -33,8 +33,7 @@ import java.util.List;
 
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
 
@@ -45,7 +44,6 @@ import static org.mockito.Mockito.when;
                 WfsWmsConfig.class,
                 WmsDefaultParam.class,
                 WfsDefaultParam.class,
-                DownloadableFieldsService.class,
                 JacksonAutoConfiguration.class,
                 CacheAutoConfiguration.class}
 )
@@ -268,9 +266,10 @@ public class WmsServerTest {
 
         when(search.searchCollections(eq(id)))
                 .thenReturn(stac);
-        DescribeLayerResponse response = wmsServer.describeLayer(id, request);
 
-        assertNull(response, "Null expected as Service Exception ignored");
+        // When layer is not found on the server, DownloadableFieldsNotFoundException is thrown
+        assertThrows(GeoserverFieldsNotFoundException.class, () -> wmsServer.describeLayer(id, request),
+                "DownloadableFieldsNotFoundException expected when layer is not found on server");
     }
 
     @Test
@@ -289,6 +288,7 @@ public class WmsServerTest {
         assertEquals("https://geoserver-123.aodn.org.au/geoserver/wfs?", value.getLayerDescription().getWfs());
         assertEquals("imos:srs_ghrsst_l4_gamssa_url", value.getLayerDescription().getQuery().getTypeName());
     }
+
     /**
      * Test with only one dateTime field in the describe layer
      */
@@ -350,6 +350,7 @@ public class WmsServerTest {
 
         assertEquals("CQL_FILTER=time DURING 2023-01-01/2023-12-31", result);
     }
+
     /**
      * Test with only one dateTime field in the describe layer with predefined cql
      */
@@ -411,6 +412,7 @@ public class WmsServerTest {
 
         assertEquals("CQL_FILTER=time DURING 2023-01-01/2023-12-31 AND set_code=1234", result);
     }
+
     /**
      * Test with only two or more dateTime field in the describe layer with predefined cql
      */
@@ -505,6 +507,7 @@ public class WmsServerTest {
 
         assertEquals("CQL_FILTER=juld DURING 2023-01-01/2023-12-31 AND set_code=1234", result);
     }
+
     /**
      * Test where dateTime is a range start_xxx end_xxx
      */

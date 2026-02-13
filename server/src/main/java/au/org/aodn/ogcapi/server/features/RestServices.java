@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.server.core.exception.DownloadableFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
@@ -9,7 +8,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
@@ -87,56 +86,40 @@ public class RestServices extends OGCApiService {
     }
 
     /**
-     * This is used to get the downloadable fields from wfs where layer name is not mentioned in wms
+     * This is used to get the WFS fields given a WFS layer
      *
      * @param collectionId - The uuid of dataset
-     * @param request      - Request to get field given a layer name
-     * @return - The downloadable field name
+     * @param request      -Request to get field given a WFS layer name; if no layer name provided, it will return fields for all WFS links in the collection
+     * @return - The WFS fields
      */
-    public ResponseEntity<?> getWfsDownloadableFields(String collectionId, FeatureRequest request) {
+    public ResponseEntity<?> getWfsFields(String collectionId, FeatureRequest request) {
+        List<WFSFieldModel> result = wfsServer.getWFSFields(collectionId, request);
 
-        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
-            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
-        }
-
-        List<DownloadableFieldModel> result = wfsServer.getDownloadableFields(collectionId, request, null);
-
-        return result.isEmpty() ?
+        return result == null ?
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
 
     /**
-     * This is used to get the downloadable fields from wfs given a wms layer
+     * This is used to get the WMS fields from the describe wfs layer given a wms layer
      *
      * @param collectionId - The uuid of dataset
-     * @param request      - Request to get field given a WMS layer name
-     * @return - The downloadable field name, or UNAUTHORIZED if it is not in white list
+     * @param request      - Request to get field given a WMS layer name; if no layer name provided, it will return fields for all WMS links in the collection
+     * @return - The WMS fields, or UNAUTHORIZED if it is not in white list
      */
-    public ResponseEntity<?> getWmsDownloadableFields(String collectionId, FeatureRequest request) {
-
-        if (request.getLayerName() == null || request.getLayerName().isEmpty()) {
-            log.info("Layer name cannot be null or empty");
-            return ResponseEntity.badRequest().body("Layer name cannot be null or empty");
-        }
-
+    public ResponseEntity<?> getWmsFields(String collectionId, FeatureRequest request) {
         // Temp block and show only white list uuid, the other uuid need QA check before release.
         if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        else {
-            try {
-                List<DownloadableFieldModel> result = wmsServer.getDownloadableFields(collectionId, request);
+        } else {
+            List<WFSFieldModel> result = wmsServer.getWMSFields(collectionId, request);
 
-                return result.isEmpty() ?
-                        ResponseEntity.notFound().build() :
-                        ResponseEntity.ok(result);
-            }
-            catch(DownloadableFieldsNotFoundException nfe) {
-                return ResponseEntity.notFound().build();
-            }
+            return result.isEmpty() ?
+                    ResponseEntity.notFound().build() :
+                    ResponseEntity.ok(result);
         }
     }
+
     /**
      * This is used to get all available layers from WMS GetCapabilities
      *
@@ -160,15 +143,21 @@ public class RestServices extends OGCApiService {
      * @return - List of available feature types with name, title, abstract, etc.
      */
     public ResponseEntity<?> getWfsLayers(String collectionId, FeatureRequest request) {
-        List<FeatureTypeInfo> result = wfsServer.getCapabilitiesFeatureTypes(collectionId, request);
+        if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } else {
+            List<FeatureTypeInfo> result = wfsServer.getCapabilitiesFeatureTypes(collectionId, request);
 
-        return result.isEmpty() ?
-                ResponseEntity.notFound().build() :
-                ResponseEntity.ok(result);
+            return result.isEmpty() ?
+                    ResponseEntity.notFound().build() :
+                    ResponseEntity.ok(result);
+        }
+
     }
+
     /**
      * @param collectionID - uuid
-     * @param from -
+     * @param from         -
      * @return -
      */
     public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {

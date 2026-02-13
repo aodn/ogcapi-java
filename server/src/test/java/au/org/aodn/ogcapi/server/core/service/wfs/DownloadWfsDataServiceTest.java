@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.DownloadableFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import org.junit.jupiter.api.BeforeEach;
@@ -52,26 +52,29 @@ public class DownloadWfsDataServiceTest {
     }
 
     /**
-     * Helper method to create a list of downloadable fields for testing
+     * Helper method to create a WFSFieldModel for testing
      */
-    private List<DownloadableFieldModel> createTestDownloadableFields() {
-        List<DownloadableFieldModel> fields = new ArrayList<>();
+    private WFSFieldModel createTestWFSFieldModel() {
+        List<WFSFieldModel.Field> fields = new ArrayList<>();
 
         // Add geometry field
-        fields.add(DownloadableFieldModel.builder()
+        fields.add(WFSFieldModel.Field.builder()
                 .name("geom")
                 .label("geom")
                 .type("geometrypropertytype")
                 .build());
 
         // Add datetime field
-        fields.add(DownloadableFieldModel.builder()
+        fields.add(WFSFieldModel.Field.builder()
                 .name("timestamp")
                 .label("timestamp")
                 .type("dateTime")
                 .build());
 
-        return fields;
+        return WFSFieldModel.builder()
+                .typename("testLayer")
+                .fields(fields)
+                .build();
     }
 
     @Test
@@ -79,7 +82,7 @@ public class DownloadWfsDataServiceTest {
         // Setup
         String uuid = "test-uuid";
         String layerName = "test:layer";
-        List<DownloadableFieldModel> fields = createTestDownloadableFields();
+        WFSFieldModel wfsFieldModel = createTestWFSFieldModel();
 
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
@@ -91,7 +94,7 @@ public class DownloadWfsDataServiceTest {
         when(query.getTypeName()).thenReturn(layerName);
 
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
+        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
 
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
@@ -115,7 +118,7 @@ public class DownloadWfsDataServiceTest {
         // Setup
         String uuid = "test-uuid";
         String layerName = "test:layer";
-        List<DownloadableFieldModel> fields = createTestDownloadableFields();
+        WFSFieldModel wfsFieldModel = createTestWFSFieldModel();
 
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
@@ -127,7 +130,7 @@ public class DownloadWfsDataServiceTest {
         when(query.getTypeName()).thenReturn(layerName);
 
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
+        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
 
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
@@ -153,7 +156,7 @@ public class DownloadWfsDataServiceTest {
         String layerName = "test:layer";
         String startDate = "2023-01-01";
         String endDate = "2023-12-31";
-        List<DownloadableFieldModel> fields = createTestDownloadableFields();
+        WFSFieldModel wfsFieldModel = createTestWFSFieldModel();
 
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
@@ -165,7 +168,7 @@ public class DownloadWfsDataServiceTest {
         when(query.getTypeName()).thenReturn(layerName);
 
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
+        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
 
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
@@ -193,7 +196,7 @@ public class DownloadWfsDataServiceTest {
         String uuid = "test-uuid";
         String layerName = "test:layer";
         String startDate = "2023-01-01";
-        List<DownloadableFieldModel> fields = createTestDownloadableFields();
+        WFSFieldModel wfsFieldModel = createTestWFSFieldModel();
 
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
@@ -205,7 +208,7 @@ public class DownloadWfsDataServiceTest {
         when(query.getTypeName()).thenReturn(layerName);
 
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
+        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
 
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");
@@ -231,7 +234,7 @@ public class DownloadWfsDataServiceTest {
         String layerName = "test:layer";
         String startDate = "01-2023";  // MM-YYYY format
         String endDate = "12-2023";    // MM-YYYY format
-        List<DownloadableFieldModel> fields = createTestDownloadableFields();
+        WFSFieldModel wfsFieldModel = createTestWFSFieldModel();
 
         DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
         DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
@@ -243,7 +246,7 @@ public class DownloadWfsDataServiceTest {
         when(query.getTypeName()).thenReturn(layerName);
 
         when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(fields);
+        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
 
         Map<String, String> defaultParams = new HashMap<>();
         defaultParams.put("service", "WFS");

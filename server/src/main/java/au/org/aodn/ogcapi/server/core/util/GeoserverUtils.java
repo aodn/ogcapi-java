@@ -85,27 +85,26 @@ public class GeoserverUtils {
 
     /**
      * Extract layer name or typename from a LinkModel.
-     * First tries link.title, then falls back to extracting from link.href URL query parameters.
+     * If link title does not match the typename/layername extracted from URL, return the extracted typename/layername.
      *
      * @param link - The LinkModel object
-     * @return layer name/typename if found, empty otherwise
+     * @return layer name/typename if found
      */
     public static Optional<String> extractLayernameOrTypenameFromLink(LinkModel link) {
         if (link == null) {
             return Optional.empty();
         }
 
-        // Try to get layer name from link title first
+        Optional<String> extractedName = extractLayernameOrTypenameFromUrl(link.getHref());
+
         if (link.getTitle() != null && !link.getTitle().isEmpty()) {
+            if (extractedName.isPresent() && !roughlyMatch(link.getTitle(), extractedName.get())) {
+                log.debug("Link title '{}' does not match type/layer name extracted from URL, return the extracted layer/type name {}", link.getTitle(), extractedName.get());
+                return extractedName;
+            }
             return Optional.of(link.getTitle());
         }
 
-        // Fallback: extract layer name from URL query parameters
-        if (link.getHref() != null) {
-            return extractLayernameOrTypenameFromUrl(link.getHref());
-        }
-
-        return Optional.empty();
+        return extractedName;
     }
-
 }
