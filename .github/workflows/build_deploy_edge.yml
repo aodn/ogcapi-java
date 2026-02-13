@@ -46,6 +46,8 @@ jobs:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
 
       - name: Build with Maven
+        env:
+          DOCKER_API_VERSION: 1.44
         run: mvn -B verify --file pom.xml
 
       - name: Login to ECR
