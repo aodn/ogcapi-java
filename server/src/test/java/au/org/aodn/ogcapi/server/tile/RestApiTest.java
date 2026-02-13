@@ -94,5 +94,4 @@ public class RestApiTest extends BaseTestClass {
 
         // No meaningful verify can be done here, we keep it here so that we know that test case considered.
     }
-
 }
