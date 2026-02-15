@@ -17,4 +17,5 @@ public class WfsDefaultParam {
 
     private Map<String, String> fields;
     private Map<String, String> download;
+    private Map<String, String> capabilities;
 }

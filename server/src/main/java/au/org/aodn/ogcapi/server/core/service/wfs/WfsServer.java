@@ -36,7 +36,6 @@ import java.util.stream.Stream;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.DOWNLOADABLE_FIELDS;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WFS_FEATURE_TYPES;
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
-import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.*;
 
 @Slf4j
@@ -94,6 +93,23 @@ public class WfsServer {
                 .toList();
     }
 
+    protected String createCapabilitiesQueryUrl(String wfsServerUrl) {
+        // Parse the base URL to construct GetCapabilities request
+        UriComponents components = UriComponentsBuilder.fromUriString(wfsServerUrl).build();
+
+        // Build GetCapabilities URL
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .newInstance()
+                .scheme("https")        // hardcode to be https to avoid redirect
+                .port(components.getPort())
+                .host(components.getHost())
+                .path(components.getPath() != null ? components.getPath() : "/geoserver/ows");
+
+        Map<String, String> params = wfsDefaultParam.getCapabilities();
+        params.forEach(builder::queryParam);
+
+        return builder.build().toUriString();
+    }
 
     protected String createFeatureFieldQueryUrl(String url, FeatureRequest request) {
         UriComponents components = UriComponentsBuilder.fromUriString(url).build();
@@ -336,20 +352,7 @@ public class WfsServer {
     @Cacheable(value = GET_CAPABILITIES_WFS_FEATURE_TYPES)
     public List<FeatureTypeInfo> fetchCapabilitiesFeatureTypesByUrl(String wfsServerUrl) {
         try {
-            // Parse the base URL to construct GetCapabilities request
-            UriComponents components = UriComponentsBuilder.fromUriString(wfsServerUrl).build();
-
-            // Build GetCapabilities URL
-            UriComponentsBuilder builder = UriComponentsBuilder
-                    .newInstance()
-                    .scheme("https")        // hardcode to be https to avoid redirect
-                    .port(components.getPort())
-                    .host(components.getHost())
-                    .path(components.getPath() != null ? components.getPath() : "/geoserver/ows")
-                    .queryParam("service", "wfs")
-                    .queryParam("request", "GetCapabilities");
-
-            String url = builder.build().toUriString();
+            String url = createCapabilitiesQueryUrl(wfsServerUrl);
             log.debug("WFS GetCapabilities URL: {}", url);
 
             // Make the HTTPS call
