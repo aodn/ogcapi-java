@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.service.wfs;
+package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
@@ -8,14 +8,14 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -24,7 +24,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static org.junit.jupiter.api.Assertions.*;
@@ -32,6 +31,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+@SpringBootTest
 public class WfsServerTest {
 
     @Mock
@@ -43,7 +43,7 @@ public class WfsServerTest {
     @Mock
     HttpEntity<?> entity;
 
-    @Mock
+    @Autowired
     WfsDefaultParam wfsDefaultParam;
 
     AutoCloseable closeableMock;
@@ -51,12 +51,6 @@ public class WfsServerTest {
     @BeforeEach
     public void setUp() {
         closeableMock = MockitoAnnotations.openMocks(this);
-        // Setup default param mock
-        when(wfsDefaultParam.getFields()).thenReturn(Map.of(
-                "service", "WFS",
-                "version", "2.0.0",
-                "request", "DescribeFeatureType"
-        ));
     }
 
     @AfterEach
@@ -331,5 +325,42 @@ public class WfsServerTest {
         WFSFieldModel result = server.getDownloadableFields(id, request, null);
 
         assertNull(result, "Should return null when no collection found");
+    }
+
+    @Test
+    void createFeatureFieldQueryUrl_buildsCorrectUrlWithTypename() {
+        // arrange
+        String baseUrl = "https://example.com/wfs?service=WFS&version=1.1.0&request=GetFeature";
+        FeatureRequest request = FeatureRequest
+                .builder()
+                .layerName("my:layer")
+                .build();
+
+        // act
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+        String result = server.createFeatureFieldQueryUrl(baseUrl, request);
+
+        // assert
+        assertNotNull(result);
+        assertTrue(result.contains("TYPENAME=my:layer"));
+        assertTrue(result.contains("SERVICE=WFS"));
+        assertTrue(result.contains("VERSION=2.0.0"));      // from defaults
+        assertTrue(result.contains("REQUEST=DescribeFeatureType")); // original one is replaced
+    }
+
+    @Test
+    void createCapabilitiesQueryUrl_buildsCorrectUrl() {
+        // arrange
+        String baseUrl = "https://example.com/wfs?service=WFS&version=1.1.0&request=GetFeature";
+
+        // act
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+        String result = server.createCapabilitiesQueryUrl(baseUrl);
+
+        // assert
+        assertNotNull(result);
+        assertTrue(result.contains("SERVICE=WFS"));
+        assertTrue(result.contains("VERSION=1.0.0"));      // from defaults
+        assertTrue(result.contains("REQUEST=GetCapabilities")); // original one is replaced
     }
 }
