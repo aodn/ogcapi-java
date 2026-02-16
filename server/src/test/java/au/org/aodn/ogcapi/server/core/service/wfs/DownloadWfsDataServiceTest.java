@@ -3,20 +3,24 @@ package au.org.aodn.ogcapi.server.core.service.wfs;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
+import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -24,30 +28,38 @@ import static org.mockito.Mockito.*;
 /**
  * Unit tests for DownloadWfsDataService
  */
+@SpringBootTest(classes = {WfsDefaultParam.class})
+@TestPropertySource(locations = "classpath:application.yaml")
+@EnableConfigurationProperties(WfsDefaultParam.class)
 @ExtendWith(MockitoExtension.class)
 public class DownloadWfsDataServiceTest {
 
     @Mock
-    private WmsServer wmsServer;
-
-    @Mock
-    private WfsServer wfsServer;
+    private RestTemplateUtils restTemplateUtils;
 
     @Mock
     private RestTemplate restTemplate;
 
     @Mock
-    private WfsDefaultParam wfsDefaultParam;
-
-    @Mock
     private HttpEntity<?> pretendUserEntity;
 
-    private DownloadWfsDataService downloadWfsDataService;
+    @Autowired
+    WfsDefaultParam wfsDefaultParam;
+
+    DownloadWfsDataService downloadWfsDataService;
+    WmsServer wmsServer;
+    WfsServer wfsServer;
 
     @BeforeEach
     public void setUp() {
+
+        Search search = Mockito.mock(Search.class);
+
+        wfsServer = Mockito.spy(new WfsServer(search, restTemplate, restTemplateUtils, pretendUserEntity, wfsDefaultParam));
+        wmsServer = Mockito.spy(new WmsServer(search, wfsServer, pretendUserEntity));
+
         downloadWfsDataService = new DownloadWfsDataService(
-                wmsServer, wfsServer, restTemplate, wfsDefaultParam, pretendUserEntity
+                wmsServer, wfsServer, restTemplate, pretendUserEntity
         );
     }
 
@@ -93,14 +105,10 @@ public class DownloadWfsDataServiceTest {
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
 
-        when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
-
-        Map<String, String> defaultParams = new HashMap<>();
-        defaultParams.put("service", "WFS");
-        defaultParams.put("version", "2.0.0");
-        defaultParams.put("request", "GetFeature");
-        when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
+        doReturn(describeLayerResponse)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(wfsFieldModel)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
 
         // Test with null dates (non-specified dates from frontend)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -129,14 +137,10 @@ public class DownloadWfsDataServiceTest {
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
 
-        when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
-
-        Map<String, String> defaultParams = new HashMap<>();
-        defaultParams.put("service", "WFS");
-        defaultParams.put("version", "2.0.0");
-        defaultParams.put("request", "GetFeature");
-        when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
+        doReturn(describeLayerResponse)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(wfsFieldModel)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
 
         // Test with empty string dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -167,14 +171,10 @@ public class DownloadWfsDataServiceTest {
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
 
-        when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
-
-        Map<String, String> defaultParams = new HashMap<>();
-        defaultParams.put("service", "WFS");
-        defaultParams.put("version", "2.0.0");
-        defaultParams.put("request", "GetFeature");
-        when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
+        doReturn(describeLayerResponse)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(wfsFieldModel)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
 
         // Test with valid dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -207,14 +207,10 @@ public class DownloadWfsDataServiceTest {
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
 
-        when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
-
-        Map<String, String> defaultParams = new HashMap<>();
-        defaultParams.put("service", "WFS");
-        defaultParams.put("version", "2.0.0");
-        defaultParams.put("request", "GetFeature");
-        when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
+        doReturn(describeLayerResponse)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(wfsFieldModel)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
 
         // Test with only start date (end date is null)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -245,14 +241,10 @@ public class DownloadWfsDataServiceTest {
         when(layerDescription.getQuery()).thenReturn(query);
         when(query.getTypeName()).thenReturn(layerName);
 
-        when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(describeLayerResponse);
-        when(wfsServer.getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString())).thenReturn(wfsFieldModel);
-
-        Map<String, String> defaultParams = new HashMap<>();
-        defaultParams.put("service", "WFS");
-        defaultParams.put("version", "2.0.0");
-        defaultParams.put("request", "GetFeature");
-        when(wfsDefaultParam.getDownload()).thenReturn(defaultParams);
+        doReturn(describeLayerResponse)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(wfsFieldModel)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
 
         // Test with MM-YYYY format dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -276,8 +268,10 @@ public class DownloadWfsDataServiceTest {
         String uuid = "test-uuid";
         String layerName = "test:layer";
 
-        when(wmsServer.describeLayer(eq(uuid), any(FeatureRequest.class))).thenReturn(null);
-        when(wfsServer.getFeatureServerUrlByTitle(eq(uuid), eq(layerName))).thenReturn(java.util.Optional.empty());
+        doReturn(null)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(java.util.Optional.empty())
+                .when(wfsServer).getFeatureServerUrlByTitle(eq(uuid), eq(layerName));
 
         // Test with no WFS server URL available
         Exception exception = assertThrows(IllegalArgumentException.class, () -> downloadWfsDataService.prepareWfsRequestUrl(

@@ -68,7 +68,34 @@ public class WfsServer {
         this.pretendUserEntity = entity;
         this.wfsDefaultParam = wfsDefaultParam;
     }
+    /**
+     * Build WFS GetFeature URL
+     */
+    protected String createWfsRequestUrl(String wfsUrl, String layerName, List<String> fields, String cqlFilter, String outputFormat) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(wfsUrl)
+                .scheme("https");  // Force HTTPS to fix redirect
 
+        Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
+        param.put("typeName", layerName);
+        param.put("outputFormat", outputFormat == null ? "text/csv" : outputFormat);
+
+        if(fields != null) {
+            param.put("propertyName", String.join(",", fields));
+        }
+        // Add general query parameters
+        param.forEach((key, value) -> {
+            if (value != null) {
+                builder.queryParam(key, value);
+            }
+        });
+
+        // Add CQL filter if present
+        if (cqlFilter != null && !cqlFilter.isEmpty()) {
+            builder.queryParam("cql_filter", cqlFilter);
+        }
+
+        return builder.build().toUriString();
+    }
     /**
      * Get all WFS links from a collection.
      *

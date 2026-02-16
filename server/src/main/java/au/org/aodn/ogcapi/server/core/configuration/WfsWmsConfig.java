@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.client.RestTemplate;
@@ -36,7 +37,7 @@ public class WfsWmsConfig {
     }
 
     @Bean
-    public WmsServer createWmsServer(@Qualifier("pretendUserEntity") HttpEntity<?> entity) {
-        return new WmsServer(entity);
+    public WmsServer createWmsServer(Search search, @Lazy WfsServer wfsServer, @Qualifier("pretendUserEntity") HttpEntity<?> entity) {
+        return new WmsServer(search, wfsServer, entity);
     }
 }

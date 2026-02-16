@@ -13,7 +13,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -26,20 +25,17 @@ public class DownloadWfsDataService {
     private final WmsServer wmsServer;
     private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
-    private final WfsDefaultParam wfsDefaultParam;
     private final HttpEntity<?> pretendUserEntity;
 
     public DownloadWfsDataService(
             WmsServer wmsServer,
             WfsServer wfsServer,
             RestTemplate restTemplate,
-            WfsDefaultParam wfsDefaultParam,
             @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity
     ) {
         this.wmsServer = wmsServer;
         this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
-        this.wfsDefaultParam = wfsDefaultParam;
         this.pretendUserEntity = pretendUserEntity;
     }
 
@@ -95,33 +91,6 @@ public class DownloadWfsDataService {
 
         return cqlFilter.toString();
     }
-
-    /**
-     * Build WFS GetFeature URL
-     */
-    private String buildWfsRequestUrl(String wfsUrl, String layerName, String cqlFilter) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(wfsUrl)
-                .scheme("https");  // Force HTTPS to fix redirect
-
-        Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
-        param.put("typeName", layerName);
-        param.put("outputFormat", "text/csv");
-
-        // Add general query parameters
-        param.forEach((key, value) -> {
-            if (value != null) {
-                builder.queryParam(key, value);
-            }
-        });
-
-        // Add CQL filter if present
-        if (cqlFilter != null && !cqlFilter.isEmpty()) {
-            builder.queryParam("cql_filter", cqlFilter);
-        }
-
-        return builder.build().toUriString();
-    }
-
     /**
      * Does collection lookup, WFS validation, field retrieval, and URL building
      */
@@ -130,7 +99,7 @@ public class DownloadWfsDataService {
             String startDate,
             String endDate,
             Object multiPolygon,
-            List<String> fields,// TODO: currently not used
+            List<String> fields,
             String layerName) {
 
         DescribeLayerResponse describeLayerResponse = wmsServer.describeLayer(uuid, FeatureRequest.builder().layerName(layerName).build());
@@ -167,12 +136,11 @@ public class DownloadWfsDataService {
         String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, wfsFieldModel);
 
         // Build final WFS request URL
-        String wfsRequestUrl = buildWfsRequestUrl(wfsServerUrl, wfsTypeName, cqlFilter);
+        String wfsRequestUrl = wfsServer.createWfsRequestUrl(wfsServerUrl, wfsTypeName, fields, cqlFilter, null);
 
         log.info("Prepared WFS request URL: {}", wfsRequestUrl);
         return wfsRequestUrl;
     }
-
     /**
      * Execute WFS request with SSE support
      */

@@ -49,13 +49,6 @@ public class WmsServer {
     @Autowired
     protected RestTemplateUtils restTemplateUtils;
 
-    @Lazy
-    @Autowired
-    protected WfsServer wfsServer;
-
-    @Autowired
-    protected Search search;
-
     @Autowired
     protected WmsDefaultParam wmsDefaultParam;
 
@@ -67,13 +60,17 @@ public class WmsServer {
     protected WmsServer self;
 
     protected final HttpEntity<?> pretendUserEntity;
+    protected WfsServer wfsServer;
+    protected Search search;
 
-    public WmsServer(HttpEntity<?> entity) {
+    public WmsServer(Search search, WfsServer wfsServer, HttpEntity<?> entity) {
         xmlMapper = new XmlMapper();
         xmlMapper.registerModule(new JavaTimeModule()); // Add JavaTimeModule
         xmlMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-        pretendUserEntity = entity;
+        this.pretendUserEntity = entity;
+        this.wfsServer = wfsServer;
+        this.search = search;
     }
 
     /**
@@ -447,7 +444,7 @@ public class WmsServer {
     protected Optional<String> getMapServerUrl(String collectionId, FeatureRequest request) {
         // Get the record contains the map feature, given one uuid , 1 result expected
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
-        if (!result.getCollections().isEmpty()) {
+        if (result != null && result.getCollections() != null && !result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
 
             String layerName = request != null ? request.getLayerName() : null;
