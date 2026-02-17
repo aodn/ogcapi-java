@@ -5,7 +5,8 @@ import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -164,7 +165,7 @@ public class WfsServerTest {
                 .thenReturn(stac);
 
         WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
-        WFSFieldModel result = server.getDownloadableFields(id, request);
+        WfsFields result = server.getDownloadableFields(id, request);
 
         assertNotNull(result);
         assertNotNull(result.getFields());
@@ -172,7 +173,7 @@ public class WfsServerTest {
         assertEquals(3, result.getFields().size());
 
         // Check geometry field
-        WFSFieldModel.Field geomField = result.getFields().stream()
+        WfsField geomField = result.getFields().stream()
                 .filter(f -> "geom".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -181,7 +182,7 @@ public class WfsServerTest {
         assertEquals("GeometryPropertyType", geomField.getType());
 
         // Check datetime field
-        WFSFieldModel.Field timeField = result.getFields().stream()
+        WfsField timeField = result.getFields().stream()
                 .filter(f -> "timestamp".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -190,7 +191,7 @@ public class WfsServerTest {
         assertEquals("dateTime", timeField.getType());
 
         // Check string field
-        WFSFieldModel.Field nameField = result.getFields().stream()
+        WfsField nameField = result.getFields().stream()
                 .filter(f -> "name".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -322,7 +323,7 @@ public class WfsServerTest {
 
         WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
 
-        WFSFieldModel result = server.getDownloadableFields(id, request);
+        WfsFields result = server.getDownloadableFields(id, request);
 
         assertNull(result, "Should return null when no collection found");
     }

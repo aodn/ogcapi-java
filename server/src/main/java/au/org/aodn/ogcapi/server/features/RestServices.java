@@ -8,14 +8,18 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.mapper.StacToCollection;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.util.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
+import org.geotools.feature.FeatureCollection;
+import org.geotools.geojson.feature.FeatureJSON;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
@@ -23,6 +27,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
+import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -93,20 +99,34 @@ public class RestServices extends OGCApiService {
      * @param request      -Request to get field given a WFS layer name; if no layer name provided, it will return fields for all WFS links in the collection
      * @return - The WFS fields
      */
-    public ResponseEntity<?> getWfsFields(String collectionId, WfsServer.WfsFeatureRequest request) {
-        List<WFSFieldModel> result = wfsServer.getWFSFields(collectionId, request);
+    public ResponseEntity<?> getWfsFields(String collectionId, FeatureRequest request) {
+        WfsServer.WfsFeatureRequest wfsFeatureRequest = WfsServer.WfsFeatureRequest.builder().build();
+        BeanUtils.copyProperties(request, wfsFeatureRequest);
+        List<WfsFields> result = wfsServer.getWFSFields(collectionId, wfsFeatureRequest);
 
         return result == null ?
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
 
-    public ResponseEntity<?> getWfsFieldValue(String collectionId, WfsServer.WfsFeatureRequest request) {
-        List<String> result = wfsServer.getFieldValues(collectionId, request, new ParameterizedTypeReference<>() {});
+    public ResponseEntity<?> getWfsFieldValue(String collectionId, FeatureRequest request) {
+        WfsServer.WfsFeatureRequest wfsWithServer = wmsServer.createRequestFromLayerName(collectionId, request.getLayerName());
+        WfsServer.WfsFeatureRequest wfsFeatureRequest = WfsServer.WfsFeatureRequest.builder().build();
+        // clone value from request
+        BeanUtils.copyProperties(request, wfsFeatureRequest);
+        // copy enhanced value
+        CommonUtils.copyIgnoringNull(wfsWithServer, wfsFeatureRequest);
 
-        return result == null ?
-                ResponseEntity.notFound().build() :
-                ResponseEntity.ok(result);
+        String result = wfsServer.getFieldValues(collectionId, wfsFeatureRequest, new ParameterizedTypeReference<>() {});
+
+        FeatureJSON json = new FeatureJSON();
+        try {
+            FeatureCollection<?, ?> collection = json.readFeatureCollection(new StringReader(result));
+            return ResponseEntity.ok().body(collection);
+        }
+        catch (IOException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
     /**
      * This is used to get the WMS fields from the describe wfs layer given a wms layer
@@ -120,7 +140,7 @@ public class RestServices extends OGCApiService {
         if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } else {
-            List<WFSFieldModel> result = wmsServer.getWMSFields(collectionId, request);
+            List<WfsFields> result = wmsServer.getWMSFields(collectionId, request);
 
             return result.isEmpty() ?
                     ResponseEntity.notFound().build() :
@@ -160,7 +180,6 @@ public class RestServices extends OGCApiService {
                     ResponseEntity.notFound().build() :
                     ResponseEntity.ok(result);
         }
-
     }
 
     /**

@@ -1,9 +1,7 @@
 package au.org.aodn.ogcapi.server.core.model.ogc;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
 import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
@@ -12,7 +10,8 @@ import java.util.List;
 
 @Schema(description = "Query parameters for feature requests")
 @Data
-@SuperBuilder(toBuilder = true)
+@SuperBuilder
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)    // Need when using @SuperBuilder
 @EqualsAndHashCode
 public class FeatureRequest implements Serializable {
     @Schema(description = "Property to be return")
