@@ -111,6 +111,8 @@ public class StacToCollectionTest {
         scope.put("code", "document");
         scope.put("name", "IMOS publication");
 
+        List<String> parameterVocabs = Arrays.asList("wave", "temperature");
+
         StacCollectionModel model = StacCollectionModel
                 .builder()
                 .summaries(
@@ -125,6 +127,7 @@ public class StacToCollectionTest {
                                 .datasetGroup(datasetGroup)
                                 .aiDescription(aiDescription)
                                 .scope(scope)
+                                .parameterVocabs(parameterVocabs)
                                 .build()
                 )
                 .license("Attribution 4.0")
@@ -154,6 +157,7 @@ public class StacToCollectionTest {
         Assertions.assertEquals(aiDescription, collection.getProperties().get(CollectionProperty.aiDescription));
         Assertions.assertEquals("document",
                 ((Map<String, String>) collection.getProperties().get(CollectionProperty.scope)).get("code"));
+        Assertions.assertEquals(parameterVocabs, collection.getProperties().get(CollectionProperty.parameterVocabs));
         Assertions.assertNotNull(collection.getLinks());
         Assertions.assertEquals(3, collection.getLinks().size());
     }
