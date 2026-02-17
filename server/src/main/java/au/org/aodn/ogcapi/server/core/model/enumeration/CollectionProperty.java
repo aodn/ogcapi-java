@@ -24,7 +24,8 @@ public enum CollectionProperty {
     datasetGroup("dataset_group"),
     aiDescription("ai:description"),
     aiUpdateFrequency("ai:update_frequency"),
-    scope("scope");
+    scope("scope"),
+    parameterVocabs("parameter_vocabs");
 
     private final String value;
 

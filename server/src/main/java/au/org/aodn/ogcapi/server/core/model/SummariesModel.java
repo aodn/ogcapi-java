@@ -48,4 +48,7 @@ public class SummariesModel {
     protected Map<String, String> scope;
 
     protected String statement;
+
+    @JsonProperty("parameter_vocabs")
+    protected List<String> parameterVocabs;
 }
