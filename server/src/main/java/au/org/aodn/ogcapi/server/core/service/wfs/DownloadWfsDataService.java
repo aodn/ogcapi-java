@@ -113,7 +113,7 @@ public class DownloadWfsDataService {
             wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
             wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
 
-            wfsFieldModel = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+            wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
             log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
         } else {
             Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitle(uuid, layerName);
@@ -121,7 +121,7 @@ public class DownloadWfsDataService {
             if (featureServerUrl.isPresent()) {
                 wfsServerUrl = featureServerUrl.get();
                 wfsTypeName = layerName;
-                wfsFieldModel = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+                wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
                 log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
             } else {
                 throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");

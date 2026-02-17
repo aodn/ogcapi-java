@@ -108,7 +108,7 @@ public class DownloadWfsDataServiceTest {
         doReturn(describeLayerResponse)
                 .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
         doReturn(wfsFieldModel)
-                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
         // Test with null dates (non-specified dates from frontend)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -140,7 +140,7 @@ public class DownloadWfsDataServiceTest {
         doReturn(describeLayerResponse)
                 .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
         doReturn(wfsFieldModel)
-                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
         // Test with empty string dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -174,7 +174,7 @@ public class DownloadWfsDataServiceTest {
         doReturn(describeLayerResponse)
                 .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
         doReturn(wfsFieldModel)
-                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
         // Test with valid dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -210,7 +210,7 @@ public class DownloadWfsDataServiceTest {
         doReturn(describeLayerResponse)
                 .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
         doReturn(wfsFieldModel)
-                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
         // Test with only start date (end date is null)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
@@ -244,7 +244,7 @@ public class DownloadWfsDataServiceTest {
         doReturn(describeLayerResponse)
                 .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
         doReturn(wfsFieldModel)
-                .when(wfsServer).getDownloadableFields(eq(uuid), any(FeatureRequest.class), anyString());
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
         // Test with MM-YYYY format dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(

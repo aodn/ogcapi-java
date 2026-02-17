@@ -583,6 +583,22 @@ public class WmsServer {
         return null;
     }
 
+    protected WfsServer.WfsFeatureRequest createRequestFromLayerName(String collectionId, String layerName) {
+        FeatureRequest layerRequest = FeatureRequest.builder().layerName(layerName).build();
+
+        DescribeLayerResponse response = this.describeLayer(collectionId, layerRequest);
+        if(response != null && response.getLayerDescription() != null) {
+            return WfsServer.WfsFeatureRequest.builder()
+                    .layerName(response.getLayerDescription().getQuery().getTypeName())
+                    .server(response.getLayerDescription().getWfs())
+                    .build();
+        }
+        else {
+            return WfsServer.WfsFeatureRequest.builder()
+                    .layerName(layerName)
+                    .build();
+        }
+    }
     /**
      * Fetch fields for a single layer using WFS.getDownloadableFields
      *
@@ -590,21 +606,10 @@ public class WmsServer {
      * @param layerName    - The layer name to fetch fields for
      * @return - WFSFieldModel containing typename and fields, or null if not found
      */
-    private WFSFieldModel fetchFieldsForLayer(String collectionId, String layerName) {
-        FeatureRequest layerRequest = FeatureRequest.builder().layerName(layerName).build();
+    protected WFSFieldModel fetchFieldsForLayer(String collectionId, String layerName) {
 
-        DescribeLayerResponse response = this.describeLayer(collectionId, layerRequest);
-
-        if (response != null && response.getLayerDescription().getWfs() != null) {
-            // Use describe layer to find the real layer name and wfs server for fields
-            FeatureRequest requestWithDescribeLayer = FeatureRequest.builder()
-                    .layerName(response.getLayerDescription().getQuery().getTypeName())
-                    .build();
-            return wfsServer.getDownloadableFields(collectionId, requestWithDescribeLayer, response.getLayerDescription().getWfs());
-        } else {
-            // Fallback: trust what is found inside the elastic search metadata
-            return wfsServer.getDownloadableFields(collectionId, layerRequest, null);
-        }
+        WfsServer.WfsFeatureRequest request = createRequestFromLayerName(collectionId, layerName);
+        return wfsServer.getDownloadableFields(collectionId, request);
     }
 
     /**

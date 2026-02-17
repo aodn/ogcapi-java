@@ -17,6 +17,7 @@ import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -92,7 +93,7 @@ public class RestServices extends OGCApiService {
      * @param request      -Request to get field given a WFS layer name; if no layer name provided, it will return fields for all WFS links in the collection
      * @return - The WFS fields
      */
-    public ResponseEntity<?> getWfsFields(String collectionId, FeatureRequest request) {
+    public ResponseEntity<?> getWfsFields(String collectionId, WfsServer.WfsFeatureRequest request) {
         List<WFSFieldModel> result = wfsServer.getWFSFields(collectionId, request);
 
         return result == null ?
@@ -100,6 +101,13 @@ public class RestServices extends OGCApiService {
                 ResponseEntity.ok(result);
     }
 
+    public ResponseEntity<?> getWfsFieldValue(String collectionId, WfsServer.WfsFeatureRequest request) {
+        List<String> result = wfsServer.getFieldValues(collectionId, request, new ParameterizedTypeReference<>() {});
+
+        return result == null ?
+                ResponseEntity.notFound().build() :
+                ResponseEntity.ok(result);
+    }
     /**
      * This is used to get the WMS fields from the describe wfs layer given a wms layer
      *

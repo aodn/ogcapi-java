@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -11,7 +12,7 @@ import java.util.List;
 
 @Schema(description = "Query parameters for feature requests")
 @Data
-@Builder
+@SuperBuilder(toBuilder = true)
 @EqualsAndHashCode
 public class FeatureRequest implements Serializable {
     @Schema(description = "Property to be return")
@@ -44,6 +45,7 @@ public class FeatureRequest implements Serializable {
     @Schema(description = "Enable or disable geoserver whitelist")
     @Builder.Default
     private Boolean enableGeoServerWhiteList = Boolean.TRUE;
+
     /**
      * Make sure if json indicate null, we still return true by default
      * @return - Utility function with default

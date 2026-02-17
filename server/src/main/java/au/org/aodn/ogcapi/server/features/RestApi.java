@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.Valid;
 import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -125,7 +127,14 @@ public class RestApi implements CollectionsApi {
                 return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wfs_fields -> {
-                return featuresService.getWfsFields(collectionId, request);
+                WfsServer.WfsFeatureRequest wfsFeatureRequest = WfsServer.WfsFeatureRequest.builder().build();
+                BeanUtils.copyProperties(request, wfsFeatureRequest);
+                return featuresService.getWfsFields(collectionId, wfsFeatureRequest);
+            }
+            case wfs_field_value -> {
+                WfsServer.WfsFeatureRequest wfsFeatureRequest = WfsServer.WfsFeatureRequest.builder().build();
+                BeanUtils.copyProperties(request, wfsFeatureRequest);
+                return featuresService.getWfsFieldValue(collectionId, wfsFeatureRequest);
             }
             case wms_fields -> {
                 return featuresService.getWmsFields(collectionId, request);
