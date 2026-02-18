@@ -137,5 +137,14 @@ public class RestServicesTest {
         assertTrue(v.containsKey("time"), "time field found");
         assertEquals("2023-11-26T15:20:00Z", v.get("time").get(0));
         assertEquals("2023-11-25T15:20:00Z", v.get("time").get(1));
+
+        // It works even property is null
+        response = restServices.getWfsFieldValue(
+                "any-works",
+                FeatureRequest.builder()
+                        .build()
+        );
+        assertInstanceOf(Map.class, response.getBody());
+
     }
 }

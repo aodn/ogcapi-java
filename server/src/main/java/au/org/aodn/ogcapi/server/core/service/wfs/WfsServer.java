@@ -194,7 +194,7 @@ public class WfsServer {
                 param.put("TYPENAME", request.getLayerName());
                 param.put("outputFormat", "application/json");
 
-                if(!request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
+                if(request.getProperties() != null && !request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
                     param.put("propertyName", String.join(
                             ",",
                             request.getProperties().stream().map(Enum::name).toList())
