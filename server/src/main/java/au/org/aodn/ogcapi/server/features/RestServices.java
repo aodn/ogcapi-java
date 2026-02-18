@@ -125,6 +125,19 @@ public class RestServices extends OGCApiService {
         // copy enhanced value
         CommonUtils.copyIgnoringNull(wfsWithServer, wfsFeatureRequest);
 
+        // Now check if we need to map field
+        List<WfsFields> supportedFields = wfsServer.getWFSFields(collectionId, wfsFeatureRequest);
+        List<String> extractedName = supportedFields.get(0).getFields().stream()
+                .map(f -> f.getName().toLowerCase())
+                .toList();
+
+        for(FeatureRequest.PropertyName name : wfsFeatureRequest.getProperties()) {
+            if(extractedName.contains(name.name().toLowerCase())) {
+                // TODO: If missing then may need map
+                log.info("Field {} need map", name);
+            }
+        }
+
         String result = wfsServer.getFieldValues(collectionId, wfsFeatureRequest, new ParameterizedTypeReference<>() {});
 
         FeatureJSON json = new FeatureJSON();

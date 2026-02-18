@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
@@ -110,7 +112,23 @@ public class RestServicesTest {
                             """
                 );
 
-        ResponseEntity<?> response = restServices.getWfsFieldValue("any-works", FeatureRequest.builder().build());
+        when(wfsServer.getWFSFields(anyString(), any(WfsServer.WfsFeatureRequest.class)))
+                .thenReturn(List.of(WfsFields.builder()
+                        .fields(List.of(
+                                WfsField.builder()
+                                        .name("TIME")
+                                        .build()
+                            )
+                        )
+                        .build()
+                ));
+
+        ResponseEntity<?> response = restServices.getWfsFieldValue(
+                "any-works",
+                FeatureRequest.builder()
+                        .properties(List.of(FeatureRequest.PropertyName.TIME))
+                        .build()
+        );
         assertInstanceOf(Map.class, response.getBody());
 
         @SuppressWarnings("unchecked")
