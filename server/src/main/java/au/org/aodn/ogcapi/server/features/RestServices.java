@@ -18,7 +18,10 @@ import au.org.aodn.ogcapi.server.core.util.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.feature.FeatureCollection;
+import org.geotools.feature.FeatureIterator;
 import org.geotools.geojson.feature.FeatureJSON;
+import org.opengis.feature.simple.SimpleFeature;
+import org.opengis.feature.simple.SimpleFeatureType;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -30,8 +33,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.*;
 
 @Slf4j
 @Service("FeaturesRestService")
@@ -108,7 +110,13 @@ public class RestServices extends OGCApiService {
                 ResponseEntity.notFound().build() :
                 ResponseEntity.ok(result);
     }
-
+    /**
+     * Get the list of values from the WFS, the FeatureRequest have predefined enum to control what can pass in for the
+     * properties name. You may need to update it if you want to expand the list.
+     * @param collectionId - The uuid of the metadata
+     * @param request - The request property you want to query
+     * @return - The return value, which is sorted by desc
+     */
     public ResponseEntity<?> getWfsFieldValue(String collectionId, FeatureRequest request) {
         WfsServer.WfsFeatureRequest wfsWithServer = wmsServer.createRequestFromLayerName(collectionId, request.getLayerName());
         WfsServer.WfsFeatureRequest wfsFeatureRequest = WfsServer.WfsFeatureRequest.builder().build();
@@ -121,8 +129,20 @@ public class RestServices extends OGCApiService {
 
         FeatureJSON json = new FeatureJSON();
         try {
-            FeatureCollection<?, ?> collection = json.readFeatureCollection(new StringReader(result));
-            return ResponseEntity.ok().body(collection);
+            @SuppressWarnings("unchecked")
+            FeatureCollection<SimpleFeatureType, SimpleFeature> collection = json.readFeatureCollection(new StringReader(result));
+            try(FeatureIterator<SimpleFeature> i = collection.features()) {
+                Map<String, List<Object>> results = new HashMap<>();
+                while(i.hasNext()) {
+                    SimpleFeature s = i.next();
+                    s.getProperties()
+                            .forEach(property -> {
+                                results.computeIfAbsent(property.getName().toString(), k -> new ArrayList<>());
+                                results.get(property.getName().toString()).add(s.getAttribute(property.getName()));
+                            });
+                }
+                return ResponseEntity.ok().body(results);
+            }
         }
         catch (IOException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

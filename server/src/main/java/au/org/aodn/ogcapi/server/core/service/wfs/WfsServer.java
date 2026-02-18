@@ -193,7 +193,10 @@ public class WfsServer {
                 // Now we add the missing argument from the request
                 param.put("TYPENAME", request.getLayerName());
                 param.put("outputFormat", "application/json");
-                param.put("propertyName", String.join(",", request.getProperties()));
+                param.put("propertyName", String.join(
+                        ",",
+                        request.getProperties().stream().map(v -> v.name().toLowerCase()).toList())
+                );
                 param.put("sortBy", String.join(
                         ",",
                         // Assume always sort by desc

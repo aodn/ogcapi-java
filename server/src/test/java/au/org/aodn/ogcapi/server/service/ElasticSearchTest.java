@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.EsFeatureModel;
 import au.org.aodn.ogcapi.server.core.model.EsPolygonModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -50,7 +51,7 @@ public class ElasticSearchTest {
 
         // Arrange
         String collectionId = "test-collection";
-        List<String> properties = List.of("prop1", "prop2");
+        List<FeatureRequest.PropertyName> properties = List.of(FeatureRequest.PropertyName.TIME);
         String filter = null;
 
         SearchResponse<EsFeatureCollectionModel> mockResponse = mock(SearchResponse.class);

@@ -14,7 +14,10 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
@@ -108,6 +111,13 @@ public class RestServicesTest {
                 );
 
         ResponseEntity<?> response = restServices.getWfsFieldValue("any-works", FeatureRequest.builder().build());
+        assertInstanceOf(Map.class, response.getBody());
 
+        @SuppressWarnings("unchecked")
+        Map<String, List<Object>> v = (Map<String, List<Object>>)response.getBody();
+
+        assertTrue(v.containsKey("time"), "time field found");
+        assertEquals("2023-11-26T15:20:00Z", v.get("time").get(0));
+        assertEquals("2023-11-25T15:20:00Z", v.get("time").get(1));
     }
 }

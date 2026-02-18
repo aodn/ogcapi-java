@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.SearchSuggestionsModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -632,7 +633,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 //    }
 
     @Override
-    public SearchResult<FeatureGeoJSON> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
+    public SearchResult<FeatureGeoJSON> searchFeatureSummary(String collectionId, List<FeatureRequest.PropertyName> properties, String filter) {
         try {
             SearchRequest searchRequest = new SearchRequest.Builder()
                     .index(dataIndexName)
