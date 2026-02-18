@@ -195,12 +195,12 @@ public class WfsServer {
                 param.put("outputFormat", "application/json");
                 param.put("propertyName", String.join(
                         ",",
-                        request.getProperties().stream().map(v -> v.name().toLowerCase()).toList())
+                        request.getProperties().stream().map(Enum::name).toList())
                 );
                 param.put("sortBy", String.join(
                         ",",
                         // Assume always sort by desc
-                        request.getProperties().stream().map(p -> String.format("%s+D", p)).toList())
+                        request.getProperties().stream().map(p -> String.format("%s+D", p.name())).toList())
                 );
 
                 // This is the normal route

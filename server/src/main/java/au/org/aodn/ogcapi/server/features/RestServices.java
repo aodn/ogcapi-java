@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.LayerInfo;
 import au.org.aodn.ogcapi.server.core.service.DasService;
@@ -128,13 +129,14 @@ public class RestServices extends OGCApiService {
         // Now check if we need to map field
         List<WfsFields> supportedFields = wfsServer.getWFSFields(collectionId, wfsFeatureRequest);
         List<String> extractedName = supportedFields.get(0).getFields().stream()
-                .map(f -> f.getName().toLowerCase())
+                .map(WfsField::getName)
                 .toList();
 
         for(FeatureRequest.PropertyName name : wfsFeatureRequest.getProperties()) {
-            if(extractedName.contains(name.name().toLowerCase())) {
+            if(extractedName.contains(name.name())) {
                 // TODO: If missing then may need map
                 log.info("Field {} need map", name);
+                //
             }
         }
 
