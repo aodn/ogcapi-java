@@ -193,15 +193,18 @@ public class WfsServer {
                 // Now we add the missing argument from the request
                 param.put("TYPENAME", request.getLayerName());
                 param.put("outputFormat", "application/json");
-                param.put("propertyName", String.join(
-                        ",",
-                        request.getProperties().stream().map(Enum::name).toList())
-                );
-                param.put("sortBy", String.join(
-                        ",",
-                        // Assume always sort by desc
-                        request.getProperties().stream().map(p -> String.format("%s+D", p.name())).toList())
-                );
+
+                if(!request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
+                    param.put("propertyName", String.join(
+                            ",",
+                            request.getProperties().stream().map(Enum::name).toList())
+                    );
+                    param.put("sortBy", String.join(
+                            ",",
+                            // Assume always sort by desc
+                            request.getProperties().stream().map(p -> String.format("%s+D", p.name())).toList())
+                    );
+                }
 
                 // This is the normal route
                 UriComponentsBuilder builder = UriComponentsBuilder

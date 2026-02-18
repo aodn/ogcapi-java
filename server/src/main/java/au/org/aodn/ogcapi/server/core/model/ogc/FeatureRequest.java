@@ -17,7 +17,15 @@ public class FeatureRequest implements Serializable {
     // Define a fix name for fields, the geoserver data have all sorts of different name,
     // map it here so that we hide the complexity of call from UI.
     public enum PropertyName {
-        time
+        wildcard,
+        time;
+
+        public static PropertyName fromString(String input) {
+            if (input == null || "*".equals(input.trim())) {
+                return wildcard;  // or throw exception / return default
+            }
+            return valueOf(input.trim());
+        }
     }
 
     @Schema(description = "Property to be return")

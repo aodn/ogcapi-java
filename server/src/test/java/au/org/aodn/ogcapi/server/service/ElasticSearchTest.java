@@ -51,7 +51,7 @@ public class ElasticSearchTest {
 
         // Arrange
         String collectionId = "test-collection";
-        List<FeatureRequest.PropertyName> properties = List.of(FeatureRequest.PropertyName.TIME);
+        List<FeatureRequest.PropertyName> properties = List.of(FeatureRequest.PropertyName.wildcard);
         String filter = null;
 
         SearchResponse<EsFeatureCollectionModel> mockResponse = mock(SearchResponse.class);
@@ -62,7 +62,7 @@ public class ElasticSearchTest {
         featureCollectionProperties.put("collection", "2d496463-600c-465a-84a1-8a4ab76bd505");
         featureCollectionProperties.put("key", "satellite_ghrsst_l4_gamssa_1day_multi_sensor_world.zarr");
         esFeatureCollection.setProperties(featureCollectionProperties);
-        var coords = new ArrayList<List<List<BigDecimal>>>();
+        List<List<List<BigDecimal>>> coords = new ArrayList<>();
         var esFeature = new EsFeatureModel();
 
         // mock a single point [147.338884, -43.190779]
