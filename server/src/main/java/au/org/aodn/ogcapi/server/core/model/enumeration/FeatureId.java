@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 public enum FeatureId {
     summary("summary"),
     wfs_fields("wfs_fields"), // Query field based on pure wfs and given layer
+    wfs_field_value("wfs_field_value"),
     wms_fields("wms_fields"), // Query field based on value from wms describe layer query
     wave_buoy_first_data_available("wave_buoy_first_data_available"),
     wave_buoy_latest_date("wave_buoy_latest_date"),

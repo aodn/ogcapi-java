@@ -5,7 +5,8 @@ import au.org.aodn.ogcapi.server.core.exception.GeoserverLayersNotFoundException
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.*;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
@@ -101,20 +102,20 @@ public class WmsServer {
             // Special handle for date time field, the field name will be diff across dataset. So we need
             // to look it up
             try {
-                List<WFSFieldModel> wfsFieldModels = this.getWMSFields(uuid, request);
+                List<WfsFields> wfsFieldModels = this.getWMSFields(uuid, request);
                 // Flatten all fields from all WFSFieldModels
-                List<WFSFieldModel.Field> allFields = wfsFieldModels.stream()
+                List<WfsField> allFields = wfsFieldModels.stream()
                         .filter(m -> m.getFields() != null)
                         .flatMap(m -> m.getFields().stream())
                         .toList();
 
-                List<WFSFieldModel.Field> target = allFields.stream()
+                List<WfsField> target = allFields.stream()
                         .filter(value -> "dateTime".equalsIgnoreCase(value.getType()))
                         .toList();
 
                 if (!target.isEmpty()) {
 
-                    List<WFSFieldModel.Field> range;
+                    List<WfsField> range;
                     if (target.size() > 2) {
                         // Try to find possible fields where it contains start end min max
                         range = target.stream()
@@ -139,7 +140,7 @@ public class WmsServer {
                         } else {
                             // There are more than 1 dateTime field, it is not range type, so we try to guess the individual one
                             // based on some common name. Add more if needed
-                            List<WFSFieldModel.Field> individual = target.stream()
+                            List<WfsField> individual = target.stream()
                                     .filter(v -> Stream.of("juld", "time").anyMatch(k -> v.getName().equalsIgnoreCase(k)))
                                     .toList();
 
@@ -583,6 +584,22 @@ public class WmsServer {
         return null;
     }
 
+    public WfsServer.WfsFeatureRequest createRequestFromLayerName(String collectionId, String layerName) {
+        FeatureRequest layerRequest = FeatureRequest.builder().layerName(layerName).build();
+
+        DescribeLayerResponse response = this.describeLayer(collectionId, layerRequest);
+        if(response != null && response.getLayerDescription() != null) {
+            return WfsServer.WfsFeatureRequest.builder()
+                    .layerName(response.getLayerDescription().getQuery().getTypeName())
+                    .server(response.getLayerDescription().getWfs())
+                    .build();
+        }
+        else {
+            return WfsServer.WfsFeatureRequest.builder()
+                    .layerName(layerName)
+                    .build();
+        }
+    }
     /**
      * Fetch fields for a single layer using WFS.getDownloadableFields
      *
@@ -590,21 +607,10 @@ public class WmsServer {
      * @param layerName    - The layer name to fetch fields for
      * @return - WFSFieldModel containing typename and fields, or null if not found
      */
-    private WFSFieldModel fetchFieldsForLayer(String collectionId, String layerName) {
-        FeatureRequest layerRequest = FeatureRequest.builder().layerName(layerName).build();
+    protected WfsFields fetchFieldsForLayer(String collectionId, String layerName) {
 
-        DescribeLayerResponse response = this.describeLayer(collectionId, layerRequest);
-
-        if (response != null && response.getLayerDescription().getWfs() != null) {
-            // Use describe layer to find the real layer name and wfs server for fields
-            FeatureRequest requestWithDescribeLayer = FeatureRequest.builder()
-                    .layerName(response.getLayerDescription().getQuery().getTypeName())
-                    .build();
-            return wfsServer.getDownloadableFields(collectionId, requestWithDescribeLayer, response.getLayerDescription().getWfs());
-        } else {
-            // Fallback: trust what is found inside the elastic search metadata
-            return wfsServer.getDownloadableFields(collectionId, layerRequest, null);
-        }
+        WfsServer.WfsFeatureRequest request = createRequestFromLayerName(collectionId, layerName);
+        return wfsServer.getDownloadableFields(collectionId, request);
     }
 
     /**
@@ -614,8 +620,8 @@ public class WmsServer {
      * @param request      - Request item for this WMS layer, usually layer name
      * @return - List of WFSFieldModel containing typename and fields for each WMS layer
      */
-    public List<WFSFieldModel> getWMSFields(String collectionId, FeatureRequest request) {
-        List<WFSFieldModel> wmsFields = new ArrayList<>();
+    public List<WfsFields> getWMSFields(String collectionId, FeatureRequest request) {
+        List<WfsFields> wmsFields = new ArrayList<>();
 
         List<String> layerNamesToProcess = new ArrayList<>();
         // If layer name is provided, use it directly
@@ -632,7 +638,7 @@ public class WmsServer {
 
         // Fetch fields for each layer name
         for (String layerName : layerNamesToProcess) {
-            WFSFieldModel fieldModel = fetchFieldsForLayer(collectionId, layerName);
+            WfsFields fieldModel = fetchFieldsForLayer(collectionId, layerName);
             if (fieldModel != null) {
                 wmsFields.add(fieldModel);
             }

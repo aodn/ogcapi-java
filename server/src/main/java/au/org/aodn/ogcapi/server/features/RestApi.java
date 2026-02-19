@@ -127,6 +127,9 @@ public class RestApi implements CollectionsApi {
             case wfs_fields -> {
                 return featuresService.getWfsFields(collectionId, request);
             }
+            case wfs_field_value -> {
+                return featuresService.getWfsFieldValue(collectionId, request);
+            }
             case wms_fields -> {
                 return featuresService.getWmsFields(collectionId, request);
             }

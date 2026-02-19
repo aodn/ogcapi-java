@@ -1,22 +1,39 @@
 package au.org.aodn.ogcapi.server.features;
 
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.DasService;
+import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.List;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 public class RestServicesTest {
 
     @Mock
     private DasService dasService;
+
+    @Mock
+    private WmsServer wmsServer;
+
+    @Mock
+    private WfsServer wfsServer;
 
     @InjectMocks
     private RestServices restServices;
@@ -64,5 +81,70 @@ public class RestServicesTest {
         ResponseEntity<?> response = restServices.getWaveBuoysLatestDate(SUPPORTED_COLLECTION_ID);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetWfsTimeFieldWorks() {
+        when(wfsServer.getFieldValues(anyString(), any(WfsServer.WfsFeatureRequest.class), any(ParameterizedTypeReference.class)))
+                .thenReturn(
+                        """
+                            {
+                              "type": "FeatureCollection",
+                              "features": [
+                                {
+                                  "type": "Feature",
+                                  "id": "srs_ghrsst_l3s_M_1d_ngt_url.fid-4218f2fa_19c6cde1def_1ef0",
+                                  "geometry": null,
+                                  "properties": {
+                                    "time": "2023-11-26T15:20:00Z"
+                                  }
+                                },
+                                {
+                                  "type": "Feature",
+                                  "id": "srs_ghrsst_l3s_M_1d_ngt_url.fid-4218f2fa_19c6cde1def_1ef2",
+                                  "geometry": null,
+                                  "properties": {
+                                    "time": "2023-11-25T15:20:00Z"
+                                  }
+                                }
+                              ]
+                            }
+                            """
+                );
+
+        when(wfsServer.getWFSFields(anyString(), any(WfsServer.WfsFeatureRequest.class)))
+                .thenReturn(List.of(WfsFields.builder()
+                        .fields(List.of(
+                                WfsField.builder()
+                                        .name("TIME")
+                                        .build()
+                            )
+                        )
+                        .build()
+                ));
+
+        ResponseEntity<?> response = restServices.getWfsFieldValue(
+                "any-works",
+                FeatureRequest.builder()
+                        .properties(List.of(FeatureRequest.PropertyName.time))
+                        .build()
+        );
+        assertInstanceOf(Map.class, response.getBody());
+
+        @SuppressWarnings("unchecked")
+        Map<String, List<Object>> v = (Map<String, List<Object>>)response.getBody();
+
+        assertTrue(v.containsKey("time"), "time field found");
+        assertEquals("2023-11-26T15:20:00Z", v.get("time").get(0));
+        assertEquals("2023-11-25T15:20:00Z", v.get("time").get(1));
+
+        // It works even property is null
+        response = restServices.getWfsFieldValue(
+                "any-works",
+                FeatureRequest.builder()
+                        .build()
+        );
+        assertInstanceOf(Map.class, response.getBody());
+
     }
 }

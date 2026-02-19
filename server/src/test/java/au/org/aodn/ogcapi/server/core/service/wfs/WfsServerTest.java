@@ -5,7 +5,8 @@ import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -140,7 +141,7 @@ public class WfsServerTest {
                 </xsd:schema>
                 """;
 
-        FeatureRequest request = FeatureRequest.builder().layerName("test:layer").build();
+        WfsServer.WfsFeatureRequest request = WfsServer.WfsFeatureRequest.builder().layerName("test:layer").build();
 
         ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
         stac.setCollections(List.of(
@@ -164,7 +165,7 @@ public class WfsServerTest {
                 .thenReturn(stac);
 
         WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
-        WFSFieldModel result = server.getDownloadableFields(id, request, null);
+        WfsFields result = server.getDownloadableFields(id, request);
 
         assertNotNull(result);
         assertNotNull(result.getFields());
@@ -172,7 +173,7 @@ public class WfsServerTest {
         assertEquals(3, result.getFields().size());
 
         // Check geometry field
-        WFSFieldModel.Field geomField = result.getFields().stream()
+        WfsField geomField = result.getFields().stream()
                 .filter(f -> "geom".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -181,7 +182,7 @@ public class WfsServerTest {
         assertEquals("GeometryPropertyType", geomField.getType());
 
         // Check datetime field
-        WFSFieldModel.Field timeField = result.getFields().stream()
+        WfsField timeField = result.getFields().stream()
                 .filter(f -> "timestamp".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -190,7 +191,7 @@ public class WfsServerTest {
         assertEquals("dateTime", timeField.getType());
 
         // Check string field
-        WFSFieldModel.Field nameField = result.getFields().stream()
+        WfsField nameField = result.getFields().stream()
                 .filter(f -> "name".equals(f.getName()))
                 .findFirst()
                 .orElse(null);
@@ -202,7 +203,7 @@ public class WfsServerTest {
     @Test
     public void testGetDownloadableFieldsNotFoundResponse() {
         // Mock WFS response with NOT_FOUND status
-        FeatureRequest request = FeatureRequest.builder().layerName("test:layer2").build();
+        WfsServer.WfsFeatureRequest request = WfsServer.WfsFeatureRequest.builder().layerName("test:layer2").build();
 
         ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
         stac.setCollections(List.of(
@@ -229,7 +230,7 @@ public class WfsServerTest {
 
         GeoserverFieldsNotFoundException exception = assertThrows(
                 GeoserverFieldsNotFoundException.class,
-                () -> server.getDownloadableFields(id, request, null)
+                () -> server.getDownloadableFields(id, request)
         );
 
         assertEquals("No downloadable fields found for all url",
@@ -240,7 +241,7 @@ public class WfsServerTest {
 
     @Test
     public void testGetDownloadableFieldsWfsError() {
-        FeatureRequest request = FeatureRequest.builder().layerName("invalid:layer").build();
+        WfsServer.WfsFeatureRequest request = WfsServer.WfsFeatureRequest.builder().layerName("invalid:layer").build();
 
         ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
         stac.setCollections(List.of(
@@ -267,7 +268,7 @@ public class WfsServerTest {
 
         GeoserverFieldsNotFoundException exception = assertThrows(
                 GeoserverFieldsNotFoundException.class,
-                () -> server.getDownloadableFields(id, request, null)
+                () -> server.getDownloadableFields(id, request)
         );
 
         assertTrue(exception.getMessage().contains("No downloadable fields found"));
@@ -275,7 +276,7 @@ public class WfsServerTest {
 
     @Test
     public void testGetDownloadableFieldsNetworkError() {
-        FeatureRequest request = FeatureRequest.builder().layerName("test:layer").build();
+        WfsServer.WfsFeatureRequest request = WfsServer.WfsFeatureRequest.builder().layerName("test:layer").build();
 
         ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
         stac.setCollections(List.of(
@@ -303,7 +304,7 @@ public class WfsServerTest {
 
         RuntimeException exception = assertThrows(
                 RuntimeException.class,
-                () -> server.getDownloadableFields(id, request, null)
+                () -> server.getDownloadableFields(id, request)
         );
 
         assertTrue(exception.getMessage().contains("Connection timeout"));
@@ -311,7 +312,7 @@ public class WfsServerTest {
 
     @Test
     public void testGetDownloadableFieldsNoCollection() {
-        FeatureRequest request = FeatureRequest.builder().layerName("test:layer").build();
+        WfsServer.WfsFeatureRequest request = WfsServer.WfsFeatureRequest.builder().layerName("test:layer").build();
 
         ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
         stac.setCollections(Collections.emptyList());
@@ -322,7 +323,7 @@ public class WfsServerTest {
 
         WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
 
-        WFSFieldModel result = server.getDownloadableFields(id, request, null);
+        WfsFields result = server.getDownloadableFields(id, request);
 
         assertNull(result, "Should return null when no collection found");
     }

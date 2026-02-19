@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -39,9 +40,9 @@ public abstract class OGCApiService {
     public abstract List<String> getConformanceDeclaration();
 
     public ResponseEntity<FeatureCollectionGeoJSON> getFeature(String collectionId,
-                                        FeatureId fid,
-                                        List<String> properties,
-                                        String filter) throws Exception {
+                                                               FeatureId fid,
+                                                               List<FeatureRequest.PropertyName> properties,
+                                                               String filter) throws Exception {
         switch(fid) {
             case summary -> {
                 var result = search.searchFeatureSummary(collectionId, properties, filter);
@@ -160,9 +161,9 @@ public abstract class OGCApiService {
     }
     /**
      * Convert the bbox parameter to CQL
-     * @param bbox
-     * @param filter
-     * @return
+     * @param bbox - Bounding box
+     * @param filter - CQL filter string
+     * @return - String format as cql
      */
     public static String processBBoxParameter(String fieldName, List<BigDecimal> bbox, String filter) {
         String f = null;

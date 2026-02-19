@@ -1,7 +1,8 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WFSFieldModel;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
+import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
@@ -42,17 +43,17 @@ public class DownloadWfsDataService {
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WFSFieldModel wfsFieldModel) {
+    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WfsFields wfsFieldModel) {
         StringBuilder cqlFilter = new StringBuilder();
 
         if (wfsFieldModel == null || wfsFieldModel.getFields() == null) {
             return cqlFilter.toString();
         }
 
-        List<WFSFieldModel.Field> fields = wfsFieldModel.getFields();
+        List<WfsField> fields = wfsFieldModel.getFields();
 
         // Find temporal field
-        Optional<WFSFieldModel.Field> temporalField = fields.stream()
+        Optional<WfsField> temporalField = fields.stream()
                 .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
                 .findFirst();
 
@@ -66,7 +67,7 @@ public class DownloadWfsDataService {
         }
 
         // Find geometry field
-        Optional<WFSFieldModel.Field> geometryField = fields.stream()
+        Optional<WfsField> geometryField = fields.stream()
                 .filter(field -> "geometrypropertytype".equals(field.getType()))
                 .findFirst();
 
@@ -106,14 +107,14 @@ public class DownloadWfsDataService {
 
         String wfsServerUrl;
         String wfsTypeName;
-        WFSFieldModel wfsFieldModel;
+        WfsFields wfsFieldModel;
 
         // Try to get WFS details from DescribeLayer first, then fallback to searching by layer name
         if (describeLayerResponse != null && describeLayerResponse.getLayerDescription().getWfs() != null) {
             wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
             wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
 
-            wfsFieldModel = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+            wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
             log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
         } else {
             Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitle(uuid, layerName);
@@ -121,7 +122,7 @@ public class DownloadWfsDataService {
             if (featureServerUrl.isPresent()) {
                 wfsServerUrl = featureServerUrl.get();
                 wfsTypeName = layerName;
-                wfsFieldModel = wfsServer.getDownloadableFields(uuid, FeatureRequest.builder().layerName(wfsTypeName).build(), wfsServerUrl);
+                wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
                 log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
             } else {
                 throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");

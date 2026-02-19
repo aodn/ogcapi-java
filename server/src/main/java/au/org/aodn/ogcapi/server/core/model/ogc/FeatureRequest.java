@@ -1,9 +1,8 @@
 package au.org.aodn.ogcapi.server.core.model.ogc;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.Builder;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.*;
+import lombok.experimental.SuperBuilder;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -11,11 +10,26 @@ import java.util.List;
 
 @Schema(description = "Query parameters for feature requests")
 @Data
-@Builder
+@SuperBuilder
+@NoArgsConstructor(force = true, access = AccessLevel.PROTECTED)    // Need when using @SuperBuilder
 @EqualsAndHashCode
 public class FeatureRequest implements Serializable {
+    // Define a fix name for fields, the geoserver data have all sorts of different name,
+    // map it here so that we hide the complexity of call from UI.
+    public enum PropertyName {
+        wildcard,
+        time;
+
+        public static PropertyName fromString(String input) {
+            if (input == null || "*".equals(input.trim())) {
+                return wildcard;  // or throw exception / return default
+            }
+            return valueOf(input.trim());
+        }
+    }
+
     @Schema(description = "Property to be return")
-    private List<String> properties;
+    private List<PropertyName> properties;
 
     @Schema(description = "Only records that have a geometry that intersects the bounding box are selected. The bounding box is provided as four or six numbers, depending on whether the coordinate reference system includes a vertical axis (height or depth):  * Lower left corner, coordinate axis 1 * Lower left corner, coordinate axis 2 * Minimum value, coordinate axis 3 (optional) * Upper right corner, coordinate axis 1 * Upper right corner, coordinate axis 2 * Maximum value, coordinate axis 3 (optional)  The coordinate reference system of the values is WGS 84 long/lat (http://www.opengis.net/def/crs/OGC/1.3/CRS84) unless a different coordinate reference system is specified in the parameter `bbox-crs`.  For WGS 84 longitude/latitude the values are in most cases the sequence of minimum longitude, minimum latitude, maximum longitude and maximum latitude.  However, in cases where the box spans the antimeridian the first value (west-most box edge) is larger than the third value (east-most box edge).  If the vertical axis is included, the third and the sixth number are the bottom and the top of the 3-dimensional bounding box.  If a record has multiple spatial geometry properties, it is the decision of the server whether only a single spatial geometry property is used to determine the extent or all relevant geometries.")
     private List<BigDecimal> bbox;
@@ -44,6 +58,7 @@ public class FeatureRequest implements Serializable {
     @Schema(description = "Enable or disable geoserver whitelist")
     @Builder.Default
     private Boolean enableGeoServerWhiteList = Boolean.TRUE;
+
     /**
      * Make sure if json indicate null, we still return true by default
      * @return - Utility function with default
