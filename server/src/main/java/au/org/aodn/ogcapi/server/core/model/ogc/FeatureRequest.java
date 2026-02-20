@@ -35,7 +35,7 @@ public class FeatureRequest implements Serializable {
         GML3("GML3"),
         GML32("gml32"),
         SHAPE_ZIP("shape-zip"),  // also accepted as "SHAPE-ZIP"
-        CSV("csv"),
+        CSV("text/csv"),
         JSON(MediaType.APPLICATION_JSON_VALUE), // also "json" for backward compatibility
         GEOJSON("application/geo+json"),
         KML("KML"),
@@ -48,14 +48,12 @@ public class FeatureRequest implements Serializable {
         }
 
         public static GeoServerOutputFormat fromString(String s) {
-            if (s == null) return UNKNOWN;
-            String key = s.trim().toUpperCase().replace("-", "_");
-            try {
-                return valueOf(key);
+            for(GeoServerOutputFormat f : GeoServerOutputFormat.values()) {
+                if(f.value.equalsIgnoreCase(s)) {
+                    return f;
+                }
             }
-            catch (IllegalArgumentException e) {
-                return UNKNOWN; // or throw custom exception
-            }
+            return UNKNOWN; // or throw custom exception
         }
 
         @Override

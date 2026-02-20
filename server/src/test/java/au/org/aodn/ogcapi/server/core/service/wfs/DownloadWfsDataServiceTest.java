@@ -281,4 +281,40 @@ public class DownloadWfsDataServiceTest {
 
         assertTrue(exception.getMessage().contains("No WFS server URL found"));
     }
+
+    @Test
+    public void verifyRequestUrlGenerateCorrect() {
+        // Setup
+        String uuid = "test-uuid";
+        String layerName = "test:layer";
+        String startDate = "01-2024";  // MM-YYYY format
+        String endDate = "12-2024";    // MM-YYYY format
+        WfsFields wfsFieldModel = createTestWFSFieldModel();
+
+        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
+        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
+        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
+
+        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
+        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
+        when(layerDescription.getQuery()).thenReturn(query);
+        when(query.getTypeName()).thenReturn(layerName);
+
+        doReturn(describeLayerResponse)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(wfsFieldModel)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
+
+        // Test with MM-YYYY format dates
+        String result = downloadWfsDataService.prepareWfsRequestUrl(
+                uuid, startDate, endDate, null, null, layerName, null
+        );
+
+        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z", result, "Correct url 1");
+
+        result = downloadWfsDataService.prepareWfsRequestUrl(
+                uuid, startDate, endDate, null, null, layerName, "shape-zip"
+        );
+        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z", result, "Correct url 1");
+    }
 }
