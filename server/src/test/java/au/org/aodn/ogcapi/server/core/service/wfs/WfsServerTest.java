@@ -361,7 +361,7 @@ public class WfsServerTest {
         // assert
         assertNotNull(result);
         assertTrue(result.contains("SERVICE=WFS"));
-        assertTrue(result.contains("VERSION=1.0.0"));      // from defaults
+        assertTrue(result.contains("VERSION=2.0.0"));      // from defaults
         assertTrue(result.contains("REQUEST=GetCapabilities")); // original one is replaced
     }
 }
