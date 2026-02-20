@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.model.ogc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.http.MediaType;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -25,6 +26,41 @@ public class FeatureRequest implements Serializable {
                 return wildcard;  // or throw exception / return default
             }
             return valueOf(input.trim());
+        }
+    }
+
+    @Getter
+    public enum GeoServerOutputFormat {
+        GML2("GML2"),
+        GML3("GML3"),
+        GML32("gml32"),
+        SHAPE_ZIP("shape-zip"),  // also accepted as "SHAPE-ZIP"
+        CSV("csv"),
+        JSON(MediaType.APPLICATION_JSON_VALUE), // also "json" for backward compatibility
+        GEOJSON("application/geo+json"),
+        KML("KML"),
+        UNKNOWN("unknown");
+
+        private final String value;
+
+        GeoServerOutputFormat(String value) {
+            this.value = value;
+        }
+
+        public static GeoServerOutputFormat fromString(String s) {
+            if (s == null) return UNKNOWN;
+            String key = s.trim().toUpperCase().replace("-", "_");
+            try {
+                return valueOf(key);
+            }
+            catch (IllegalArgumentException e) {
+                return UNKNOWN; // or throw custom exception
+            }
+        }
+
+        @Override
+        public String toString() {
+            return value;
         }
     }
 
@@ -51,6 +87,9 @@ public class FeatureRequest implements Serializable {
 
     @Schema(description = "Y")
     private BigDecimal y;
+
+    @Schema(description = "Data output format")
+    private GeoServerOutputFormat outputFormat;
 
     @Schema(description = "Wave buoy name")
     private String waveBuoy;

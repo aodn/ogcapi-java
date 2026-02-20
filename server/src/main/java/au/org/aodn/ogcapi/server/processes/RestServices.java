@@ -182,6 +182,7 @@ public class RestServices {
             Object multiPolygon,
             List<String> fields,
             String layerName,
+            String outputFormat,
             SseEmitter emitter) {
 
         // Set up references for resources that need to be cleaned up
@@ -219,9 +220,7 @@ public class RestServices {
             cleanupWfsResources.run();
         });
 
-        emitter.onError(throwable -> {
-            WfsErrorHandler.handleError((Exception) throwable, uuid, emitter, cleanupWfsResources);
-        });
+        emitter.onError(throwable -> WfsErrorHandler.handleError((Exception) throwable, uuid, emitter, cleanupWfsResources));
 
         // Validate parameters
         if (uuid == null || layerName == null || layerName.trim().isEmpty()) {
@@ -270,7 +269,8 @@ public class RestServices {
 
                 // STEP 3: Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
                 String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
-                        uuid, startDate, endDate, multiPolygon, fields, layerName);
+                        uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat
+                );
 
                 emitter.send(SseEmitter.event()
                         .name("wfs-request-ready")

@@ -101,7 +101,8 @@ public class DownloadWfsDataService {
             String endDate,
             Object multiPolygon,
             List<String> fields,
-            String layerName) {
+            String layerName,
+            String outputFormat) {
 
         DescribeLayerResponse describeLayerResponse = wmsServer.describeLayer(uuid, FeatureRequest.builder().layerName(layerName).build());
 
@@ -114,7 +115,13 @@ public class DownloadWfsDataService {
             wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
             wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
 
-            wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
+            wfsFieldModel = wfsServer.getDownloadableFields(
+                    uuid,
+                    WfsServer.WfsFeatureRequest.builder()
+                            .layerName(wfsTypeName)
+                            .server(wfsServerUrl)
+                            .build()
+            );
             log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
         } else {
             Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitle(uuid, layerName);
@@ -137,7 +144,12 @@ public class DownloadWfsDataService {
         String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, wfsFieldModel);
 
         // Build final WFS request URL
-        String wfsRequestUrl = wfsServer.createWfsRequestUrl(wfsServerUrl, wfsTypeName, fields, cqlFilter, null);
+        String wfsRequestUrl = wfsServer.createWfsRequestUrl(
+                wfsServerUrl,
+                wfsTypeName,
+                fields,
+                cqlFilter,
+                outputFormat);
 
         log.info("Prepared WFS request URL: {}", wfsRequestUrl);
         return wfsRequestUrl;

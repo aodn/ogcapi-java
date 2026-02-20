@@ -113,7 +113,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with null dates (non-specified dates from frontend)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, null, null, null, null, layerName
+                uuid, null, null, null, null, layerName, null
         );
 
         // Verify URL doesn't contain temporal filter when dates are null
@@ -145,7 +145,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with empty string dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, "", "", null, null, layerName
+                uuid, "", "", null, null, layerName, null
         );
 
         // Verify URL doesn't contain temporal filter when dates are empty
@@ -179,7 +179,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with valid dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, endDate, null, null, layerName
+                uuid, startDate, endDate, null, null, layerName, null
         );
 
         // Verify URL contains temporal filter when valid dates are provided
@@ -215,7 +215,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with only start date (end date is null)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, null, null, null, layerName
+                uuid, startDate, null, null, null, layerName, null
         );
 
         // Verify URL doesn't contain temporal filter when only one date is provided
@@ -249,7 +249,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with MM-YYYY format dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, endDate, null, null, layerName
+                uuid, startDate, endDate, null, null, layerName, null
         );
 
         // Verify URL contains temporal filter with converted dates
@@ -276,7 +276,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with no WFS server URL available
         Exception exception = assertThrows(IllegalArgumentException.class, () -> downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, null, null, null, null, layerName
+                uuid, null, null, null, null, layerName, null
         ));
 
         assertTrue(exception.getMessage().contains("No WFS server URL found"));
