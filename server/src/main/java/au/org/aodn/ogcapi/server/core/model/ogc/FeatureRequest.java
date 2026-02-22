@@ -31,20 +31,22 @@ public class FeatureRequest implements Serializable {
 
     @Getter
     public enum GeoServerOutputFormat {
-        GML2("GML2"),
-        GML3("GML3"),
-        GML32("gml32"),
-        SHAPE_ZIP("shape-zip"),  // also accepted as "SHAPE-ZIP"
-        CSV("text/csv"),
-        JSON(MediaType.APPLICATION_JSON_VALUE), // also "json" for backward compatibility
-        GEOJSON("application/geo+json"),
-        KML("KML"),
-        UNKNOWN("unknown");
+        GML2("GML2", "application/gml+xml"),
+        GML3("GML3", "application/gml+xml"),
+        GML32("gml32", "application/gml+xml"),
+        SHAPE_ZIP("shape-zip", "application/zip"),  // also accepted as "SHAPE-ZIP"
+        CSV("text/csv", "text/csv"),
+        JSON(MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE), // also "json" for backward compatibility
+        GEOJSON("application/geo+json", "application/geo+json"),
+        KML("KML", "application/vnd.google-earth.kml+xml"),
+        UNKNOWN("unknown", "application/octet-stream");
 
         private final String value;
+        private final String mediaType;
 
-        GeoServerOutputFormat(String value) {
+        GeoServerOutputFormat(String value, String mediaType) {
             this.value = value;
+            this.mediaType = mediaType;
         }
 
         public static GeoServerOutputFormat fromString(String s) {
