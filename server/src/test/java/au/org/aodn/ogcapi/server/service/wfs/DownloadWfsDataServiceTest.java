@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.service.wfs;
 
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
@@ -85,7 +86,10 @@ public class DownloadWfsDataServiceTest {
 
 
         service.executeWfsRequestWithSse(
-                "http://mock/wfs?...", "uuid-123", "layer:test", "text/csv",
+                "http://mock/wfs?...",
+                "uuid-123",
+                "layer:test",
+                FeatureRequest.GeoServerOutputFormat.CSV.getValue(),
                 emitter, new AtomicBoolean());
 
         // Wait for processing (use Awaitility in real tests)
@@ -113,6 +117,7 @@ public class DownloadWfsDataServiceTest {
         DownloadWfsDataService service = new DownloadWfsDataService(
                 wmsServer, wfsServer, restTemplateMock, entity, 10);
 
+        // Just some big enough random binary to trigger chunk split
         byte[] originalBytes = new byte[] {
                 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F,
                 0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F,
@@ -145,7 +150,12 @@ public class DownloadWfsDataServiceTest {
                 0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
                 0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
                 (byte)0xE0, (byte)0xE1, (byte)0xE2, (byte)0xE3, (byte)0xE4, (byte)0xE5, (byte)0xE6, (byte)0xE7,
-                (byte)0xF0, (byte)0xF1, (byte)0xF2, (byte)0xF3, (byte)0xF4, (byte)0xF5, (byte)0xF6, (byte)0xF7
+                (byte)0xF0, (byte)0xF1, (byte)0xF2, (byte)0xF3, (byte)0xF4, (byte)0xF5, (byte)0xF6, (byte)0xF7,
+                (byte)0xD0, (byte)0xD1, (byte)0xD2, (byte)0xD3, (byte)0xD4, (byte)0xD5, (byte)0xD6, (byte)0xD7,
+                0x60, 0x61, 0x62, 0x63, 0x64, 0x65, 0x66, 0x67, 0x68, 0x69, 0x6A, 0x6B, 0x6C, 0x6D, 0x6E, 0x6F,
+                0x70, 0x71, 0x72, 0x73, 0x74, 0x75, 0x76, 0x77, 0x78, 0x79, 0x7A, 0x7B, 0x7C, 0x7D, 0x7E, 0x7F,
+                (byte)0xE0, (byte)0xE1, (byte)0xE2, (byte)0xE3, (byte)0xE4, (byte)0xE5, (byte)0xE6, (byte)0xE7,
+                (byte)0xF0, (byte)0xF1, (byte)0xF2, (byte)0xF3, (byte)0xF4, (byte)0xF5,
         };
 
         // Mock WFS response
@@ -184,7 +194,10 @@ public class DownloadWfsDataServiceTest {
 
 
         service.executeWfsRequestWithSse(
-                "http://mock/wfs?...", "uuid-123", "layer:test", "shape-zip",
+                "http://mock/wfs?...",
+                "uuid-123",
+                "layer:test",
+                FeatureRequest.GeoServerOutputFormat.SHAPE_ZIP.getValue(),
                 emitter, new AtomicBoolean());
 
         // Wait for processing (use Awaitility in real tests)
