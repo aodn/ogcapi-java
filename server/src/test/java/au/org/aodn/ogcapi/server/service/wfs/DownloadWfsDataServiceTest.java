@@ -71,6 +71,7 @@ public class DownloadWfsDataServiceTest {
                     }
                     if (data.containsKey("filename")) {
                         // All item proceeded, we can continue the verification
+                        assertEquals("layer:test_uuid-123.csv", data.get("filename"));
                         countDownLatch.countDown();
                     }
                 }
@@ -80,7 +81,7 @@ public class DownloadWfsDataServiceTest {
 
 
         service.executeWfsRequestWithSse(
-                "http://mock/wfs?...", "uuid-123", "layer:test", "csv",
+                "http://mock/wfs?...", "uuid-123", "layer:test", "text/csv",
                 emitter, new AtomicBoolean());
 
         // Wait for processing (use Awaitility in real tests)
