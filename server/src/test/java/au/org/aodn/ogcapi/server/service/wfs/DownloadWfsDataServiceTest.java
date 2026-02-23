@@ -34,7 +34,10 @@ public class DownloadWfsDataServiceTest {
 
     @Mock
     protected HttpEntity<?> entity;
-
+    /**
+     * Test a text file from source is break down into chunk correct and reconstruct correctly
+     * @throws Exception - Not expected
+     */
     @Test
     void verifyDecodeTextCorrectlyForSSE() throws Exception {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
@@ -98,7 +101,10 @@ public class DownloadWfsDataServiceTest {
 
         assertEquals(original, result);
     }
-
+    /**
+     * Test a binary file from source is break down into chunk correct and reconstruct correctly
+     * @throws Exception - Not expected
+     */
     @Test
     void verifyDecodeBinaryCorrectlyForSSE() throws Exception {
         final CountDownLatch countDownLatch = new CountDownLatch(1);
