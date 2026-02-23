@@ -184,7 +184,7 @@ public class DownloadWfsDataServiceTest {
                     }
                     if (data.containsKey("filename")) {
                         // All item proceeded, we can continue the verification
-                        assertEquals("layer:test_uuid-123.shp", data.get("filename"));
+                        assertEquals("layer:test_uuid-123.zip", data.get("filename"));
                         countDownLatch.countDown();
                     }
                 }
