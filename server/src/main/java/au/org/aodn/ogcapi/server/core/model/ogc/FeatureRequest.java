@@ -31,22 +31,24 @@ public class FeatureRequest implements Serializable {
 
     @Getter
     public enum GeoServerOutputFormat {
-        GML2("GML2", "application/gml+xml"),
-        GML3("GML3", "application/gml+xml"),
-        GML32("gml32", "application/gml+xml"),
-        SHAPE_ZIP("shape-zip", "application/zip"),  // also accepted as "SHAPE-ZIP"
-        CSV("text/csv", "text/csv"),
-        JSON(MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE), // also "json" for backward compatibility
-        GEOJSON("application/geo+json", "application/geo+json"),
-        KML("KML", "application/vnd.google-earth.kml+xml"),
-        UNKNOWN("unknown", "application/octet-stream");
+        GML2("GML2", "application/gml+xml", "gml"),
+        GML3("GML3", "application/gml+xml", "gml"),
+        GML32("gml32", "application/gml+xml", "gml"),
+        SHAPE_ZIP("shape-zip", "application/zip", "shp"),  // also accepted as "SHAPE-ZIP"
+        CSV("text/csv", "text/csv", "csv"),
+        JSON(MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE, "json"), // also "json" for backward compatibility
+        GEOJSON("application/geo+json", "application/geo+json", "geojson"),
+        KML("KML", "application/vnd.google-earth.kml+xml", "kml"),
+        UNKNOWN("unknown", "application/octet-stream", "bin");
 
         private final String value;
         private final String mediaType;
+        private final String fileExtension;
 
-        GeoServerOutputFormat(String value, String mediaType) {
+        GeoServerOutputFormat(String value, String mediaType, String fileExtension) {
             this.value = value;
             this.mediaType = mediaType;
+            this.fileExtension = fileExtension;
         }
 
         public static GeoServerOutputFormat fromString(String s) {

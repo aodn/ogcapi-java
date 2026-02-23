@@ -161,6 +161,7 @@ public class DownloadWfsDataService {
             String wfsRequestUrl,
             String uuid,
             String layerName,
+            String outputFormat,
             SseEmitter emitter,
             AtomicBoolean wfsServerResponded) {
         restTemplate.execute(
@@ -187,59 +188,35 @@ public class DownloadWfsDataService {
                     int bytesRead;
                     long totalBytes = 0;
                     int chunkNumber = 0;
-                    long lastProgressTime = System.currentTimeMillis();
                     ByteArrayOutputStream chunkBuffer = new ByteArrayOutputStream();
 
                     while ((bytesRead = inputStream.read(buffer)) != -1) {
                         chunkBuffer.write(buffer, 0, bytesRead);
                         totalBytes += bytesRead;
 
-                        long currentTime = System.currentTimeMillis();
-
-                        // Send chunk when buffer is full OR every 2 seconds
-                        if (chunkBuffer.size() >= 16384 ||
-                                (currentTime - lastProgressTime >= 2000)) {
-
+                        // Send when buffer >= 16KB **and** size divisible by 3 (for clean Base64)
+                        while (chunkBuffer.size() >= 16384 && chunkBuffer.size() % 3 == 0) {
                             byte[] chunkBytes = chunkBuffer.toByteArray();
+                            String encodedData = Base64.getEncoder().encodeToString(chunkBytes);
 
-                            // Ensure Base64 alignment
-                            // Base64 works in 3-byte groups, so chunk size should be divisible by 3
-                            int alignedSize = (chunkBytes.length / 3) * 3;
+                            emitter.send(SseEmitter.event()
+                                    .name("file-chunk")
+                                    .data(Map.of(
+                                            "chunkNumber", ++chunkNumber,
+                                            "data", encodedData,
+                                            "chunkSize", chunkBytes.length,
+                                            "totalBytes", totalBytes,
+                                            "timestamp", System.currentTimeMillis()
+                                    ))
+                                    .id(String.valueOf(chunkNumber)));
 
-                            if (alignedSize > 0) {
-                                // Send the aligned portion
-                                byte[] alignedChunk = Arrays.copyOf(chunkBytes, alignedSize);
-                                String encodedData = Base64.getEncoder().encodeToString(alignedChunk);
-
-                                emitter.send(SseEmitter.event()
-                                        .name("file-chunk")
-                                        .data(Map.of(
-                                                "chunkNumber", ++chunkNumber,
-                                                "data", encodedData,
-                                                "chunkSize", alignedChunk.length,
-                                                "totalBytes", totalBytes,
-                                                "timestamp", currentTime
-                                        ))
-                                        .id(String.valueOf(chunkNumber)));
-
-                                // Keep the remaining bytes for next chunk
-                                if (alignedSize < chunkBytes.length) {
-                                    byte[] remainder = Arrays.copyOfRange(chunkBytes, alignedSize, chunkBytes.length);
-                                    chunkBuffer.reset();
-                                    chunkBuffer.write(remainder);
-                                } else {
-                                    chunkBuffer.reset();
-                                }
-
-                                lastProgressTime = currentTime;
-                            }
+                            chunkBuffer.reset();
                         }
                     }
 
-                    // Send final chunk if any remains
+                    // Final chunk (may not be %3==0, but client Base64 decoder usually handles it)
                     if (chunkBuffer.size() > 0) {
-                        String encodedData = Base64.getEncoder()
-                                .encodeToString(chunkBuffer.toByteArray());
+                        String encodedData = Base64.getEncoder().encodeToString(chunkBuffer.toByteArray());
                         emitter.send(SseEmitter.event()
                                 .name("file-chunk")
                                 .data(Map.of(
@@ -258,7 +235,8 @@ public class DownloadWfsDataService {
                                     "totalBytes", totalBytes,
                                     "totalChunks", chunkNumber,
                                     "message", "WFS data download completed successfully",
-                                    "filename", layerName + "_" + uuid + ".csv"
+                                    "media-type", FeatureRequest.GeoServerOutputFormat.fromString(outputFormat).getMediaType(),
+                                    "filename", String.format("%s_%s.%s", layerName, uuid, FeatureRequest.GeoServerOutputFormat.fromString(outputFormat).getFileExtension())
                             )));
 
                     // Close SSE connection with completion

@@ -2,7 +2,6 @@ package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
-import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -276,7 +275,6 @@ public class RestServices {
                 emitter.send(SseEmitter.event()
                         .name("wfs-request-ready")
                         .data(Map.of(
-                                "media-type", FeatureRequest.GeoServerOutputFormat.fromString(outputFormat).getMediaType(),
                                 "message", "Connecting to WFS server...",
                                 "timestamp", System.currentTimeMillis()
                         )));
@@ -286,6 +284,7 @@ public class RestServices {
                         wfsRequestUrl,
                         uuid,
                         layerName,
+                        outputFormat,
                         emitter,
                         wfsServerResponded
                 );
