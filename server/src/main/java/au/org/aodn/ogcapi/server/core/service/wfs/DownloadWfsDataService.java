@@ -9,6 +9,7 @@ import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -27,17 +28,20 @@ public class DownloadWfsDataService {
     private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
     private final HttpEntity<?> pretendUserEntity;
+    private final int chunkSize;
 
     public DownloadWfsDataService(
             WmsServer wmsServer,
             WfsServer wfsServer,
             RestTemplate restTemplate,
-            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity
+            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
+            @Value("${app.sse.chunkSize:16384}") int chunkSize
     ) {
         this.wmsServer = wmsServer;
         this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
         this.pretendUserEntity = pretendUserEntity;
+        this.chunkSize = chunkSize;
     }
 
     /**
@@ -195,7 +199,7 @@ public class DownloadWfsDataService {
                         totalBytes += bytesRead;
 
                         // Send when buffer >= 16KB **and** size divisible by 3 (for clean Base64)
-                        while (chunkBuffer.size() >= 16384 && chunkBuffer.size() % 3 == 0) {
+                        while (chunkBuffer.size() >= chunkSize && chunkBuffer.size() % 3 == 0) {
                             byte[] chunkBytes = chunkBuffer.toByteArray();
                             String encodedData = Base64.getEncoder().encodeToString(chunkBytes);
 

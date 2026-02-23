@@ -60,7 +60,7 @@ public class DownloadWfsDataServiceTest {
         wmsServer = Mockito.spy(new WmsServer(search, wfsServer, pretendUserEntity));
 
         downloadWfsDataService = new DownloadWfsDataService(
-                wmsServer, wfsServer, restTemplate, pretendUserEntity
+                wmsServer, wfsServer, restTemplate, pretendUserEntity, 16384
         );
     }
 
