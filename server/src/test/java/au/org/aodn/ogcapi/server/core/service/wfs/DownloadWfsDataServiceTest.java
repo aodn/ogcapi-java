@@ -7,6 +7,8 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -254,13 +257,10 @@ public class DownloadWfsDataServiceTest {
 
         // Verify URL contains temporal filter with converted dates
         assertNotNull(result);
-        assertTrue(result.contains("typeName=" + layerName));
-        assertTrue(result.contains("cql_filter"), "URL should contain cql_filter");
-        assertTrue(result.contains("DURING"), "CQL filter should contain DURING operator");
-        // Start date should be first day of January 2023
-        assertTrue(result.contains("2023-01-01T00:00:00Z"), "Start date should be converted to first day of month");
-        // End date should be last day of December 2023
-        assertTrue(result.contains("2023-12-31T23:59:59Z"), "End date should be converted to last day of month");
+        assertEquals(
+                "https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2023-01-01T00:00:00Z/2023-12-31T23:59:59Z))",
+                result
+        );
     }
 
     @Test
@@ -310,11 +310,53 @@ public class DownloadWfsDataServiceTest {
                 uuid, startDate, endDate, null, null, layerName, null
         );
 
-        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z", result, "Correct url 1");
+        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
 
         result = downloadWfsDataService.prepareWfsRequestUrl(
                 uuid, startDate, endDate, null, null, layerName, "shape-zip"
         );
-        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z", result, "Correct url 1");
+        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
+    }
+    /**
+     * Make sure the url generated contains the correct polygon
+     * @throws JsonProcessingException - Not expected
+     */
+    @Test
+    public void verifyRequestUrlGenerateCorrectWithPolygon() throws JsonProcessingException {
+        // Setup
+        String uuid = "test-uuid";
+        String layerName = "test:layer";
+        String startDate = "01-2024";  // MM-YYYY format
+        String endDate = "12-2024";    // MM-YYYY format
+        WfsFields wfsFieldModel = createTestWFSFieldModel();
+
+        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
+        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
+        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
+
+        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
+        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
+        when(layerDescription.getQuery()).thenReturn(query);
+        when(query.getTypeName()).thenReturn(layerName);
+
+        doReturn(describeLayerResponse)
+                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(wfsFieldModel)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
+
+        Object multiPolygon = new ObjectMapper().readValue(
+                "{ \"type\": \"MultiPolygon\", \"coordinates\": [[[[112.01192842942288, -22.393450547704845], [129.68986083498982, -22.393450547704845], [129.68986083498982, -12.647778557898718], [112.01192842942288, -12.647778557898718], [112.01192842942288, -22.393450547704845]]], [[[128.29423459244452, 3.5283082597303377], [143.95626242544682, 3.5283082597303377], [143.95626242544682, 13.182067934641196], [128.29423459244452, 13.182067934641196], [128.29423459244452, 3.5283082597303377]]]] }",
+                HashMap.class
+        );
+
+        // Test with MM-YYYY format dates
+        String result = downloadWfsDataService.prepareWfsRequestUrl(
+                uuid, startDate, endDate, multiPolygon, null, layerName, null
+        );
+
+        assertEquals(
+                "https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z)) AND INTERSECTS(geom,MULTIPOLYGON (((112.01192842942288 -22.393450547704845, 129.68986083498982 -22.393450547704845, 129.68986083498982 -12.647778557898718, 112.01192842942288 -12.647778557898718, 112.01192842942288 -22.393450547704845)), ((128.29423459244452 3.5283082597303377, 143.95626242544682 3.5283082597303377, 143.95626242544682 13.182067934641196, 128.29423459244452 13.182067934641196, 128.29423459244452 3.5283082597303377))))",
+                result,
+                "Correct url 1");
     }
 }

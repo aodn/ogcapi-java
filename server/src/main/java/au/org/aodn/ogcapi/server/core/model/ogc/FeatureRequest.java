@@ -34,7 +34,7 @@ public class FeatureRequest implements Serializable {
         GML2("GML2", "application/gml+xml", "gml"),
         GML3("GML3", "application/gml+xml", "gml"),
         GML32("gml32", "application/gml+xml", "gml"),
-        SHAPE_ZIP("shape-zip", "application/zip", "shp"),  // also accepted as "SHAPE-ZIP"
+        SHAPE_ZIP("shape-zip", "application/zip", "zip"),  // also accepted as "SHAPE-ZIP"
         CSV("text/csv", "text/csv", "csv"),
         JSON(MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE, "json"), // also "json" for backward compatibility
         GEOJSON("application/geo+json", "application/geo+json", "geojson"),

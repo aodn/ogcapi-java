@@ -43,11 +43,10 @@ public class DownloadWfsDataService {
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
     }
-
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WfsFields wfsFieldModel) {
+    protected String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WfsFields wfsFieldModel) {
         StringBuilder cqlFilter = new StringBuilder();
 
         if (wfsFieldModel == null || wfsFieldModel.getFields() == null) {
@@ -56,23 +55,23 @@ public class DownloadWfsDataService {
 
         List<WfsField> fields = wfsFieldModel.getFields();
 
-        // Find temporal field
-        Optional<WfsField> temporalField = fields.stream()
+        // Possible to have multiple days, better to consider all
+        List<WfsField> temporalField = fields.stream()
                 .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
-                .findFirst();
+                .toList();
 
         // Add temporal filter only if both dates are specified
-        if (temporalField.isPresent() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
-            String fieldName = temporalField.get().getName();
-            cqlFilter.append(fieldName)
-                    .append(" DURING ")
-                    .append(startDate).append("T00:00:00Z/")
-                    .append(endDate).append("T23:59:59Z");
+        if (!temporalField.isEmpty() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+            List<String> cqls = new ArrayList<>();
+            temporalField.forEach(temp ->
+                cqls.add(String.format("(%s DURING %sT00:00:00Z/%sT23:59:59Z)", temp.getName(), startDate, endDate))
+            );
+            cqlFilter.append("(").append(String.join(" OR ", cqls)).append(")");
         }
 
         // Find geometry field
         Optional<WfsField> geometryField = fields.stream()
-                .filter(field -> "geometrypropertytype".equals(field.getType()))
+                .filter(field -> "geometrypropertytype".equalsIgnoreCase(field.getType()))
                 .findFirst();
 
         // Add spatial filter
@@ -133,7 +132,13 @@ public class DownloadWfsDataService {
             if (featureServerUrl.isPresent()) {
                 wfsServerUrl = featureServerUrl.get();
                 wfsTypeName = layerName;
-                wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
+                wfsFieldModel = wfsServer.getDownloadableFields(
+                        uuid,
+                        WfsServer.WfsFeatureRequest.builder()
+                                .layerName(wfsTypeName)
+                                .server(wfsServerUrl)
+                                .build()
+                );
                 log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
             } else {
                 throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
