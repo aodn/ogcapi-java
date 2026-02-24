@@ -20,8 +20,8 @@ public class DatasetDownloadEnums {
         COLLECTION_TITLE("collection_title"),
         FULL_METADATA_LINK("full_metadata_link"),
         SUGGESTED_CITATION("suggested_citation"),
-        KEY("key")
-        ;
+        KEY("key"),
+        OUTPUT_FORMAT("output_format");
 
         private final String value;
 

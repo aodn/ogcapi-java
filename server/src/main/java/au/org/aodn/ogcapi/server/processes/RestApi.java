@@ -9,6 +9,7 @@ import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -125,14 +126,19 @@ public class RestApi implements ProcessesApi {
             String startDate = body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue()).toString();
             String endDate = body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue()).toString();
             String layerName = body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue()).toString();
+            String outputFormat = body.getInputs().get(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue()).toString();
             var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
 
             List<String> fields = body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue()) instanceof List<?> list
                     ? list.stream().map(String::valueOf).toList()
                     : null;
 
+            if(FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
+                throw new IllegalArgumentException(String.format("Output format %s not supported", outputFormat));
+            }
+
             return restServices.downloadWfsDataWithSse(
-                    uuid, startDate, endDate, multiPolygon, fields, layerName, emitter
+                    uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, emitter
             );
 
         } catch (Exception e) {

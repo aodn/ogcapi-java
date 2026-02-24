@@ -9,6 +9,7 @@ import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
@@ -27,23 +28,25 @@ public class DownloadWfsDataService {
     private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
     private final HttpEntity<?> pretendUserEntity;
+    private final int chunkSize;
 
     public DownloadWfsDataService(
             WmsServer wmsServer,
             WfsServer wfsServer,
             RestTemplate restTemplate,
-            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity
+            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
+            @Value("${app.sse.chunkSize:16384}") int chunkSize
     ) {
         this.wmsServer = wmsServer;
         this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
         this.pretendUserEntity = pretendUserEntity;
+        this.chunkSize = chunkSize;
     }
-
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    private String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WfsFields wfsFieldModel) {
+    protected String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WfsFields wfsFieldModel) {
         StringBuilder cqlFilter = new StringBuilder();
 
         if (wfsFieldModel == null || wfsFieldModel.getFields() == null) {
@@ -52,23 +55,23 @@ public class DownloadWfsDataService {
 
         List<WfsField> fields = wfsFieldModel.getFields();
 
-        // Find temporal field
-        Optional<WfsField> temporalField = fields.stream()
+        // Possible to have multiple days, better to consider all
+        List<WfsField> temporalField = fields.stream()
                 .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
-                .findFirst();
+                .toList();
 
         // Add temporal filter only if both dates are specified
-        if (temporalField.isPresent() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
-            String fieldName = temporalField.get().getName();
-            cqlFilter.append(fieldName)
-                    .append(" DURING ")
-                    .append(startDate).append("T00:00:00Z/")
-                    .append(endDate).append("T23:59:59Z");
+        if (!temporalField.isEmpty() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+            List<String> cqls = new ArrayList<>();
+            temporalField.forEach(temp ->
+                cqls.add(String.format("(%s DURING %sT00:00:00Z/%sT23:59:59Z)", temp.getName(), startDate, endDate))
+            );
+            cqlFilter.append("(").append(String.join(" OR ", cqls)).append(")");
         }
 
         // Find geometry field
         Optional<WfsField> geometryField = fields.stream()
-                .filter(field -> "geometrypropertytype".equals(field.getType()))
+                .filter(field -> "geometrypropertytype".equalsIgnoreCase(field.getType()))
                 .findFirst();
 
         // Add spatial filter
@@ -101,7 +104,8 @@ public class DownloadWfsDataService {
             String endDate,
             Object multiPolygon,
             List<String> fields,
-            String layerName) {
+            String layerName,
+            String outputFormat) {
 
         DescribeLayerResponse describeLayerResponse = wmsServer.describeLayer(uuid, FeatureRequest.builder().layerName(layerName).build());
 
@@ -114,7 +118,13 @@ public class DownloadWfsDataService {
             wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
             wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
 
-            wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
+            wfsFieldModel = wfsServer.getDownloadableFields(
+                    uuid,
+                    WfsServer.WfsFeatureRequest.builder()
+                            .layerName(wfsTypeName)
+                            .server(wfsServerUrl)
+                            .build()
+            );
             log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
         } else {
             Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitle(uuid, layerName);
@@ -122,7 +132,13 @@ public class DownloadWfsDataService {
             if (featureServerUrl.isPresent()) {
                 wfsServerUrl = featureServerUrl.get();
                 wfsTypeName = layerName;
-                wfsFieldModel = wfsServer.getDownloadableFields(uuid, WfsServer.WfsFeatureRequest.builder().layerName(wfsTypeName).server(wfsServerUrl).build());
+                wfsFieldModel = wfsServer.getDownloadableFields(
+                        uuid,
+                        WfsServer.WfsFeatureRequest.builder()
+                                .layerName(wfsTypeName)
+                                .server(wfsServerUrl)
+                                .build()
+                );
                 log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
             } else {
                 throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
@@ -137,7 +153,12 @@ public class DownloadWfsDataService {
         String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, wfsFieldModel);
 
         // Build final WFS request URL
-        String wfsRequestUrl = wfsServer.createWfsRequestUrl(wfsServerUrl, wfsTypeName, fields, cqlFilter, null);
+        String wfsRequestUrl = wfsServer.createWfsRequestUrl(
+                wfsServerUrl,
+                wfsTypeName,
+                fields,
+                cqlFilter,
+                outputFormat);
 
         log.info("Prepared WFS request URL: {}", wfsRequestUrl);
         return wfsRequestUrl;
@@ -149,6 +170,7 @@ public class DownloadWfsDataService {
             String wfsRequestUrl,
             String uuid,
             String layerName,
+            String outputFormat,
             SseEmitter emitter,
             AtomicBoolean wfsServerResponded) {
         restTemplate.execute(
@@ -175,59 +197,35 @@ public class DownloadWfsDataService {
                     int bytesRead;
                     long totalBytes = 0;
                     int chunkNumber = 0;
-                    long lastProgressTime = System.currentTimeMillis();
                     ByteArrayOutputStream chunkBuffer = new ByteArrayOutputStream();
 
                     while ((bytesRead = inputStream.read(buffer)) != -1) {
                         chunkBuffer.write(buffer, 0, bytesRead);
                         totalBytes += bytesRead;
 
-                        long currentTime = System.currentTimeMillis();
-
-                        // Send chunk when buffer is full OR every 2 seconds
-                        if (chunkBuffer.size() >= 16384 ||
-                                (currentTime - lastProgressTime >= 2000)) {
-
+                        // Send when buffer >= 16KB **and** size divisible by 3 (for clean Base64)
+                        while (chunkBuffer.size() >= chunkSize && chunkBuffer.size() % 3 == 0) {
                             byte[] chunkBytes = chunkBuffer.toByteArray();
+                            String encodedData = Base64.getEncoder().encodeToString(chunkBytes);
 
-                            // Ensure Base64 alignment
-                            // Base64 works in 3-byte groups, so chunk size should be divisible by 3
-                            int alignedSize = (chunkBytes.length / 3) * 3;
+                            emitter.send(SseEmitter.event()
+                                    .name("file-chunk")
+                                    .data(Map.of(
+                                            "chunkNumber", ++chunkNumber,
+                                            "data", encodedData,
+                                            "chunkSize", chunkBytes.length,
+                                            "totalBytes", totalBytes,
+                                            "timestamp", System.currentTimeMillis()
+                                    ))
+                                    .id(String.valueOf(chunkNumber)));
 
-                            if (alignedSize > 0) {
-                                // Send the aligned portion
-                                byte[] alignedChunk = Arrays.copyOf(chunkBytes, alignedSize);
-                                String encodedData = Base64.getEncoder().encodeToString(alignedChunk);
-
-                                emitter.send(SseEmitter.event()
-                                        .name("file-chunk")
-                                        .data(Map.of(
-                                                "chunkNumber", ++chunkNumber,
-                                                "data", encodedData,
-                                                "chunkSize", alignedChunk.length,
-                                                "totalBytes", totalBytes,
-                                                "timestamp", currentTime
-                                        ))
-                                        .id(String.valueOf(chunkNumber)));
-
-                                // Keep the remaining bytes for next chunk
-                                if (alignedSize < chunkBytes.length) {
-                                    byte[] remainder = Arrays.copyOfRange(chunkBytes, alignedSize, chunkBytes.length);
-                                    chunkBuffer.reset();
-                                    chunkBuffer.write(remainder);
-                                } else {
-                                    chunkBuffer.reset();
-                                }
-
-                                lastProgressTime = currentTime;
-                            }
+                            chunkBuffer.reset();
                         }
                     }
 
-                    // Send final chunk if any remains
+                    // Final chunk (may not be %3==0, but client Base64 decoder usually handles it)
                     if (chunkBuffer.size() > 0) {
-                        String encodedData = Base64.getEncoder()
-                                .encodeToString(chunkBuffer.toByteArray());
+                        String encodedData = Base64.getEncoder().encodeToString(chunkBuffer.toByteArray());
                         emitter.send(SseEmitter.event()
                                 .name("file-chunk")
                                 .data(Map.of(
@@ -246,7 +244,8 @@ public class DownloadWfsDataService {
                                     "totalBytes", totalBytes,
                                     "totalChunks", chunkNumber,
                                     "message", "WFS data download completed successfully",
-                                    "filename", layerName + "_" + uuid + ".csv"
+                                    "media-type", FeatureRequest.GeoServerOutputFormat.fromString(outputFormat).getMediaType(),
+                                    "filename", String.format("%s_%s.%s", layerName, uuid, FeatureRequest.GeoServerOutputFormat.fromString(outputFormat).getFileExtension())
                             )));
 
                     // Close SSE connection with completion

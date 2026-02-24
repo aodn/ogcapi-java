@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.model.ogc;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
+import org.springframework.http.MediaType;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -25,6 +26,43 @@ public class FeatureRequest implements Serializable {
                 return wildcard;  // or throw exception / return default
             }
             return valueOf(input.trim());
+        }
+    }
+
+    @Getter
+    public enum GeoServerOutputFormat {
+        GML2("GML2", "application/gml+xml", "gml"),
+        GML3("GML3", "application/gml+xml", "gml"),
+        GML32("gml32", "application/gml+xml", "gml"),
+        SHAPE_ZIP("shape-zip", "application/zip", "zip"),  // also accepted as "SHAPE-ZIP"
+        CSV("text/csv", "text/csv", "csv"),
+        JSON(MediaType.APPLICATION_JSON_VALUE, MediaType.APPLICATION_JSON_VALUE, "json"), // also "json" for backward compatibility
+        GEOJSON("application/geo+json", "application/geo+json", "geojson"),
+        KML("KML", "application/vnd.google-earth.kml+xml", "kml"),
+        UNKNOWN("unknown", "application/octet-stream", "bin");
+
+        private final String value;
+        private final String mediaType;
+        private final String fileExtension;
+
+        GeoServerOutputFormat(String value, String mediaType, String fileExtension) {
+            this.value = value;
+            this.mediaType = mediaType;
+            this.fileExtension = fileExtension;
+        }
+
+        public static GeoServerOutputFormat fromString(String s) {
+            for(GeoServerOutputFormat f : GeoServerOutputFormat.values()) {
+                if(f.value.equalsIgnoreCase(s)) {
+                    return f;
+                }
+            }
+            return UNKNOWN; // or throw custom exception
+        }
+
+        @Override
+        public String toString() {
+            return value;
         }
     }
 
@@ -51,6 +89,9 @@ public class FeatureRequest implements Serializable {
 
     @Schema(description = "Y")
     private BigDecimal y;
+
+    @Schema(description = "Data output format")
+    private GeoServerOutputFormat outputFormat;
 
     @Schema(description = "Wave buoy name")
     private String waveBuoy;

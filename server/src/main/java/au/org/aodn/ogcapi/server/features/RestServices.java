@@ -144,25 +144,30 @@ public class RestServices extends OGCApiService {
 
         String result = wfsServer.getFieldValues(collectionId, wfsFeatureRequest, new ParameterizedTypeReference<>() {});
 
-        FeatureJSON json = new FeatureJSON();
-        try {
-            @SuppressWarnings("unchecked")
-            FeatureCollection<SimpleFeatureType, SimpleFeature> collection = json.readFeatureCollection(new StringReader(result));
-            try(FeatureIterator<SimpleFeature> i = collection.features()) {
-                Map<String, List<Object>> results = new HashMap<>();
-                while(i.hasNext()) {
-                    SimpleFeature s = i.next();
-                    s.getProperties()
-                            .forEach(property -> {
-                                results.computeIfAbsent(property.getName().toString(), k -> new ArrayList<>());
-                                results.get(property.getName().toString()).add(s.getAttribute(property.getName()));
-                            });
+        if(result != null) {
+            FeatureJSON json = new FeatureJSON();
+            try {
+                @SuppressWarnings("unchecked")
+                FeatureCollection<SimpleFeatureType, SimpleFeature> collection = json.readFeatureCollection(new StringReader(result));
+                try (FeatureIterator<SimpleFeature> i = collection.features()) {
+                    Map<String, List<Object>> results = new HashMap<>();
+                    while (i.hasNext()) {
+                        SimpleFeature s = i.next();
+                        s.getProperties()
+                                .forEach(property -> {
+                                    results.computeIfAbsent(property.getName().toString(), k -> new ArrayList<>());
+                                    results.get(property.getName().toString()).add(s.getAttribute(property.getName()));
+                                });
+                    }
+                    return ResponseEntity.ok().body(results);
                 }
-                return ResponseEntity.ok().body(results);
+            } catch (IOException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
             }
         }
-        catch (IOException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        else {
+            // Field not found
+            return ResponseEntity.notFound().build();
         }
     }
     /**
