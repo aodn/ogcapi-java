@@ -1,9 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.wfs;
 
-import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
-import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -25,6 +23,8 @@ import org.springframework.web.client.RestTemplate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -63,7 +63,7 @@ public class DownloadWfsDataServiceTest {
         wmsServer = Mockito.spy(new WmsServer(search, wfsServer, pretendUserEntity));
 
         downloadWfsDataService = new DownloadWfsDataService(
-                wmsServer, wfsServer, restTemplate, pretendUserEntity, 16384
+                wfsServer, restTemplate, pretendUserEntity, 16384
         );
     }
 
@@ -100,17 +100,8 @@ public class DownloadWfsDataServiceTest {
         String layerName = "test:layer";
         WfsFields wfsFieldModel = createTestWFSFieldModel();
 
-        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
-        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
-        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-
-        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
-        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
-        when(layerDescription.getQuery()).thenReturn(query);
-        when(query.getTypeName()).thenReturn(layerName);
-
-        doReturn(describeLayerResponse)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(Optional.of("https://test.com/geoserver/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
         doReturn(wfsFieldModel)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
@@ -132,17 +123,8 @@ public class DownloadWfsDataServiceTest {
         String layerName = "test:layer";
         WfsFields wfsFieldModel = createTestWFSFieldModel();
 
-        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
-        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
-        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-
-        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
-        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
-        when(layerDescription.getQuery()).thenReturn(query);
-        when(query.getTypeName()).thenReturn(layerName);
-
-        doReturn(describeLayerResponse)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(Optional.of("https://test.com/geoserver/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
         doReturn(wfsFieldModel)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
@@ -166,17 +148,8 @@ public class DownloadWfsDataServiceTest {
         String endDate = "2023-12-31";
         WfsFields wfsFieldModel = createTestWFSFieldModel();
 
-        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
-        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
-        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-
-        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
-        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
-        when(layerDescription.getQuery()).thenReturn(query);
-        when(query.getTypeName()).thenReturn(layerName);
-
-        doReturn(describeLayerResponse)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(Optional.of("https://test.com/geoserver/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
         doReturn(wfsFieldModel)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
@@ -202,17 +175,8 @@ public class DownloadWfsDataServiceTest {
         String startDate = "2023-01-01";
         WfsFields wfsFieldModel = createTestWFSFieldModel();
 
-        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
-        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
-        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-
-        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
-        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
-        when(layerDescription.getQuery()).thenReturn(query);
-        when(query.getTypeName()).thenReturn(layerName);
-
-        doReturn(describeLayerResponse)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(Optional.of("https://test.com/geoserver/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
         doReturn(wfsFieldModel)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
@@ -236,17 +200,8 @@ public class DownloadWfsDataServiceTest {
         String endDate = "12-2023";    // MM-YYYY format
         WfsFields wfsFieldModel = createTestWFSFieldModel();
 
-        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
-        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
-        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-
-        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
-        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
-        when(layerDescription.getQuery()).thenReturn(query);
-        when(query.getTypeName()).thenReturn(layerName);
-
-        doReturn(describeLayerResponse)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(Optional.of("https://test.com/geoserver/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
         doReturn(wfsFieldModel)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
@@ -269,10 +224,8 @@ public class DownloadWfsDataServiceTest {
         String uuid = "test-uuid";
         String layerName = "test:layer";
 
-        doReturn(null)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
-        doReturn(java.util.Optional.empty())
-                .when(wfsServer).getFeatureServerUrlByTitle(eq(uuid), eq(layerName));
+        doReturn(Optional.empty())
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
 
         // Test with no WFS server URL available
         Exception exception = assertThrows(IllegalArgumentException.class, () -> downloadWfsDataService.prepareWfsRequestUrl(
@@ -291,17 +244,8 @@ public class DownloadWfsDataServiceTest {
         String endDate = "12-2024";    // MM-YYYY format
         WfsFields wfsFieldModel = createTestWFSFieldModel();
 
-        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
-        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
-        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-
-        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
-        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
-        when(layerDescription.getQuery()).thenReturn(query);
-        when(query.getTypeName()).thenReturn(layerName);
-
-        doReturn(describeLayerResponse)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(Optional.of("https://test.com/geoserver/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
         doReturn(wfsFieldModel)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
@@ -317,8 +261,10 @@ public class DownloadWfsDataServiceTest {
         );
         assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
     }
+
     /**
      * Make sure the url generated contains the correct polygon
+     *
      * @throws JsonProcessingException - Not expected
      */
     @Test
@@ -330,17 +276,8 @@ public class DownloadWfsDataServiceTest {
         String endDate = "12-2024";    // MM-YYYY format
         WfsFields wfsFieldModel = createTestWFSFieldModel();
 
-        DescribeLayerResponse describeLayerResponse = mock(DescribeLayerResponse.class);
-        DescribeLayerResponse.LayerDescription layerDescription = mock(DescribeLayerResponse.LayerDescription.class);
-        DescribeLayerResponse.Query query = mock(DescribeLayerResponse.Query.class);
-
-        when(describeLayerResponse.getLayerDescription()).thenReturn(layerDescription);
-        when(layerDescription.getWfs()).thenReturn("https://test.com/geoserver/wfs");
-        when(layerDescription.getQuery()).thenReturn(query);
-        when(query.getTypeName()).thenReturn(layerName);
-
-        doReturn(describeLayerResponse)
-                .when(wmsServer).describeLayer(eq(uuid), any(FeatureRequest.class));
+        doReturn(Optional.of("https://test.com/geoserver/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), eq(layerName));
         doReturn(wfsFieldModel)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 

@@ -79,18 +79,26 @@ public class WfsServer {
         this.pretendUserEntity = entity;
         this.wfsDefaultParam = wfsDefaultParam;
     }
+
     /**
      * Build WFS GetFeature URL
      */
     protected String createWfsRequestUrl(String wfsUrl, String layerName, List<String> fields, String cqlFilter, String outputFormat) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(wfsUrl)
-                .scheme("https");  // Force HTTPS to fix redirect
+        UriComponents components = UriComponentsBuilder.fromUriString(wfsUrl).build();
+        UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
+                .scheme("https")  // Force HTTPS to fix redirect
+                .host(components.getHost())
+                .path(Objects.requireNonNull(components.getPath()));
+
+        if (components.getPort() != -1) {
+            builder.port(components.getPort());
+        }
 
         Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
         param.put("typeName", layerName);
         param.put("outputFormat", outputFormat == null ? "text/csv" : outputFormat);
 
-        if(fields != null) {
+        if (fields != null) {
             param.put("propertyName", String.join(",", fields));
         }
         // Add general query parameters
@@ -107,6 +115,7 @@ public class WfsServer {
 
         return builder.build().toUriString();
     }
+
     /**
      * Get all WFS links from a collection.
      *
@@ -194,7 +203,7 @@ public class WfsServer {
                 param.put("TYPENAME", request.getLayerName());
                 param.put("outputFormat", "application/json");
 
-                if(request.getProperties() != null && !request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
+                if (request.getProperties() != null && !request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
                     param.put("propertyName", String.join(
                             ",",
                             request.getProperties().stream().map(Enum::name).toList())
@@ -276,7 +285,7 @@ public class WfsServer {
                     if (uri != null) {
                         ResponseEntity<T> response =
                                 restTemplate.exchange(uri, HttpMethod.GET, pretendUserEntity, tClass
-                        );
+                                );
 
                         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                             return response.getBody();
@@ -289,11 +298,12 @@ public class WfsServer {
         }
         return null;
     }
+
     /**
      * Get the downloadable fields for a given collection id and layer name
      *
-     * @param collectionId     - The uuid of the collection
-     * @param request          - The feature request containing the layer name
+     * @param collectionId - The uuid of the collection
+     * @param request      - The feature request containing the layer name
      * @return - WFSFieldModel containing typename and fields
      */
     @Cacheable(value = DOWNLOADABLE_FIELDS)
@@ -402,27 +412,6 @@ public class WfsServer {
         }
     }
 
-    /**
-     * Find the url that is able to get WFS call, this can be found in ai:Group
-     *
-     * @param collectionId - The uuid
-     * @param layerName    - The layer name to match the title
-     * @return - The first wfs server link if found
-     */
-    public Optional<String> getFeatureServerUrlByTitle(String collectionId, String layerName) {
-        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
-        if (!result.getCollections().isEmpty()) {
-            StacCollectionModel model = result.getCollections().get(0);
-            return model.getLinks()
-                    .stream()
-                    .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER) && link.getTitle().equalsIgnoreCase(layerName))
-                    .map(LinkModel::getHref)
-                    .findFirst();
-        } else {
-            return Optional.empty();
-        }
-    }
 
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group
@@ -435,13 +424,14 @@ public class WfsServer {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if (!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
+            log.info("start to find wfs link for collectionId {} with layerName {}, total links to check {}", collectionId, layerName, model.getLinks().size());
             return model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
                     .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
                     .filter(link -> {
                         Optional<String> name = extractLayernameOrTypenameFromUrl(link.getHref());
-                        return link.getTitle().equalsIgnoreCase(layerName) ||
+                        return roughlyMatch(link.getTitle(), layerName) ||
                                 (name.isPresent() && roughlyMatch(name.get(), layerName));
                     })
                     .map(LinkModel::getHref)
@@ -449,6 +439,27 @@ public class WfsServer {
         } else {
             return Optional.empty();
         }
+    }
+
+
+    /**
+     * Find the WFS server URL for a given collection and layer name.
+     * First tries to match by title or query param, then falls back to the first available WFS link.
+     *
+     * @param collectionId - The uuid
+     * @param layerName    - The layer name to match the title
+     * @return - The matched wfs server link, or the first available one if no match found
+     */
+    public Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+        Optional<String> url = getFeatureServerUrlByTitleOrQueryParam(collectionId, layerName);
+        if (url.isPresent()) {
+            log.debug("Found WFS link by title/query param for collectionId {} with layerName {}: {}", collectionId, layerName, url.get());
+            return url;
+        }
+
+        log.debug("No WFS link matched by title/query param for collectionId {} with layerName {}, falling back to first available WFS link", collectionId, layerName);
+        Optional<List<String>> allUrls = getAllFeatureServerUrls(collectionId);
+        return allUrls.filter(list -> !list.isEmpty()).map(list -> list.get(0));
     }
 
     /**
