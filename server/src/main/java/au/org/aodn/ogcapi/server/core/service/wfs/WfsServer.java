@@ -405,27 +405,6 @@ public class WfsServer {
         }
     }
 
-    /**
-     * Find the url that is able to get WFS call, this can be found in ai:Group
-     *
-     * @param collectionId - The uuid
-     * @param layerName    - The layer name to match the title
-     * @return - The first wfs server link if found
-     */
-    public Optional<String> getFeatureServerUrlByTitle(String collectionId, String layerName) {
-        ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
-        if (!result.getCollections().isEmpty()) {
-            StacCollectionModel model = result.getCollections().get(0);
-            return model.getLinks()
-                    .stream()
-                    .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER) && roughlyMatch(link.getTitle(), layerName))
-                    .map(LinkModel::getHref)
-                    .findFirst();
-        } else {
-            return Optional.empty();
-        }
-    }
 
     /**
      * Find the url that is able to get WFS call, this can be found in ai:Group
@@ -453,6 +432,26 @@ public class WfsServer {
         } else {
             return Optional.empty();
         }
+    }
+
+
+    /**
+     * Find the WFS server URL for a given collection and layer name.
+     * First tries to match by title or query param, then falls back to the first available WFS link.
+     *
+     * @param collectionId - The uuid
+     * @param layerName    - The layer name to match the title
+     * @return - The matched wfs server link, or the first available one if no match found
+     */
+    public Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+        Optional<String> url = getFeatureServerUrlByTitleOrQueryParam(collectionId, layerName);
+        if (url.isPresent()) {
+            return url;
+        }
+
+        log.debug("No WFS link matched by title/query param for collectionId {} with layerName {}, falling back to first available WFS link", collectionId, layerName);
+        Optional<List<String>> allUrls = getAllFeatureServerUrls(collectionId);
+        return allUrls.filter(list -> !list.isEmpty()).map(list -> list.get(0));
     }
 
     /**

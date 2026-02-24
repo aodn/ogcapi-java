@@ -3,7 +3,6 @@ package au.org.aodn.ogcapi.server.core.service.wfs;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
-import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
@@ -24,7 +23,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Service
 public class DownloadWfsDataService {
-    private final WmsServer wmsServer;
     private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
     private final HttpEntity<?> pretendUserEntity;
@@ -37,7 +35,6 @@ public class DownloadWfsDataService {
             @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
             @Value("${app.sse.chunkSize:16384}") int chunkSize
     ) {
-        this.wmsServer = wmsServer;
         this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
         this.pretendUserEntity = pretendUserEntity;
@@ -109,28 +106,14 @@ public class DownloadWfsDataService {
             String layerName,
             String outputFormat) {
 
-//        DescribeLayerResponse describeLayerResponse = wmsServer.describeLayer(uuid, FeatureRequest.builder().layerName(layerName).build());
-
         String wfsServerUrl;
         String wfsTypeName;
         WfsFields wfsFieldModel;
 
-        // We trust the layername from request to be valid
-//        if (describeLayerResponse != null && describeLayerResponse.getLayerDescription().getWfs() != null) {
-//            wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
-//            wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
-//
-//            wfsFieldModel = wfsServer.getDownloadableFields(
-//                    uuid,
-//                    WfsServer.WfsFeatureRequest.builder()
-//                            .layerName(layerName)
-//                            .server(wfsServerUrl)
-//                            .build()
-//            );
-//            log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
-//        } else {
-        Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitleOrQueryParam(uuid, layerName);
+        // Get WFS server URL and field model for the given UUID and layer name
+        Optional<String> featureServerUrl = wfsServer.getFeatureServerUrl(uuid, layerName);
 
+        // Get the wfs fields to build the CQL filter
         if (featureServerUrl.isPresent()) {
             wfsServerUrl = featureServerUrl.get();
             wfsTypeName = layerName;
@@ -141,11 +124,10 @@ public class DownloadWfsDataService {
                             .server(wfsServerUrl)
                             .build()
             );
-            log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
+            log.debug("WFSFieldModel by wfs typename: {}", wfsFieldModel);
         } else {
             throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
         }
-//        }
 
         // Validate start and end dates
         String validStartDate = DatetimeUtils.validateAndFormatDate(startDate, true);
