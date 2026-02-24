@@ -63,7 +63,7 @@ public class DownloadWfsDataServiceTest {
         wmsServer = Mockito.spy(new WmsServer(search, wfsServer, pretendUserEntity));
 
         downloadWfsDataService = new DownloadWfsDataService(
-                wmsServer, wfsServer, restTemplate, pretendUserEntity, 16384
+                wfsServer, restTemplate, pretendUserEntity, 16384
         );
     }
 
@@ -261,8 +261,10 @@ public class DownloadWfsDataServiceTest {
         );
         assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
     }
+
     /**
      * Make sure the url generated contains the correct polygon
+     *
      * @throws JsonProcessingException - Not expected
      */
     @Test

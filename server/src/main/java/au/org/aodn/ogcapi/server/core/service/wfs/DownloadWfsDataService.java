@@ -3,7 +3,6 @@ package au.org.aodn.ogcapi.server.core.service.wfs;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +28,6 @@ public class DownloadWfsDataService {
     private final int chunkSize;
 
     public DownloadWfsDataService(
-            WmsServer wmsServer,
             WfsServer wfsServer,
             RestTemplate restTemplate,
             @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
