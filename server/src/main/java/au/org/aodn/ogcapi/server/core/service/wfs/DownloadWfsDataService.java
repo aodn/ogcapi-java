@@ -43,6 +43,7 @@ public class DownloadWfsDataService {
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
     }
+
     /**
      * Build CQL filter for temporal and spatial constraints
      */
@@ -64,7 +65,7 @@ public class DownloadWfsDataService {
         if (!temporalField.isEmpty() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
             List<String> cqls = new ArrayList<>();
             temporalField.forEach(temp ->
-                cqls.add(String.format("(%s DURING %sT00:00:00Z/%sT23:59:59Z)", temp.getName(), startDate, endDate))
+                    cqls.add(String.format("(%s DURING %sT00:00:00Z/%sT23:59:59Z)", temp.getName(), startDate, endDate))
             );
             cqlFilter.append("(").append(String.join(" OR ", cqls)).append(")");
         }
@@ -95,6 +96,7 @@ public class DownloadWfsDataService {
 
         return cqlFilter.toString();
     }
+
     /**
      * Does collection lookup, WFS validation, field retrieval, and URL building
      */
@@ -107,17 +109,31 @@ public class DownloadWfsDataService {
             String layerName,
             String outputFormat) {
 
-        DescribeLayerResponse describeLayerResponse = wmsServer.describeLayer(uuid, FeatureRequest.builder().layerName(layerName).build());
+//        DescribeLayerResponse describeLayerResponse = wmsServer.describeLayer(uuid, FeatureRequest.builder().layerName(layerName).build());
 
         String wfsServerUrl;
         String wfsTypeName;
         WfsFields wfsFieldModel;
 
-        // Try to get WFS details from DescribeLayer first, then fallback to searching by layer name
-        if (describeLayerResponse != null && describeLayerResponse.getLayerDescription().getWfs() != null) {
-            wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
-            wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
+        // We trust the layername from request to be valid
+//        if (describeLayerResponse != null && describeLayerResponse.getLayerDescription().getWfs() != null) {
+//            wfsServerUrl = describeLayerResponse.getLayerDescription().getWfs();
+//            wfsTypeName = describeLayerResponse.getLayerDescription().getQuery().getTypeName();
+//
+//            wfsFieldModel = wfsServer.getDownloadableFields(
+//                    uuid,
+//                    WfsServer.WfsFeatureRequest.builder()
+//                            .layerName(layerName)
+//                            .server(wfsServerUrl)
+//                            .build()
+//            );
+//            log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
+//        } else {
+        Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitleOrQueryParam(uuid, layerName);
 
+        if (featureServerUrl.isPresent()) {
+            wfsServerUrl = featureServerUrl.get();
+            wfsTypeName = layerName;
             wfsFieldModel = wfsServer.getDownloadableFields(
                     uuid,
                     WfsServer.WfsFeatureRequest.builder()
@@ -125,25 +141,11 @@ public class DownloadWfsDataService {
                             .server(wfsServerUrl)
                             .build()
             );
-            log.info("WFSFieldModel by describeLayer: {}", wfsFieldModel);
+            log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
         } else {
-            Optional<String> featureServerUrl = wfsServer.getFeatureServerUrlByTitle(uuid, layerName);
-
-            if (featureServerUrl.isPresent()) {
-                wfsServerUrl = featureServerUrl.get();
-                wfsTypeName = layerName;
-                wfsFieldModel = wfsServer.getDownloadableFields(
-                        uuid,
-                        WfsServer.WfsFeatureRequest.builder()
-                                .layerName(wfsTypeName)
-                                .server(wfsServerUrl)
-                                .build()
-                );
-                log.info("WFSFieldModel by wfs typename: {}", wfsFieldModel);
-            } else {
-                throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
-            }
+            throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
         }
+//        }
 
         // Validate start and end dates
         String validStartDate = DatetimeUtils.validateAndFormatDate(startDate, true);
@@ -163,6 +165,7 @@ public class DownloadWfsDataService {
         log.info("Prepared WFS request URL: {}", wfsRequestUrl);
         return wfsRequestUrl;
     }
+
     /**
      * Execute WFS request with SSE support
      */

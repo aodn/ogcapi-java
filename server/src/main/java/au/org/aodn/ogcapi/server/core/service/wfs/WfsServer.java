@@ -79,6 +79,7 @@ public class WfsServer {
         this.pretendUserEntity = entity;
         this.wfsDefaultParam = wfsDefaultParam;
     }
+
     /**
      * Build WFS GetFeature URL
      */
@@ -90,7 +91,7 @@ public class WfsServer {
         param.put("typeName", layerName);
         param.put("outputFormat", outputFormat == null ? "text/csv" : outputFormat);
 
-        if(fields != null) {
+        if (fields != null) {
             param.put("propertyName", String.join(",", fields));
         }
         // Add general query parameters
@@ -107,6 +108,7 @@ public class WfsServer {
 
         return builder.build().toUriString();
     }
+
     /**
      * Get all WFS links from a collection.
      *
@@ -194,7 +196,7 @@ public class WfsServer {
                 param.put("TYPENAME", request.getLayerName());
                 param.put("outputFormat", "application/json");
 
-                if(request.getProperties() != null && !request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
+                if (request.getProperties() != null && !request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
                     param.put("propertyName", String.join(
                             ",",
                             request.getProperties().stream().map(Enum::name).toList())
@@ -276,7 +278,7 @@ public class WfsServer {
                     if (uri != null) {
                         ResponseEntity<T> response =
                                 restTemplate.exchange(uri, HttpMethod.GET, pretendUserEntity, tClass
-                        );
+                                );
 
                         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                             return response.getBody();
@@ -289,11 +291,12 @@ public class WfsServer {
         }
         return null;
     }
+
     /**
      * Get the downloadable fields for a given collection id and layer name
      *
-     * @param collectionId     - The uuid of the collection
-     * @param request          - The feature request containing the layer name
+     * @param collectionId - The uuid of the collection
+     * @param request      - The feature request containing the layer name
      * @return - WFSFieldModel containing typename and fields
      */
     @Cacheable(value = DOWNLOADABLE_FIELDS)
@@ -416,7 +419,7 @@ public class WfsServer {
             return model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER) && link.getTitle().equalsIgnoreCase(layerName))
+                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER) && roughlyMatch(link.getTitle(), layerName))
                     .map(LinkModel::getHref)
                     .findFirst();
         } else {
@@ -435,13 +438,14 @@ public class WfsServer {
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if (!result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
+            log.info("start to find wfs link for collectionId {} with layerName {}, total links to check {}", collectionId, layerName, model.getLinks().size());
             return model.getLinks()
                     .stream()
                     .filter(link -> link.getAiGroup() != null)
                     .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
                     .filter(link -> {
                         Optional<String> name = extractLayernameOrTypenameFromUrl(link.getHref());
-                        return link.getTitle().equalsIgnoreCase(layerName) ||
+                        return roughlyMatch(link.getTitle(), layerName) ||
                                 (name.isPresent() && roughlyMatch(name.get(), layerName));
                     })
                     .map(LinkModel::getHref)
