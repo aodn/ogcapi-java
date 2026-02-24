@@ -350,6 +350,50 @@ public class WfsServerTest {
     }
 
     @Test
+    void createWfsRequestUrl_stripsOldParamsFromServerUrl() {
+        // The server URL already has query params that would cause duplicates
+        String serverUrlWithParams = "https://geoserver.imas.utas.edu.au/geoserver/seamap/wfs"
+                + "?version=1.0.0&request=GetFeature&typeName=SeamapAus_VIC_statewide_habitats_2023&outputFormat=SHAPE-ZIP";
+
+        String layerName = "seamap:SeamapAus_VIC_statewide_habitats_2023";
+        String outputFormat = "text/csv";
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+        String result = server.createWfsRequestUrl(serverUrlWithParams, layerName, null, null, outputFormat);
+
+        assertNotNull(result);
+
+        // Old param values from the server URL must NOT appear
+        assertFalse(result.contains("SHAPE-ZIP"), "Old outputFormat value should be removed");
+        assertFalse(result.contains("typeName=SeamapAus_VIC_statewide_habitats_2023&"),
+                "Old typeName (without namespace prefix) should be removed");
+
+        // New param values must be present
+        assertTrue(result.contains("typeName=seamap:SeamapAus_VIC_statewide_habitats_2023"),
+                "New typeName with namespace prefix should be present");
+        assertTrue(result.contains("outputFormat=text/csv"),
+                "New outputFormat should be present");
+
+        // Default download params from config
+        assertTrue(result.contains("SERVICE=WFS"), "SERVICE param should be present");
+        assertTrue(result.contains("VERSION=1.0.0"), "VERSION param should be present");
+        assertTrue(result.contains("REQUEST=GetFeature"), "REQUEST param should be present");
+
+        // No duplicate keys — each param name should appear exactly once
+        String query = result.substring(result.indexOf('?') + 1);
+        String[] pairs = query.split("&");
+        long typeNameCount = java.util.Arrays.stream(pairs).filter(p -> p.toLowerCase().startsWith("typename=")).count();
+        long outputFormatCount = java.util.Arrays.stream(pairs).filter(p -> p.toLowerCase().startsWith("outputformat=")).count();
+        long versionCount = java.util.Arrays.stream(pairs).filter(p -> p.toLowerCase().startsWith("version=")).count();
+        long requestCount = java.util.Arrays.stream(pairs).filter(p -> p.toLowerCase().startsWith("request=")).count();
+
+        assertEquals(1, typeNameCount, "typeName should appear exactly once");
+        assertEquals(1, outputFormatCount, "outputFormat should appear exactly once");
+        assertEquals(1, versionCount, "VERSION should appear exactly once");
+        assertEquals(1, requestCount, "REQUEST should appear exactly once");
+    }
+
+    @Test
     void createCapabilitiesQueryUrl_buildsCorrectUrl() {
         // arrange
         String baseUrl = "https://example.com/wfs?service=WFS&version=1.1.0&request=GetFeature";

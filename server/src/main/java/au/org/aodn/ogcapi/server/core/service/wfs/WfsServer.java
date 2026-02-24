@@ -84,8 +84,15 @@ public class WfsServer {
      * Build WFS GetFeature URL
      */
     protected String createWfsRequestUrl(String wfsUrl, String layerName, List<String> fields, String cqlFilter, String outputFormat) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(wfsUrl)
-                .scheme("https");  // Force HTTPS to fix redirect
+        UriComponents components = UriComponentsBuilder.fromUriString(wfsUrl).build();
+        UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
+                .scheme("https")  // Force HTTPS to fix redirect
+                .host(components.getHost())
+                .path(Objects.requireNonNull(components.getPath()));
+
+        if (components.getPort() != -1) {
+            builder.port(components.getPort());
+        }
 
         Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
         param.put("typeName", layerName);
@@ -446,6 +453,7 @@ public class WfsServer {
     public Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
         Optional<String> url = getFeatureServerUrlByTitleOrQueryParam(collectionId, layerName);
         if (url.isPresent()) {
+            log.debug("Found WFS link by title/query param for collectionId {} with layerName {}: {}", collectionId, layerName, url.get());
             return url;
         }
 
