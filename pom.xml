@@ -101,6 +101,16 @@
 				<artifactId>gt-referencing</artifactId>
 				<version>${org.geotools.version}</version>
 			</dependency>
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-wps</artifactId>
+                <version>${org.geotools.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.geotools</groupId>
+                <artifactId>gt-xml</artifactId>
+                <version>${org.geotools.version}</version>
+            </dependency>
 			<!--
 			https://mvnrepository.com/artifact/org.geotools/gt-epsg-hsql
 			it is use to lookup EPSG values
