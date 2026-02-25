@@ -8,6 +8,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.*;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.ogcapi.server.core.service.geoserver.Server;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -42,7 +43,7 @@ import static au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultPar
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.*;
 
 @Slf4j
-public class WfsServer {
+public class WfsServer implements Server {
     // Cannot use singleton bean as it impacted other dependency
     protected final XmlMapper xmlMapper;
     protected RestTemplateUtils restTemplateUtils;

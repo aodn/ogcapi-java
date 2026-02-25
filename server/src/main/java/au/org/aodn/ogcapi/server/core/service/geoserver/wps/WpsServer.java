@@ -28,7 +28,7 @@ import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
 @Slf4j
-public class WpsServer {
+public class WpsServer implements Server {
 
     protected final RestTemplate restTemplate;
     protected final WmsServer wmsServer;
