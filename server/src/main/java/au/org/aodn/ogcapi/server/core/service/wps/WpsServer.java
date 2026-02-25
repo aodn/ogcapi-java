@@ -1,5 +1,8 @@
 package au.org.aodn.ogcapi.server.core.service.wps;
 
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import lombok.extern.slf4j.Slf4j;
 import net.opengis.ows11.CodeType;
 import net.opengis.ows11.Ows11Factory;
 import net.opengis.wps10.*;
@@ -7,6 +10,9 @@ import org.geotools.wps.WPS;
 import org.geotools.wps.WPSConfiguration;
 import org.geotools.xsd.Encoder;
 import org.opengis.filter.Filter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpEntity;
+import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -19,7 +25,26 @@ import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 public class WpsServer {
+
+    @Autowired
+    protected RestTemplate restTemplate;
+
+    protected WmsServer wmsServer;
+    protected final HttpEntity<?> pretendUserEntity;
+
+    public static class WpsProcessRequest extends FeatureRequest {}
+
+    public WpsServer(WmsServer wmsServer, HttpEntity<?> entity) {
+        this.wmsServer = wmsServer;
+        this.pretendUserEntity = entity;
+    }
+
+    public String getEstimateDownloadSize(String uuid, WpsProcessRequest request) {
+
+        String xml = createEstimateDownloadSize(request.getLayerName(), );
+    }
 
     @SuppressWarnings("unchecked")
     protected String createEstimateDownloadSize(String layerName, Filter filter) throws Exception {
@@ -43,6 +68,20 @@ public class WpsServer {
         }
 
         execute.setDataInputs(inputs);
+
+
+        ResponseFormType responseForm = wpsFactory.createResponseFormType();
+
+        CodeType outputId = owsFactory.createCodeType();
+        outputId.setValue("result");
+
+        OutputDefinitionType rawOutput = wpsFactory.createOutputDefinitionType();
+        rawOutput.setIdentifier(outputId);
+        rawOutput.setMimeType("application/json");
+        responseForm.setRawDataOutput(rawOutput);
+
+        execute.setResponseForm(responseForm);
+
         Encoder encoder = new Encoder(new WPSConfiguration());
         encoder.setIndenting(true);
 

@@ -1,17 +1,26 @@
 package au.org.aodn.ogcapi.server.core.service.wps;
 
+import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
 import org.geotools.factory.CommonFactoryFinder;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(MockitoExtension.class)
 public class WpsServerTest {
+
+    @Mock
+    WmsServer wmsServer;
+
     @Test
     void testCreateEstimateDownloadSize() throws Exception {
-        WpsServer wpsServer = new WpsServer();
+        WpsServer wpsServer = new WpsServer(wmsServer, null);
 
         // 1. Create a Filter for the test (state = 'TAS')
         FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
