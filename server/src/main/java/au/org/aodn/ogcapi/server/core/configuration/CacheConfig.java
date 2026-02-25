@@ -2,8 +2,8 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
 import au.org.aodn.ogcapi.server.core.service.CacheWarm;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import org.ehcache.config.builders.*;
 import org.ehcache.config.units.MemoryUnit;

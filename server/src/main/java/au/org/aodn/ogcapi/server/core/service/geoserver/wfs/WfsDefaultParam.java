@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service.wfs;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,9 +1,9 @@
-package au.org.aodn.ogcapi.server.core.service.wfs;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
