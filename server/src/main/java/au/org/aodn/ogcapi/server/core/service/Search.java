@@ -18,7 +18,7 @@ public interface Search {
     ElasticSearchBase.SearchResult<StacCollectionModel> searchCollections(String id);
     ElasticSearchBase.SearchResult<StacCollectionModel> searchCollections(List<String> ids, String sortBy);
     ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollections(String sortBy) throws Exception;
-    ElasticSearchBase.SearchResult<FeatureGeoJSON>searchFeatureSummary(String collectionId, List<FeatureRequest.PropertyName> properties, String filter) throws Exception;
+    ElasticSearchBase.SearchResult<FeatureGeoJSON>searchFeatureSummary(String collectionId, List<String> properties, String filter) throws Exception;
 
     ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(
             List<String> targets,

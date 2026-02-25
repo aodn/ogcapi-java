@@ -126,7 +126,7 @@ public class RestServicesTest {
         ResponseEntity<?> response = restServices.getWfsFieldValue(
                 "any-works",
                 FeatureRequest.builder()
-                        .properties(List.of(FeatureRequest.PropertyName.time))
+                        .properties(List.of("time"))
                         .build()
         );
         assertInstanceOf(Map.class, response.getBody());

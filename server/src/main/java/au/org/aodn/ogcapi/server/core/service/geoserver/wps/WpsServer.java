@@ -26,6 +26,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 
 @Slf4j
 public class WpsServer implements Server {
@@ -45,9 +46,27 @@ public class WpsServer implements Server {
     }
 
     public String getEstimateDownloadSize(String uuid, WpsProcessRequest request) {
+        // Get WFS server URL and field model for the given UUID and layer name
+        Optional<String> featureServerUrl = wfsServer.getFeatureServerUrl(uuid, request.getLayerName());
 
-        // String xml = createEstimateDownloadSize(request.getLayerName(), );
-        return "";
+        // Get the wfs fields to build the CQL filter
+        if (featureServerUrl.isPresent()) {
+            String wfsServerUrl = featureServerUrl.get();
+//            WfsServer.WfsFeatureRequest featureRequest = WfsServer.WfsFeatureRequest.builder()
+//                    .layerName(request.getLayerName())
+//                    .datetime(request.getDatetime())
+//                    .
+//                    .build();
+//            // Build CQL filter
+//            String cqlFilter = wfsServer.buildCqlFilter(
+//                    wfsServerUrl,
+//                    uuid,
+//                    request.getLayerName(), startDate, endDate, multiPolygon);
+            return "";
+        }
+        else {
+            throw new UnsupportedOperationException("Missing wfs url in metadata");
+        }
     }
 
     @SuppressWarnings("unchecked")

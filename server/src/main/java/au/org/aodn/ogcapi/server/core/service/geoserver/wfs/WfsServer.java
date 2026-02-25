@@ -85,7 +85,7 @@ public class WfsServer implements Server {
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    protected String buildCqlFilter(String serverUrl, String uuid, String layerName, String sd, String ed, Object multiPolygon) {
+    public String buildCqlFilter(String serverUrl, String uuid, String layerName, String sd, String ed, Object multiPolygon) {
 
         WfsFields wfsFieldModel = self.getDownloadableFields(
                 uuid,
@@ -271,15 +271,15 @@ public class WfsServer implements Server {
                 param.put("TYPENAME", request.getLayerName());
                 param.put("outputFormat", "application/json");
 
-                if (request.getProperties() != null && !request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
+                if (request.getProperties() != null && !request.getProperties().contains("*")) {
                     param.put("propertyName", String.join(
                             ",",
-                            request.getProperties().stream().map(Enum::name).toList())
+                            request.getProperties())
                     );
                     param.put("sortBy", String.join(
                             ",",
                             // Assume always sort by desc
-                            request.getProperties().stream().map(p -> String.format("%s+D", p.name())).toList())
+                            request.getProperties().stream().map(p -> String.format("%s+D", p)).toList())
                     );
                 }
 
