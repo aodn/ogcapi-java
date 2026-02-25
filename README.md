@@ -54,6 +54,43 @@ The server module contains the implementation of those interfaces, for details p
 |-------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | score | The min score value of the return record, the higher the value, the more relevance it will be. By default the score isn't set, it is Elastic Search field not STAC field |
 
+# Use AWS CodeArtifact
+We are using AWS CodeArtifact to get stacmodel dependency deployed by es-indexer. 
+Since AWS CodeArtifact is private repository, and AWS CodeArtifact doesn't support direct mvn login,
+you need to do some extra configuration to get the dependency.
+
+1. Add settings.xml. Please run the following command (One-time configuration, you can skip this step if you already have settings.xml in your .m2 folder, but make sure the content is correct):
+```bash
+cd ~/.m2
+cat > settings.xml << 'EOF'
+<!-- ~/.m2/settings.xml -->
+<settings>
+  <servers>
+    <server>
+      <id>codeartifact</id>
+      <username>aws</username>
+      <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
+    </server>
+  </servers>
+
+  <profiles>
+    <profile>
+      <id>use-codeartifact</id>
+      <repositories>
+        <repository>
+          <id>codeartifact</id>
+          <url>https://<domain>-<account-id>.d.codeartifact.<region>.amazonaws.com/maven/<repo>/</url>
+        </repository>
+      </repositories>
+    </profile>
+  </profiles>
+  <activeProfiles>
+    <activeProfile>use-codeartifact</activeProfile>
+  </activeProfiles>
+</settings>
+
+EOF
+```
 
 
 # Sort
