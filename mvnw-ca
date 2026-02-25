@@ -1,0 +1,50 @@
+#!/usr/bin/env sh
+# mvnw-ca: fetch AWS CodeArtifact token and repo URL
+
+[ -f ".mvn/codeartifact.env" ] && . ".mvn/codeartifact.env"
+
+if command -v aws >/dev/null 2>&1 &&
+   [ -n "${CA_DOMAIN:-}" ] && [ -n "${CA_DOMAIN_OWNER:-}" ] && [ -n "${CA_REGION:-}" ]; then
+
+  # Get auth token if not set
+  if [ -z "${CODEARTIFACT_AUTH_TOKEN:-}" ]; then
+    CA_DURATION_SECONDS="${CA_DURATION_SECONDS:-43200}"
+    CODEARTIFACT_AUTH_TOKEN="$(
+      aws codeartifact get-authorization-token \
+        --domain "$CA_DOMAIN" \
+        --domain-owner "$CA_DOMAIN_OWNER" \
+        --region "$CA_REGION" \
+        --duration-seconds "$CA_DURATION_SECONDS" \
+        --query authorizationToken --output text 2>/dev/null || true
+    )"
+    export CODEARTIFACT_AUTH_TOKEN
+  fi
+
+  echo "DEBUG: CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}"
+  echo "DEBUG: CA_REPOSITORY=${CA_REPOSITORY:-[NOT SET]}"
+  # Get repository URL if not set
+  if [ -z "${CODEARTIFACT_REPO_URL:-}" ] && [ -n "${CA_REPOSITORY:-}" ]; then
+    CODEARTIFACT_REPO_URL="$(
+      aws codeartifact get-repository-endpoint \
+        --domain "$CA_DOMAIN" \
+        --domain-owner "$CA_DOMAIN_OWNER" \
+        --repository "$CA_REPOSITORY" \
+        --region "$CA_REGION" \
+        --format maven \
+        --query repositoryEndpoint --output text 2>/dev/null || true
+    )"
+    export CODEARTIFACT_REPO_URL
+  else
+    echo
+  fi
+fi
+
+# Only generate wrapper if files are missing
+if [ ! -f ".mvn/wrapper/maven-wrapper.properties" ]; then
+  echo "Maven wrapper files not found, generating with 'mvn wrapper:wrapper'..."
+  mvn wrapper:wrapper -q
+fi
+
+echo "DEBUG: CODEARTIFACT_REPO_URL=$CODEARTIFACT_REPO_URL"
+
+exec mvn "$@"
