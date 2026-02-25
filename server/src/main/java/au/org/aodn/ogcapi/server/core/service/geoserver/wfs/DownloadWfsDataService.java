@@ -1,10 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
-import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
-import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
+import au.org.aodn.ogcapi.server.core.service.geoserver.Server;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,8 +18,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
-public class DownloadWfsDataService {
-    private final WfsServer wfsServer;
+public class DownloadWfsDataService extends Server {
     private final RestTemplate restTemplate;
     private final HttpEntity<?> pretendUserEntity;
     private final int chunkSize;
@@ -33,65 +29,11 @@ public class DownloadWfsDataService {
             @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
             @Value("${app.sse.chunkSize:16384}") int chunkSize
     ) {
-        this.wfsServer = wfsServer;
+        super(wfsServer);
         this.restTemplate = restTemplate;
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
     }
-
-    /**
-     * Build CQL filter for temporal and spatial constraints
-     */
-    protected String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WfsFields wfsFieldModel) {
-        StringBuilder cqlFilter = new StringBuilder();
-
-        if (wfsFieldModel == null || wfsFieldModel.getFields() == null) {
-            return cqlFilter.toString();
-        }
-
-        List<WfsField> fields = wfsFieldModel.getFields();
-
-        // Possible to have multiple days, better to consider all
-        List<WfsField> temporalField = fields.stream()
-                .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
-                .toList();
-
-        // Add temporal filter only if both dates are specified
-        if (!temporalField.isEmpty() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
-            List<String> cqls = new ArrayList<>();
-            temporalField.forEach(temp ->
-                    cqls.add(String.format("(%s DURING %sT00:00:00Z/%sT23:59:59Z)", temp.getName(), startDate, endDate))
-            );
-            cqlFilter.append("(").append(String.join(" OR ", cqls)).append(")");
-        }
-
-        // Find geometry field
-        Optional<WfsField> geometryField = fields.stream()
-                .filter(field -> "geometrypropertytype".equalsIgnoreCase(field.getType()))
-                .findFirst();
-
-        // Add spatial filter
-        if (geometryField.isPresent() && multiPolygon != null) {
-            String fieldName = geometryField.get().getName();
-
-            String wkt = GeometryUtils.convertToWkt(multiPolygon);
-
-            if ((wkt != null) && !cqlFilter.isEmpty()) {
-                cqlFilter.append(" AND ");
-            }
-
-            if (wkt != null) {
-                cqlFilter.append("INTERSECTS(")
-                        .append(fieldName)
-                        .append(",")
-                        .append(wkt)
-                        .append(")");
-            }
-        }
-
-        return cqlFilter.toString();
-    }
-
     /**
      * Does collection lookup, WFS validation, field retrieval, and URL building
      */
@@ -104,46 +46,30 @@ public class DownloadWfsDataService {
             String layerName,
             String outputFormat) {
 
-        String wfsServerUrl;
-        String wfsTypeName;
-        WfsFields wfsFieldModel;
 
         // Get WFS server URL and field model for the given UUID and layer name
         Optional<String> featureServerUrl = wfsServer.getFeatureServerUrl(uuid, layerName);
 
         // Get the wfs fields to build the CQL filter
         if (featureServerUrl.isPresent()) {
-            wfsServerUrl = featureServerUrl.get();
-            wfsTypeName = layerName;
-            wfsFieldModel = wfsServer.getDownloadableFields(
-                    uuid,
-                    WfsServer.WfsFeatureRequest.builder()
-                            .layerName(wfsTypeName)
-                            .server(wfsServerUrl)
-                            .build()
-            );
-            log.debug("WFSFieldModel by wfs typename: {}", wfsFieldModel);
+            String wfsServerUrl = featureServerUrl.get();
+
+            // Build CQL filter
+            String cqlFilter = buildCqlFilter(wfsServerUrl, uuid, layerName, startDate, endDate, multiPolygon);
+
+            // Build final WFS request URL
+            String wfsRequestUrl = wfsServer.createWfsRequestUrl(
+                    wfsServerUrl,
+                    layerName,
+                    fields,
+                    cqlFilter,
+                    outputFormat);
+
+            log.info("Prepared WFS request URL: {}", wfsRequestUrl);
+            return wfsRequestUrl;
         } else {
             throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
         }
-
-        // Validate start and end dates
-        String validStartDate = DatetimeUtils.validateAndFormatDate(startDate, true);
-        String validEndDate = DatetimeUtils.validateAndFormatDate(endDate, false);
-
-        // Build CQL filter
-        String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, wfsFieldModel);
-
-        // Build final WFS request URL
-        String wfsRequestUrl = wfsServer.createWfsRequestUrl(
-                wfsServerUrl,
-                wfsTypeName,
-                fields,
-                cqlFilter,
-                outputFormat);
-
-        log.info("Prepared WFS request URL: {}", wfsRequestUrl);
-        return wfsRequestUrl;
     }
 
     /**
