@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service.wfs;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;

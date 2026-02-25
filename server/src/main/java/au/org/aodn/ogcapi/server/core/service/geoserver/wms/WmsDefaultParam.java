@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service.wms;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wms;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
