@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.service.geoserver.Server;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +17,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 @Service
-public class DownloadWfsDataService extends Server {
+public class DownloadWfsDataService {
+    private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
     private final HttpEntity<?> pretendUserEntity;
     private final int chunkSize;
@@ -29,7 +29,7 @@ public class DownloadWfsDataService extends Server {
             @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
             @Value("${app.sse.chunkSize:16384}") int chunkSize
     ) {
-        super(wfsServer);
+        this.wfsServer = wfsServer;
         this.restTemplate = restTemplate;
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
@@ -55,7 +55,7 @@ public class DownloadWfsDataService extends Server {
             String wfsServerUrl = featureServerUrl.get();
 
             // Build CQL filter
-            String cqlFilter = buildCqlFilter(wfsServerUrl, uuid, layerName, startDate, endDate, multiPolygon);
+            String cqlFilter = wfsServer.buildCqlFilter(wfsServerUrl, uuid, layerName, startDate, endDate, multiPolygon);
 
             // Build final WFS request URL
             String wfsRequestUrl = wfsServer.createWfsRequestUrl(

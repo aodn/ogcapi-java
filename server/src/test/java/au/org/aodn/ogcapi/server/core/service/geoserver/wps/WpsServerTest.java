@@ -1,6 +1,7 @@
-package au.org.aodn.ogcapi.server.core.service.wps;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wps;
 
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import org.geotools.factory.CommonFactoryFinder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,9 +19,12 @@ public class WpsServerTest {
     @Mock
     WmsServer wmsServer;
 
+    @Mock
+    WfsServer wfsServer;
+
     @Test
     void testCreateEstimateDownloadSize() throws Exception {
-        WpsServer wpsServer = new WpsServer(wmsServer, null);
+        WpsServer wpsServer = new WpsServer(wmsServer, wfsServer, null,null);
 
         // 1. Create a Filter for the test (state = 'TAS')
         FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
