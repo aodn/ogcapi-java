@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service.wms;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wms;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
@@ -10,7 +10,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultParam;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.*;
 import org.mockito.Mockito;
@@ -31,8 +31,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import static au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam.WFS_LINK_MARKER;
-import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
+import static au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultParam.WFS_LINK_MARKER;
+import static au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsDefaultParam.WMS_LINK_MARKER;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;

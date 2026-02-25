@@ -1,8 +1,8 @@
 package au.org.aodn.ogcapi.server.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.service.wfs.DownloadWfsDataService;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.http.HttpEntity;

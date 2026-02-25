@@ -1,9 +1,9 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsDefaultParam;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultParam;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

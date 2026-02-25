@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service.wms;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wms;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.GeoserverLayersNotFoundException;
@@ -10,7 +10,7 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.*;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.CACHE_WMS_MAP_TILE;
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.GET_CAPABILITIES_WMS_LAYERS;
-import static au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam.WMS_LINK_MARKER;
+import static au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsDefaultParam.WMS_LINK_MARKER;
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.*;
 
 @Slf4j
