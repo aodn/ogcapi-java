@@ -56,10 +56,13 @@ The server module contains the implementation of those interfaces, for details p
 
 # Use AWS CodeArtifact
 We are using AWS CodeArtifact to get stacmodel dependency deployed by es-indexer. 
-Since AWS CodeArtifact is private repository, and AWS CodeArtifact doesn't support direct mvn login,
-you need to do some extra configuration to get the dependency.
 
-1. Add settings.xml. Please run the following command (One-time configuration, you can skip this step if you already have settings.xml in your .m2 folder, but make sure the content is correct):
+Since AWS CodeArtifact is private repository, and AWS CodeArtifact doesn't support direct mvn login,
+
+So, please use:`./mvnw-ca install` to instead`mvn install` for dependency installation at root of the project. 
+
+Before running `./mvnw-ca install`, please make sure you have settings.xml in your ~/.m2 folder. 
+If not, run the following command:
 ```bash
 cd ~/.m2
 cat > settings.xml << 'EOF'
