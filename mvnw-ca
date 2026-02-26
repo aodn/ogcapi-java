@@ -20,8 +20,6 @@ if command -v aws >/dev/null 2>&1 &&
     export CODEARTIFACT_AUTH_TOKEN
   fi
 
-  echo "DEBUG: CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}"
-  echo "DEBUG: CA_REPOSITORY=${CA_REPOSITORY:-[NOT SET]}"
   # Get repository URL if not set
   if [ -z "${CODEARTIFACT_REPO_URL:-}" ] && [ -n "${CA_REPOSITORY:-}" ]; then
     CODEARTIFACT_REPO_URL="$(
@@ -38,13 +36,5 @@ if command -v aws >/dev/null 2>&1 &&
     echo
   fi
 fi
-
-# Only generate wrapper if files are missing
-if [ ! -f ".mvn/wrapper/maven-wrapper.properties" ]; then
-  echo "Maven wrapper files not found, generating with 'mvn wrapper:wrapper'..."
-  mvn wrapper:wrapper -q
-fi
-
-echo "DEBUG: CODEARTIFACT_REPO_URL=$CODEARTIFACT_REPO_URL"
 
 exec mvn "$@"

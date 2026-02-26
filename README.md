@@ -72,21 +72,6 @@ cat > settings.xml << 'EOF'
       <password>${env.CODEARTIFACT_AUTH_TOKEN}</password>
     </server>
   </servers>
-
-  <profiles>
-    <profile>
-      <id>use-codeartifact</id>
-      <repositories>
-        <repository>
-          <id>codeartifact</id>
-          <url>https://<domain>-<account-id>.d.codeartifact.<region>.amazonaws.com/maven/<repo>/</url>
-        </repository>
-      </repositories>
-    </profile>
-  </profiles>
-  <activeProfiles>
-    <activeProfile>use-codeartifact</activeProfile>
-  </activeProfiles>
 </settings>
 
 EOF
