@@ -55,13 +55,13 @@ The server module contains the implementation of those interfaces, for details p
 | score | The min score value of the return record, the higher the value, the more relevance it will be. By default the score isn't set, it is Elastic Search field not STAC field |
 
 # Use AWS CodeArtifact
-We are using AWS CodeArtifact to get stacmodel dependency deployed by es-indexer. 
+We are using AWS CodeArtifact to get stacmodel dependency deployed by es-indexer.
 
 Since AWS CodeArtifact is private repository, and AWS CodeArtifact doesn't support direct mvn login,
 
-So, please use:`./mvnw-ca install` to instead`mvn install` for dependency installation at root of the project. 
+So, please use:`./mvnw-ca install` to instead`mvn install` for dependency installation at root of the project.
 
-Before running `./mvnw-ca install`, please make sure you have settings.xml in your ~/.m2 folder. 
+Before running `./mvnw-ca install`, please make sure you have settings.xml in your ~/.m2 folder.
 If not, run the following command:
 ```bash
 cd ~/.m2
