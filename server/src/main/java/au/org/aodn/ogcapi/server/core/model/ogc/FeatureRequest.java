@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model.ogc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
@@ -77,6 +78,9 @@ public class FeatureRequest implements Serializable {
     @Schema(description = "Y")
     private BigDecimal y;
 
+    @Schema(description = "GeoJson MultiPolygon")
+    private Object multiPolygon;
+
     @Schema(description = "Data output format")
     private GeoServerOutputFormat outputFormat;
 
@@ -93,5 +97,23 @@ public class FeatureRequest implements Serializable {
      */
     public Boolean getEnableGeoServerWhiteList() {
         return enableGeoServerWhiteList != null ? enableGeoServerWhiteList : Boolean.TRUE;
+    }
+    /**
+     * date time must be of ogc format xxx/yyy or ../yyy or /yyy or xxx/.. or xxx/ etc
+     * @return The first part represent start date, null for unspecify.
+     */
+    @JsonIgnore
+    public String getStartDateTime() {
+        return (datetime == null || (datetime.startsWith("../") || datetime.startsWith("/"))) ?
+            null : datetime.split("/")[0];
+    }
+    /**
+     * date time must be of ogc format xxx/yyy or ../yyy or /yyy or xxx/.. or xxx/ etc
+     * @return The end part represent end date, null for unspecify.
+     */
+    @JsonIgnore
+    public String getEndDateTime() {
+        return (datetime == null || (datetime.endsWith("/..") || datetime.endsWith("/"))) ?
+                null : datetime.split("/")[1];
     }
 }

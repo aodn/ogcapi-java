@@ -8,12 +8,14 @@ import lombok.extern.slf4j.Slf4j;
 import net.opengis.ows11.CodeType;
 import net.opengis.ows11.Ows11Factory;
 import net.opengis.wps10.*;
+import org.geotools.filter.text.cql2.CQL;
 import org.geotools.wps.WPS;
 import org.geotools.wps.WPSConfiguration;
 import org.geotools.xsd.Encoder;
 import org.opengis.filter.Filter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 import org.w3c.dom.CDATASection;
 import org.w3c.dom.Document;
@@ -45,24 +47,43 @@ public class WpsServer implements Server {
         this.pretendUserEntity = entity;
     }
 
-    public String getEstimateDownloadSize(String uuid, WpsProcessRequest request) {
+    public String getEstimateDownloadSize(String uuid, WpsProcessRequest request) throws Exception {
         // Get WFS server URL and field model for the given UUID and layer name
         Optional<String> featureServerUrl = wfsServer.getFeatureServerUrl(uuid, request.getLayerName());
 
         // Get the wfs fields to build the CQL filter
         if (featureServerUrl.isPresent()) {
-            String wfsServerUrl = featureServerUrl.get();
-//            WfsServer.WfsFeatureRequest featureRequest = WfsServer.WfsFeatureRequest.builder()
-//                    .layerName(request.getLayerName())
-//                    .datetime(request.getDatetime())
-//                    .
-//                    .build();
-//            // Build CQL filter
-//            String cqlFilter = wfsServer.buildCqlFilter(
-//                    wfsServerUrl,
-//                    uuid,
-//                    request.getLayerName(), startDate, endDate, multiPolygon);
-            return "";
+            WfsServer.WfsFeatureRequest featureRequest = WfsServer.WfsFeatureRequest.builder()
+                    .server(featureServerUrl.get())
+                    .layerName(request.getLayerName())
+                    .datetime(request.getDatetime())
+                    .properties(request.getProperties())
+                    .multiPolygon(request.getMultiPolygon())
+                    .build();
+
+            // Build CQL filter as long string
+            String cqlFilter = wfsServer.buildCqlFilter(uuid, featureRequest);
+
+            // Convert to filter
+            Filter filter = CQL.toFilter(cqlFilter);
+
+            // Finally create the request
+            String xmlRequest = createEstimateDownloadSizeXmlRequest(featureRequest.getLayerName(), filter);
+            HttpEntity<String> entity = new HttpEntity<>(xmlRequest, pretendUserEntity.getHeaders());
+
+            ResponseEntity<String> response = restTemplate.exchange(
+                    featureRequest.getServer().replace("wfs", "wps"),
+                    HttpMethod.POST,
+                    entity,
+                    String.class
+            );
+
+            if(response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            }
+            else {
+                return "";
+            }
         }
         else {
             throw new UnsupportedOperationException("Missing wfs url in metadata");
@@ -70,7 +91,7 @@ public class WpsServer implements Server {
     }
 
     @SuppressWarnings("unchecked")
-    protected String createEstimateDownloadSize(String layerName, Filter filter) throws Exception {
+    protected String createEstimateDownloadSizeXmlRequest(String layerName, Filter filter) throws Exception {
         Wps10Factory wpsFactory = Wps10Factory.eINSTANCE;
         Ows11Factory owsFactory = Ows11Factory.eINSTANCE;
 

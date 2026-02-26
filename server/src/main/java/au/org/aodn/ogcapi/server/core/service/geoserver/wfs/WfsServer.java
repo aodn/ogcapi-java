@@ -85,20 +85,17 @@ public class WfsServer implements Server {
     /**
      * Build CQL filter for temporal and spatial constraints
      */
-    public String buildCqlFilter(String serverUrl, String uuid, String layerName, String sd, String ed, Object multiPolygon) {
+    public String buildCqlFilter(String uuid, WfsFeatureRequest featureRequest) {
 
         WfsFields wfsFieldModel = self.getDownloadableFields(
                 uuid,
-                WfsServer.WfsFeatureRequest.builder()
-                        .layerName(layerName)
-                        .server(serverUrl)
-                        .build()
+                featureRequest
         );
         log.debug("WFSFieldModel by wfs typename: {}", wfsFieldModel);
 
         // Validate start and end dates
-        final String startDate = DatetimeUtils.validateAndFormatDate(sd, true);
-        final String endDate = DatetimeUtils.validateAndFormatDate(ed, false);
+        final String startDate = DatetimeUtils.validateAndFormatDate(featureRequest.getStartDateTime(), true);
+        final String endDate = DatetimeUtils.validateAndFormatDate(featureRequest.getEndDateTime(), false);
 
         StringBuilder cqlFilter = new StringBuilder();
 
@@ -128,10 +125,10 @@ public class WfsServer implements Server {
                 .findFirst();
 
         // Add spatial filter
-        if (geometryField.isPresent() && multiPolygon != null) {
+        if (geometryField.isPresent() && featureRequest.getMultiPolygon() != null) {
             String fieldName = geometryField.get().getName();
 
-            String wkt = GeometryUtils.convertToWkt(multiPolygon);
+            String wkt = GeometryUtils.convertToWkt(featureRequest.getMultiPolygon());
 
             if ((wkt != null) && !cqlFilter.isEmpty()) {
                 cqlFilter.append(" AND ");
@@ -518,7 +515,9 @@ public class WfsServer implements Server {
      * @param layerName    - The layer name to match the title
      * @return - The matched wfs server link, or the first available one if no match found
      */
-    public Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+    public Optional<String>
+
+    getFeatureServerUrl(String collectionId, String layerName) {
         Optional<String> url = getFeatureServerUrlByTitleOrQueryParam(collectionId, layerName);
         if (url.isPresent()) {
             log.debug("Found WFS link by title/query param for collectionId {} with layerName {}: {}", collectionId, layerName, url.get());

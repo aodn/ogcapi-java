@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,15 +55,19 @@ public class DownloadWfsDataService {
         if (featureServerUrl.isPresent()) {
             String wfsServerUrl = featureServerUrl.get();
 
-            // Build CQL filter
-            String cqlFilter = wfsServer.buildCqlFilter(wfsServerUrl, uuid, layerName, startDate, endDate, multiPolygon);
+            WfsServer.WfsFeatureRequest featureRequest = WfsServer.WfsFeatureRequest.builder()
+                    .server(wfsServerUrl)
+                    .layerName(layerName)
+                    .datetime(DatetimeUtils.formatOGCDateTime(startDate, endDate))
+                    .multiPolygon(multiPolygon)
+                    .build();
 
             // Build final WFS request URL
             String wfsRequestUrl = wfsServer.createWfsRequestUrl(
                     wfsServerUrl,
                     layerName,
                     fields,
-                    cqlFilter,
+                    wfsServer.buildCqlFilter(uuid, featureRequest),
                     outputFormat);
 
             log.info("Prepared WFS request URL: {}", wfsRequestUrl);
