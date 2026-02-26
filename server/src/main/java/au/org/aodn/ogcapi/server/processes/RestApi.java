@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,10 +36,12 @@ public class RestApi implements ProcessesApi {
     @Override
     // because the produces value in the interface declaration includes "/_" which may
     // cause exception thrown sometimes. So i re-declared the produces value here
-    @RequestMapping(value = "/processes/{processID}/execution",
-            produces = {"application/json", "text/html"},
-            consumes = {"application/json"},
-            method = RequestMethod.POST)
+    @RequestMapping(
+            value = "/processes/{processID}/execution",
+            produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_HTML_VALUE },
+            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            method = RequestMethod.POST
+    )
     public ResponseEntity<InlineResponse200> execute(
             @Parameter(in = ParameterIn.PATH, required = true, schema = @Schema())
             @PathVariable("processID")
@@ -47,8 +50,9 @@ public class RestApi implements ProcessesApi {
             @Valid
             @RequestBody Execute body) {
 
-        if (processID.equals(ProcessIdEnum.DOWNLOAD_DATASET.getValue())) {
+        ProcessIdEnum processId = ProcessIdEnum.fromString(processID);
 
+        if (processId == ProcessIdEnum.DOWNLOAD_DATASET) {
             try {
 
                 var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
@@ -111,15 +115,17 @@ public class RestApi implements ProcessesApi {
     /**
      * WFS download endpoint with SSE support to handle long-running operations and prevent timeouts
      */
-    @RequestMapping(value = "/processes/downloadWfs/execution",
-            produces = MediaType.TEXT_EVENT_STREAM_VALUE,
-            consumes = {"application/json"},
-            method = RequestMethod.POST)
-    public SseEmitter downloadWfsSse(
+    @RequestMapping(
+            value = "/processes/{processID}/execution",
+            produces = { MediaType.TEXT_EVENT_STREAM_VALUE },
+            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            method = RequestMethod.POST
+    )
+    public SseEmitter executeSse(
+            @Parameter(in = ParameterIn.PATH, required = true, schema = @Schema())
+            @PathVariable("processID") String processId,
             @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required = true, schema = @Schema())
             @RequestBody Execute body) {
-
-        final SseEmitter emitter = new SseEmitter(0L);
 
         try {
             String uuid = body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue()).toString();
@@ -137,12 +143,33 @@ public class RestApi implements ProcessesApi {
                 throw new IllegalArgumentException(String.format("Output format %s not supported", outputFormat));
             }
 
-            return restServices.downloadWfsDataWithSse(
-                    uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, emitter
-            );
+            ProcessIdEnum id = ProcessIdEnum.fromString(processId);
+            SseEmitter emitter;
+
+            switch (id) {
+                case DOWNLOAD_WFS_SSE: {
+                    emitter = restServices.downloadWfsDataWithSse(
+                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat
+                    );
+                    break;
+                }
+                case DOWNLOAD_WFS_SIZE: {
+                    emitter = restServices.downloadWfsSizeWithSse(uuid, layerName, startDate, endDate, multiPolygon, fields);
+                    break;
+                }
+                default: {
+                    emitter = new SseEmitter(0L);
+                    emitter.completeWithError(new BadRequestException(
+                            String.format("Unknown process Id for SSE type download [%s]", processId)
+                    ));
+                }
+            }
+
+            return emitter;
 
         } catch (Exception e) {
             log.error("Download wfs data failed with unhandled error {}", e.getMessage());
+            final SseEmitter emitter = new SseEmitter(0L);
             emitter.completeWithError(e);
             return emitter;
         }

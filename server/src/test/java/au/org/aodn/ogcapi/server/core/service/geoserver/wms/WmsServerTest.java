@@ -2,7 +2,7 @@ package au.org.aodn.ogcapi.server.core.service.geoserver.wms;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
-import au.org.aodn.ogcapi.server.core.configuration.WfsWmsConfig;
+import au.org.aodn.ogcapi.server.core.configuration.GeoServerConfig;
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
@@ -41,7 +41,7 @@ import static org.mockito.Mockito.when;
         classes = {
                 TestConfig.class,
                 Config.class,
-                WfsWmsConfig.class,
+                GeoServerConfig.class,
                 WmsDefaultParam.class,
                 WfsDefaultParam.class,
                 JacksonAutoConfiguration.class,

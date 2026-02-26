@@ -10,8 +10,6 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.opengis.filter.Filter;
 import org.opengis.filter.FilterFactory2;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
@@ -30,8 +28,6 @@ import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class WpsServerTest {
-
-    protected Logger log = LoggerFactory.getLogger(WpsServerTest.class);
 
     @Mock
     protected WmsServer wmsServer;
@@ -91,8 +87,9 @@ public class WpsServerTest {
         String wfsUrl = "http://example.com/geoserver/wfs";
         AtomicReference<String> xml = new AtomicReference<>();
 
-        WpsServer.WpsProcessRequest request = new WpsServer.WpsProcessRequest();
-        request.setLayerName(layerName);
+        WpsServer.WpsProcessRequest request = WpsServer.WpsProcessRequest.builder()
+                .layerName(layerName)
+                .build();
 
         when(wfsServer.getFeatureServerUrl(uuid, layerName)).thenReturn(Optional.of(wfsUrl));
         when(wfsServer.buildCqlFilter(eq(uuid), any())).thenReturn("state = 'TAS'");
@@ -159,8 +156,9 @@ public class WpsServerTest {
     @Test
     void getEstimateDownloadSize_noWfsUrl_throwsException() {
         String uuid = "test-uuid";
-        WpsServer.WpsProcessRequest request = new WpsServer.WpsProcessRequest();
-        request.setLayerName("test:layer");
+        WpsServer.WpsProcessRequest request = WpsServer.WpsProcessRequest.builder()
+                .layerName("test:layer")
+                .build();
 
         when(wfsServer.getFeatureServerUrl(anyString(), anyString())).thenReturn(Optional.empty());
 
@@ -174,8 +172,9 @@ public class WpsServerTest {
         String layerName = "test:layer";
         String wfsUrl = "http://example.com/geoserver/wfs";
 
-        WpsServer.WpsProcessRequest request = new WpsServer.WpsProcessRequest();
-        request.setLayerName(layerName);
+        WpsServer.WpsProcessRequest request = WpsServer.WpsProcessRequest.builder()
+                .layerName(layerName)
+                .build();
 
         when(wfsServer.getFeatureServerUrl(uuid, layerName)).thenReturn(Optional.of(wfsUrl));
         when(wfsServer.buildCqlFilter(eq(uuid), any())).thenReturn("state = 'TAS'");

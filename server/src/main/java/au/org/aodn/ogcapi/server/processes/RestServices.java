@@ -3,6 +3,8 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wps.WpsServer;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +36,9 @@ public class RestServices {
 
     @Autowired
     private DownloadWfsDataService downloadWfsDataService;
+
+    @Autowired
+    protected WpsServer wpsServer;
 
     public RestServices(BatchClient batchClient, ObjectMapper objectMapper) {
         this.batchClient = batchClient;
@@ -175,15 +180,15 @@ public class RestServices {
         }
     }
 
-    public SseEmitter downloadWfsDataWithSse(
-            String uuid,
-            String startDate,
-            String endDate,
-            Object multiPolygon,
-            List<String> fields,
-            String layerName,
-            String outputFormat,
-            SseEmitter emitter) {
+    public SseEmitter downloadWfsDataWithSse(String uuid,
+                                             String startDate,
+                                             String endDate,
+                                             Object multiPolygon,
+                                             List<String> fields,
+                                             String layerName,
+                                             String outputFormat) {
+
+        final SseEmitter emitter = new SseEmitter(0L);
 
         // Set up references for resources that need to be cleaned up
         AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
@@ -291,6 +296,61 @@ public class RestServices {
 
             } catch (Exception e) {
                 WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
+            }
+        });
+        return emitter;
+    }
+
+    public SseEmitter downloadWfsSizeWithSse(String uuid,
+                                             String layerName,
+                                             String startDate,
+                                             String endDate,
+                                             Object multiPolygon,
+                                             List<String> fields) {
+
+
+        final SseEmitter emitter = new SseEmitter(0L);
+
+        CompletableFuture.runAsync(() -> {
+            ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+            CountDownLatch done = new CountDownLatch(1);
+
+            // Send keep-alive every 20 seconds
+            executor.execute(() -> {
+                try {
+                    while (done.await(20, TimeUnit.SECONDS)) {
+                        emitter.send(SseEmitter.event()
+                                .name("keep-alive")
+                                .data(Map.of(
+                                        "timestamp", System.currentTimeMillis(),
+                                        "message", "Waiting for WFS server response..."
+                                )));
+                    }
+                }
+                catch(Exception e) {
+                    done.countDown();
+                }
+            });
+
+            WpsServer.WpsProcessRequest request = WpsServer.WpsProcessRequest.builder()
+                    .layerName(layerName)
+                    .datetime(DatetimeUtils.formatOGCDateTime(startDate, endDate))
+                    .properties(fields)
+                    .multiPolygon(multiPolygon)
+                    .build();
+
+            try {
+                emitter.send(wpsServer.getEstimateDownloadSize(
+                        uuid,
+                        request
+                ));
+            }
+            catch(Exception e) {
+                emitter.completeWithError(e);
+            }
+            finally {
+                done.countDown();
+                emitter.complete();
             }
         });
         return emitter;

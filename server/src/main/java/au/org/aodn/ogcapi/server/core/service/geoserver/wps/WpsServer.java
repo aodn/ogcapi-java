@@ -4,6 +4,9 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.geoserver.Server;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 import lombok.extern.slf4j.Slf4j;
 import net.opengis.ows11.CodeType;
 import net.opengis.ows11.Ows11Factory;
@@ -38,6 +41,9 @@ public class WpsServer implements Server {
     protected final WfsServer wfsServer;
     protected final HttpEntity<?> pretendUserEntity;
 
+    @Getter
+    @Setter
+    @SuperBuilder
     public static class WpsProcessRequest extends FeatureRequest {}
 
     public WpsServer(WmsServer wmsServer, WfsServer wfsServer, RestTemplate restTemplate, HttpEntity<?> entity) {
