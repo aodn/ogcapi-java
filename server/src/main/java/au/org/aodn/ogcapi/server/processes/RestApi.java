@@ -128,19 +128,16 @@ public class RestApi implements ProcessesApi {
             @RequestBody Execute body) {
 
         try {
-            String uuid = body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue()).toString();
-            String startDate = body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue()).toString();
-            String endDate = body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue()).toString();
-            String layerName = body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue()).toString();
-            String outputFormat = body.getInputs().get(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue()).toString();
-            var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
+            String uuid = DatasetDownloadEnums.Parameter.UUID.getStringInput(body);
+            String layerName = DatasetDownloadEnums.Parameter.LAYER_NAME.getStringInput(body);
+            String startDate = DatasetDownloadEnums.Parameter.START_DATE.getStringInput(body);
+            String endDate = DatasetDownloadEnums.Parameter.END_DATE.getStringInput(body);
+            String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
+            Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
+            List<String> fields = DatasetDownloadEnums.Parameter.FIELDS.getListInput(body);
 
-            List<String> fields = body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue()) instanceof List<?> list
-                    ? list.stream().map(String::valueOf).toList()
-                    : null;
-
-            if(FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
-                throw new IllegalArgumentException(String.format("Output format %s not supported", outputFormat));
+            if(uuid == null || layerName == null) {
+                throw new IllegalArgumentException("UUID and LayerName cannot null");
             }
 
             ProcessIdEnum id = ProcessIdEnum.fromString(processId);
@@ -148,13 +145,12 @@ public class RestApi implements ProcessesApi {
 
             switch (id) {
                 case DOWNLOAD_WFS_SSE: {
+                    if(FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
+                        throw new IllegalArgumentException(String.format("Output format %s not supported", outputFormat));
+                    }
                     emitter = restServices.downloadWfsDataWithSse(
                             uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat
                     );
-                    break;
-                }
-                case DOWNLOAD_WFS_SIZE: {
-                    emitter = restServices.downloadWfsSizeWithSse(uuid, layerName, startDate, endDate, multiPolygon, fields);
                     break;
                 }
                 default: {

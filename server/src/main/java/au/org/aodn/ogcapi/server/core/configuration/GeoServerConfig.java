@@ -4,7 +4,6 @@ import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
-import au.org.aodn.ogcapi.server.core.service.geoserver.wps.WpsServer;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -40,13 +39,5 @@ public class GeoServerConfig {
     @Bean
     public WmsServer createWmsServer(Search search, @Lazy WfsServer wfsServer, @Qualifier("pretendUserEntity") HttpEntity<?> entity) {
         return new WmsServer(search, wfsServer, entity);
-    }
-
-    @Bean
-    public WpsServer createWpsServer(WmsServer wmsServer,
-                                     WfsServer wfsServer,
-                                     RestTemplate restTemplate,
-                                     @Qualifier("pretendUserEntity") HttpEntity<?> entity) {
-        return new WpsServer(wmsServer, wfsServer, restTemplate, entity);
     }
 }
