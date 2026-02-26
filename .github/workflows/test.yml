@@ -17,7 +17,7 @@ permissions:
 jobs:
   build_test:
     runs-on: ubuntu-latest
-    environment: test
+    environment: test1
     steps:
       - name: Checkout
         uses: actions/checkout@v4
