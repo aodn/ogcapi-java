@@ -55,15 +55,15 @@ public class RestApi implements ProcessesApi {
         if (processId == ProcessIdEnum.DOWNLOAD_DATASET) {
             try {
 
-                var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
-                var key = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.KEY.getValue());
-                var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue());
-                var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
-                var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
-                var recipient = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.RECIPIENT.getValue());
-                var collectionTitle = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue());
-                var fullMetadataLink = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue());
-                var suggestedCitation = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue());
+                String uuid = DatasetDownloadEnums.Parameter.UUID.getStringInput(body);
+                String key = DatasetDownloadEnums.Parameter.KEY.getStringInput(body);
+                String startDate = DatasetDownloadEnums.Parameter.START_DATE.getStringInput(body);
+                String endDate = DatasetDownloadEnums.Parameter.END_DATE.getStringInput(body);
+                String recipient = DatasetDownloadEnums.Parameter.RECIPIENT.getStringInput(body);
+                String collectionTitle = DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getStringInput(body);
+                String fullMetadataLink = DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getStringInput(body);
+                String suggestedCitation = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getStringInput(body);
+                Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
 
                 // move the notify user email from data-access-service to here to make the first email faster
                 restServices.notifyUser(recipient, uuid, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation);
