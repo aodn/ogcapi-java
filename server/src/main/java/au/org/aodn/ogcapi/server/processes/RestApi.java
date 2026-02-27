@@ -152,16 +152,18 @@ public class RestApi implements ProcessesApi {
                                 String.format("Missing output format [%s]", processId)
                         ));
                     }
-                    emitter = restServices.downloadWfsDataWithSse(
-                            uuid,
-                            startDate,
-                            endDate,
-                            multiPolygon,
-                            fields,
-                            layerName,
-                            outputFormat,
-                            id == ProcessIdEnum.DOWNLOAD_WFS_ESTIMATE
-                    );
+                    else {
+                        emitter = restServices.downloadWfsDataWithSse(
+                                uuid,
+                                startDate,
+                                endDate,
+                                multiPolygon,
+                                fields,
+                                layerName,
+                                outputFormat,
+                                id == ProcessIdEnum.DOWNLOAD_WFS_ESTIMATE
+                        );
+                    }
                     break;
                 }
                 default: {

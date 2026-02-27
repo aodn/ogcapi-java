@@ -288,7 +288,15 @@ public class RestServices {
                     );
                 }
                 else {
-                    BigInteger est = downloadWfsDataService.estimateDownloadSize(uuid, layerName, startDate, endDate, multiPolygon, fields, outputFormat);
+                    BigInteger est = downloadWfsDataService.estimateDownloadSize(
+                            uuid,
+                            layerName,
+                            startDate,
+                            endDate,
+                            multiPolygon,
+                            fields,
+                            outputFormat
+                    );
                     emitter.send(SseEmitter.event()
                             .name(est != null ? "estimate-complete" : "estimate-failed")
                             .data(Map.of(

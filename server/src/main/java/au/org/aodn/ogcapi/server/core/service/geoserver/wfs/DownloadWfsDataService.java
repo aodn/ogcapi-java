@@ -31,6 +31,7 @@ public class DownloadWfsDataService {
     private final HttpEntity<?> pretendUserEntity;
     private final int chunkSize;
     private static final WFSConfiguration CONFIG = new WFSConfiguration();
+    private static final int SAMPLES_SIZE = 500;
     /**
      * Some wfs request contains non standard minetype which is not allow by the default rest template
      */
@@ -146,7 +147,7 @@ public class DownloadWfsDataService {
      * We just need to estimate the download size, the way we do it is issue two query:
      * a. Issue a query and get the number or record hit
      * b. Issue a query with data download but then limit the records size, and do a liner interpolation
-     * @return
+     * @return The estimated file size
      */
     public BigInteger estimateDownloadSize(
             String uuid,
@@ -174,13 +175,16 @@ public class DownloadWfsDataService {
                 if(o instanceof FeatureCollectionType hits) {
                     BigInteger featureCount = hits.getNumberOfFeatures();
 
+                    log.debug("Total record hits {}", featureCount);
                     // Now we need to do another query where we limited the record count to something small
                     wfsRequestUrl = prepareWfsRequestUrl(
-                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat,  50L, false
+                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, SAMPLES_SIZE, false
                     );
                     ResponseEntity<byte[]> bytes = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
                     if(bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
-                        return featureCount.multiply(BigInteger.valueOf(bytes.getBody().length / 50));
+                        return featureCount
+                                .multiply(BigInteger.valueOf(bytes.getBody().length))
+                                .divide(BigInteger.valueOf(SAMPLES_SIZE));
                     }
                 }
             }
