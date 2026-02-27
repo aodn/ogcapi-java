@@ -376,7 +376,7 @@ public class WfsServerTest {
 
         // Default download params from config
         assertTrue(result.contains("SERVICE=WFS"), "SERVICE param should be present");
-        assertTrue(result.contains("VERSION=1.0.0"), "VERSION param should be present");
+        assertTrue(result.contains("VERSION=1.1.0"), "VERSION param should be present");
         assertTrue(result.contains("REQUEST=GetFeature"), "REQUEST param should be present");
 
         // No duplicate keys — each param name should appear exactly once

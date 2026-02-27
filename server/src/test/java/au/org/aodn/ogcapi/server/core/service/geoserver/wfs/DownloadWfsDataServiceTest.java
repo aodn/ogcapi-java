@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -42,13 +43,13 @@ public class DownloadWfsDataServiceTest {
     private RestTemplateUtils restTemplateUtils;
 
     @Mock
-    private RestTemplate restTemplate;
-
-    @Mock
     private HttpEntity<?> pretendUserEntity;
 
     @Autowired
     WfsDefaultParam wfsDefaultParam;
+
+    @Spy
+    RestTemplate restTemplate;
 
     DownloadWfsDataService downloadWfsDataService;
     WmsServer wmsServer;
@@ -215,7 +216,7 @@ public class DownloadWfsDataServiceTest {
         // Verify URL contains temporal filter with converted dates
         assertNotNull(result);
         assertEquals(
-                "https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2023-01-01T00:00:00Z/2023-12-31T23:59:59Z))",
+                "https://test.com/geoserver/wfs?VERSION=1.1.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2023-01-01T00:00:00Z/2023-12-31T23:59:59Z))",
                 result
         );
     }
@@ -256,12 +257,12 @@ public class DownloadWfsDataServiceTest {
                 uuid, startDate, endDate, null, null, layerName, null, -1L, false
         );
 
-        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
+        assertEquals("https://test.com/geoserver/wfs?VERSION=1.1.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
 
         result = downloadWfsDataService.prepareWfsRequestUrl(
                 uuid, startDate, endDate, null, null, layerName, "shape-zip", -1L, false
         );
-        assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
+        assertEquals("https://test.com/geoserver/wfs?VERSION=1.1.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
     }
 
     /**
@@ -294,7 +295,7 @@ public class DownloadWfsDataServiceTest {
         );
 
         assertEquals(
-                "https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z)) AND INTERSECTS(geom,MULTIPOLYGON (((112.01192842942288 -22.393450547704845, 129.68986083498982 -22.393450547704845, 129.68986083498982 -12.647778557898718, 112.01192842942288 -12.647778557898718, 112.01192842942288 -22.393450547704845)), ((128.29423459244452 3.5283082597303377, 143.95626242544682 3.5283082597303377, 143.95626242544682 13.182067934641196, 128.29423459244452 13.182067934641196, 128.29423459244452 3.5283082597303377))))",
+                "https://test.com/geoserver/wfs?VERSION=1.1.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z)) AND INTERSECTS(geom,MULTIPOLYGON (((112.01192842942288 -22.393450547704845, 129.68986083498982 -22.393450547704845, 129.68986083498982 -12.647778557898718, 112.01192842942288 -12.647778557898718, 112.01192842942288 -22.393450547704845)), ((128.29423459244452 3.5283082597303377, 143.95626242544682 3.5283082597303377, 143.95626242544682 13.182067934641196, 128.29423459244452 13.182067934641196, 128.29423459244452 3.5283082597303377))))",
                 result,
                 "Correct url 1");
     }

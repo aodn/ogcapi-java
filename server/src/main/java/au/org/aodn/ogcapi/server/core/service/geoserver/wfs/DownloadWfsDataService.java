@@ -2,21 +2,15 @@ package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
-import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import net.opengis.wfs.FeatureCollectionType;
 import org.geotools.wfs.v1_1.WFSConfiguration;
 import org.geotools.xsd.Parser;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.math.BigInteger;
@@ -24,7 +18,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
-@Service
 public class DownloadWfsDataService {
     private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
@@ -32,71 +25,17 @@ public class DownloadWfsDataService {
     private final int chunkSize;
     private static final WFSConfiguration CONFIG = new WFSConfiguration();
     private static final int SAMPLES_SIZE = 500;
-    /**
-     * Some wfs request contains non standard minetype which is not allow by the default rest template
-     */
-    static class WfsCustomResponseWrapper implements ClientHttpResponse {
-        private final ClientHttpResponse delegate;
-
-        public WfsCustomResponseWrapper(ClientHttpResponse delegate) {
-            this.delegate = delegate;
-        }
-
-        @Override
-        @Nonnull
-        public HttpStatusCode getStatusCode() throws IOException {
-            return delegate.getStatusCode();
-        }
-
-        @Override
-        @Nonnull
-        public String getStatusText() throws IOException {
-            return delegate.getStatusText();
-        }
-
-        @Override
-        public void close() {
-            delegate.close();
-        }
-
-        @Override
-        @Nonnull
-        public InputStream getBody() throws IOException {
-            return delegate.getBody();
-        }
-
-        @Override
-        @Nonnull
-        public HttpHeaders getHeaders() {
-            HttpHeaders headers = new HttpHeaders();
-            headers.putAll(delegate.getHeaders());
-            String ct = headers.getFirst(HttpHeaders.CONTENT_TYPE);
-            if (ct != null && ct.contains("subtype=")) {
-                headers.set(HttpHeaders.CONTENT_TYPE, "text/xml");
-            }
-            return headers;
-        }
-    }
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
             RestTemplate restTemplate,
-            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
-            @Value("${app.sse.chunkSize:16384}") int chunkSize
+            HttpEntity<?> pretendUserEntity,
+            int chunkSize
     ) {
         this.wfsServer = wfsServer;
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
-        // We need a custom rest template in order to deal with some non-standard minetype from wfs
-        RestTemplate clone = new RestTemplate(restTemplate.getRequestFactory());
-        clone.setInterceptors(new ArrayList<>(restTemplate.getInterceptors()));
-        clone.setMessageConverters(new ArrayList<>(restTemplate.getMessageConverters()));
-        clone.setErrorHandler(restTemplate.getErrorHandler());
-        clone.getInterceptors().add((request, body, execution) -> {
-            ClientHttpResponse resp = execution.execute(request, body);
-            return new WfsCustomResponseWrapper(resp);
-        });
-        this.restTemplate = clone;
+        this.restTemplate = restTemplate;
     }
     /**
      * Does collection lookup, WFS validation, field retrieval, and URL building
@@ -160,7 +99,7 @@ public class DownloadWfsDataService {
 
         // Just get number of record, the reply will always in XML
         String wfsRequestUrl = prepareWfsRequestUrl(
-                uuid, startDate, endDate, multiPolygon, fields, layerName, null,  -1L, true
+                uuid, startDate, endDate, multiPolygon, fields, layerName, "",  -1L, true
         );
 
         ResponseEntity<String> response = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, String.class);

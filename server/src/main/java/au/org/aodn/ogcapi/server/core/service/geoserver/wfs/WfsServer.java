@@ -163,7 +163,13 @@ public class WfsServer implements Server {
         param.put("typeName", layerName);
 
         if(outputFormat != null) {
-            param.put("outputFormat", outputFormat);
+            if(!outputFormat.isEmpty()) {
+                param.put("outputFormat", outputFormat);
+            }
+        }
+        else {
+            // Default to csv
+            param.put("outputFormat", "text/csv");
         }
 
         if(maxRecordNum > 0) {
