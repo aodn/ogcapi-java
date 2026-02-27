@@ -159,7 +159,9 @@ public class WfsServer implements Server {
             builder.port(components.getPort());
         }
 
-        Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
+        Map<String, String> param = new HashMap<>(
+                estimateSizeOnly ? wfsDefaultParam.getEstimate() : wfsDefaultParam.getDownload()
+        );
         param.put("typeName", layerName);
 
         if(outputFormat != null) {

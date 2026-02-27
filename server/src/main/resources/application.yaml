@@ -29,7 +29,11 @@ wfs-default-param:
     REQUEST: "DescribeFeatureType"
   download:
     SERVICE: "WFS"
-    VERSION: "1.1.0"       # Need at least 1.1.0 for resultType=hits to work TODO: Change to 2.0.0 after testing CQL query
+    VERSION: "1.0.0"       # TODO: Full regression test need to Change to 2.0.0 because the download may work strange
+    REQUEST: "GetFeature"
+  estimate:
+    SERVICE: "WFS"
+    VERSION: "1.1.0"       # Must use 1.1.0 or above otherwise missing function to do size estimate
     REQUEST: "GetFeature"
   capabilities:
     SERVICE: "WFS"
