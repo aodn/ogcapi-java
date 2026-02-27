@@ -359,7 +359,7 @@ public class WfsServerTest {
         String outputFormat = "text/csv";
 
         WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
-        String result = server.createWfsRequestUrl(serverUrlWithParams, layerName, null, null, outputFormat);
+        String result = server.createWfsRequestUrl(serverUrlWithParams, layerName, null, null, outputFormat, 1L, false);
 
         assertNotNull(result);
 

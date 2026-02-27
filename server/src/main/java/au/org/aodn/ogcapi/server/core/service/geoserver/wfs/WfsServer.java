@@ -148,7 +148,7 @@ public class WfsServer implements Server {
     /**
      * Build WFS GetFeature URL
      */
-    protected String createWfsRequestUrl(String wfsUrl, String layerName, List<String> fields, String cqlFilter, String outputFormat) {
+    protected String createWfsRequestUrl(String wfsUrl, String layerName, List<String> fields, String cqlFilter, String outputFormat, long maxRecordNum, boolean estimateSizeOnly) {
         UriComponents components = UriComponentsBuilder.fromUriString(wfsUrl).build();
         UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
                 .scheme("https")  // Force HTTPS to fix redirect
@@ -161,7 +161,19 @@ public class WfsServer implements Server {
 
         Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
         param.put("typeName", layerName);
-        param.put("outputFormat", outputFormat == null ? "text/csv" : outputFormat);
+
+        if(outputFormat != null) {
+            param.put("outputFormat", outputFormat);
+        }
+
+        if(maxRecordNum > 0) {
+            param.put("maxFeatures", String.valueOf(maxRecordNum));
+        }
+
+        if (estimateSizeOnly) {
+            // Just get result count
+            param.put("resultType", "hits");
+        }
 
         if (fields != null) {
             param.put("propertyName", String.join(",", fields));

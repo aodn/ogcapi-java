@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum ProcessIdEnum {
     DOWNLOAD_DATASET("download"),
     DOWNLOAD_WFS_SSE("downloadWfs"),
-    DOWNLOAD_WFS_SIZE("downloadWfsSize"),
+    DOWNLOAD_WFS_ESTIMATE("estimateWfsDownload"),
     UNKNOWN("");
 
     private final String value;

@@ -109,7 +109,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with null dates (non-specified dates from frontend)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, null, null, null, null, layerName, null
+                uuid, null, null, null, null, layerName, null, -1L, false
         );
 
         // Verify URL doesn't contain temporal filter when dates are null
@@ -132,7 +132,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with empty string dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, "", "", null, null, layerName, null
+                uuid, "", "", null, null, layerName, null, -1L, false
         );
 
         // Verify URL doesn't contain temporal filter when dates are empty
@@ -157,7 +157,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with valid dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, endDate, null, null, layerName, null
+                uuid, startDate, endDate, null, null, layerName, null, -1L, false
         );
 
         // Verify URL contains temporal filter when valid dates are provided
@@ -184,7 +184,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with only start date (end date is null)
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, null, null, null, layerName, null
+                uuid, startDate, null, null, null, layerName, null, -1L, false
         );
 
         // Verify URL doesn't contain temporal filter when only one date is provided
@@ -209,7 +209,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with MM-YYYY format dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, endDate, null, null, layerName, null
+                uuid, startDate, endDate, null, null, layerName, null, -1L, false
         );
 
         // Verify URL contains temporal filter with converted dates
@@ -231,7 +231,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with no WFS server URL available
         Exception exception = assertThrows(IllegalArgumentException.class, () -> downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, null, null, null, null, layerName, null
+                uuid, null, null, null, null, layerName, null, -1L, false
         ));
 
         assertTrue(exception.getMessage().contains("No WFS server URL found"));
@@ -253,13 +253,13 @@ public class DownloadWfsDataServiceTest {
 
         // Test with MM-YYYY format dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, endDate, null, null, layerName, null
+                uuid, startDate, endDate, null, null, layerName, null, -1L, false
         );
 
         assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=text/csv&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
 
         result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, endDate, null, null, layerName, "shape-zip"
+                uuid, startDate, endDate, null, null, layerName, "shape-zip", -1L, false
         );
         assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
     }
@@ -290,7 +290,7 @@ public class DownloadWfsDataServiceTest {
 
         // Test with MM-YYYY format dates
         String result = downloadWfsDataService.prepareWfsRequestUrl(
-                uuid, startDate, endDate, multiPolygon, null, layerName, null
+                uuid, startDate, endDate, multiPolygon, null, layerName, null, -1L, false
         );
 
         assertEquals(

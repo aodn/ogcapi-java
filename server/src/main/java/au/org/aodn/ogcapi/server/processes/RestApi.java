@@ -144,12 +144,23 @@ public class RestApi implements ProcessesApi {
             SseEmitter emitter;
 
             switch (id) {
-                case DOWNLOAD_WFS_SSE: {
+                case DOWNLOAD_WFS_SSE:
+                case DOWNLOAD_WFS_ESTIMATE: {
                     if(FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
-                        throw new IllegalArgumentException(String.format("Output format %s not supported", outputFormat));
+                        emitter = new SseEmitter(0L);
+                        emitter.completeWithError(new BadRequestException(
+                                String.format("Missing output format [%s]", processId)
+                        ));
                     }
                     emitter = restServices.downloadWfsDataWithSse(
-                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat
+                            uuid,
+                            startDate,
+                            endDate,
+                            multiPolygon,
+                            fields,
+                            layerName,
+                            outputFormat,
+                            id == ProcessIdEnum.DOWNLOAD_WFS_ESTIMATE
                     );
                     break;
                 }

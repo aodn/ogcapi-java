@@ -2,17 +2,24 @@ package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
+import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import net.opengis.wfs.FeatureCollectionType;
+import org.geotools.wfs.v1_1.WFSConfiguration;
+import org.geotools.xsd.Parser;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
+import org.springframework.http.*;
+import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,6 +30,52 @@ public class DownloadWfsDataService {
     private final RestTemplate restTemplate;
     private final HttpEntity<?> pretendUserEntity;
     private final int chunkSize;
+    private static final WFSConfiguration CONFIG = new WFSConfiguration();
+    /**
+     * Some wfs request contains non standard minetype which is not allow by the default rest template
+     */
+    static class WfsCustomResponseWrapper implements ClientHttpResponse {
+        private final ClientHttpResponse delegate;
+
+        public WfsCustomResponseWrapper(ClientHttpResponse delegate) {
+            this.delegate = delegate;
+        }
+
+        @Override
+        @Nonnull
+        public HttpStatusCode getStatusCode() throws IOException {
+            return delegate.getStatusCode();
+        }
+
+        @Override
+        @Nonnull
+        public String getStatusText() throws IOException {
+            return delegate.getStatusText();
+        }
+
+        @Override
+        public void close() {
+            delegate.close();
+        }
+
+        @Override
+        @Nonnull
+        public InputStream getBody() throws IOException {
+            return delegate.getBody();
+        }
+
+        @Override
+        @Nonnull
+        public HttpHeaders getHeaders() {
+            HttpHeaders headers = new HttpHeaders();
+            headers.putAll(delegate.getHeaders());
+            String ct = headers.getFirst(HttpHeaders.CONTENT_TYPE);
+            if (ct != null && ct.contains("subtype=")) {
+                headers.set(HttpHeaders.CONTENT_TYPE, "text/xml");
+            }
+            return headers;
+        }
+    }
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
@@ -31,9 +84,18 @@ public class DownloadWfsDataService {
             @Value("${app.sse.chunkSize:16384}") int chunkSize
     ) {
         this.wfsServer = wfsServer;
-        this.restTemplate = restTemplate;
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
+        // We need a custom rest template in order to deal with some non-standard minetype from wfs
+        RestTemplate clone = new RestTemplate(restTemplate.getRequestFactory());
+        clone.setInterceptors(new ArrayList<>(restTemplate.getInterceptors()));
+        clone.setMessageConverters(new ArrayList<>(restTemplate.getMessageConverters()));
+        clone.setErrorHandler(restTemplate.getErrorHandler());
+        clone.getInterceptors().add((request, body, execution) -> {
+            ClientHttpResponse resp = execution.execute(request, body);
+            return new WfsCustomResponseWrapper(resp);
+        });
+        this.restTemplate = clone;
     }
     /**
      * Does collection lookup, WFS validation, field retrieval, and URL building
@@ -45,7 +107,9 @@ public class DownloadWfsDataService {
             Object multiPolygon,
             List<String> fields,
             String layerName,
-            String outputFormat) {
+            String outputFormat,
+            long maxRecordCount,
+            boolean estimateSizeOnly) {
 
 
         // Get WFS server URL and field model for the given UUID and layer name
@@ -68,7 +132,9 @@ public class DownloadWfsDataService {
                     layerName,
                     fields,
                     wfsServer.buildCqlFilter(uuid, featureRequest),
-                    outputFormat);
+                    outputFormat,
+                    maxRecordCount,
+                    estimateSizeOnly);
 
             log.info("Prepared WFS request URL: {}", wfsRequestUrl);
             return wfsRequestUrl;
@@ -76,7 +142,54 @@ public class DownloadWfsDataService {
             throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
         }
     }
+    /**
+     * We just need to estimate the download size, the way we do it is issue two query:
+     * a. Issue a query and get the number or record hit
+     * b. Issue a query with data download but then limit the records size, and do a liner interpolation
+     * @return
+     */
+    public BigInteger estimateDownloadSize(
+            String uuid,
+            String layerName,
+            String startDate,
+            String endDate,
+            Object multiPolygon,
+            List<String> fields,
+            String outputFormat) {
 
+        // Just get number of record, the reply will always in XML
+        String wfsRequestUrl = prepareWfsRequestUrl(
+                uuid, startDate, endDate, multiPolygon, fields, layerName, null,  -1L, true
+        );
+
+        ResponseEntity<String> response = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, String.class);
+
+        if(response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            Parser parser = new Parser(CONFIG);
+            parser.setValidating(false);
+            parser.setFailOnValidationError(false);
+
+            try {
+                Object o = parser.parse(new StringReader(response.getBody()));
+                if(o instanceof FeatureCollectionType hits) {
+                    BigInteger featureCount = hits.getNumberOfFeatures();
+
+                    // Now we need to do another query where we limited the record count to something small
+                    wfsRequestUrl = prepareWfsRequestUrl(
+                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat,  50L, false
+                    );
+                    ResponseEntity<byte[]> bytes = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
+                    if(bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
+                        return featureCount.multiply(BigInteger.valueOf(bytes.getBody().length / 50));
+                    }
+                }
+            }
+            catch(Exception e) {
+                log.error("Fail to convert wfs hits result", e);
+            }
+        }
+        return null;
+    }
     /**
      * Execute WFS request with SSE support
      */

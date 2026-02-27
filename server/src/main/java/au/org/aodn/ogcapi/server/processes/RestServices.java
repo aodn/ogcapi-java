@@ -18,6 +18,7 @@ import software.amazon.awssdk.services.ses.model.*;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
@@ -181,20 +182,18 @@ public class RestServices {
                                              Object multiPolygon,
                                              List<String> fields,
                                              String layerName,
-                                             String outputFormat) {
+                                             String outputFormat,
+                                             boolean estimateSizeOnly) {
 
         final SseEmitter emitter = new SseEmitter(0L);
 
         // Set up references for resources that need to be cleaned up
         AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
         AtomicReference<ScheduledExecutorService> keepAliveExecutorRef = new AtomicReference<>();
-        AtomicBoolean downloadCompleted = new AtomicBoolean(false);
 
         // Set up cleanup function to clear up resources
         Runnable cleanupWfsResources = () -> {
             try {
-                downloadCompleted.set(true);
-
                 ScheduledFuture<?> keepAliveTask = keepAliveTaskRef.get();
                 if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
                     keepAliveTask.cancel(false);
@@ -248,17 +247,15 @@ public class RestServices {
                 // Send keep-alive every 20 seconds
                 ScheduledFuture<?> keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> {
                     try {
-                        if (!downloadCompleted.get()) {
-                            String status = wfsServerResponded.get() ? "streaming" : "waiting-for-wfs-server";
-                            emitter.send(SseEmitter.event()
-                                    .name("keep-alive")
-                                    .data(Map.of(
-                                            "status", status,
-                                            "timestamp", System.currentTimeMillis(),
-                                            "message", wfsServerResponded.get() ?
-                                                    "WFS data streaming in progress..." : "Waiting for WFS server response..."
-                                    )));
-                        }
+                        String status = wfsServerResponded.get() ? "streaming" : "waiting-for-wfs-server";
+                        emitter.send(SseEmitter.event()
+                                .name("keep-alive")
+                                .data(Map.of(
+                                        "status", status,
+                                        "timestamp", System.currentTimeMillis(),
+                                        "message", wfsServerResponded.get() ?
+                                                "WFS data streaming in progress..." : "Waiting for WFS server response..."
+                                )));
                     } catch (Exception e) {
                         WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
                     }
@@ -267,11 +264,6 @@ public class RestServices {
                 keepAliveTaskRef.set(keepAliveTask);
                 keepAliveExecutorRef.set(keepAliveExecutor);
 
-                // STEP 3: Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
-                String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
-                        uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat
-                );
-
                 emitter.send(SseEmitter.event()
                         .name("wfs-request-ready")
                         .data(Map.of(
@@ -279,16 +271,32 @@ public class RestServices {
                                 "timestamp", System.currentTimeMillis()
                         )));
 
-                // STEP 4: Make the WFS call: Streaming the response directly to client via SSE
-                downloadWfsDataService.executeWfsRequestWithSse(
-                        wfsRequestUrl,
-                        uuid,
-                        layerName,
-                        outputFormat,
-                        emitter,
-                        wfsServerResponded
-                );
+                if(!estimateSizeOnly) {
+                    // STEP 3: Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
+                    String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
+                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat,  -1L, false
+                    );
 
+                    // STEP 4: Make the WFS call: Streaming the response directly to client via SSE
+                    downloadWfsDataService.executeWfsRequestWithSse(
+                            wfsRequestUrl,
+                            uuid,
+                            layerName,
+                            outputFormat,
+                            emitter,
+                            wfsServerResponded
+                    );
+                }
+                else {
+                    BigInteger est = downloadWfsDataService.estimateDownloadSize(uuid, layerName, startDate, endDate, multiPolygon, fields, outputFormat);
+                    emitter.send(SseEmitter.event()
+                            .name(est != null ? "estimate-complete" : "estimate-failed")
+                            .data(Map.of(
+                                    "size", est != null ? est : "",
+                                    "timestamp", System.currentTimeMillis()
+                            )));
+                    emitter.complete();
+                }
             } catch (Exception e) {
                 WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
             }
