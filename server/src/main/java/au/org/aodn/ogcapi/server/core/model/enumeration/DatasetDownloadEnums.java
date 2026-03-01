@@ -1,6 +1,9 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import au.org.aodn.ogcapi.processes.model.Execute;
 import lombok.Getter;
+
+import java.util.List;
 
 /**
  * the values are used for aws batch's environment variables
@@ -27,6 +30,25 @@ public class DatasetDownloadEnums {
 
         Parameter(String value) {
             this.value = value;
+        }
+
+        public String getStringInput(Execute input) {
+            Object value = input.getInputs().get(getValue());
+            return value == null ? null : value.toString();
+        }
+
+        public Object getObjectInput(Execute input) {
+            return input.getInputs().get(getValue());
+        }
+
+        public List<String> getListInput(Execute input) {
+            Object value = input.getInputs().get(getValue());
+            if(value instanceof List<?> list) {
+                return list.stream().map(String::valueOf).toList();
+            }
+            else {
+                return null;
+            }
         }
     }
 

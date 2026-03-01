@@ -1,38 +1,41 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.service.geoserver.Server;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
+import net.opengis.wfs.FeatureCollectionType;
+import org.geotools.wfs.v1_1.WFSConfiguration;
+import org.geotools.xsd.Parser;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.StringReader;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
-@Service
-public class DownloadWfsDataService extends Server {
+public class DownloadWfsDataService {
+    private final WfsServer wfsServer;
     private final RestTemplate restTemplate;
     private final HttpEntity<?> pretendUserEntity;
     private final int chunkSize;
+    private static final WFSConfiguration CONFIG = new WFSConfiguration();
+    private static final int SAMPLES_SIZE = 500;
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
             RestTemplate restTemplate,
-            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
-            @Value("${app.sse.chunkSize:16384}") int chunkSize
+            HttpEntity<?> pretendUserEntity,
+            int chunkSize
     ) {
-        super(wfsServer);
-        this.restTemplate = restTemplate;
+        this.wfsServer = wfsServer;
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
+        this.restTemplate = restTemplate;
     }
     /**
      * Does collection lookup, WFS validation, field retrieval, and URL building
@@ -44,7 +47,9 @@ public class DownloadWfsDataService extends Server {
             Object multiPolygon,
             List<String> fields,
             String layerName,
-            String outputFormat) {
+            String outputFormat,
+            long maxRecordCount,
+            boolean estimateSizeOnly) {
 
 
         // Get WFS server URL and field model for the given UUID and layer name
@@ -54,16 +59,22 @@ public class DownloadWfsDataService extends Server {
         if (featureServerUrl.isPresent()) {
             String wfsServerUrl = featureServerUrl.get();
 
-            // Build CQL filter
-            String cqlFilter = buildCqlFilter(wfsServerUrl, uuid, layerName, startDate, endDate, multiPolygon);
+            WfsServer.WfsFeatureRequest featureRequest = WfsServer.WfsFeatureRequest.builder()
+                    .server(wfsServerUrl)
+                    .layerName(layerName)
+                    .datetime(DatetimeUtils.formatOGCDateTime(startDate, endDate))
+                    .multiPolygon(multiPolygon)
+                    .build();
 
             // Build final WFS request URL
             String wfsRequestUrl = wfsServer.createWfsRequestUrl(
                     wfsServerUrl,
                     layerName,
                     fields,
-                    cqlFilter,
-                    outputFormat);
+                    wfsServer.buildCqlFilter(uuid, featureRequest),
+                    outputFormat,
+                    maxRecordCount,
+                    estimateSizeOnly);
 
             log.info("Prepared WFS request URL: {}", wfsRequestUrl);
             return wfsRequestUrl;
@@ -71,7 +82,57 @@ public class DownloadWfsDataService extends Server {
             throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
         }
     }
+    /**
+     * We just need to estimate the download size, the way we do it is issue two query:
+     * a. Issue a query and get the number or record hit
+     * b. Issue a query with data download but then limit the records size, and do a liner interpolation
+     * @return The estimated file size
+     */
+    public BigInteger estimateDownloadSize(
+            String uuid,
+            String layerName,
+            String startDate,
+            String endDate,
+            Object multiPolygon,
+            List<String> fields,
+            String outputFormat) {
 
+        // Just get number of record, the reply will always in XML
+        String wfsRequestUrl = prepareWfsRequestUrl(
+                uuid, startDate, endDate, multiPolygon, fields, layerName, "",  -1L, true
+        );
+
+        ResponseEntity<String> response = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, String.class);
+
+        if(response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            Parser parser = new Parser(CONFIG);
+            parser.setValidating(false);
+            parser.setFailOnValidationError(false);
+
+            try {
+                Object o = parser.parse(new StringReader(response.getBody()));
+                if(o instanceof FeatureCollectionType hits) {
+                    BigInteger featureCount = hits.getNumberOfFeatures();
+
+                    log.debug("Total record hits {}", featureCount);
+                    // Now we need to do another query where we limited the record count to something small
+                    wfsRequestUrl = prepareWfsRequestUrl(
+                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, SAMPLES_SIZE, false
+                    );
+                    ResponseEntity<byte[]> bytes = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
+                    if(bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
+                        return featureCount
+                                .multiply(BigInteger.valueOf(bytes.getBody().length))
+                                .divide(BigInteger.valueOf(SAMPLES_SIZE));
+                    }
+                }
+            }
+            catch(Exception e) {
+                log.error("Fail to convert wfs hits result", e);
+            }
+        }
+        return null;
+    }
     /**
      * Execute WFS request with SSE support
      */

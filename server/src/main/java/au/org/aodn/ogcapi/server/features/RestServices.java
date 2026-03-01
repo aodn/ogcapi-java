@@ -133,8 +133,8 @@ public class RestServices extends OGCApiService {
                     .map(WfsField::getName)
                     .toList();
 
-            for (FeatureRequest.PropertyName name : wfsFeatureRequest.getProperties()) {
-                if (extractedName.contains(name.name())) {
+            for (String name : wfsFeatureRequest.getProperties()) {
+                if (extractedName.contains(name)) {
                     // TODO: If missing then may need map
                     log.info("Field {} need map", name);
                     //

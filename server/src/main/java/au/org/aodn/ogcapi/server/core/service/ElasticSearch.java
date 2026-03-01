@@ -633,7 +633,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 //    }
 
     @Override
-    public SearchResult<FeatureGeoJSON> searchFeatureSummary(String collectionId, List<FeatureRequest.PropertyName> properties, String filter) {
+    public SearchResult<FeatureGeoJSON> searchFeatureSummary(String collectionId, List<String> properties, String filter) {
         try {
             SearchRequest searchRequest = new SearchRequest.Builder()
                     .index(dataIndexName)

@@ -51,7 +51,7 @@ public class ElasticSearchTest {
 
         // Arrange
         String collectionId = "test-collection";
-        List<FeatureRequest.PropertyName> properties = List.of(FeatureRequest.PropertyName.wildcard);
+        List<String> properties = List.of("*");
         String filter = null;
 
         SearchResponse<EsFeatureCollectionModel> mockResponse = mock(SearchResponse.class);

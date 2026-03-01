@@ -8,6 +8,9 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.*;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.ogcapi.server.core.service.geoserver.Server;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -40,7 +43,7 @@ import static au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultPar
 import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.*;
 
 @Slf4j
-public class WfsServer {
+public class WfsServer implements Server {
     // Cannot use singleton bean as it impacted other dependency
     protected final XmlMapper xmlMapper;
     protected RestTemplateUtils restTemplateUtils;
@@ -79,11 +82,73 @@ public class WfsServer {
         this.pretendUserEntity = entity;
         this.wfsDefaultParam = wfsDefaultParam;
     }
+    /**
+     * Build CQL filter for temporal and spatial constraints
+     */
+    public String buildCqlFilter(String uuid, WfsFeatureRequest featureRequest) {
 
+        WfsFields wfsFieldModel = self.getDownloadableFields(
+                uuid,
+                featureRequest
+        );
+        log.debug("WFSFieldModel by wfs typename: {}", wfsFieldModel);
+
+        // Validate start and end dates
+        final String startDate = DatetimeUtils.validateAndFormatDate(featureRequest.getStartDateTime(), true);
+        final String endDate = DatetimeUtils.validateAndFormatDate(featureRequest.getEndDateTime(), false);
+
+        StringBuilder cqlFilter = new StringBuilder();
+
+        if (wfsFieldModel == null || wfsFieldModel.getFields() == null) {
+            return cqlFilter.toString();
+        }
+
+        List<WfsField> fields = wfsFieldModel.getFields();
+
+        // Possible to have multiple days, better to consider all
+        List<WfsField> temporalField = fields.stream()
+                .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
+                .toList();
+
+        // Add temporal filter only if both dates are specified
+        if (!temporalField.isEmpty() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
+            List<String> cqls = new ArrayList<>();
+            temporalField.forEach(temp ->
+                    cqls.add(String.format("(%s DURING %sT00:00:00Z/%sT23:59:59Z)", temp.getName(), startDate, endDate))
+            );
+            cqlFilter.append("(").append(String.join(" OR ", cqls)).append(")");
+        }
+
+        // Find geometry field
+        Optional<WfsField> geometryField = fields.stream()
+                .filter(field -> "geometrypropertytype".equalsIgnoreCase(field.getType()))
+                .findFirst();
+
+        // Add spatial filter
+        if (geometryField.isPresent() && featureRequest.getMultiPolygon() != null) {
+            String fieldName = geometryField.get().getName();
+
+            String wkt = GeometryUtils.convertToWkt(featureRequest.getMultiPolygon());
+
+            if ((wkt != null) && !cqlFilter.isEmpty()) {
+                cqlFilter.append(" AND ");
+            }
+
+            if (wkt != null) {
+                cqlFilter.append("INTERSECTS(")
+                        .append(fieldName)
+                        .append(",")
+                        .append(wkt)
+                        .append(")");
+            }
+        }
+
+        return cqlFilter.toString();
+    }
     /**
      * Build WFS GetFeature URL
      */
-    protected String createWfsRequestUrl(String wfsUrl, String layerName, List<String> fields, String cqlFilter, String outputFormat) {
+    protected String createWfsRequestUrl(String wfsUrl, String layerName, List<String> fields, String cqlFilter, String outputFormat, long maxRecordNum, boolean estimateSizeOnly) {
         UriComponents components = UriComponentsBuilder.fromUriString(wfsUrl).build();
         UriComponentsBuilder builder = UriComponentsBuilder.newInstance()
                 .scheme("https")  // Force HTTPS to fix redirect
@@ -94,9 +159,29 @@ public class WfsServer {
             builder.port(components.getPort());
         }
 
-        Map<String, String> param = new HashMap<>(wfsDefaultParam.getDownload());
+        Map<String, String> param = new HashMap<>(
+                estimateSizeOnly ? wfsDefaultParam.getEstimate() : wfsDefaultParam.getDownload()
+        );
         param.put("typeName", layerName);
-        param.put("outputFormat", outputFormat == null ? "text/csv" : outputFormat);
+
+        if(outputFormat != null) {
+            if(!outputFormat.isEmpty()) {
+                param.put("outputFormat", outputFormat);
+            }
+        }
+        else {
+            // Default to csv
+            param.put("outputFormat", "text/csv");
+        }
+
+        if(maxRecordNum > 0) {
+            param.put("maxFeatures", String.valueOf(maxRecordNum));
+        }
+
+        if (estimateSizeOnly) {
+            // Just get result count
+            param.put("resultType", "hits");
+        }
 
         if (fields != null) {
             param.put("propertyName", String.join(",", fields));
@@ -203,15 +288,15 @@ public class WfsServer {
                 param.put("TYPENAME", request.getLayerName());
                 param.put("outputFormat", "application/json");
 
-                if (request.getProperties() != null && !request.getProperties().contains(FeatureRequest.PropertyName.wildcard)) {
+                if (request.getProperties() != null && !request.getProperties().contains("*")) {
                     param.put("propertyName", String.join(
                             ",",
-                            request.getProperties().stream().map(Enum::name).toList())
+                            request.getProperties())
                     );
                     param.put("sortBy", String.join(
                             ",",
                             // Assume always sort by desc
-                            request.getProperties().stream().map(p -> String.format("%s+D", p.name())).toList())
+                            request.getProperties().stream().map(p -> String.format("%s+D", p)).toList())
                     );
                 }
 
@@ -450,7 +535,9 @@ public class WfsServer {
      * @param layerName    - The layer name to match the title
      * @return - The matched wfs server link, or the first available one if no match found
      */
-    public Optional<String> getFeatureServerUrl(String collectionId, String layerName) {
+    public Optional<String>
+
+    getFeatureServerUrl(String collectionId, String layerName) {
         Optional<String> url = getFeatureServerUrlByTitleOrQueryParam(collectionId, layerName);
         if (url.isPresent()) {
             log.debug("Found WFS link by title/query param for collectionId {} with layerName {}: {}", collectionId, layerName, url.get());
