@@ -1,16 +1,22 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
+import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import lombok.extern.slf4j.Slf4j;
+import net.opengis.ows10.ExceptionReportType;
 import net.opengis.wfs.FeatureCollectionType;
 import org.geotools.wfs.v1_1.WFSConfiguration;
 import org.geotools.xsd.Parser;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.xml.sax.SAXException;
 
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.math.BigInteger;
@@ -19,12 +25,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class DownloadWfsDataService {
-    private final WfsServer wfsServer;
-    private final RestTemplate restTemplate;
-    private final HttpEntity<?> pretendUserEntity;
-    private final int chunkSize;
-    private static final WFSConfiguration CONFIG = new WFSConfiguration();
-    private static final int SAMPLES_SIZE = 500;
+    protected final WfsServer wfsServer;
+    protected final RestTemplate restTemplate;
+    protected final HttpEntity<?> pretendUserEntity;
+    protected final int chunkSize;
+    protected static final WFSConfiguration WFS_CONFIG = new WFSConfiguration();
+    protected static final int SAMPLES_SIZE = 500;    // A not too small sample for download size estimation
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
@@ -88,6 +94,7 @@ public class DownloadWfsDataService {
      * b. Issue a query with data download but then limit the records size, and do a liner interpolation
      * @return The estimated file size
      */
+    @Cacheable(CacheConfig.DOWNLOADABLE_SIZE)
     public BigInteger estimateDownloadSize(
             String uuid,
             String layerName,
@@ -95,7 +102,7 @@ public class DownloadWfsDataService {
             String endDate,
             Object multiPolygon,
             List<String> fields,
-            String outputFormat) {
+            String outputFormat) throws IllegalArgumentException {
 
         // Just get number of record, the reply will always in XML
         String wfsRequestUrl = prepareWfsRequestUrl(
@@ -105,7 +112,7 @@ public class DownloadWfsDataService {
         ResponseEntity<String> response = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, String.class);
 
         if(response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            Parser parser = new Parser(CONFIG);
+            Parser parser = new Parser(WFS_CONFIG);
             parser.setValidating(false);
             parser.setFailOnValidationError(false);
 
@@ -126,8 +133,11 @@ public class DownloadWfsDataService {
                                 .divide(BigInteger.valueOf(SAMPLES_SIZE));
                     }
                 }
+                else if(o instanceof ExceptionReportType report) {
+                    throw new IllegalArgumentException(String.join(",", report.getException().stream().map(ex -> ex.getExceptionText().toString()).toList()));
+                }
             }
-            catch(Exception e) {
+            catch(IOException | SAXException | ParserConfigurationException e) {
                 log.error("Fail to convert wfs hits result", e);
             }
         }
