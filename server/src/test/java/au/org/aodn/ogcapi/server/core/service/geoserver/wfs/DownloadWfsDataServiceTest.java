@@ -70,7 +70,7 @@ public class DownloadWfsDataServiceTest {
         wmsServer = Mockito.spy(new WmsServer(search, wfsServer, pretendUserEntity));
 
         downloadWfsDataService = new DownloadWfsDataService(
-                wfsServer, restTemplate, pretendUserEntity, 16384
+                wfsServer, restTemplate, pretendUserEntity, 16384, new ObjectMapper()
         );
     }
 
@@ -315,31 +315,17 @@ public class DownloadWfsDataServiceTest {
         List<String> fields = List.of("name", "area");
         String format = "application/json";
 
-        // 1. Hits response (XML)
-        String hitsXml = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <wfs:FeatureCollection
-                xmlns:xs="http://www.w3.org/2001/XMLSchema"
-                xmlns:wfs="http://www.opengis.net/wfs"
-                xmlns:gml="http://www.opengis.net/gml"
-                xmlns:ogc="http://www.opengis.net/ogc"
-                xmlns:ows="http://www.opengis.net/ows"
-                xmlns:xlink="http://www.w3.org/1999/xlink"
-                xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-                numberOfFeatures="227193"
-                timeStamp="2026-03-01T22:28:56.206Z"
-                xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.1.0/wfs.xsd"
-            />
-            """;
-        ResponseEntity<String> hitsResponse = new ResponseEntity<>(hitsXml, HttpStatus.OK);
+        // 1. Count response: GeoJSON with totalFeatures (1 record requested, but totalFeatures = full count)
+        String countJson = "{\"totalFeatures\": 227193, \"features\": []}";
+        ResponseEntity<String> countResponse = new ResponseEntity<>(countJson, HttpStatus.OK);
 
-        // 2. Sample response (small payload)
+        // 2. Sample response (small payload in requested format)
         byte[] sampleBytes = "fake data".getBytes();
         ResponseEntity<byte[]> sampleResponse = new ResponseEntity<>(sampleBytes, HttpStatus.OK);
 
-        doReturn(hitsResponse)
+        doReturn(countResponse)
                 .when(restTemplate).exchange(
-                    argThat((String url) -> url != null && url.contains("resultType=hits")),
+                    argThat((String url) -> url != null && url.contains("maxFeatures=1")),
                     eq(HttpMethod.GET),
                     any(HttpEntity.class),
                     eq(String.class));
@@ -364,53 +350,48 @@ public class DownloadWfsDataServiceTest {
         BigInteger size = downloadWfsDataService.estimateDownloadSize(
                 uuid, layer, start, end, multiPolygon, fields, format);
 
-        // Should have call with resultType=hits to get number of record
+        // Should call with maxFeatures=1 to get totalFeatures count via GeoJSON
         verify(restTemplate).exchange(
-                eq("https://dummy.com/wfs?VERSION=1.1.0&typeName=water_bodies&SERVICE=WFS&REQUEST=GetFeature&resultType=hits&propertyName=name,area&cql_filter=((time DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))"),  // or contains(...)
+                argThat((String url) -> url != null && url.contains("maxFeatures=1") && url.contains("outputFormat=application")),
                 eq(HttpMethod.GET),
                 any(),
-                eq(String.class)                    // or byte[].class etc.
+                eq(String.class)
         );
 
-        // Should also call with maxFeatures
+        // Should also call with maxFeatures=500 to sample bytes for size interpolation
         verify(restTemplate).exchange(
-                eq("https://dummy.com/wfs?REQUEST=GetFeature&propertyName=name,area&VERSION=1.0.0&typeName=water_bodies&SERVICE=WFS&outputFormat=application/json&maxFeatures=500&cql_filter=((time DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))"),  // or contains(...)
+                argThat((String url) -> url != null && url.contains("maxFeatures=" + DownloadWfsDataService.SAMPLES_SIZE)),
                 eq(HttpMethod.GET),
                 any(),
-                eq(byte[].class)                    // or byte[].class etc.
+                eq(byte[].class)
         );
 
-        // numberOfFeatures="227193"
+        // totalFeatures=227193, sampleBytes=9 bytes, SAMPLES_SIZE=500
         long expected = 227193L * sampleBytes.length / DownloadWfsDataService.SAMPLES_SIZE;
         assertEquals(BigInteger.valueOf(expected), size, "Size match");
     }
     /**
-     * Expect illegal exception when param is wrong
+     * Expect RuntimeException when GeoServer returns JSON without the totalFeatures field
+     * (e.g. GeoServer returned an error JSON or unexpected structure)
      */
     @Test
-    void throwExceptionWhenHitsRequestFails() {
+    void throwsExceptionWhenCountResponseMissesTotalFeatures() {
 
         String uuid = "lyr-123";
         String layer = "imos:aatams_sattag_dm_profile_map1";
         String start = "2024-01-01";
         String end = "2024-12-31";
-        Object multiPolygon = new Object(); // or real geometry
+        Object multiPolygon = new Object();
         List<String> fields = List.of("name", "area");
         String format = "application/json";
 
-        // 1. Hits response (XML), indicate error
-        String hitsXml = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <ows:ExceptionReport xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ows="http://www.opengis.net/ows" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/ows https://geoserver-123.aodn.org.au/geoserver/schemas/ows/1.0.0/owsExceptionReport.xsd">
-                <ows:Exception exceptionCode="InvalidParameterValue" locator="typeName">
-                    <ows:ExceptionText>Feature type imos:aatams_sattag_dm_profile_map1 unknown</ows:ExceptionText>
-                </ows:Exception>
-            </ows:ExceptionReport>
-            """;
-        ResponseEntity<String> hitsResponse = new ResponseEntity<>(hitsXml, HttpStatus.OK);
-        doReturn(hitsResponse)
+        // GeoServer returns JSON but without the totalFeatures field
+        String countJson = "{\"error\": \"Feature type unknown\"}";
+        ResponseEntity<String> countResponse = new ResponseEntity<>(countJson, HttpStatus.OK);
+
+        doReturn(countResponse)
                 .when(restTemplate).exchange(
-                        argThat((String url) -> url != null && url.contains("resultType=hits")),
+                        argThat((String url) -> url != null && url.contains("maxFeatures=1")),
                         eq(HttpMethod.GET),
                         any(HttpEntity.class),
                         eq(String.class));
@@ -427,10 +408,10 @@ public class DownloadWfsDataServiceTest {
         doReturn(fs)
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
-        assertThrows(IllegalArgumentException.class,
+        assertThrows(RuntimeException.class,
                 () -> downloadWfsDataService.estimateDownloadSize(
-                    uuid, layer, start, end, multiPolygon, fields, format)
-        );
+                        uuid, layer, start, end, multiPolygon, fields, format),
+                "Should throw RuntimeException when totalFeatures is missing from count response");
     }
 
     @Test
@@ -439,23 +420,17 @@ public class DownloadWfsDataServiceTest {
         String layer = "imos:aatams_sattag_dm_profile_map1";
         String start = "2024-01-01";
         String end = "2024-12-31";
-        Object multiPolygon = new Object(); // or real geometry
+        Object multiPolygon = new Object();
         List<String> fields = List.of("name", "area");
         String format = "application/json";
 
-        // 1. A syntax error XML, should not see this but just incase
-        String hitsXml = """
-            <?xml version="1.0" encoding="UTF-8"?>
-            <ows:ExceptionReport23433 xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ows="http://www.opengis.net/ows" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/ows https://geoserver-123.aodn.org.au/geoserver/schemas/ows/1.0.0/owsExceptionReport.xsd">
-                <ows:Exception exceptionCode="InvalidParameterValue" locator="typeName">
-                    <ows:ExceptionText>Feature type imos:aatams_sattag_dm_profile_map1 unknown</ows:ExceptionText>
-                </ows:Exception>
-            </ows:ExceptionReport>
-            """;
-        ResponseEntity<String> hitsResponse = new ResponseEntity<>(hitsXml, HttpStatus.OK);
-        doReturn(hitsResponse)
+        // GeoServer returns malformed JSON — Jackson will throw an IOException, expect null back
+        String malformedJson = "not-valid-json{{{{";
+        ResponseEntity<String> countResponse = new ResponseEntity<>(malformedJson, HttpStatus.OK);
+
+        doReturn(countResponse)
                 .when(restTemplate).exchange(
-                        argThat((String url) -> url != null && url.contains("resultType=hits")),
+                        argThat((String url) -> url != null && url.contains("maxFeatures=1")),
                         eq(HttpMethod.GET),
                         any(HttpEntity.class),
                         eq(String.class));
@@ -475,6 +450,6 @@ public class DownloadWfsDataServiceTest {
         BigInteger size = downloadWfsDataService.estimateDownloadSize(
                         uuid, layer, start, end, multiPolygon, fields, format);
 
-        assertNull(size, "Size should be null");
+        assertNull(size, "Size should be null when JSON parsing fails");
     }
 }
