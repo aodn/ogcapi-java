@@ -19,12 +19,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class DownloadWfsDataService {
-    private final WfsServer wfsServer;
-    private final RestTemplate restTemplate;
-    private final HttpEntity<?> pretendUserEntity;
-    private final int chunkSize;
-    private static final WFSConfiguration CONFIG = new WFSConfiguration();
-    private static final int SAMPLES_SIZE = 500;
+    protected final WfsServer wfsServer;
+    protected final RestTemplate restTemplate;
+    protected final HttpEntity<?> pretendUserEntity;
+    protected final int chunkSize;
+    protected static final WFSConfiguration CONFIG = new WFSConfiguration();
+    protected static final int SAMPLES_SIZE = 500;    // A not too small sample for download size estimation
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
