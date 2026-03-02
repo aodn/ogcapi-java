@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
@@ -16,7 +17,6 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.http.client.ClientHttpResponse;
 import org.springframework.web.client.RestTemplate;
 
@@ -102,7 +102,8 @@ public class GeoServerConfig {
     public DownloadWfsDataService createDownloadWfsDataService(WfsServer wfsServer,
                                                                RestTemplate restTemplate,
                                                                @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
-                                                               @Value("${app.sse.chunkSize:16384}") int chunkSize) {
+                                                               @Value("${app.sse.chunkSize:16384}") int chunkSize,
+                                                               ObjectMapper objectMapper) {
 
         RestTemplate clone = new RestTemplate(restTemplate.getRequestFactory());
         clone.setInterceptors(new ArrayList<>(restTemplate.getInterceptors()));
@@ -114,6 +115,6 @@ public class GeoServerConfig {
         clone.setMessageConverters(new ArrayList<>(restTemplate.getMessageConverters()));
         clone.setErrorHandler(restTemplate.getErrorHandler());
 
-        return new DownloadWfsDataService(wfsServer, clone, pretendUserEntity, chunkSize);
+        return new DownloadWfsDataService(wfsServer, clone, pretendUserEntity, chunkSize, objectMapper);
     }
 }

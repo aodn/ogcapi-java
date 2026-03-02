@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -18,8 +19,9 @@ public class GeoServerConfigTest {
     public DownloadWfsDataService createDownloadWfsDataService(WfsServer wfsServer,
                                                                RestTemplate restTemplate,
                                                                @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
-                                                               @Value("${app.sse.chunkSize:16384}") int chunkSize) {
+                                                               @Value("${app.sse.chunkSize:16384}") int chunkSize,
+                                                               ObjectMapper objectMapper) {
         // We do not add interceptor here because most of the time restTemplate is mock and cannot trigger custom interceptor
-        return new DownloadWfsDataService(wfsServer, restTemplate, pretendUserEntity, chunkSize);
+        return new DownloadWfsDataService(wfsServer, restTemplate, pretendUserEntity, chunkSize, objectMapper);
     }
 }

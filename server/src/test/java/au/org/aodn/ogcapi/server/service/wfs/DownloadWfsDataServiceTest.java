@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import org.junit.jupiter.api.Test;
@@ -43,7 +44,7 @@ public class DownloadWfsDataServiceTest {
         RestTemplate restTemplateMock = mock(RestTemplate.class);
         // Intended to set a very small chunk size to test the edge case
         DownloadWfsDataService service = new DownloadWfsDataService(
-                wfsServer, restTemplateMock, entity, 10);
+                wfsServer, restTemplateMock, entity, 10, new ObjectMapper());
 
         String original = "id,name,age,city\n1,Alice,30,Sydney\n2,Bob,25,Melbourne\n3,„Café“,42,Perth\n";
         byte[] originalBytes = original.getBytes(StandardCharsets.UTF_8);
@@ -115,7 +116,7 @@ public class DownloadWfsDataServiceTest {
         RestTemplate restTemplateMock = mock(RestTemplate.class);
         // Intended to set a very small chunk size to test the edge case
         DownloadWfsDataService service = new DownloadWfsDataService(
-                wfsServer, restTemplateMock, entity, 10);
+                wfsServer, restTemplateMock, entity, 10, new ObjectMapper());
 
         // Just some big enough random binary to trigger chunk split
         byte[] originalBytes = new byte[]{

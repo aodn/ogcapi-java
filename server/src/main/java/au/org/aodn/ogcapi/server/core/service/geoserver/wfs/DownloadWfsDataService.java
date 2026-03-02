@@ -3,22 +3,17 @@ package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import net.opengis.ows10.ExceptionReportType;
-import net.opengis.wfs.FeatureCollectionType;
-import org.geotools.wfs.v1_1.WFSConfiguration;
-import org.geotools.xsd.Parser;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.xml.sax.SAXException;
 
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -29,20 +24,23 @@ public class DownloadWfsDataService {
     protected final RestTemplate restTemplate;
     protected final HttpEntity<?> pretendUserEntity;
     protected final int chunkSize;
-    protected static final WFSConfiguration WFS_CONFIG = new WFSConfiguration();
+    protected final ObjectMapper objectMapper;
     protected static final int SAMPLES_SIZE = 500;    // A not too small sample for download size estimation
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
             RestTemplate restTemplate,
             HttpEntity<?> pretendUserEntity,
-            int chunkSize
+            int chunkSize,
+            ObjectMapper objectMapper
     ) {
         this.wfsServer = wfsServer;
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
         this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
+
     /**
      * Does collection lookup, WFS validation, field retrieval, and URL building
      */
@@ -88,10 +86,12 @@ public class DownloadWfsDataService {
             throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
         }
     }
+
     /**
      * We just need to estimate the download size, the way we do it is issue two query:
      * a. Issue a query and get the number or record hit
      * b. Issue a query with data download but then limit the records size, and do a liner interpolation
+     *
      * @return The estimated file size
      */
     @Cacheable(CacheConfig.DOWNLOADABLE_SIZE)
@@ -104,45 +104,43 @@ public class DownloadWfsDataService {
             List<String> fields,
             String outputFormat) throws IllegalArgumentException {
 
-        // Just get number of record, the reply will always in XML
-        String wfsRequestUrl = prepareWfsRequestUrl(
-                uuid, startDate, endDate, multiPolygon, fields, layerName, "",  -1L, true
+        // Get total feature count via GeoJSON response
+        String countUrl = prepareWfsRequestUrl(
+                uuid, startDate, endDate, multiPolygon, fields, layerName, "application/json", 1L, false
         );
 
-        ResponseEntity<String> response = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, String.class);
+        ResponseEntity<String> countResponse = restTemplate.exchange(countUrl, HttpMethod.GET, pretendUserEntity, String.class);
 
-        if(response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-            Parser parser = new Parser(WFS_CONFIG);
-            parser.setValidating(false);
-            parser.setFailOnValidationError(false);
-
+        if (countResponse.getStatusCode().is2xxSuccessful() && countResponse.getBody() != null) {
             try {
-                Object o = parser.parse(new StringReader(response.getBody()));
-                if(o instanceof FeatureCollectionType hits) {
-                    BigInteger featureCount = hits.getNumberOfFeatures();
+                JsonNode root = objectMapper.readTree(countResponse.getBody());
+                if (!root.has("totalFeatures")) {
+                    throw new RuntimeException("GeoServer GeoJSON response missing totalFeatures field");
+                }
+                BigInteger featureCount = BigInteger.valueOf(root.get("totalFeatures").asLong());
+                log.debug("Total record hits {}", featureCount);
 
-                    log.debug("Total record hits {}", featureCount);
-                    // Now we need to do another query where we limited the record count to something small
-                    wfsRequestUrl = prepareWfsRequestUrl(
-                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, SAMPLES_SIZE, false
-                    );
-                    ResponseEntity<byte[]> bytes = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
-                    if(bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
-                        return featureCount
-                                .multiply(BigInteger.valueOf(bytes.getBody().length))
-                                .divide(BigInteger.valueOf(SAMPLES_SIZE));
-                    }
+                // In case the records we have is smaller than our predefined SAMPLES_SIZE, we use smaller one.
+                long sampleSize = featureCount.longValue() < SAMPLES_SIZE ? featureCount.longValue() : SAMPLES_SIZE;
+
+                // Download a small sample to measure bytes per record in the requested output format
+                String sampleUrl = prepareWfsRequestUrl(
+                        uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, sampleSize, false
+                );
+
+                ResponseEntity<byte[]> bytes = restTemplate.exchange(sampleUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
+                if (bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
+                    return featureCount
+                            .multiply(BigInteger.valueOf(bytes.getBody().length))
+                            .divide(BigInteger.valueOf(sampleSize));
                 }
-                else if(o instanceof ExceptionReportType report) {
-                    throw new IllegalArgumentException(String.join(",", report.getException().stream().map(ex -> ex.getExceptionText().toString()).toList()));
-                }
-            }
-            catch(IOException | SAXException | ParserConfigurationException e) {
-                log.error("Fail to convert wfs hits result", e);
+            } catch (IOException e) {
+                log.error("Fail to get feature count for estimate", e);
             }
         }
         return null;
     }
+
     /**
      * Execute WFS request with SSE support
      */
