@@ -120,17 +120,19 @@ public class DownloadWfsDataService {
                 Object o = parser.parse(new StringReader(response.getBody()));
                 if(o instanceof FeatureCollectionType hits) {
                     BigInteger featureCount = hits.getNumberOfFeatures();
+                    // In case the records we have is smaller than our predefined SAMPLES_SIZE, we use smaller one.
+                    long sampleSize = featureCount.longValue() < SAMPLES_SIZE ? featureCount.longValue() : SAMPLES_SIZE;
 
                     log.debug("Total record hits {}", featureCount);
                     // Now we need to do another query where we limited the record count to something small
                     wfsRequestUrl = prepareWfsRequestUrl(
-                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, SAMPLES_SIZE, false
+                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, sampleSize, false
                     );
                     ResponseEntity<byte[]> bytes = restTemplate.exchange(wfsRequestUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
                     if(bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
                         return featureCount
                                 .multiply(BigInteger.valueOf(bytes.getBody().length))
-                                .divide(BigInteger.valueOf(SAMPLES_SIZE));
+                                .divide(BigInteger.valueOf(sampleSize));
                     }
                 }
                 else if(o instanceof ExceptionReportType report) {
