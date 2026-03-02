@@ -384,4 +384,52 @@ public class DownloadWfsDataServiceTest {
         long expected = 227193L * sampleBytes.length / DownloadWfsDataService.SAMPLES_SIZE;
         assertEquals(BigInteger.valueOf(expected), size, "Size match");
     }
+    /**
+     * Expect illegal exception when param is wrong
+     */
+    @Test
+    void throwExceptionWhenHitsRequestFails() {
+
+        String uuid = "lyr-123";
+        String layer = "imos:aatams_sattag_dm_profile_map1";
+        String start = "2024-01-01";
+        String end = "2024-12-31";
+        Object multiPolygon = new Object(); // or real geometry
+        List<String> fields = List.of("name", "area");
+        String format = "application/json";
+
+        // 1. Hits response (XML), indicate error
+        String hitsXml = """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <ows:ExceptionReport xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:ows="http://www.opengis.net/ows" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.0.0" xsi:schemaLocation="http://www.opengis.net/ows https://geoserver-123.aodn.org.au/geoserver/schemas/ows/1.0.0/owsExceptionReport.xsd">
+                <ows:Exception exceptionCode="InvalidParameterValue" locator="typeName">
+                    <ows:ExceptionText>Feature type imos:aatams_sattag_dm_profile_map1 unknown</ows:ExceptionText>
+                </ows:Exception>
+            </ows:ExceptionReport>
+            """;
+        ResponseEntity<String> hitsResponse = new ResponseEntity<>(hitsXml, HttpStatus.OK);
+        doReturn(hitsResponse)
+                .when(restTemplate).exchange(
+                        argThat((String url) -> url != null && url.contains("resultType=hits")),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        eq(String.class));
+
+        doReturn(Optional.of("http://dummy.com/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), anyString());
+
+        WfsFields fs = WfsFields.builder()
+                .fields(List.of(
+                        WfsField.builder().type("dateTime").name("time").build()
+                ))
+                .build();
+
+        doReturn(fs)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
+
+        assertThrows(IllegalArgumentException.class,
+                () -> downloadWfsDataService.estimateDownloadSize(
+                    uuid, layer, start, end, multiPolygon, fields, format)
+        );
+    }
 }

@@ -288,22 +288,34 @@ public class RestServices {
                     );
                 }
                 else {
-                    BigInteger est = downloadWfsDataService.estimateDownloadSize(
-                            uuid,
-                            layerName,
-                            startDate,
-                            endDate,
-                            multiPolygon,
-                            fields,
-                            outputFormat
-                    );
-                    emitter.send(SseEmitter.event()
-                            .name(est != null ? "estimate-complete" : "estimate-failed")
-                            .data(Map.of(
-                                    "size", est != null ? est : "",
-                                    "timestamp", System.currentTimeMillis()
-                            )));
-                    emitter.complete();
+                    try {
+                        BigInteger est = downloadWfsDataService.estimateDownloadSize(
+                                uuid,
+                                layerName,
+                                startDate,
+                                endDate,
+                                multiPolygon,
+                                fields,
+                                outputFormat
+                        );
+                        emitter.send(SseEmitter.event()
+                                .name(est != null ? "estimate-complete" : "estimate-failed")
+                                .data(Map.of(
+                                        "size", est != null ? est : "",
+                                        "timestamp", System.currentTimeMillis()
+                                )));
+                    }
+                    catch(IllegalArgumentException iae) {
+                        emitter.send(SseEmitter.event()
+                                .name("estimate-failed")
+                                .data(Map.of(
+                                        "message", iae.getMessage(),
+                                        "timestamp", System.currentTimeMillis()
+                                )));
+                    }
+                    finally {
+                        emitter.complete();
+                    }
                 }
             } catch (Exception e) {
                 WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
