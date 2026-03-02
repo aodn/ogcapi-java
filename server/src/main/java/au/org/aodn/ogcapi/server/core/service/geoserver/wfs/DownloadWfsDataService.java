@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
+import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -7,6 +8,7 @@ import net.opengis.ows10.ExceptionReportType;
 import net.opengis.wfs.FeatureCollectionType;
 import org.geotools.wfs.v1_1.WFSConfiguration;
 import org.geotools.xsd.Parser;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -92,6 +94,7 @@ public class DownloadWfsDataService {
      * b. Issue a query with data download but then limit the records size, and do a liner interpolation
      * @return The estimated file size
      */
+    @Cacheable(CacheConfig.DOWNLOADABLE_SIZE)
     public BigInteger estimateDownloadSize(
             String uuid,
             String layerName,
