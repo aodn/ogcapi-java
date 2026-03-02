@@ -25,7 +25,8 @@ public enum CollectionProperty {
     aiDescription("ai:description"),
     aiUpdateFrequency("ai:update_frequency"),
     scope("scope"),
-    parameterVocabs("parameter_vocabs");
+    parameterVocabs("parameter_vocabs"),
+    aiParameterVocabs("ai:parameter_vocabs");
 
     private final String value;
 
