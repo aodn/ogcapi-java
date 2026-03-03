@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import org.ehcache.config.builders.*;
 import org.ehcache.config.units.MemoryUnit;
+import org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration;
 import org.ehcache.jsr107.EhcacheCachingProvider;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
@@ -19,6 +20,7 @@ import javax.cache.CacheManager;
 import javax.cache.Caching;
 import java.io.File;
 import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -31,7 +33,10 @@ public class CacheConfig {
     public static final String CACHE_WMS_MAP_TILE = "cache-wms-map_tile";
     public static final String GET_CAPABILITIES_WMS_LAYERS = "get-capabilities-wms-layers";
     public static final String GET_CAPABILITIES_WFS_FEATURE_TYPES = "get-capabilities-wfs-feature-types";
+
     public static final String DOWNLOADABLE_FIELDS = "downloadable-fields";
+    public static final String DOWNLOADABLE_SIZE = "downloadable-size";
+
     public static final String ALL_NO_LAND_GEOMETRY = "all-noland-geometry";
     public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
     public static final String ELASTIC_SEARCH_UUID_ONLY = "elastic-search-uuid-only";
@@ -53,7 +58,7 @@ public class CacheConfig {
 
         org.ehcache.config.Configuration config = ConfigurationBuilder
                 .newConfigurationBuilder()
-                .withService(new org.ehcache.impl.config.persistence.DefaultPersistenceConfiguration(storagePath))
+                .withService(new DefaultPersistenceConfiguration(storagePath))
                 .withCache(CACHE_WMS_MAP_TILE,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                         Object.class, byte[].class,
@@ -79,6 +84,12 @@ public class CacheConfig {
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(200)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                .withCache(DOWNLOADABLE_SIZE,
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, BigInteger.class,
+                                ResourcePoolsBuilder.heap(100)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
                 .withCache(ELASTIC_SEARCH_UUID_ONLY,
