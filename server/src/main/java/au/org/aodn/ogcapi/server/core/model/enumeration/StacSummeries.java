@@ -16,7 +16,9 @@ public enum StacSummeries {
     Status("summaries.status", "summaries.status"),
     Statement("summaries.statement", "summaries.statement"),
     Credits("summaries.credits", "summaries.credits"),
-    Scope("summaries.scope", "summaries.scope")
+    Scope("summaries.scope", "summaries.scope"),
+    AiParameterVocabs("summaries.ai:parameter_vocabs", "summaries.ai:parameter_vocabs"),
+    AiPlatformVocabs("summaries.ai:platform_vocabs", "summaries.ai:platform_vocabs")
     ;
 
     public final String sortField;

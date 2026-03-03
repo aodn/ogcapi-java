@@ -51,4 +51,7 @@ public class SummariesModel {
 
     @JsonProperty("parameter_vocabs")
     protected List<String> parameterVocabs;
+
+    @JsonProperty("ai:parameter_vocabs")
+    protected List<String> aiParameterVocabs;
 }

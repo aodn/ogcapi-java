@@ -712,6 +712,7 @@ public class RestApiTest extends BaseTestClass {
         assertEquals("35234913-aa3c-48ec-b9a4-77f822f66ef8", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "asset.summary exist 35234913-aa3c-48ec-b9a4-77f822f66ef8");
     }
 
+    @Test
     public void verifyAiUpdateFrequencyWorks() throws IOException {
         super.insertJsonToElasticRecordIndex("caf7220a-19e0-4a7f-9af6-eade6c79a47a.json"); // this record is assumed to have a delayed mode with AI enhanced ai:update_frequency field
         ResponseEntity<Collections> collections = testRestTemplate.exchange(
@@ -721,6 +722,7 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {});
 
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        assertEquals("caf7220a-19e0-4a7f-9af6-eade6c79a47a", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "ai:update_frequency exist caf7220a-19e0-4a7f-9af6-eade6c79a47a");
 
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?filter=(ai_update_frequency='real-time')",
@@ -730,6 +732,26 @@ public class RestApiTest extends BaseTestClass {
 
 
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "no real-time records found");
-        assertEquals("caf7220a-19e0-4a7f-9af6-eade6c79a47a", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "ai:update_frequency exist caf7220a-19e0-4a7f-9af6-eade6c79a47a");
+        }
+
+    @Test
+    public void verifyAiParameterVocabsWorks() throws IOException {
+        super.insertJsonToElasticRecordIndex("e26d0a56-5603-4413-911d-7b359a533a75.json"); // this record is assumed to have predicted keyword with AI enhanced ai:parameter_vocabs field
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=(parameter_vocabs='ocean biota' OR ai_parameter_vocabs='ocean biota')",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=(platform_vocabs='glider' OR ai_platform_vocabs='glider')",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "no records found for glider platform");
     }
 }
