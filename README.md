@@ -61,8 +61,9 @@ Since AWS CodeArtifact is private repository, and AWS CodeArtifact doesn't suppo
 
 So, please use:`./mvnw-ca install` to instead`mvn install` for dependency installation at root of the project.
 
-Before running `./mvnw-ca install`, please make sure you have settings.xml in your ~/.m2 folder.
-If not, run the following command:
+Before running `./mvnw-ca install`, you need to:
+ - Authenticate to AWS (export vars or refresh ~/.aws/credentials) using `AodnElevatedDeveloperAccess` role in `AODN-central` account (in which the images and artifacts of AODN are stored).
+ -  make sure you have settings.xml in your ~/.m2 folder. If not, run the following command:
 ```bash
 cd ~/.m2
 cat > settings.xml << 'EOF'
