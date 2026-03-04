@@ -45,6 +45,26 @@ jobs:
           aws-region: ${{ vars.AWS_REGION }}
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
 
+      - name: Get CodeArtifact Repository Authentication Token
+        run: |
+          TOKEN=$(aws codeartifact get-authorization-token \
+            --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+            --domain-owner ${{ steps.aws_auth.outputs.aws-account-id }} \
+            --region ${{ vars.AWS_REGION }} \
+            --query authorizationToken \
+            --output text)
+          echo "CODEARTIFACT_AUTH_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+      - name: Get CodeArtifact Repository URL
+        run: |
+          REPO_URL=$(aws codeartifact get-repository-endpoint \
+            --domain ${{ vars.CODEARTIFACT_DOMAIN }} \
+            --repository ${{ vars.CODEARTIFACT_REPO }} \
+            --format maven \
+            --region ${{ vars.AWS_REGION }} \
+            --output text)
+          echo "CODEARTIFACT_REPO_URL=$REPO_URL" >> "$GITHUB_ENV"
+
       - name: Build with Maven
         run: mvn -B verify --file pom.xml
 
