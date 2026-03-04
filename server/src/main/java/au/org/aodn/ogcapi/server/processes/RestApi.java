@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.coyote.BadRequestException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -35,10 +36,12 @@ public class RestApi implements ProcessesApi {
     @Override
     // because the produces value in the interface declaration includes "/_" which may
     // cause exception thrown sometimes. So i re-declared the produces value here
-    @RequestMapping(value = "/processes/{processID}/execution",
-            produces = {"application/json", "text/html"},
-            consumes = {"application/json"},
-            method = RequestMethod.POST)
+    @RequestMapping(
+            value = "/processes/{processID}/execution",
+            produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_HTML_VALUE },
+            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            method = RequestMethod.POST
+    )
     public ResponseEntity<InlineResponse200> execute(
             @Parameter(in = ParameterIn.PATH, required = true, schema = @Schema())
             @PathVariable("processID")
@@ -47,19 +50,20 @@ public class RestApi implements ProcessesApi {
             @Valid
             @RequestBody Execute body) {
 
-        if (processID.equals(ProcessIdEnum.DOWNLOAD_DATASET.getValue())) {
+        ProcessIdEnum processId = ProcessIdEnum.fromString(processID);
 
+        if (processId == ProcessIdEnum.DOWNLOAD_DATASET) {
             try {
 
-                var uuid = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue());
-                var key = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.KEY.getValue());
-                var startDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue());
-                var endDate = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue());
-                var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
-                var recipient = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.RECIPIENT.getValue());
-                var collectionTitle = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue());
-                var fullMetadataLink = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue());
-                var suggestedCitation = (String) body.getInputs().get(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue());
+                String uuid = DatasetDownloadEnums.Parameter.UUID.getStringInput(body);
+                String key = DatasetDownloadEnums.Parameter.KEY.getStringInput(body);
+                String startDate = DatasetDownloadEnums.Parameter.START_DATE.getStringInput(body);
+                String endDate = DatasetDownloadEnums.Parameter.END_DATE.getStringInput(body);
+                String recipient = DatasetDownloadEnums.Parameter.RECIPIENT.getStringInput(body);
+                String collectionTitle = DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getStringInput(body);
+                String fullMetadataLink = DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getStringInput(body);
+                String suggestedCitation = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getStringInput(body);
+                Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
 
                 // move the notify user email from data-access-service to here to make the first email faster
                 restServices.notifyUser(recipient, uuid, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation);
@@ -111,38 +115,70 @@ public class RestApi implements ProcessesApi {
     /**
      * WFS download endpoint with SSE support to handle long-running operations and prevent timeouts
      */
-    @RequestMapping(value = "/processes/downloadWfs/execution",
-            produces = MediaType.TEXT_EVENT_STREAM_VALUE,
-            consumes = {"application/json"},
-            method = RequestMethod.POST)
-    public SseEmitter downloadWfsSse(
+    @RequestMapping(
+            value = "/processes/{processID}/execution",
+            produces = { MediaType.TEXT_EVENT_STREAM_VALUE },
+            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            method = RequestMethod.POST
+    )
+    public SseEmitter executeSse(
+            @Parameter(in = ParameterIn.PATH, required = true, schema = @Schema())
+            @PathVariable("processID") String processId,
             @Parameter(in = ParameterIn.DEFAULT, description = "Mandatory execute request JSON", required = true, schema = @Schema())
             @RequestBody Execute body) {
 
-        final SseEmitter emitter = new SseEmitter(0L);
-
         try {
-            String uuid = body.getInputs().get(DatasetDownloadEnums.Parameter.UUID.getValue()).toString();
-            String startDate = body.getInputs().get(DatasetDownloadEnums.Parameter.START_DATE.getValue()).toString();
-            String endDate = body.getInputs().get(DatasetDownloadEnums.Parameter.END_DATE.getValue()).toString();
-            String layerName = body.getInputs().get(DatasetDownloadEnums.Parameter.LAYER_NAME.getValue()).toString();
-            String outputFormat = body.getInputs().get(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue()).toString();
-            var multiPolygon = body.getInputs().get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue());
+            String uuid = DatasetDownloadEnums.Parameter.UUID.getStringInput(body);
+            String layerName = DatasetDownloadEnums.Parameter.LAYER_NAME.getStringInput(body);
+            String startDate = DatasetDownloadEnums.Parameter.START_DATE.getStringInput(body);
+            String endDate = DatasetDownloadEnums.Parameter.END_DATE.getStringInput(body);
+            String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
+            Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
+            List<String> fields = DatasetDownloadEnums.Parameter.FIELDS.getListInput(body);
 
-            List<String> fields = body.getInputs().get(DatasetDownloadEnums.Parameter.FIELDS.getValue()) instanceof List<?> list
-                    ? list.stream().map(String::valueOf).toList()
-                    : null;
-
-            if(FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
-                throw new IllegalArgumentException(String.format("Output format %s not supported", outputFormat));
+            if(uuid == null || layerName == null) {
+                throw new IllegalArgumentException("UUID and LayerName cannot null");
             }
 
-            return restServices.downloadWfsDataWithSse(
-                    uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, emitter
-            );
+            ProcessIdEnum id = ProcessIdEnum.fromString(processId);
+            SseEmitter emitter;
+
+            switch (id) {
+                case DOWNLOAD_WFS_SSE:
+                case DOWNLOAD_WFS_ESTIMATE: {
+                    if(FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
+                        emitter = new SseEmitter(0L);
+                        emitter.completeWithError(new BadRequestException(
+                                String.format("Missing output format [%s]", processId)
+                        ));
+                    }
+                    else {
+                        emitter = restServices.downloadWfsDataWithSse(
+                                uuid,
+                                startDate,
+                                endDate,
+                                multiPolygon,
+                                fields,
+                                layerName,
+                                outputFormat,
+                                id == ProcessIdEnum.DOWNLOAD_WFS_ESTIMATE
+                        );
+                    }
+                    break;
+                }
+                default: {
+                    emitter = new SseEmitter(0L);
+                    emitter.completeWithError(new BadRequestException(
+                            String.format("Unknown process Id for SSE type download [%s]", processId)
+                    ));
+                }
+            }
+
+            return emitter;
 
         } catch (Exception e) {
             log.error("Download wfs data failed with unhandled error {}", e.getMessage());
+            final SseEmitter emitter = new SseEmitter(0L);
             emitter.completeWithError(e);
             return emitter;
         }

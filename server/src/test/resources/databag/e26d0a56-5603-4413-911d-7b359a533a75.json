@@ -54,6 +54,11 @@
     "revision": "2019-10-14T00:00:00",
     "dataset_group": ["aims"],
     "update_frequency": "completed",
+    "ai:update_frequency": "completed",
+    "ai:parameter_vocabs": [
+      "ocean biota"
+    ],
+    "ai:platform_vocabs": [],
     "proj:geometry": {
       "geometries": [
         {
@@ -152,8 +157,10 @@
         "end": "1986-02-28T12:59:59Z"
       }
     ],
-    "parameter_vocabs": [],
-    "platform_vocabs": [],
+    "parameter_vocabs_sayt": [
+      "ocean biota"
+    ],
+    "platform_vocabs_sayt": [],
     "organisation_vocabs": [
       "Australian Institute of Marine Science (AIMS)"
     ]
@@ -442,7 +449,18 @@
       ]
     }
   ],
-  "themes": [],
+  "themes": [{
+    "concepts": [
+      {
+        "id": "Abundance of biota",
+        "url": "http://vocab.aodn.org.au/def/discovery_parameter/entity/488",
+        "title": "AODN Discovery Parameter Vocabulary",
+        "description": "",
+        "ai:description": "This is the prediction provided by AI model."
+      }
+    ],
+    "scheme": "theme"
+  }],
   "id": "e26d0a56-5603-4413-911d-7b359a533a75",
   "search_suggestions": {
     "abstract_phrases": [

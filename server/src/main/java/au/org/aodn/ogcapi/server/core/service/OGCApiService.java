@@ -41,7 +41,7 @@ public abstract class OGCApiService {
 
     public ResponseEntity<FeatureCollectionGeoJSON> getFeature(String collectionId,
                                                                FeatureId fid,
-                                                               List<FeatureRequest.PropertyName> properties,
+                                                               List<String> properties,
                                                                String filter) throws Exception {
         switch(fid) {
             case summary -> {

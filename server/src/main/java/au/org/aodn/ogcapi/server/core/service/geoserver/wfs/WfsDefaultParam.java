@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service.wfs;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -18,4 +18,5 @@ public class WfsDefaultParam {
     private Map<String, String> fields;
     private Map<String, String> download;
     private Map<String, String> capabilities;
+    private Map<String, String> estimate;
 }

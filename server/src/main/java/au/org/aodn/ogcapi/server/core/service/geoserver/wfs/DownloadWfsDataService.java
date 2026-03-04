@@ -1,95 +1,44 @@
-package au.org.aodn.ogcapi.server.core.service.wfs;
+package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
+import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
-import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
-import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.stereotype.Service;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
-@Service
 public class DownloadWfsDataService {
-    private final WfsServer wfsServer;
-    private final RestTemplate restTemplate;
-    private final HttpEntity<?> pretendUserEntity;
-    private final int chunkSize;
+    protected final WfsServer wfsServer;
+    protected final RestTemplate restTemplate;
+    protected final HttpEntity<?> pretendUserEntity;
+    protected final int chunkSize;
+    protected final ObjectMapper objectMapper;
+    protected static final int SAMPLES_SIZE = 500;    // A not too small sample for download size estimation
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
             RestTemplate restTemplate,
-            @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
-            @Value("${app.sse.chunkSize:16384}") int chunkSize
+            HttpEntity<?> pretendUserEntity,
+            int chunkSize,
+            ObjectMapper objectMapper
     ) {
         this.wfsServer = wfsServer;
-        this.restTemplate = restTemplate;
         this.pretendUserEntity = pretendUserEntity;
         this.chunkSize = chunkSize;
-    }
-
-    /**
-     * Build CQL filter for temporal and spatial constraints
-     */
-    protected String buildCqlFilter(String startDate, String endDate, Object multiPolygon, WfsFields wfsFieldModel) {
-        StringBuilder cqlFilter = new StringBuilder();
-
-        if (wfsFieldModel == null || wfsFieldModel.getFields() == null) {
-            return cqlFilter.toString();
-        }
-
-        List<WfsField> fields = wfsFieldModel.getFields();
-
-        // Possible to have multiple days, better to consider all
-        List<WfsField> temporalField = fields.stream()
-                .filter(field -> "dateTime".equals(field.getType()) || "date".equals(field.getType()))
-                .toList();
-
-        // Add temporal filter only if both dates are specified
-        if (!temporalField.isEmpty() && startDate != null && !startDate.isEmpty() && endDate != null && !endDate.isEmpty()) {
-            List<String> cqls = new ArrayList<>();
-            temporalField.forEach(temp ->
-                    cqls.add(String.format("(%s DURING %sT00:00:00Z/%sT23:59:59Z)", temp.getName(), startDate, endDate))
-            );
-            cqlFilter.append("(").append(String.join(" OR ", cqls)).append(")");
-        }
-
-        // Find geometry field
-        Optional<WfsField> geometryField = fields.stream()
-                .filter(field -> "geometrypropertytype".equalsIgnoreCase(field.getType()))
-                .findFirst();
-
-        // Add spatial filter
-        if (geometryField.isPresent() && multiPolygon != null) {
-            String fieldName = geometryField.get().getName();
-
-            String wkt = GeometryUtils.convertToWkt(multiPolygon);
-
-            if ((wkt != null) && !cqlFilter.isEmpty()) {
-                cqlFilter.append(" AND ");
-            }
-
-            if (wkt != null) {
-                cqlFilter.append("INTERSECTS(")
-                        .append(fieldName)
-                        .append(",")
-                        .append(wkt)
-                        .append(")");
-            }
-        }
-
-        return cqlFilter.toString();
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -102,48 +51,94 @@ public class DownloadWfsDataService {
             Object multiPolygon,
             List<String> fields,
             String layerName,
-            String outputFormat) {
+            String outputFormat,
+            long maxRecordCount,
+            boolean estimateSizeOnly) {
 
-        String wfsServerUrl;
-        String wfsTypeName;
-        WfsFields wfsFieldModel;
 
         // Get WFS server URL and field model for the given UUID and layer name
         Optional<String> featureServerUrl = wfsServer.getFeatureServerUrl(uuid, layerName);
 
         // Get the wfs fields to build the CQL filter
         if (featureServerUrl.isPresent()) {
-            wfsServerUrl = featureServerUrl.get();
-            wfsTypeName = layerName;
-            wfsFieldModel = wfsServer.getDownloadableFields(
-                    uuid,
-                    WfsServer.WfsFeatureRequest.builder()
-                            .layerName(wfsTypeName)
-                            .server(wfsServerUrl)
-                            .build()
-            );
-            log.debug("WFSFieldModel by wfs typename: {}", wfsFieldModel);
+            String wfsServerUrl = featureServerUrl.get();
+
+            WfsServer.WfsFeatureRequest featureRequest = WfsServer.WfsFeatureRequest.builder()
+                    .server(wfsServerUrl)
+                    .layerName(layerName)
+                    .datetime(DatetimeUtils.formatOGCDateTime(startDate, endDate))
+                    .multiPolygon(multiPolygon)
+                    .build();
+
+            // Build final WFS request URL
+            String wfsRequestUrl = wfsServer.createWfsRequestUrl(
+                    wfsServerUrl,
+                    layerName,
+                    fields,
+                    wfsServer.buildCqlFilter(uuid, featureRequest),
+                    outputFormat,
+                    maxRecordCount,
+                    estimateSizeOnly);
+
+            log.info("Prepared WFS request URL: {}", wfsRequestUrl);
+            return wfsRequestUrl;
         } else {
             throw new IllegalArgumentException("No WFS server URL found for the given UUID and layer name");
         }
+    }
 
-        // Validate start and end dates
-        String validStartDate = DatetimeUtils.validateAndFormatDate(startDate, true);
-        String validEndDate = DatetimeUtils.validateAndFormatDate(endDate, false);
+    /**
+     * We just need to estimate the download size, the way we do it is issue two query:
+     * a. Issue a query and get the number or record hit
+     * b. Issue a query with data download but then limit the records size, and do a liner interpolation
+     *
+     * @return The estimated file size
+     */
+    @Cacheable(CacheConfig.DOWNLOADABLE_SIZE)
+    public BigInteger estimateDownloadSize(
+            String uuid,
+            String layerName,
+            String startDate,
+            String endDate,
+            Object multiPolygon,
+            List<String> fields,
+            String outputFormat) throws IllegalArgumentException {
 
-        // Build CQL filter
-        String cqlFilter = buildCqlFilter(validStartDate, validEndDate, multiPolygon, wfsFieldModel);
+        // Get total feature count via GeoJSON response
+        String countUrl = prepareWfsRequestUrl(
+                uuid, startDate, endDate, multiPolygon, fields, layerName, "application/json", 1L, false
+        );
 
-        // Build final WFS request URL
-        String wfsRequestUrl = wfsServer.createWfsRequestUrl(
-                wfsServerUrl,
-                wfsTypeName,
-                fields,
-                cqlFilter,
-                outputFormat);
+        ResponseEntity<String> countResponse = restTemplate.exchange(countUrl, HttpMethod.GET, pretendUserEntity, String.class);
 
-        log.info("Prepared WFS request URL: {}", wfsRequestUrl);
-        return wfsRequestUrl;
+        if (countResponse.getStatusCode().is2xxSuccessful() && countResponse.getBody() != null) {
+            try {
+                JsonNode root = objectMapper.readTree(countResponse.getBody());
+                if (!root.has("totalFeatures")) {
+                    throw new RuntimeException("GeoServer GeoJSON response missing totalFeatures field");
+                }
+                BigInteger featureCount = BigInteger.valueOf(root.get("totalFeatures").asLong());
+                log.debug("Total record hits {}", featureCount);
+
+                // In case the records we have is smaller than our predefined SAMPLES_SIZE, we use smaller one.
+                long sampleSize = featureCount.longValue() < SAMPLES_SIZE ? featureCount.longValue() : SAMPLES_SIZE;
+
+                // Download a small sample to measure bytes per record in the requested output format
+                String sampleUrl = prepareWfsRequestUrl(
+                        uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, sampleSize, false
+                );
+
+                ResponseEntity<byte[]> bytes = restTemplate.exchange(sampleUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
+                if (bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
+                    return featureCount
+                            .multiply(BigInteger.valueOf(bytes.getBody().length))
+                            .divide(BigInteger.valueOf(sampleSize));
+                }
+            } catch (IOException e) {
+                log.error("Fail to get feature count for estimate", e);
+            }
+        }
+        return null;
     }
 
     /**

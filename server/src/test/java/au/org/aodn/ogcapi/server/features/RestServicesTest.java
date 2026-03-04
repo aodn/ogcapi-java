@@ -4,8 +4,8 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.DasService;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -126,7 +126,7 @@ public class RestServicesTest {
         ResponseEntity<?> response = restServices.getWfsFieldValue(
                 "any-works",
                 FeatureRequest.builder()
-                        .properties(List.of(FeatureRequest.PropertyName.time))
+                        .properties(List.of("time"))
                         .build()
         );
         assertInstanceOf(Map.class, response.getBody());

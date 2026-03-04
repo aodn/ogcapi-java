@@ -231,6 +231,10 @@ public interface Converter<F, T> {
             if (m.getSummaries().getParameterVocabs() != null && !m.getSummaries().getParameterVocabs().isEmpty()) {
                 collection.getProperties().put(CollectionProperty.parameterVocabs, m.getSummaries().getParameterVocabs());
             }
+
+            if (m.getSummaries().getAiParameterVocabs() != null && !m.getSummaries().getAiParameterVocabs().isEmpty()) {
+                collection.getProperties().put(CollectionProperty.aiParameterVocabs, m.getSummaries().getAiParameterVocabs());
+            }
         }
 
         return collection;

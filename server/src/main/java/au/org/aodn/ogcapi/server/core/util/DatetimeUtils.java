@@ -12,7 +12,16 @@ public class DatetimeUtils {
     private DatetimeUtils() {
     }
 
+    public static String formatOGCDateTime(String startDate, String endDate) {
+        if(startDate == null || startDate.trim().isEmpty()) {
+            startDate = "..";
+        }
 
+        if(endDate == null || endDate.trim().isEmpty()) {
+            endDate = "..";
+        }
+        return String.format("%s/%s", startDate, endDate);
+    }
     /**
      * Validate and format date for WFS CQL filter
      * Handles MM-YYYY to YYYY-MM-DD conversion for temporal queries

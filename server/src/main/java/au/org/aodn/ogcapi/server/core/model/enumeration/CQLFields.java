@@ -149,6 +149,18 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
+    ai_parameter_vocabs(
+            StacSummeries.AiParameterVocabs.searchField,
+            StacSummeries.AiParameterVocabs.displayField,
+            null,
+            null
+    ),
+    ai_platform_vocabs(
+            StacSummeries.AiPlatformVocabs.searchField,
+            StacSummeries.AiPlatformVocabs.displayField,
+            null,
+            null
+    ),
     organisation_vocabs(
             StacBasicField.OrganisationVocabs.searchField,
             StacBasicField.OrganisationVocabs.displayField,

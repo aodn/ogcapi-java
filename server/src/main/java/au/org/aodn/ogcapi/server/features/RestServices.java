@@ -12,9 +12,9 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import au.org.aodn.ogcapi.server.core.service.wfs.WfsServer;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsDefaultParam;
-import au.org.aodn.ogcapi.server.core.service.wms.WmsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsDefaultParam;
+import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.CommonUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
@@ -133,8 +133,8 @@ public class RestServices extends OGCApiService {
                     .map(WfsField::getName)
                     .toList();
 
-            for (FeatureRequest.PropertyName name : wfsFeatureRequest.getProperties()) {
-                if (extractedName.contains(name.name())) {
+            for (String name : wfsFeatureRequest.getProperties()) {
+                if (extractedName.contains(name)) {
                     // TODO: If missing then may need map
                     log.info("Field {} need map", name);
                     //
