@@ -18,6 +18,8 @@ if command -v aws >/dev/null 2>&1 &&
         --query authorizationToken --output text 2>/dev/null || true
     )"
     export CODEARTIFACT_AUTH_TOKEN
+    # For intellj config env injector
+    echo "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}"
   fi
 
   # Get repository URL if not set
@@ -32,9 +34,17 @@ if command -v aws >/dev/null 2>&1 &&
         --query repositoryEndpoint --output text 2>/dev/null || true
     )"
     export CODEARTIFACT_REPO_URL
+    # For intellj config env injector
+    echo "CODEARTIFACT_REPO_URL=${CODEARTIFACT_REPO_URL}"
   else
-    echo
+    echo "Missing CODEARTIFACT_REPO_URL"
   fi
 fi
 
-exec mvn "$@"
+if command -v mvn >/dev/null 2>&1; then
+  echo "mvn exists"
+  mvn "$@"
+else
+  echo "mvn not found, use wrapper"
+  exec ./mvnw "$@"
+fi
