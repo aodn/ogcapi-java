@@ -18,7 +18,8 @@ if command -v aws >/dev/null 2>&1 &&
         --query authorizationToken --output text 2>/dev/null || true
     )"
     export CODEARTIFACT_AUTH_TOKEN
-    echo "Code artifact token ${CODEARTIFACT_AUTH_TOKEN}"
+    # For intellj config env injector
+    echo "CODEARTIFACT_AUTH_TOKEN=${CODEARTIFACT_AUTH_TOKEN}"
   fi
 
   # Get repository URL if not set
@@ -33,7 +34,8 @@ if command -v aws >/dev/null 2>&1 &&
         --query repositoryEndpoint --output text 2>/dev/null || true
     )"
     export CODEARTIFACT_REPO_URL
-    echo "Code artifact URL ${CODEARTIFACT_REPO_URL}"
+    # For intellj config env injector
+    echo "CODEARTIFACT_REPO_URL=${CODEARTIFACT_REPO_URL}"
   else
     echo "Missing CODEARTIFACT_REPO_URL"
   fi
