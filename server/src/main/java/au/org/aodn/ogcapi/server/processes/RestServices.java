@@ -80,7 +80,8 @@ public class RestServices {
             String recipient,
             String collectionTitle,
             String fullMetadataLink,
-            String suggestedCitation
+            String suggestedCitation,
+            String outputFormat
     ) throws JsonProcessingException {
 
         Map<String, String> parameters = new HashMap<>();
@@ -92,6 +93,9 @@ public class RestServices {
         parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), collectionTitle);
         parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), fullMetadataLink);
         parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), suggestedCitation);
+        if (outputFormat != null) {
+            parameters.put(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue(), outputFormat);
+        }
         if (polygons == null || polygons.toString().isEmpty()) {
             throw new IllegalArgumentException("Polygons parameter should now be null. If users didn't specify polygons, a 'non-specified' should be sent.");
 
