@@ -4,7 +4,6 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
-import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.geotools.filter.text.cql2.CQLException;
@@ -42,9 +41,10 @@ public class BeforeImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHan
                             .path(StacSummeries.Temporal.searchField)
                             .query(q1 -> q1
                                     .range(r -> r
-                                            .field(StacSummeries.TemporalEnd.searchField)
-                                            .lte(JsonData.of(dateFormatter.format(literal.getValue())))
-                                            .format("strict_date_optional_time")
+                                            .date(d -> d
+                                                    .field(StacSummeries.TemporalEnd.searchField)
+                                                    .lte(dateFormatter.format(literal.getValue()))
+                                                    .format("strict_date_optional_time"))
                                     )
                             )
                     )._toQuery();

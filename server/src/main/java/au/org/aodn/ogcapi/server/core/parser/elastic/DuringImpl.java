@@ -7,7 +7,6 @@ import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
-import co.elastic.clients.json.JsonData;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.geotools.filter.text.cql2.CQLException;
@@ -69,20 +68,22 @@ public class DuringImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHan
                         && cqlFields == CQLFields.temporal) {
 
                     Query gte = RangeQuery.of(r -> r
+                            .date(d -> d
                                     .field(StacSummeries.TemporalStart.searchField)
-                                    .gte(JsonData.of(dateFormatter.format(period.getBeginning().getPosition().getDate())))
-                                    .format("strict_date_optional_time"))._toQuery();
+                                    .gte(dateFormatter.format(period.getBeginning().getPosition().getDate()))
+                                    .format("strict_date_optional_time")))._toQuery();
 
                     Query lte = RangeQuery.of(r -> r
+                            .date(d -> d
                                     .field(StacSummeries.TemporalEnd.searchField)
-                                    .lte(JsonData.of(dateFormatter.format(period.getEnding().getPosition().getDate())))
-                                    .format("strict_date_optional_time"))._toQuery();
+                                    .lte(dateFormatter.format(period.getEnding().getPosition().getDate()))
+                                    .format("strict_date_optional_time")))._toQuery();
 
 
                     this.query = NestedQuery.of(n -> n
                             .path(StacSummeries.Temporal.searchField)
-                                .query(BoolQuery.of(q -> q
-                                        .must(gte, lte))._toQuery()
+                            .query(BoolQuery.of(q -> q
+                                    .must(gte, lte))._toQuery()
                             )
                     )._toQuery();
                 }
