@@ -178,7 +178,7 @@ public abstract class ElasticSearchBase {
                 builder.query(q -> q.scriptScore(ss -> ss
                         // to get the original _score from ELasticsearch
                         .query(bq -> bq.bool(createBoolQueryForProperties(queries, should, filters)))
-                        .script(s -> s.inline(i -> i
+                        .script(s -> s
                                 .lang("painless")
                                 .source(
                                         // Step 1: Retrieve internal quality score from summaries.score field
@@ -196,7 +196,6 @@ public abstract class ElasticSearchBase {
                                                 // Step 4: Calculate final score
                                                 // Final score = Elasticsearch relevance * normalized quality
                                                 "return _score * multiplier;"
-                                )
                                 )
                         ))
                 );

@@ -104,10 +104,10 @@ public enum CQLFields implements CQLFieldsInterface {
             (order) -> new SortOptions.Builder().script(s -> s
                     .type(ScriptSortType.Number)
                     .nested(NestedSortValue.of(p -> p.path(StacSummeries.Temporal.sortField)))
-                    .script(script -> script.inline(line -> line
+                    .script(script -> script
                             .lang("painless")
                             .source("if (doc['" + StacSummeries.TemporalEnd.searchField + "'].size() == 0) {" +
-                                          "  return Long.MAX_VALUE; " +
+                                    "  return Long.MAX_VALUE; " +
                                     "     } " +
                                     "     else {" +
                                     "       return doc['" + StacSummeries.TemporalEnd.searchField + "'].stream()" +
@@ -115,7 +115,7 @@ public enum CQLFields implements CQLFieldsInterface {
                                     "           .max()" +
                                     "           .getAsLong()" +
                                     "     }"
-                            ))
+                            )
                     ).order(order)
             )
     ),
@@ -312,22 +312,23 @@ public enum CQLFields implements CQLFieldsInterface {
 
     @Override
     public Query getPropertyEqualToQuery(String literal) {
-        if(getOverridePropertyEqualsToQuery() == null) {
+        if (getOverridePropertyEqualsToQuery() == null) {
             return MatchPhraseQuery.of(builder -> builder
                     .field(this.searchField)
                     .query(literal)
             )._toQuery();
-        }
-        else {
+        } else {
             return getOverridePropertyEqualsToQuery().apply(literal);
         }
     }
 
     @Override
     public Query getPropertyGreaterThanOrEqualsToQuery(String literal) {
-        return  RangeQuery.of(builder -> builder
-                .field(this.searchField)
-                .gte(JsonData.of(literal))
+        return RangeQuery.of(builder -> builder
+                // set as untyped because the property type is uncertain
+                .untyped(u -> u
+                        .field(this.searchField)
+                        .gte(JsonData.of(literal)))
         )._toQuery();
     }
 
@@ -354,7 +355,7 @@ public enum CQLFields implements CQLFieldsInterface {
     @Override
     public Query getIsNullQuery() {
         Query fieldExist = ExistsQuery.of(f -> f
-                        .field(this.searchField))._toQuery();
+                .field(this.searchField))._toQuery();
 
         return BoolQuery.of(b -> b
                 .mustNot(fieldExist))._toQuery();
@@ -368,8 +369,10 @@ public enum CQLFields implements CQLFieldsInterface {
                 .flags("ALL")
                 .value(literal))._toQuery();
     }
+
     /**
      * Given param, find any of those is not a valid CQLCollectionsField
+     *
      * @param args -
      * @return Invalid enum
      */
@@ -379,8 +382,7 @@ public enum CQLFields implements CQLFieldsInterface {
                     try {
                         CQLFields.valueOf(str);
                         return false;
-                    }
-                    catch (IllegalArgumentException e) {
+                    } catch (IllegalArgumentException e) {
                         return true;
                     }
                 })
