@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -19,6 +21,9 @@ public class LinkModel {
 
     @JsonProperty("ai:group")
     protected String aiGroup;
+
+    @JsonProperty("ai:role")
+    protected List<String> aiRole;
 
     @JsonProperty("description")
     protected String description;

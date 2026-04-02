@@ -5,12 +5,17 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 public class ExtendedLink extends Link {
 
     @JsonProperty("ai:group")
     private String aiGroup;
+
+    @JsonProperty("ai:role")
+    private List<String> aiRole;
 
     @JsonProperty("description")
     private String description;
@@ -21,6 +26,11 @@ public class ExtendedLink extends Link {
 
     public ExtendedLink aiGroup(String aiGroup) {
         this.aiGroup = aiGroup;
+        return this;
+    }
+
+    public ExtendedLink aiRole(List<String> aiRole) {
+        this.aiRole = aiRole;
         return this;
     }
 
