@@ -161,6 +161,13 @@ public class StacToCollectionTest {
         Assertions.assertEquals(parameterVocabs, collection.getProperties().get(CollectionProperty.parameterVocabs));
         Assertions.assertNotNull(collection.getLinks());
         Assertions.assertEquals(3, collection.getLinks().size());
+
+        ExtendedLink convertedLink1 = (ExtendedLink) collection.getLinks().stream()
+                .filter(l -> "related".equals(l.getRel()))
+                .findFirst()
+                .orElseThrow();
+
+        Assertions.assertEquals(List.of("download"), convertedLink1.getAiRole());
     }
 
     @Test
