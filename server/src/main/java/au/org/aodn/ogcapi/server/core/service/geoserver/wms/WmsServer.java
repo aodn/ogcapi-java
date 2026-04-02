@@ -449,11 +449,10 @@ public class WmsServer {
             StacCollectionModel model = result.getCollections().get(0);
 
             String layerName = request != null ? request.getLayerName() : null;
-            // Filter for WMS links
+            // Filter WMS links by ai:group marker, falling back to rel="wms"
             List<LinkModel> wmsLinks = model.getLinks()
                     .stream()
-                    .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains(WMS_LINK_MARKER))
+                    .filter(isWmsLink(WMS_LINK_MARKER))
                     .toList();
 
             if (wmsLinks.isEmpty()) {
@@ -725,11 +724,10 @@ public class WmsServer {
 
         StacCollectionModel model = result.getCollections().get(0);
 
-        // Filter WMS links where ai:group contains WMS_LINK_MARKER
+        // Filter WMS links by ai:group marker, falling back to rel="wms"
         return model.getLinks()
                 .stream()
-                .filter(link -> link.getAiGroup() != null)
-                .filter(link -> link.getAiGroup().contains(WMS_LINK_MARKER))
+                .filter(isWmsLink(WMS_LINK_MARKER))
                 .toList();
     }
 

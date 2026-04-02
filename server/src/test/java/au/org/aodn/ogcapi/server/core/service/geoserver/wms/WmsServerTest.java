@@ -275,6 +275,48 @@ public class WmsServerTest {
     }
 
     @Test
+    public void describeLayer_withRelWmsFallback_returnsResult() {
+        // Link has rel="wms" but no aiGroup — getMapServerUrl should find it via fallback
+        FeatureRequest request = FeatureRequest.builder().layerName("imos:test_layer").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(new ArrayList<>());
+        stac.getCollections().add(
+                StacCollectionModel
+                        .builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .rel("wms")
+                                        .href("http://geoserver-123.aodn.org.au/geoserver/wms")
+                                        .title(request.getLayerName())
+                                        .build())  // no aiGroup
+                        )
+                        .build()
+        );
+
+        String describeLayerXml = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <!DOCTYPE WMS_DescribeLayerResponse SYSTEM "https://geoserver-123.aodn.org.au/geoserver/schemas/wms/1.1.1/WMS_DescribeLayerResponse.dtd">
+                <WMS_DescribeLayerResponse version="1.1.1">
+                    <LayerDescription name="imos:test_layer" wfs="https://geoserver-123.aodn.org.au/geoserver/wfs?" owsURL="https://geoserver-123.aodn.org.au/geoserver/wfs?" owsType="WFS">
+                        <Query typeName="imos:test_layer"/>
+                    </LayerDescription>
+                </WMS_DescribeLayerResponse>""";
+
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), eq(entity), eq(String.class)))
+                .thenReturn(ResponseEntity.ok(describeLayerXml));
+
+        String id = "id";
+        when(search.searchCollections(eq(id))).thenReturn(stac);
+
+        DescribeLayerResponse response = wmsServer.describeLayer(id, request);
+
+        assertNotNull(response, "describeLayer should succeed when link is found via rel=wms fallback");
+        assertNotNull(response.getLayerDescription());
+        assertEquals("imos:test_layer", response.getLayerDescription().getName());
+    }
+
+    @Test
     public void verifyParseCorrect() throws JsonProcessingException {
         DescribeLayerResponse value = wmsServer.xmlMapper.readValue(
                 """
