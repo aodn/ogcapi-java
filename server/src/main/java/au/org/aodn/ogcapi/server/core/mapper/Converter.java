@@ -119,6 +119,7 @@ public interface Converter<F, T> {
                                         .title(l.getTitle())
                                         .description(l.getDescription())
                                         .aiGroup(l.getAiGroup())
+                                        .aiRole(l.getAiRole())
                                 )
                                 .toList()
                 );

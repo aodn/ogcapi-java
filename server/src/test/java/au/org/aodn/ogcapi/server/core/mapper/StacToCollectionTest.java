@@ -78,6 +78,7 @@ public class StacToCollectionTest {
                 .type("text/html")
                 .title("Data Link")
                 .aiGroup("data-access")
+                .aiRole(List.of("download"))
                 .description("description")
                 .build();
         var link2 = LinkModel.builder()
