@@ -25,6 +25,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultParam.WFS_LINK_MARKER;
 import static org.junit.jupiter.api.Assertions.*;
@@ -391,6 +392,28 @@ public class WfsServerTest {
         assertEquals(1, outputFormatCount, "outputFormat should appear exactly once");
         assertEquals(1, versionCount, "VERSION should appear exactly once");
         assertEquals(1, requestCount, "REQUEST should appear exactly once");
+    }
+
+    @Test
+    void getFeatureServerUrl_withRelWfsFallback_returnsUrl() {
+        // Link has rel="wfs" but no aiGroup — should be found via fallback
+        String expectedUrl = "http://geoserver.example.com/geoserver/wfs";
+        LinkModel wfsLink = LinkModel.builder()
+                .rel("wfs")
+                .href(expectedUrl)
+                .title("test_layer")
+                .build();
+
+        StacCollectionModel model = StacCollectionModel.builder().links(List.of(wfsLink)).build();
+        ElasticSearchBase.SearchResult<StacCollectionModel> result = new ElasticSearchBase.SearchResult<>();
+        result.setCollections(List.of(model));
+        when(mockSearch.searchCollections(anyString())).thenReturn(result);
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+        Optional<String> url = server.getFeatureServerUrl("id", "test_layer");
+
+        assertTrue(url.isPresent(), "URL should be found via rel=wfs fallback when aiGroup is absent");
+        assertEquals(expectedUrl, url.get());
     }
 
     @Test

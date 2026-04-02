@@ -217,11 +217,10 @@ public class WfsServer implements Server {
 
         StacCollectionModel model = result.getCollections().get(0);
 
-        // Filter WMS links where ai:group contains WMS_LINK_MARKER
+        // Filter WFS links by ai:group marker, falling back to rel="wfs"
         return model.getLinks()
                 .stream()
-                .filter(link -> link.getAiGroup() != null)
-                .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
+                .filter(isWfsLink(WFS_LINK_MARKER))
                 .toList();
     }
 
@@ -482,13 +481,9 @@ public class WfsServer implements Server {
             return Optional.of(
                     model.getLinks()
                             .stream()
-                            .filter(link -> link.getAiGroup() != null)
-                            .filter(link ->
-                                    // This is the pattern for wfs link
-                                    link.getAiGroup().contains(WFS_LINK_MARKER) ||
-                                            // The data itself can be unclean, ows is another option where it works with wfs
-                                            link.getHref().contains("/ows")
-                            )
+                            .filter(isWfsLink(WFS_LINK_MARKER)
+                                    // The data itself can be unclean, ows is another option where it works with wfs
+                                    .or(link -> link.getHref().contains("/ows")))
                             .map(LinkModel::getHref)
                             .toList()
             );
@@ -512,8 +507,7 @@ public class WfsServer implements Server {
             log.info("start to find wfs link for collectionId {} with layerName {}, total links to check {}", collectionId, layerName, model.getLinks().size());
             return model.getLinks()
                     .stream()
-                    .filter(link -> link.getAiGroup() != null)
-                    .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
+                    .filter(isWfsLink(WFS_LINK_MARKER))
                     .filter(link -> {
                         Optional<String> name = extractLayernameOrTypenameFromUrl(link.getHref());
                         return roughlyMatch(link.getTitle(), layerName) ||
@@ -611,11 +605,10 @@ public class WfsServer implements Server {
 
         StacCollectionModel model = result.getCollections().get(0);
 
-        // Filter WFS links where ai:group contains "Data Access > wfs"
+        // Filter WFS links by ai:group marker, falling back to rel="wfs"
         List<LinkModel> wfsLinks = model.getLinks()
                 .stream()
-                .filter(link -> link.getAiGroup() != null)
-                .filter(link -> link.getAiGroup().contains(WFS_LINK_MARKER))
+                .filter(isWfsLink(WFS_LINK_MARKER))
                 .toList();
 
         // Filter feature types based on matching with WFS links
