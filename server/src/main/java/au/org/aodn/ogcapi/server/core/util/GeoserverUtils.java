@@ -8,9 +8,36 @@ import org.springframework.web.util.UriUtils;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 @Slf4j
 public class GeoserverUtils {
+    /**
+     * Predicate that matches a link as a WFS link.
+     * Primary: link has ai:group containing the WFS marker.
+     * Fallback: link has rel = "wfs" (for links without ai:group).
+     *
+     * @param wfsLinkMarker - The WFS marker string (e.g. "Data Access > wfs")
+     * @return Predicate matching WFS links
+     */
+    public static Predicate<LinkModel> isWfsLink(String wfsLinkMarker) {
+        return link -> (link.getAiGroup() != null && link.getAiGroup().contains(wfsLinkMarker))
+                || "wfs".equalsIgnoreCase(link.getRel());
+    }
+
+    /**
+     * Predicate that matches a link as a WMS link.
+     * Primary: link has ai:group containing the WMS marker.
+     * Fallback: link has rel = "wms" (for links without ai:group).
+     *
+     * @param wmsLinkMarker - The WMS marker string (e.g. "Data Access > wms")
+     * @return Predicate matching WMS links
+     */
+    public static Predicate<LinkModel> isWmsLink(String wmsLinkMarker) {
+        return link -> (link.getAiGroup() != null && link.getAiGroup().contains(wmsLinkMarker))
+                || "wms".equalsIgnoreCase(link.getRel());
+    }
+
     /**
      * Fuzzy match utility to compare layer names, ignoring namespace prefixes
      * For example: "underway:nuyina_underway_202122020" matches "nuyina_underway_202122020"
