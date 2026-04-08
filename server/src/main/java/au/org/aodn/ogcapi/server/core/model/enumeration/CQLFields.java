@@ -194,6 +194,20 @@ public enum CQLFields implements CQLFieldsInterface {
             )._toQuery(),
             null
     ),
+    links_airole_contains(
+            StacBasicField.LinksAiRole.searchField,
+            StacBasicField.LinksAiRole.displayField,
+            (literal) -> NestedQuery.of(m -> m
+                    .path(StacBasicField.Links.searchField)  // "links"
+                    .query(q -> q
+                            .term(t -> t
+                                    .field(StacBasicField.LinksAiRole.searchField)  // "links.ai:role"
+                                    .value(literal)
+                            )
+                    )
+            )._toQuery(),
+            null
+    ),
     credit_contains(
             StacSummeries.Credits.searchField,
             StacSummeries.Credits.displayField,
