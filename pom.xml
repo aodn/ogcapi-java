@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.8</version>
+		<version>3.5.13</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>au.org.aodn.ogcapi</groupId>
@@ -192,7 +192,7 @@
 			<dependency>
 				<groupId>au.org.aodn</groupId>
 				<artifactId>stacmodel</artifactId>
-				<version>0.0.52</version>
+				<version>0.0.56</version>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>

@@ -5,7 +5,6 @@ import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.SearchSuggestionsModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
-import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -67,35 +66,49 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         this.setCacheNoLandGeometry(cacheNoLandGeometry);
         this.defaultElasticSetting = CQLToElasticFilterFactory.getDefaultSetting();
     }
-
+    /**
+     * TODO: need to observe the behaviour of different types and pick the best one for our needs,
+     * phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
+     *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
+     *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
+     * ElasticSearch recommends using bool_prefix type: <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html">...</a>
+     *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
+     *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
+     * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
+     *   > Fuzziness not allowed for type [phrase_prefix]
+     * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params">...</a>
+     *
+     * @param input - The input text
+     * @param suggestField - The field name that you want to search
+     */
     protected Query generateSearchAsYouTypeQuery(String input, String suggestField) {
-        return Query.of(q -> q.multiMatch(mm -> mm
-            .query(input)
-            .fuzziness("AUTO")
-            /*
-             * TODO: need to observe the behaviour of different types and pick the best one for our needs,
-             * phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
-             *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
-             *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
-             * ElasticSearch recommends using bool_prefix type: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html
-             *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
-             *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
-             * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
-             *   > Fuzziness not allowed for type [phrase_prefix]
-             */
-            .type(TextQueryType.BoolPrefix)
-            // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
-            .fields(Arrays.asList(suggestField, suggestField+"._2gram", suggestField+"._3gram"))
+        return Query.of(q -> q.bool(b -> b
+                .should(s -> s.multiMatch(mm -> mm
+                        .query(input)
+                        .type(TextQueryType.BoolPrefix)
+                        .fuzziness("AUTO")
+                        .fields(Arrays.asList(
+                                suggestField + "^10",         // 1. Root field is most relevant
+                                suggestField + "._2gram^5",   // 2. Pair matches (shingles)
+                                suggestField + "._3gram^2"    // 3. Triple matches
+                        ))
+                ))
+                // 4. Add a "Phrase" boost: If they type words in the exact order,
+                // give it an extra push to the top.
+                .should(s -> s.matchPhrasePrefix(mpp -> mpp
+                        .field(suggestField)
+                        .query(input)
+                        .boost(15f)
+                ))
         ));
     }
 
     protected List<Hit<SearchSuggestionsModel>> getSuggestionsByField(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        // create query
-        List<Query> suggestFieldsQueries = new ArrayList<>();
-        Stream.of(searchAsYouTypeEnabledFields).forEach(field -> {
-            String suggestField = searchAsYouTypeFieldsPath + "." + field;
-            suggestFieldsQueries.add(this.generateSearchAsYouTypeQuery(input, suggestField));
-        });
+        // 1. Map fields directly to Queries and collect to a List
+        List<Query> suggestFieldsQueries = Stream.of(searchAsYouTypeEnabledFields)
+                .map(field -> generateSearchAsYouTypeQuery(input, searchAsYouTypeFieldsPath + "." + field))
+                .toList();
+
         Query searchAsYouTypeQuery = Query.of(q -> q.nested(n -> n
                 .path(searchAsYouTypeFieldsPath)
                 .query(bQ -> bQ.bool(b -> b.should(suggestFieldsQueries)))
