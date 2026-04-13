@@ -170,7 +170,11 @@ public enum CQLFields implements CQLFieldsInterface {
     id(
             StacBasicField.UUID.searchField,
             StacBasicField.UUID.displayField,
-            null,
+            (literal) -> MatchPhraseQuery.of(builder -> builder
+                    .field(StacBasicField.UUID.searchField)
+                    .query(literal)
+                    .boost(100.0F)
+            )._toQuery(),
             (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.UUID.sortField).order(order))
     ),
     links(
