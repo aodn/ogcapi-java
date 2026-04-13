@@ -267,17 +267,28 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 should = new ArrayList<>();
 
                 for (String t : keywords) {
-                    should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.id.getPropertyEqualToQuery(t));
-                    // A request to not using acronym in title and description in metadata, hence these
-                    // acronym moved to links, for example NRMN record is mentioned in the link title.
-                    // This is a work-around to the requirement but still allow use of NRMN
-                    should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.credit_contains.getPropertyEqualToQuery(t));
+                    // check if the text is in double quote - if so, use term query instead of fuzzy match
+                    boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+                    String term = isExact ? t.substring(1, t.length() - 1) : t;
+
+                    if (isExact) {
+                        // use exact term match, search in title and description
+                        should.add(CQLFields.title.getPropertyEqualToQuery(term));         // match term in original title text
+                        should.add(CQLFields.description.getPropertyEqualToQuery(term));   // match term in original description text
+                    }
+                    else {
+                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(t));
+                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(t));
+                        should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(t));
+                        should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(t));
+                        should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(t));
+                        should.add(CQLFields.id.getPropertyEqualToQuery(t));
+                        // A request to not using acronym in title and description in metadata, hence these
+                        // acronym moved to links, for example NRMN record is mentioned in the link title.
+                        // This is a work-around to the requirement but still allow use of NRMN
+                        should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(t));
+                        should.add(CQLFields.credit_contains.getPropertyEqualToQuery(t));
+                    }
                 }
             }
 
