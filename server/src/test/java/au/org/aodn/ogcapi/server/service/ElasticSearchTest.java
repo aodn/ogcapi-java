@@ -119,52 +119,55 @@ public class ElasticSearchTest {
     }
 
     @Test
-    public void searchByParameters_withDoubleQuote_shouldUseExactMatch() throws Exception {
-        // text with double quote
+    public void searchByParametersWithDoubleQuote() throws Exception {
         String keyword = "\"ocean temperature\"";
         List<String> keywords = List.of(keyword);
-
         List<Query> should = new ArrayList<>();
         for (String t : keywords) {
             boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
             String term = isExact ? t.substring(1, t.length() - 1) : t;
-
             if (isExact) {
                 should.add(CQLFields.title.getPropertyEqualToQuery(term));
                 should.add(CQLFields.description.getPropertyEqualToQuery(term));
+            } else {
+                should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
             }
+            should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.id.getPropertyEqualToQuery(term));
+            should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(term));
+            should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
         }
-
-        // Assert
-        assertEquals(2, should.size(), "Exact match should only produce 2 queries (title + description)");
+        assertEquals(8, should.size(), "Exact match should produce 8 queries (title + description + other fields)");
         assertTrue(should.get(0).isMatchPhrase(), "Title query should be MatchPhraseQuery");
         assertTrue(should.get(1).isMatchPhrase(), "Description query should be MatchPhraseQuery");
     }
 
     @Test
-    public void searchByParameters_withoutDoubleQuote_shouldUseFuzzyMatch() throws Exception {
+    public void searchByParametersWithoutDoubleQuote() throws Exception {
         String keyword = "ocean temperature";
         List<String> keywords = List.of(keyword);
-
         List<Query> should = new ArrayList<>();
         for (String t : keywords) {
             boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
-
-            if (!isExact) {
-                should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(t));
-                should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(t));
-                should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(t));
-                should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(t));
-                should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(t));
-                should.add(CQLFields.id.getPropertyEqualToQuery(t));
-                should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(t));
-                should.add(CQLFields.credit_contains.getPropertyEqualToQuery(t));
+            String term = isExact ? t.substring(1, t.length() - 1) : t;
+            if (isExact) {
+                should.add(CQLFields.title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.description.getPropertyEqualToQuery(term));
+            } else {
+                should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
             }
+            should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.id.getPropertyEqualToQuery(term));
+            should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(term));
+            should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
         }
-
         assertEquals(8, should.size(), "Fuzzy match should produce 8 queries");
         assertTrue(should.get(0).isMatch(), "fuzzy_title should be MatchQuery");
     }
-
-
 }

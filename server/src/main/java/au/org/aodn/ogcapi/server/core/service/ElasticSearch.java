@@ -267,28 +267,35 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 should = new ArrayList<>();
 
                 for (String t : keywords) {
-                    // check if the text is in double quote - if so, use term query instead of fuzzy match
+                    // If user's input (keywords) starts and ends with quote ", and the text is not empty
+                    // treat the user intend to search with the exact term,
+                    // instead of searching in fuzzy fields i.e., fuzzy_title and fuzzy_desc,
+                    // search in the original title and description fields
+                    // other fields are searched with the same term regardless of exact match or not, as they do not use fuzzy matching.
                     boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+                    // If search text with double quote, remove quotes,
+                    // otherwise keeps same
                     String term = isExact ? t.substring(1, t.length() - 1) : t;
 
                     if (isExact) {
-                        // use exact term match, search in title and description
-                        should.add(CQLFields.title.getPropertyEqualToQuery(term));         // match term in original title text
-                        should.add(CQLFields.description.getPropertyEqualToQuery(term));   // match term in original description text
+                        // Match phrase in original title and description, not use fuzzy fields
+                        should.add(CQLFields.title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.description.getPropertyEqualToQuery(term));
                     }
                     else {
-                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(t));
-                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(t));
-                        should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(t));
-                        should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(t));
-                        should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(t));
-                        should.add(CQLFields.id.getPropertyEqualToQuery(t));
-                        // A request to not using acronym in title and description in metadata, hence these
-                        // acronym moved to links, for example NRMN record is mentioned in the link title.
-                        // This is a work-around to the requirement but still allow use of NRMN
-                        should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(t));
-                        should.add(CQLFields.credit_contains.getPropertyEqualToQuery(t));
+                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
                     }
+                    should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.id.getPropertyEqualToQuery(term));
+                    // A request to not using acronym in title and description in metadata, hence these
+                    // acronym moved to links, for example NRMN record is mentioned in the link title.
+                    // This is a work-around to the requirement but still allow use of NRMN
+                    // links_title_contains and credit_contains use match query by default, exact match is not applied here
+                    should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
                 }
             }
 
