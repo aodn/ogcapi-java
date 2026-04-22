@@ -171,7 +171,9 @@ public abstract class ElasticSearchBase {
             // put query in script block
             // determine to use script score block or not
             // only use script_score if sortby contains "score" and should field is not empty
-            boolean useScriptScore = (sortOptions != null && !sortOptions.isEmpty()) && (should != null && !should.isEmpty());
+//            boolean useScriptScore = (sortOptions != null && !sortOptions.isEmpty()) && (should != null && !should.isEmpty());
+
+            boolean useScriptScore = sortOptions != null && !sortOptions.isEmpty();
 
             if (useScriptScore) {
                 String summaryScore = StacSummeries.Score.searchField;
@@ -186,9 +188,55 @@ public abstract class ElasticSearchBase {
                                         "double internalScore = doc.containsKey('"+summaryScore+"') && " +
                                                 "!doc['"+summaryScore+"'].empty ? doc['"+summaryScore+"'].value : 0.0; " +
 
+                                                // local dev only to test internal score algorithm
+                                                // +10: dataset_group contains IMOS
+                                                "if (doc.containsKey('summaries.dataset_group') && !doc['summaries.dataset_group'].empty) { " +
+                                                "  for (String g : doc['summaries.dataset_group']) { " +
+                                                "    if (g == 'IMOS') { internalScore += 10.0; break; } " +
+                                                "  } " +
+                                                "} " +
+
+                                                // +10: records has downloadable link
+                                                "if (params._source.containsKey('links')) { " +
+                                                "  boolean hasDownload = false; " +
+                                                "  for (def linkGroup : params._source['links']) { " +
+                                                "    if (!hasDownload && linkGroup.containsKey('link')) { " +
+                                                "      for (def link : linkGroup['link']) { " +
+                                                "        if (!hasDownload && link.containsKey('ai:role')) { " +
+                                                "          for (def role : link['ai:role']) { " +
+                                                "            if (role == 'download') { internalScore += 10.0; hasDownload = true; break; } " +
+                                                "          } " +
+                                                "        } " +
+                                                "      } " +
+                                                "    } " +
+                                                "  } " +
+                                                "} " +
+
+                                                // +20: has cloud-optimised data
+                                                "if (params._source.containsKey('assets') && params._source['assets'] instanceof Map) { " +
+                                                "  boolean hasSummary = false; " +
+                                                "  for (def entry : ((Map)params._source['assets']).entrySet()) { " +
+                                                "    if (!hasSummary && entry.getValue() instanceof Map " +
+                                                "        && ((Map)entry.getValue()).containsKey('role') " +
+                                                "        && ((Map)entry.getValue())['role'] == 'SUMMARY') { " +
+                                                "      internalScore += 20.0; " +
+                                                "      hasSummary = true; " +
+                                                "    } " +
+                                                "  } " +
+                                                "} " +
+
+                                                // -10: status equals Superseded / Deprecated / obsolete
+                                                "if (doc.containsKey('summaries.status') && !doc['summaries.status'].empty) { " +
+                                                "  String st = doc['summaries.status'].value; " +
+                                                "  if (st == 'Superseded' || st == 'Deprecated' || st == 'obsolete') { " +
+                                                "    internalScore -= 10.0; " +
+                                                "  } " +
+                                                "} " +
+
+
                                                 // Step 2: Normalize internal score to 0-1 range
-                                                // Assuming summaries.score is in range 0-106
-                                                "double normalizedScore = internalScore / 106.0; " +
+                                                // Assuming summaries.score is in range 0-146
+                                                "double normalizedScore = internalScore / 146.0; " +
 
                                                 // Step 3: Ensure minimum multiplier to avoid zero scores
                                                 "double multiplier = Math.max(normalizedScore, 0.01); " +
