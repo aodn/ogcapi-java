@@ -249,6 +249,20 @@ public enum CQLFields implements CQLFieldsInterface {
                                         .operator(Operator.And)// ensure all terms are matched with fuzziness
                                         .query(literal))._toQuery(),
                         null),
+        semantic_title(
+                        null,
+                        StacBasicField.Title.displayField,
+                        (literal) -> MatchQuery.of(m -> m
+                                .field(StacBasicField.Title.searchField + ".semantic")
+                                .query(literal))._toQuery(),
+                        null),
+        semantic_desc(
+                    null,
+                    StacBasicField.Description.displayField,
+                    (literal) -> MatchQuery.of(m -> m
+                            .field(StacBasicField.Description.searchField + ".semantic")
+                            .query(literal))._toQuery(),
+                    null),
         // Contains cloud-optimized data
         assets_summary(
                         StacBasicField.AssetsSummary.searchField,

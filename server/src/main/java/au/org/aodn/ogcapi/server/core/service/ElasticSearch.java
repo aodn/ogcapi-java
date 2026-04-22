@@ -283,8 +283,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         should.add(CQLFields.description.getPropertyEqualToQuery(term));
                     }
                     else {
-                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
-                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.semantic_title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.semantic_desc.getPropertyEqualToQuery(term));
+//                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+//                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
                     }
                     should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
                     should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));

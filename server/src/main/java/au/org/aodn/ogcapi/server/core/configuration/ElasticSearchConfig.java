@@ -9,12 +9,18 @@ import co.elastic.clients.transport.rest_client.RestClientTransport;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.message.BasicHeader;
+import org.apache.http.ssl.SSLContexts;
 import org.elasticsearch.client.RestClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 
 /**
  * If user provide another search engine, this one will not be created .
@@ -31,13 +37,30 @@ public class ElasticSearchConfig {
 
     @Bean
     @ConditionalOnMissingBean(RestClientTransport.class)
-    public RestClientTransport restClientTransport() {
+    public RestClientTransport restClientTransport(
+            @Value("${elasticsearch.trustAllCertificates:false}") Boolean trustAllCertificates) {
         // Create the low-level client
         RestClient restClient = RestClient
                 .builder(HttpHost.create(serverUrl))
                 .setCompressionEnabled(true)
                 .setDefaultHeaders(new Header[]{
                         new BasicHeader("Authorization", "ApiKey " + apiKey)
+                })
+                .setHttpClientConfigCallback(httpClientBuilder -> {
+                    if (Boolean.TRUE.equals(trustAllCertificates)) {
+                        // This is use when you run a local ES instance, turn on temp license and test
+                        // some features like semantic search
+                        try {
+                            httpClientBuilder
+                                    .setSSLContext(SSLContexts.custom()
+                                            .loadTrustMaterial(null, (chain, authType) -> true)
+                                            .build())
+                                    .setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE);
+                        } catch (NoSuchAlgorithmException | KeyManagementException | KeyStoreException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    return httpClientBuilder;
                 })
                 .build();
 
