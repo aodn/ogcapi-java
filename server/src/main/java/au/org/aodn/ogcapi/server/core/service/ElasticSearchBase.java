@@ -187,8 +187,8 @@ public abstract class ElasticSearchBase {
                                                 "!doc['"+summaryScore+"'].empty ? doc['"+summaryScore+"'].value : 0.0; " +
 
                                                 // Step 2: Normalize internal score to 0-1 range
-                                                // Assuming summaries.score is in range 0-106
-                                                "double normalizedScore = internalScore / 106.0; " +
+                                                // Assuming summaries.score is in range 0-146
+                                                "double normalizedScore = internalScore / 146.0; " +
 
                                                 // Step 3: Ensure minimum multiplier to avoid zero scores
                                                 "double multiplier = Math.max(normalizedScore, 0.01); " +

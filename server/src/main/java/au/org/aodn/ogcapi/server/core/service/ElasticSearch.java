@@ -294,7 +294,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     // acronym moved to links, for example NRMN record is mentioned in the link title.
                     // This is a work-around to the requirement but still allow use of NRMN
                     // links_title_contains and credit_contains use match query by default, exact match is not applied here
-                    should.add(CQLFields.links_title_contains.getPropertyEqualToQuery(term));
+                    // links_title_contains weighted lower as it may contain combined title+description content
+                    should.add(BoolQuery.of(b -> b
+                            .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
+                            .boost(0.5f)  // lower boost to reduce promotion of link-title-only matches
+                    )._toQuery());
                     should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
                 }
             }

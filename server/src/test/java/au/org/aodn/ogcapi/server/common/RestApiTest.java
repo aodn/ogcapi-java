@@ -568,9 +568,9 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(3, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, with score 3");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
 
-        // Increase score will drop one record
+        // Increase score will drop two record
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q='dataset includes'&filter=score>=3", Collections.class);
-        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 3, with score 3");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2, with score 3");
         assertEquals("bf287dfe-9ce4-4969-9c59-51c39ea4d011", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "bf287dfe-9ce4-4969-9c59-51c39ea4d011");
     }
 
