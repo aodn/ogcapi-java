@@ -130,7 +130,6 @@ public class RestServices {
             // empty suggested citation is acceptable since it may be from external orgs
             if (suggestedCitation == null || suggestedCitation.isEmpty()) {
                 log.warn("Suggested citation is null or empty for job '{}'. Submitting with <unavailable> as value.", jobName);
-//                filteredParams.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(),"<unavailable>");
                 parameters.replace(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), "<unavailable>");
             }
         }
