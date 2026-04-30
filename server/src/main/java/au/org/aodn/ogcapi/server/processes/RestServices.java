@@ -122,11 +122,31 @@ public class RestServices {
 
     private String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {
 
+        // Filter out null or empty parameter values before submitting to AWS Batch.
+        // AWS Batch returns "Parameter values must be provided" when the job definition
+        // declares parameters but some submitted values are null/empty.
+        Map<String, String> filteredParams = new HashMap<>();
+        if (parameters != null) {
+            var suggestedCitation = parameters.get(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue());
+            // empty suggested citation is acceptable since it may be from external orgs
+            if (suggestedCitation == null || suggestedCitation.isEmpty()) {
+                log.warn("Suggested citation is null or empty for job '{}'. Submitting with <unavailable> as value.", jobName);
+                filteredParams.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(),"<unavailable>");
+            }
+        }
+
+        if (filteredParams.isEmpty()) {
+            // Defensive: don't call AWS Batch with no parameters when job definition expects some.
+            String msg = String.format("No job parameters provided for job '%s' (queue='%s', definition='%s'). Aborting submit.", jobName, jobQueue, jobDefinition);
+            log.error(msg);
+            throw new IllegalArgumentException(msg);
+        }
+
         SubmitJobRequest submitJobRequest = SubmitJobRequest.builder()
                 .jobName(jobName)
                 .jobQueue(jobQueue)
                 .jobDefinition(jobDefinition)
-                .parameters(parameters)
+                .parameters(filteredParams)
                 .build();
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);
