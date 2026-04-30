@@ -23,7 +23,9 @@ public class ActuatorConfig {
             try {
                 // Is elastic up and run?
                 String status = client.cluster().health(r -> r).status().toString();
-                if (HealthStatus.Yellow.name().equalsIgnoreCase(status) || HealthStatus.Red.name().equalsIgnoreCase(status)) {
+                // Yellow state means partially available (e.g. one shard is down),
+                // so it still work, only when Red then it will not work
+                if (HealthStatus.Red.name().equalsIgnoreCase(status)) {
                     return Health.status(ErrorCode.ELASTICSEARCH_UNAVAILABLE.getStatus())
                             .withDetail("reason", ErrorCode.ELASTICSEARCH_UNAVAILABLE.getMessage())
                             .withDetail("code", ErrorCode.ELASTICSEARCH_UNAVAILABLE.getCode())
