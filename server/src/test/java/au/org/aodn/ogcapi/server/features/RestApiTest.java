@@ -1,12 +1,9 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
-import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
-import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
-import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
-import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -22,6 +19,7 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Slf4j
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
@@ -42,7 +40,7 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @BeforeEach
-    public void afterTest() {
+    public void clearIndex() {
         super.clearElasticIndex();
         super.createElasticIndex();
     }
@@ -320,7 +318,7 @@ public class RestApiTest extends BaseTestClass {
     public void verifyCorrectPageSizeAndScoreWithQuery() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");
 
-        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery");
+        log.debug("Start verifyCorrectPageSizeAndScoreWithQuery");
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
@@ -346,7 +344,7 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {
                 });
 
-        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
+        log.debug("verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
         // Given request page size is 1
@@ -360,8 +358,8 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
 
-        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - uuid return {}", collections.getBody().getCollections().get(0).getId());
-        logger.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
+        log.debug("verifyCorrectPageSizeAndScoreWithQuery - uuid return {}", collections.getBody().getCollections().get(0).getId());
+        log.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
 
         assertEquals(
                 "100",
@@ -387,9 +385,10 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {
                 });
 
-        logger.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 2");
-
+        log.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 2");
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+
+        log.debug("{}", collections.getBody());
         assertEquals(4,
                 Objects.requireNonNull(collections.getBody()).getCollections().size(),
                 "Record return size correct"
@@ -404,6 +403,7 @@ public class RestApiTest extends BaseTestClass {
                 collections.getBody().getSearchAfter().get(2),
                 "Search after 2 value"
         );
+        log.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done all");
     }
 
     @Test
@@ -473,7 +473,7 @@ public class RestApiTest extends BaseTestClass {
 
         assertTrue(target.isPresent(), "Target bbox found 2");
 
-        logger.info(bbox.get(0).toString());
+        log.info(bbox.get(0).toString());
         // The first is the overall bounding box
         assertEquals(113.0, bbox.get(0).get(0).doubleValue(), "Overall bounding box coor 1");
         assertEquals(-43.0, bbox.get(0).get(1).doubleValue(), "Overall bounding box coor 2");
