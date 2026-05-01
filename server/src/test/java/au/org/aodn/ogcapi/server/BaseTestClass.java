@@ -63,7 +63,7 @@ public class BaseTestClass {
 
     @Value("${elasticsearch.cloud_optimized_index.name}")
     protected String data_index_name;
-    
+
     protected String getBasePath() {
         return "http://localhost:" + port + "/api/v1/ogc";
     }
