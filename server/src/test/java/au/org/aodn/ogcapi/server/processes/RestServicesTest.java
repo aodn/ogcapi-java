@@ -113,7 +113,7 @@ public class RestServicesTest {
         SubmitJobRequest captured = captor.getValue();
 
         String suggestedKey = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue();
-        assertEquals("<unavailable>", captured.parameters().get(suggestedKey));
+        assertEquals("unavailable", captured.parameters().get(suggestedKey));
         assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
     }
 }
