@@ -318,7 +318,7 @@ public class RestApiTest extends BaseTestClass {
     public void verifyCorrectPageSizeAndScoreWithQuery() throws IOException {
         assertEquals(4, pageSize, "This test only works with small page");
 
-        log.debug("Start verifyCorrectPageSizeAndScoreWithQuery");
+        log.info("Start verifyCorrectPageSizeAndScoreWithQuery");
 
         // Given 6 records and we set page to 4, that means each query elastic return 4 record only
         // and the logic to load the reset can kick in.
@@ -344,7 +344,7 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {
                 });
 
-        log.debug("verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
+        log.info("verifyCorrectPageSizeAndScoreWithQuery - Done query 1");
 
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
         // Given request page size is 1
@@ -358,8 +358,8 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
 
-        log.debug("verifyCorrectPageSizeAndScoreWithQuery - uuid return {}", collections.getBody().getCollections().get(0).getId());
-        log.debug("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
+        log.info("verifyCorrectPageSizeAndScoreWithQuery - uuid return {}", collections.getBody().getCollections().get(0).getId());
+        log.info("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
 
         assertEquals(
                 "100",
@@ -385,10 +385,10 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {
                 });
 
-        log.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 2");
+        log.info("Start verifyCorrectPageSizeAndScoreWithQuery - Done query 2");
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
 
-        log.debug("{}", collections.getBody());
+        log.info("{}", collections.getBody());
         assertEquals(4,
                 Objects.requireNonNull(collections.getBody()).getCollections().size(),
                 "Record return size correct"
@@ -403,7 +403,7 @@ public class RestApiTest extends BaseTestClass {
                 collections.getBody().getSearchAfter().get(2),
                 "Search after 2 value"
         );
-        log.debug("Start verifyCorrectPageSizeAndScoreWithQuery - Done all");
+        log.info("Start verifyCorrectPageSizeAndScoreWithQuery - Done all");
     }
 
     @Test
