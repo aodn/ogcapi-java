@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
 import lombok.Getter;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.time.YearMonth;
 import java.util.HashMap;
@@ -55,7 +56,7 @@ public class DatasetSummarizer {
             var newCount = getCount(featureToAdd);
             var timeAndCountUpdatedProperties = updateCount(timeUpdatedProperties, newCount);
 
-            aggregatedFeature.setProperties(timeAndCountUpdatedProperties);
+            aggregatedFeature.setProperties(JsonNullable.of(timeAndCountUpdatedProperties));
         } catch (ClassCastException e) {
             throw new RuntimeException("Feature properties is not a map", e);
         }

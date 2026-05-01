@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -715,7 +716,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                             } else {
                                 Map<String, Object> newPropsMap = new HashMap<>();
                                 newPropsMap.put("key", datasetKey);
-                                feature.setProperties(newPropsMap);
+                                feature.setProperties(JsonNullable.of(newPropsMap));
                             }
                         }
                         features.add(feature);
