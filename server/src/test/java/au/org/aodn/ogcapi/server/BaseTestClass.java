@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server;
 
 import au.org.aodn.ogcapi.server.core.model.VocabDto;
 import au.org.aodn.ogcapi.server.core.model.VocabModel;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
@@ -266,4 +267,13 @@ public class BaseTestClass {
         File f = ResourceUtils.getFile(path);
         return Files.readString(f.toPath(), StandardCharsets.UTF_8);
     }
+
+    public static boolean isJsonEqual(String json1, String json2) {
+        try {
+            return GeometryUtils.getMapper().readTree(json1).equals(GeometryUtils.getMapper().readTree(json2));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

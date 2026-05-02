@@ -716,6 +716,10 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public Function function(Name name, Expression... expressions) {
+        logger.debug("Function {} {}", name, expressions);
+        if(name.getLocalPart().equals(IBoundaryFunction.NAME.getFunctionName().getLocalPart())) {
+            return new IBoundaryFunction(List.of(expressions), null);
+        }
         return CommonFactoryFinder.getFilterFactory2().function(name, expressions);
     }
 

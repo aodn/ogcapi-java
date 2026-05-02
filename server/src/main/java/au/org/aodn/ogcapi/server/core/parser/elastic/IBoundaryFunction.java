@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -21,8 +22,8 @@ import java.util.Map;
 @Slf4j
 public class IBoundaryFunction extends FunctionImpl {
 
-    private static Map<String, String> loadStaticMap(String path, String keyField) {
-        Map<String, String> map = new HashMap<>();
+    private static Map<String, Geometry> loadStaticMap(String path, String keyField) {
+        final Map<String, Geometry> map = new HashMap<>();
         try (InputStream is = new ClassPathResource(path).getInputStream()) {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(is);
@@ -37,7 +38,7 @@ public class IBoundaryFunction extends FunctionImpl {
                             JsonNode geometry = feature.get("geometry");
                             if (geometry != null) {
                                 String geoJson = mapper.writeValueAsString(geometry);
-                                map.put(key, geoJson);
+                                GeometryUtils.readGeometry(geoJson).ifPresent(geo -> map.put(key, geo));
                             }
                         }
                     }
@@ -49,13 +50,13 @@ public class IBoundaryFunction extends FunctionImpl {
         return map;
     }
 
-    static final Map<String, String> CORAL_ATLAS = loadStaticMap("static/api/v1/ogc/ext/static/Allen_Coral_Atlas.json", "OBJECTID");
+    static final Map<String, Geometry> CORAL_ATLAS = loadStaticMap("static/api/v1/ogc/ext/static/Allen_Coral_Atlas.json", "OBJECTID");
 
-    static final Map<String, String> AUZ_MARINE_PARK = loadStaticMap("static/api/v1/ogc/ext/static/Australian_Marine_Parks_boundaries.json", "OBJECTID");
+    static final Map<String, Geometry> AUZ_MARINE_PARK = loadStaticMap("static/api/v1/ogc/ext/static/Australian_Marine_Parks_boundaries.json", "OBJECTID");
 
-    static final Map<String, String> MEOW = loadStaticMap("static/api/v1/ogc/ext/static/Meow.json", "ECO_CODE");
+    static final Map<String, Geometry> MEOW = loadStaticMap("static/api/v1/ogc/ext/static/Meow.json", "ECO_CODE");
 
-    static String getGeoJsonFromMap(String mapName, String key) {
+    static Geometry getGeoJsonFromMap(String mapName, String key) {
         return switch (mapName) {
             case "CORAL_ATLAS" -> CORAL_ATLAS.get(key);
             case "AUSTRALIAN_MARINE_PARKS" -> AUZ_MARINE_PARK.get(key);
