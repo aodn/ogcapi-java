@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import org.mapstruct.Mapper;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.opengis.filter.Filter;
 import org.springframework.stereotype.Service;
 
@@ -37,8 +38,7 @@ public abstract class StacToFeatureCollection implements Converter<ElasticSearch
                             feature.setGeometry(new PointGeoJSON().type(PointGeoJSON.TypeEnum.POINT).coordinates(c));
                         }
                     }
-                    feature.setProperties(i.getProperties());
-
+                    feature.setProperties(JsonNullable.of(i.getProperties()));
                     return feature;
                 })
                 .filter(i -> i.getGeometry() != null)

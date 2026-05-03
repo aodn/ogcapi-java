@@ -5,7 +5,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.5.13</version>
+		<version>3.5.14</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>au.org.aodn.ogcapi</groupId>
@@ -21,8 +21,8 @@
 		<org.mapstruct.version>1.5.5.Final</org.mapstruct.version>
 		<org.projectlombok.version>1.18.30</org.projectlombok.version>
 		<org.projectlombok.binding>0.2.0</org.projectlombok.binding>
-		<swagger.codegen.version>3.0.61</swagger.codegen.version>
-		<org.geotools.version>29.2</org.geotools.version>
+		<swagger.codegen.version>3.0.69</swagger.codegen.version>
+		<org.geotools.version>29.6</org.geotools.version>
 		<maven.deploy.skip>true</maven.deploy.skip>
 		<versioning.updatePom>true</versioning.updatePom>
 		<aws.sdk.version>2.29.52</aws.sdk.version>
@@ -56,7 +56,7 @@
 			<dependency>
 				<groupId>org.springdoc</groupId>
 				<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-				<version>2.8.8</version>
+				<version>2.8.17</version>
 			</dependency>
 			<dependency>
 				<groupId>com.github.joschi.jackson</groupId>

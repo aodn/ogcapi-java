@@ -4,6 +4,8 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import lombok.Getter;
+import org.geotools.factory.CommonFactoryFinder;
+import org.geotools.feature.NameImpl;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.IllegalFilterException;
 import org.geotools.filter.LiteralExpressionImpl;
@@ -92,7 +94,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
      *
      * @param geometry1 - The attribute value, it will be mapped by the type T enum to the real field name in Elastic
      * @param geometry2 - The Polygon and will convert to GeoJson
-     * @return
+     * @return IntersectsImpl - The intersects filter, internally it constructed the query chain
      */
     @Override
     public Intersects intersects(Expression geometry1, Expression geometry2) {
@@ -709,12 +711,16 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public Function function(String s, Expression... expressions) {
-        return null;
+        return function(new NameImpl(s), expressions);
     }
 
     @Override
     public Function function(Name name, Expression... expressions) {
-        return null;
+        logger.debug("Function {} {}", name, expressions);
+        if(name.getLocalPart().equals(IBoundaryFunction.NAME.getFunctionName().getLocalPart())) {
+            return new IBoundaryFunction(List.of(expressions), null);
+        }
+        return CommonFactoryFinder.getFilterFactory2().function(name, expressions);
     }
 
     @Override
@@ -768,9 +774,9 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
     /**
      * The jj parse have not setup anything related to sort, so this is not use, manual parse needed.
-     * @param s
-     * @param sortOrder
-     * @return
+     * @param s - Field name
+     * @param sortOrder - Order of sort
+     * @return - SortBy
      */
     @Override
     public SortBy sort(String s, SortOrder sortOrder) {

@@ -24,7 +24,6 @@ import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Map;
 
 @Configuration
 @EnableCaching
@@ -100,13 +99,13 @@ public class CacheConfig {
                 )
                 .withCache(STRING_TO_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                Map.class, Geometry.class,
+                                Object.class, Geometry.class,
                                 ResourcePoolsBuilder.heap(20000)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(24)))
                 )
                 .withCache(STRING_TO_PREPARE_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                Map.class, PreparedGeometry.class,
+                                Object.class, PreparedGeometry.class,
                                 ResourcePoolsBuilder.heap(20000)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(24)))
                 )

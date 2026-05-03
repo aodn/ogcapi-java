@@ -5,9 +5,11 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.io.ParseException;
 import org.opengis.filter.FilterVisitor;
 import org.opengis.filter.expression.Expression;
+import org.opengis.filter.expression.Function;
 import org.opengis.filter.spatial.Intersects;
 import org.opengis.referencing.FactoryException;
 import org.opengis.referencing.operation.TransformException;
@@ -27,7 +29,21 @@ public class IntersectsImpl<T extends Enum<T> & CQLFieldsInterface> extends Quer
         this.expression1 = expression1;
         this.expression2 = expression2;
 
-        if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
+        if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof Function func) {
+            Object val = func.evaluate(null);
+            if(val instanceof Geometry geometry) {
+                try {
+                    String geojson = GeometryUtils.convertToGeoJson(geometry, cqlCrsType);
+                    T v = Enum.valueOf(enumType, attribute.toString());
+                    this.query = v.getIntersectsQuery(geojson);
+                }
+                catch (Exception e) {
+                    logger.warn("Exception in geometry transform, query result will be wrong", e);
+                    this.query = null;
+                }
+            }
+        }
+        else if(expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             try {
                 String geojson = GeometryUtils.convertToGeoJson(literal, cqlCrsType);
                 // Create elastic query here

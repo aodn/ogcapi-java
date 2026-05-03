@@ -21,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -124,7 +125,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         List<Query> filters;
         if (cql != null) {
             CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
-            Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
+            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
             if (filter instanceof QueryHandler elasticFilter) {
                 filters = List.of(elasticFilter.getQuery());
             } else {
@@ -307,7 +308,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
             if(cql != null) {
-                Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
+                Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
 
                 if(filter instanceof QueryHandler handler) {
                     if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
@@ -715,7 +716,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                             } else {
                                 Map<String, Object> newPropsMap = new HashMap<>();
                                 newPropsMap.put("key", datasetKey);
-                                feature.setProperties(newPropsMap);
+                                feature.setProperties(JsonNullable.of(newPropsMap));
                             }
                         }
                         features.add(feature);
