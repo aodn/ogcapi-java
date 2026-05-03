@@ -732,8 +732,19 @@ public class RestApiTest extends BaseTestClass {
 
 
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "no real-time records found");
-        }
-
+    }
+    /**
+     * Tests the functionality of filtering collections based on the predicted AI-enhanced `ai:parameter_vocabs` field.
+     * This method performs the following:
+     * - Inserts a test JSON file into the Elasticsearch record index containing a predicted keyword with the `ai:parameter_vocabs` field.
+     * - Sends API requests to filter collections using specific conditions on `parameter_vocabs` and `ai_parameter_vocabs` fields.
+     * - Verifies the API response against expected results:
+     *   - Ensures one collection is returned for the filter matching the `ocean biota` value.
+     *   - Ensures zero collections are returned for the filter matching the `glider` platform value.
+     * This test ensures that the parameter vocabulary filters (`ai:parameter_vocabs` and `parameter_vocabs`) are properly handled by the API.
+     *
+     * @throws IOException if there is any issue with Elasticsearch data insertion or during the test execution.
+     */
     @Test
     public void verifyAiParameterVocabsWorks() throws IOException {
         super.insertJsonToElasticRecordIndex("e26d0a56-5603-4413-911d-7b359a533a75.json"); // this record is assumed to have predicted keyword with AI enhanced ai:parameter_vocabs field
@@ -753,5 +764,44 @@ public class RestApiTest extends BaseTestClass {
 
 
         assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(), "no records found for glider platform");
+    }
+    /**
+     * Verifies the functionality of the IBOUNDARY function used in the API to filter collections
+     * based on their spatial intersection with specified boundary geometries.
+     * The method does the following:
+     * - Inserts test JSON data representing collections into an Elasticsearch index.
+     * - Sends API requests to filter collections intersecting with specific boundaries using the IBOUNDARY function.
+     * - Validates the returned collections to ensure that:
+     *   - The correct number of collections is returned.
+     *   - The IDs of the returned collections match the expected values according to the defined filter criteria.
+     * This test ensures that the IBOUNDARY function accurately identifies collections that spatially intersect specified boundaries.
+     *
+     * @throws IOException if there is any issue with Elasticsearch insertion or during the test execution.
+     */
+    @Test
+    public void verifyIBoundaryFunctionWorks() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                // Will hit Shark Bay
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                // Will hit Central Eastern of Auz marine park, but not Shark Bay
+                "ae86e2f5-eaaf-459e-a405-e654d85adb9c.json"
+        );
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=INTERSECTS(geometry,IBOUNDARY('AUSTRALIAN_MARINE_PARKS','12'))",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        assertEquals("ae86e2f5-eaaf-459e-a405-e654d85adb9c", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
+
+        collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=INTERSECTS(geometry,IBOUNDARY('AUSTRALIAN_MARINE_PARKS','15'))",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
     }
 }
