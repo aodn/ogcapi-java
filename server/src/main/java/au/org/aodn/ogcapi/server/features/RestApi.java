@@ -125,7 +125,7 @@ public class RestApi implements CollectionsApi {
                 return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
             }
             case wave_buoy_all -> {
-                return featuresService.getWaveBuoyAllUniqueSites(collectionId);
+                return featuresService.getLatestWaveBuoySites(collectionId);
             }
             case wfs_fields -> {
                 return featuresService.getWfsFields(collectionId, request);

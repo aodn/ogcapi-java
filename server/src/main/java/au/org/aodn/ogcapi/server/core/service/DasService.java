@@ -71,7 +71,7 @@ public class DasService {
         return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,httpEntity,byte[].class,params).getBody();
     }
 
-    public byte[] getWaveBuoyAllUniqueSites(){
+    public byte[] getLatestWaveBuoySites(){
         String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/all")
                 .encode()
                 .toUriString();
