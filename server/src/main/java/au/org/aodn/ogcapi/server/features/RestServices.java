@@ -298,4 +298,20 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    public ResponseEntity<?> getWaveBuoyAllUniqueSites(String collectionID) {
+        if (!dasService.isCollectionSupported(collectionID)) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
+        try {
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getWaveBuoyAllUniqueSites());
+
+        } catch (Exception e) {
+            log.error("Error fetching wave buoy all unique sites date: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

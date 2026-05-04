@@ -84,6 +84,37 @@ public class RestServicesTest {
     }
 
     @Test
+    public void testGetWaveBuoyAllUniqueSitesSuccess() {
+        byte[] mockResponse = "[{\"site_code\":\"SITE1\"}]".getBytes();
+        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
+        when(dasService.getWaveBuoyAllUniqueSites()).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getWaveBuoyAllUniqueSites(SUPPORTED_COLLECTION_ID);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockResponse, response.getBody());
+    }
+
+    @Test
+    public void testGetWaveBuoyAllUniqueSitesUnsupportedCollection() {
+        when(dasService.isCollectionSupported("unsupported-id")).thenReturn(false);
+
+        ResponseEntity<?> response = restServices.getWaveBuoyAllUniqueSites("unsupported-id");
+
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetWaveBuoyAllUniqueSitesServiceError() {
+        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
+        when(dasService.getWaveBuoyAllUniqueSites()).thenThrow(new RuntimeException("Connection refused"));
+
+        ResponseEntity<?> response = restServices.getWaveBuoyAllUniqueSites(SUPPORTED_COLLECTION_ID);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
     public void testGetWfsTimeFieldWorks() {
         when(wfsServer.getFieldValues(anyString(), any(WfsServer.WfsFeatureRequest.class), any(ParameterizedTypeReference.class)))
                 .thenReturn(

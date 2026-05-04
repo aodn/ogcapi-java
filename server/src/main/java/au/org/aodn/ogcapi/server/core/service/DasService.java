@@ -71,6 +71,14 @@ public class DasService {
         return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,httpEntity,byte[].class,params).getBody();
     }
 
+    public byte[] getWaveBuoyAllUniqueSites(){
+        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/all")
+                .encode()
+                .toUriString();
+
+        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
+    }
+
     public boolean isCollectionSupported(String collectionId){
         final String waveBuoyRealtimeCollectionID = "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc";
         return waveBuoyRealtimeCollectionID.contentEquals(collectionId);
