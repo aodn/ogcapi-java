@@ -454,7 +454,7 @@ springdoc:
     path: /api/v1/ogc/api-docs/v3
 
 data-access-service:
-  host: http://localhost:5001
+  host: http://localhost:5000
   secret: 123
 
 management:
