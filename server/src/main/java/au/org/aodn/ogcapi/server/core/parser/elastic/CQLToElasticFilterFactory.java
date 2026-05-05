@@ -146,7 +146,12 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public Id id(FeatureId... featureIds) {
-        return null;
+        return id(new HashSet<>(Arrays.asList(featureIds)));
+    }
+
+    @Override
+    public Id id(Set<? extends Identifier> set) {
+        return new IdImpl<>(set, collectionFieldType);
     }
 
     @Override
@@ -225,12 +230,6 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
         else {
             return null;
         }
-    }
-
-    @Override
-    public Id id(Set<? extends Identifier> set) {
-        logger.debug("id {}", set);
-        return null;
     }
 
     @Override

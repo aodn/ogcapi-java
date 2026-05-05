@@ -804,4 +804,25 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
         assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
     }
+    /**
+     * The correct syntax for an id query is id IN (xxxxx), use id=xxxx will fail parsing
+     * @throws IOException - Not expected
+     */
+    @Test
+    public void verifyQueryByIdWorks() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                // Will hit Shark Bay
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                // Will hit Central Eastern of Auz marine park, but not Shark Bay
+                "ae86e2f5-eaaf-459e-a405-e654d85adb9c.json"
+        );
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?properties=id,geometry&filter=id IN('516811d7-cd1e-207a-e0440003ba8c79dd')",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
+    }
 }
