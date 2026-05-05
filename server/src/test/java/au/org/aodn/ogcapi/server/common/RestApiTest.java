@@ -787,7 +787,7 @@ public class RestApiTest extends BaseTestClass {
                 "ae86e2f5-eaaf-459e-a405-e654d85adb9c.json"
         );
         ResponseEntity<Collections> collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?filter=INTERSECTS(geometry,IBOUNDARY('AUSTRALIAN_MARINE_PARKS','12'))",
+                getBasePath() + "/collections?filter=INTERSECTS(geometry,IBOUNDARY('AMP','12'))",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});
@@ -796,7 +796,7 @@ public class RestApiTest extends BaseTestClass {
         assertEquals("ae86e2f5-eaaf-459e-a405-e654d85adb9c", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
 
         collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?filter=INTERSECTS(geometry,IBOUNDARY('AUSTRALIAN_MARINE_PARKS','15'))",
+                getBasePath() + "/collections?filter=INTERSECTS(geometry,IBOUNDARY('AMP','15'))",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});

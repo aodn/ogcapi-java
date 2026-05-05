@@ -58,8 +58,8 @@ public class IBoundaryFunction extends FunctionImpl {
 
     static Geometry getGeoJsonFromMap(String mapName, String key) {
         return switch (mapName) {
-            case "CORAL_ATLAS" -> CORAL_ATLAS.get(key);
-            case "AUSTRALIAN_MARINE_PARKS" -> AUZ_MARINE_PARK.get(key);
+            case "ACA" -> CORAL_ATLAS.get(key);
+            case "AMP" -> AUZ_MARINE_PARK.get(key);
             case "MEOW" -> MEOW.get(key);
             default -> null;
         };

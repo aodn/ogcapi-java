@@ -23,7 +23,7 @@ public class IBoundaryFunctionTest {
         FilterFactory2 ff = CommonFactoryFinder.getFilterFactory2();
 
         Expression func = ff.function("IBOUNDARY",
-                ff.literal("CORAL_ATLAS"),
+                ff.literal("ACA"),
                 ff.literal("1"));
 
         Object geom = func.evaluate(null);
@@ -34,7 +34,7 @@ public class IBoundaryFunctionTest {
     @Test
     public void testIBoundaryWithCQL() throws Exception {
         // Parse full CQL2 string
-        String cql = "INTERSECTS(geometry, IBOUNDARY('CORAL_ATLAS', '1'))";
+        String cql = "INTERSECTS(geometry, IBOUNDARY('ACA', '1'))";
         CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(CQLCrsType.EPSG4326, CQLFields.class);
         Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
 
