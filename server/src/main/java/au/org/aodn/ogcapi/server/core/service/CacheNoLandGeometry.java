@@ -34,7 +34,7 @@ public class CacheNoLandGeometry {
                 null,
                 null,
                 null,
-                List.of(CQLFields.id.name(), CQLFields.centroid_nocache.name()),
+                List.of(CQLFields.uuid.name(), CQLFields.centroid_nocache.name()),
                 null,
                 null,
                 null,

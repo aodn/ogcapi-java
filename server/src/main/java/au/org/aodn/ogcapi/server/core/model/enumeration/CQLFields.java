@@ -158,7 +158,7 @@ public enum CQLFields implements CQLFieldsInterface {
                         StacBasicField.OrganisationVocabs.displayField,
                         null,
                         null),
-        id(
+        uuid(
                         StacBasicField.UUID.searchField,
                         StacBasicField.UUID.displayField,
                         // Make sure if id match, it will show up as the first result
