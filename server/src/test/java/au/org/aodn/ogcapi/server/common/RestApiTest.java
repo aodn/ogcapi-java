@@ -297,14 +297,14 @@ public class RestApiTest extends BaseTestClass {
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json"
         );
 
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2007-06-05T14:00:00Z&properties=id,title", Collections.class);
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2007-06-05T14:00:00Z&properties=uuid,title", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
         assertNotNull(collections.getBody().getCollections().get(0).getId());
         assertNotNull(collections.getBody().getCollections().get(0).getTitle());
         assertNull(collections.getBody().getCollections().get(0).getDescription());
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2007-06-05T14:00:00Z&properties=id,title,description", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=../2007-06-05T14:00:00Z&properties=uuid,title,description", Collections.class);
         assertNotNull(Objects.requireNonNull(collections.getBody()).getCollections().get(0).getDescription());
     }
     /**
