@@ -136,7 +136,7 @@ public class ElasticSearchTest {
             should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
-            should.add(CQLFields.id.getPropertyEqualToQuery(term));
+            should.add(CQLFields.uuid.getPropertyEqualToQuery(term));
             should.add(BoolQuery.of(b -> b
                     .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
                     .boost(0.5f)  // lower boost to reduce promotion of link-title-only matches
@@ -166,7 +166,7 @@ public class ElasticSearchTest {
             should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
-            should.add(CQLFields.id.getPropertyEqualToQuery(term));
+            should.add(CQLFields.uuid.getPropertyEqualToQuery(term));
             should.add(BoolQuery.of(b -> b
                     .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
                     .boost(0.5f)  // lower boost to reduce promotion of link-title-only matches

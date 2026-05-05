@@ -804,4 +804,22 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
         assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
     }
+
+    @Test
+    public void verifyUUIDSearchWorks() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                // Will hit Shark Bay
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                // Will hit Central Eastern of Auz marine park, but not Shark Bay
+                "ae86e2f5-eaaf-459e-a405-e654d85adb9c.json"
+        );
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?filter=uuid='516811d7-cd1e-207a-e0440003ba8c79dd'",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
+    }
 }

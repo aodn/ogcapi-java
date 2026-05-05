@@ -290,7 +290,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
                     should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
                     should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.id.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.uuid.getPropertyEqualToQuery(term));
                     // A request to not using acronym in title and description in metadata, hence these
                     // acronym moved to links, for example NRMN record is mentioned in the link title.
                     // This is a work-around to the requirement but still allow use of NRMN
