@@ -120,6 +120,10 @@ public class DownloadWfsDataService {
                 BigInteger featureCount = BigInteger.valueOf(root.get("totalFeatures").asLong());
                 log.debug("Total record hits {}", featureCount);
 
+                if (featureCount.equals(BigInteger.ZERO)) {
+                    return BigInteger.ZERO;
+                }
+
                 // In case the records we have is smaller than our predefined SAMPLES_SIZE, we use smaller one.
                 long sampleSize = featureCount.longValue() < SAMPLES_SIZE ? featureCount.longValue() : SAMPLES_SIZE;
 
