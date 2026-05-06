@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.model;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import lombok.Getter;
 import lombok.Setter;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.util.Map;
 @Getter
@@ -19,7 +20,7 @@ public class EsFeatureModel {
         //TODO: when more geometry types are supported, functions should be
         // updated then.
         f.setGeometry(geometry.toGeoJson());
-        f.setProperties(properties);
+        f.setProperties(JsonNullable.of(properties));
         return f;
     }
 }

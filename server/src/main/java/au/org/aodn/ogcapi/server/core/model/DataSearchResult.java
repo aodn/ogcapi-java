@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
 import au.org.aodn.ogcapi.server.core.util.DatasetSummarizer;
+import org.openapitools.jackson.nullable.JsonNullable;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -77,7 +78,7 @@ public class DataSearchResult {
                 .ifPresent(val -> properties.put(FeatureProperty.COUNT.getValue(), val));
 
 
-        feature.setProperties(properties);
+        feature.setProperties(JsonNullable.of(properties));
         dataset.getFeatures().add(feature);
     }
 
