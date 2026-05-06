@@ -308,26 +308,31 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
             if(cql != null) {
-                Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
-
-                if(filter instanceof QueryHandler handler) {
-                    if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
-                        if(handler.getQuery() != null) {
-                            // There is no error during parsing
-                            filters = List.of(handler.getQuery());
+                try {
+                    Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+                    if(filter instanceof QueryHandler handler) {
+                        if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
+                            if(handler.getQuery() != null) {
+                                // There is no error during parsing
+                                filters = List.of(handler.getQuery());
+                            }
+                        }
+                        else {
+                            throw new IllegalArgumentException(
+                                    "ECQL Parse Error",
+                                    handler.getErrors()
+                                            .stream()
+                                            .reduce(null, (e1, e2) -> {
+                                                if (e1 == null) return e2;
+                                                e1.addSuppressed(e2);
+                                                return e1;
+                                            }));
                         }
                     }
-                    else {
-                        throw new IllegalArgumentException(
-                                "CQL Parse Error",
-                                handler.getErrors()
-                                        .stream()
-                                        .reduce(null, (e1, e2) -> {
-                                            if (e1 == null) return e2;
-                                            e1.addSuppressed(e2);
-                                            return e1;
-                                        }));
-                    }
+                }
+                catch(CQLException ce) {
+                    log.error("Error parsing ECQL", ce);
+                    throw ce;
                 }
             }
             // Get the page size after parsing
