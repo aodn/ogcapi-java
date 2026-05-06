@@ -370,6 +370,48 @@ public class DownloadWfsDataServiceTest {
         long expected = 227193L * sampleBytes.length / DownloadWfsDataService.SAMPLES_SIZE;
         assertEquals(BigInteger.valueOf(expected), size, "Size match");
     }
+    @Test
+    void shouldReturnZeroWhenTotalFeaturesIsZero() {
+        String uuid = "lyr-123";
+        String layer = "water_bodies";
+        String start = "2024-01-01";
+        String end = "2024-12-31";
+        Object multiPolygon = new Object();
+        List<String> fields = List.of("name", "area");
+        String format = "application/json";
+
+        String countJson = "{\"totalFeatures\": 0, \"features\": []}";
+        ResponseEntity<String> countResponse = new ResponseEntity<>(countJson, HttpStatus.OK);
+
+        doReturn(countResponse)
+                .when(restTemplate).exchange(
+                    argThat((String url) -> url != null && url.contains("maxFeatures=1")),
+                    eq(HttpMethod.GET),
+                    any(HttpEntity.class),
+                    eq(String.class));
+
+        doReturn(Optional.of("http://dummy.com/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), anyString());
+
+        WfsFields fs = WfsFields.builder()
+                .fields(List.of(
+                        WfsField.builder().type("dateTime").name("time").build()
+                ))
+                .build();
+
+        doReturn(fs)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
+
+        BigInteger size = downloadWfsDataService.estimateDownloadSize(
+                uuid, layer, start, end, multiPolygon, fields, format);
+
+        assertEquals(BigInteger.ZERO, size, "Size should be zero when totalFeatures is 0");
+        // No sample download should be made
+        verify(restTemplate, never()).exchange(
+                argThat((String url) -> url != null && url.contains("maxFeatures=0")),
+                eq(HttpMethod.GET), any(), eq(byte[].class));
+    }
+
     /**
      * Expect RuntimeException when GeoServer returns JSON without the totalFeatures field
      * (e.g. GeoServer returned an error JSON or unexpected structure)
