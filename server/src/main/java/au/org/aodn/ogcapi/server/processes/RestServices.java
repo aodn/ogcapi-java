@@ -309,11 +309,12 @@ public class RestServices {
                                         "timestamp", System.currentTimeMillis()
                                 )));
                     }
-                    catch(IllegalArgumentException iae) {
+                    catch(Exception e) {
+                        log.warn("Unexpected error during size estimation for UUID {}: {}", uuid, e.getMessage());
                         emitter.send(SseEmitter.event()
                                 .name("estimate-failed")
                                 .data(Map.of(
-                                        "message", iae.getMessage(),
+                                        "message", "Size estimation failed: " + e.getMessage(),
                                         "timestamp", System.currentTimeMillis()
                                 )));
                     }
