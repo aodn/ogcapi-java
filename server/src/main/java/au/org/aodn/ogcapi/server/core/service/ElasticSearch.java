@@ -712,17 +712,17 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     for (FeatureGeoJSON feature : documentFeatures) {
                         // add key in property field for each feature
                         if (datasetKey != null) {
-                            Object featurePropsObj = feature.getProperties();
+                            JsonNullable<Object> propertiesWrapper = feature.getProperties();
+                            Map<String, Object> featurePropsMap = new HashMap<>();
 
-                            if (featurePropsObj instanceof Map) {
-                                @SuppressWarnings("unchecked")
-                                Map<String, Object> featurePropsMap = (Map<String, Object>) featurePropsObj;
-                                featurePropsMap.put("key", datasetKey);
-                            } else {
-                                Map<String, Object> newPropsMap = new HashMap<>();
-                                newPropsMap.put("key", datasetKey);
-                                feature.setProperties(JsonNullable.of(newPropsMap));
+                            if (propertiesWrapper != null
+                                    && propertiesWrapper.isPresent()
+                                    && propertiesWrapper.get() instanceof Map<?, ?> existingProps) {
+                                existingProps.forEach((k, v) -> featurePropsMap.put(String.valueOf(k), v));
                             }
+
+                            featurePropsMap.put("key", datasetKey);
+                            feature.setProperties(JsonNullable.of(featurePropsMap));
                         }
                         features.add(feature);
                     }

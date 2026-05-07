@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openapitools.jackson.nullable.JsonNullable;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -64,6 +65,12 @@ public class ElasticSearchTest {
         esFeatureCollection.setProperties(featureCollectionProperties);
         List<List<List<BigDecimal>>> coords = new ArrayList<>();
         var esFeature = new EsFeatureModel();
+
+        // mock the feature properties
+        Map<String, Object> featureProperties = new HashMap<>();
+        featureProperties.put("date", "1939-09");
+        featureProperties.put("count", 5);
+        esFeature.setProperties(featureProperties);
 
         // mock a single point [147.338884, -43.190779]
         List<List<BigDecimal>> ring = new ArrayList<>();
@@ -116,6 +123,19 @@ public class ElasticSearchTest {
         assertTrue(featureProps.containsKey("key"));
         assertEquals("satellite_ghrsst_l4_gamssa_1day_multi_sensor_world.zarr",
                 featureProps.get("key"));
+
+        // validate the feature properties are correctly serialised
+        assertEquals("1939-09", featureProps.get("date"));
+        assertEquals(5, featureProps.get("count"));
+
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.registerModule(new JsonNullableModule());
+
+        String json = mapper.writeValueAsString(returnedFeature);
+
+        assertTrue(json.contains("\"date\":\"1939-09\""));
+        assertTrue(json.contains("\"count\":5"));
+        assertFalse(json.contains("\"present\":true"));
     }
 
     @Test
