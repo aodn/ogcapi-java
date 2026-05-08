@@ -6,6 +6,9 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
+import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
+import au.org.aodn.ogcapi.server.core.service.Search;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 public class RestServicesTest {
 
@@ -34,6 +39,9 @@ public class RestServicesTest {
 
     @Mock
     private WfsServer wfsServer;
+
+    @Mock
+    private Search search;
 
     @InjectMocks
     private RestServices restServices;
@@ -177,5 +185,22 @@ public class RestServicesTest {
         );
         assertInstanceOf(Map.class, response.getBody());
 
+    }
+
+    @Test
+    public void testGetFeatureSummaryReturnsEmptyCollectionForAmsaWithoutSearching() throws Exception {
+        ResponseEntity<FeatureCollectionGeoJSON> response = restServices.getFeature(
+                "2a5739e7-0cb8-444a-b83b-b2bc841b0ce8",
+                FeatureId.summary,
+                null,
+                null
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION, response.getBody().getType());
+        assertTrue(response.getBody().getFeatures().isEmpty());
+
+        verify(search, never()).searchFeatureSummary(anyString(), any(), any());
     }
 }
