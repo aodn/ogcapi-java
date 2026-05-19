@@ -1,5 +1,7 @@
 package au.org.aodn.ogcapi.server.core.model;
 
+import au.org.aodn.stac.model.LinkModel;
+import au.org.aodn.stac.model.SummariesModel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 

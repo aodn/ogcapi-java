@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.util;
 
-import au.org.aodn.ogcapi.server.core.model.LinkModel;
+import au.org.aodn.stac.model.LinkModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.util.UriComponentsBuilder;
 import org.springframework.web.util.UriUtils;

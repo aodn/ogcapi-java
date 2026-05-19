@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.model;
 
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
+import au.org.aodn.stac.model.LinkModel;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

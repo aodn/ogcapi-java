@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.util;
 
+import au.org.aodn.stac.model.LinkModel;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
@@ -66,5 +67,44 @@ public class LinkUtilsTest {
 
         assertEquals(combinedTitle, result[0]);
         assertNull(result[1]);
+    }
+
+    @Test
+    void testApplyParsedTitle_splitsPackedTitle() {
+        LinkModel link = new LinkModel();
+        link.setTitle("{\"title\":\"foo\",\"description\":\"bar\"}");
+
+        LinkUtils.applyParsedTitle(link);
+
+        assertEquals("foo", link.getTitle());
+        assertEquals("bar", link.getDescription());
+    }
+
+    @Test
+    void testApplyParsedTitle_preservesExistingDescription() {
+        LinkModel link = new LinkModel();
+        link.setDescription("existing");
+        link.setTitle("{\"title\":\"foo\",\"description\":\"bar\"}");
+
+        LinkUtils.applyParsedTitle(link);
+
+        assertEquals("foo", link.getTitle());
+        assertEquals("existing", link.getDescription());
+    }
+
+    @Test
+    void testApplyParsedTitle_plainTitlePassesThrough() {
+        LinkModel link = new LinkModel();
+        link.setTitle("Just a title");
+
+        LinkUtils.applyParsedTitle(link);
+
+        assertEquals("Just a title", link.getTitle());
+        assertNull(link.getDescription());
+    }
+
+    @Test
+    void testApplyParsedTitle_nullLinkIsNoop() {
+        assertDoesNotThrow(() -> LinkUtils.applyParsedTitle(null));
     }
 }

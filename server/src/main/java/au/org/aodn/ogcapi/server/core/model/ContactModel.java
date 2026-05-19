@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model;
 
+import au.org.aodn.stac.model.LinkModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

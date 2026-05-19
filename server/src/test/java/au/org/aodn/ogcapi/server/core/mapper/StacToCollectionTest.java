@@ -4,6 +4,8 @@ import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.model.*;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.stac.model.LinkModel;
+import au.org.aodn.stac.model.SummariesModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
