@@ -41,6 +41,7 @@ public class GeometryUtils {
     @Getter
     protected static GeometryFactory factory = new GeometryFactory(new PrecisionModel(), 4326);
 
+    @Getter
     protected static ObjectMapper mapper = new ObjectMapper();
     // This number of decimal is needed to do some accurate
     protected static GeometryJSON json = new GeometryJSON(PRECISION);
@@ -191,22 +192,33 @@ public class GeometryUtils {
         }
         return gridPolygons;
     }
-
+    /**
+     * Convert the WKT format from the cql to GeoJson use by Elastic search
+     * @param literalExpression - The literalExpression that represent the cql
+     * @param cqlCoorSystem - The cql coordinate system
+     * @return A Json string represent the literalExpression
+     * @throws ParseException - Not expected to parse
+     * @throws IOException - Not expected to parse
+     * @throws FactoryException - Not expected to parse
+     * @throws TransformException - Not expected to parse
+     */
+    public static String convertToGeoJson(LiteralExpressionImpl literalExpression, CQLCrsType cqlCoorSystem) throws ParseException, IOException, FactoryException, TransformException {
+        // Not thread safe reader
+        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
+        WKTReader reader = new WKTReader(geometryFactory);
+        return convertToGeoJson(reader.read(literalExpression.toString()), cqlCoorSystem);
+    }
     /**
      * Convert the WKT format from the cql to GeoJson use by Elastic search
      *
-     * @param literalExpression - Expression from parser
+     * @param geometry - The geometry that represent the cql
+     * @param cqlCoorSystem - The cql coordinate system
      * @return A Json string represent the literalExpression
-     * @throws ParseException - Not expected to parse
      * @throws IOException    - Not expected to parse
      */
-    public static String convertToGeoJson(LiteralExpressionImpl literalExpression, CQLCrsType cqlCoorSystem) throws ParseException, IOException, FactoryException, TransformException {
-        GeometryFactory geometryFactory = JTSFactoryFinder.getGeometryFactory();
-        WKTReader reader = new WKTReader(geometryFactory);
-        Geometry geo = reader.read(literalExpression.toString());
-
+    public static String convertToGeoJson(Geometry geometry, CQLCrsType cqlCoorSystem) throws IOException, FactoryException, TransformException {
         try (StringWriter writer = new StringWriter()) {
-            Geometry t = CQLCrsType.transformGeometry(geo, cqlCoorSystem, CQLCrsType.EPSG4326);
+            Geometry t = CQLCrsType.transformGeometry(geometry, cqlCoorSystem, CQLCrsType.EPSG4326);
             json.write(t, writer);
 
             String r = writer.toString();

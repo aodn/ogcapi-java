@@ -6,7 +6,6 @@ import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
-import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -32,6 +31,9 @@ public abstract class OGCApiService {
     @Autowired
     protected Search search;
 
+    // Hard coded dataset to avoid summary query, the AMSA should be skipped
+    private static final String EMPTY_SUMMARY_COLLECTION_ID = "2a5739e7-0cb8-444a-b83b-b2bc841b0ce8";
+
     /**
      * You can find conformance id
      * <a href="https://docs.ogc.org/is/19-072/19-072.html#ats_core">here</a>
@@ -45,6 +47,13 @@ public abstract class OGCApiService {
                                                                String filter) throws Exception {
         switch(fid) {
             case summary -> {
+                if (EMPTY_SUMMARY_COLLECTION_ID.equals(collectionId)) {
+                    var featureCollection = new FeatureCollectionGeoJSON();
+                    featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);
+                    featureCollection.setFeatures(List.of());
+                    return ResponseEntity.ok().body(featureCollection);
+                }
+
                 var result = search.searchFeatureSummary(collectionId, properties, filter);
                 var featureCollection = new FeatureCollectionGeoJSON();
                 featureCollection.setType(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION);

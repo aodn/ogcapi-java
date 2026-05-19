@@ -6,6 +6,9 @@ import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
+import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
+import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
+import au.org.aodn.ogcapi.server.core.service.Search;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +26,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 public class RestServicesTest {
 
@@ -34,6 +39,9 @@ public class RestServicesTest {
 
     @Mock
     private WfsServer wfsServer;
+
+    @Mock
+    private Search search;
 
     @InjectMocks
     private RestServices restServices;
@@ -79,6 +87,37 @@ public class RestServicesTest {
         when(dasService.getWaveBuoysLatestDate()).thenThrow(new RuntimeException("Connection refused"));
 
         ResponseEntity<?> response = restServices.getWaveBuoysLatestDate(SUPPORTED_COLLECTION_ID);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetLatestWaveBuoySitesSuccess() {
+        byte[] mockResponse = "[{\"site_code\":\"SITE1\"}]".getBytes();
+        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
+        when(dasService.getLatestWaveBuoySites()).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getLatestWaveBuoySites(SUPPORTED_COLLECTION_ID);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockResponse, response.getBody());
+    }
+
+    @Test
+    public void testGetLatestWaveBuoySitesUnsupportedCollection() {
+        when(dasService.isCollectionSupported("unsupported-id")).thenReturn(false);
+
+        ResponseEntity<?> response = restServices.getLatestWaveBuoySites("unsupported-id");
+
+        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetLatestWaveBuoySitesServiceError() {
+        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
+        when(dasService.getLatestWaveBuoySites()).thenThrow(new RuntimeException("Connection refused"));
+
+        ResponseEntity<?> response = restServices.getLatestWaveBuoySites(SUPPORTED_COLLECTION_ID);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
@@ -146,5 +185,22 @@ public class RestServicesTest {
         );
         assertInstanceOf(Map.class, response.getBody());
 
+    }
+
+    @Test
+    public void testGetFeatureSummaryReturnsEmptyCollectionForAmsaWithoutSearching() throws Exception {
+        ResponseEntity<FeatureCollectionGeoJSON> response = restServices.getFeature(
+                "2a5739e7-0cb8-444a-b83b-b2bc841b0ce8",
+                FeatureId.summary,
+                null,
+                null
+        );
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertEquals(FeatureCollectionGeoJSON.TypeEnum.FEATURECOLLECTION, response.getBody().getType());
+        assertTrue(response.getBody().getFeatures().isEmpty());
+
+        verify(search, never()).searchFeatureSummary(anyString(), any(), any());
     }
 }

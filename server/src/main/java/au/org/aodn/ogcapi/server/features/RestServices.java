@@ -298,4 +298,26 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.internalServerError().build();
         }
     }
+
+    /**
+     * This is to get all buoy sites with their latest available observation
+     *
+     * @param collectionID - uuid
+     * @return -
+     */
+    public ResponseEntity<?> getLatestWaveBuoySites(String collectionID) {
+        if (!dasService.isCollectionSupported(collectionID)) {
+            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+        }
+        try {
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getLatestWaveBuoySites());
+
+        } catch (Exception e) {
+            log.error("Error fetching wave buoy all unique sites date: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }
