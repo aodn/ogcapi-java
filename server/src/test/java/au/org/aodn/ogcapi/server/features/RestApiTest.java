@@ -300,7 +300,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
+                "str:7709f541-fc0c-4318-b5b9-9053aa474e0e",
                 collections.getBody().getSearchAfter().get(2),
                 "search_after 3 value"
         );
@@ -399,7 +399,7 @@ public class RestApiTest extends BaseTestClass {
         // The search after give you the value to go to next batch
         assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
         assertEquals(
-                "str:5c418118-2581-4936-b6fd-d6bedfe74f62",
+                "str:7709f541-fc0c-4318-b5b9-9053aa474e0e",
                 collections.getBody().getSearchAfter().get(2),
                 "Search after 2 value"
         );
