@@ -20,7 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import static au.org.aodn.ogcapi.server.core.util.GeometryUtils.createCentroid;
@@ -41,6 +44,25 @@ public interface Converter<F, T> {
     }
 
     T convert(F from, Filter param);
+
+    private static List<List<Date>> parseTemporal(List<List<String>> raw) {
+        if (raw == null) {
+            return null;
+        }
+        List<List<Date>> out = new ArrayList<>(raw.size());
+        for (List<String> inner : raw) {
+            if (inner == null) {
+                out.add(null);
+                continue;
+            }
+            List<Date> innerOut = new ArrayList<>(inner.size());
+            for (String s : inner) {
+                innerOut.add(s == null ? null : Date.from(Instant.parse(s)));
+            }
+            out.add(innerOut);
+        }
+        return out;
+    }
 
     default au.org.aodn.ogcapi.features.model.Link getSelfCollectionLink(String hostname, String id) {
         au.org.aodn.ogcapi.features.model.Link self = new au.org.aodn.ogcapi.features.model.Link();
@@ -100,7 +122,7 @@ public interface Converter<F, T> {
             }
 
             extent.setTemporal(new ExtentTemporal());
-            extent.getTemporal().interval(m.getExtent().getTemporal());
+            extent.getTemporal().interval(parseTemporal(m.getExtent().getTemporal()));
             collection.setExtent(extent);
         }
 

@@ -10,6 +10,7 @@ import au.org.aodn.stac.model.ConceptModel;
 import au.org.aodn.stac.model.ContactsAddressModel;
 import au.org.aodn.stac.model.ContactsModel;
 import au.org.aodn.stac.model.ContactsPhoneModel;
+import au.org.aodn.stac.model.ExtentModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.stac.model.SummariesModel;
 import au.org.aodn.stac.model.ThemesModel;

@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.model;
 
 import au.org.aodn.stac.model.AssetModel;
 import au.org.aodn.stac.model.ContactsModel;
+import au.org.aodn.stac.model.ExtentModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.stac.model.SummariesModel;
 import au.org.aodn.stac.model.ThemesModel;
