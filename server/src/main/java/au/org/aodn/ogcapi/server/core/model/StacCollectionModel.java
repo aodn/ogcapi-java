@@ -1,8 +1,10 @@
 package au.org.aodn.ogcapi.server.core.model;
 
+import au.org.aodn.stac.model.AssetModel;
 import au.org.aodn.stac.model.ContactsModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.stac.model.SummariesModel;
+import au.org.aodn.stac.model.ThemesModel;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
@@ -24,7 +26,7 @@ public class StacCollectionModel {
     protected SummariesModel summaries;
     protected List<LinkModel> links;
     protected List<ContactsModel> contacts;
-    protected List<ThemeModel> themes;
+    protected List<ThemesModel> themes;
     protected String license;
     protected Map<String, AssetModel> assets;
 

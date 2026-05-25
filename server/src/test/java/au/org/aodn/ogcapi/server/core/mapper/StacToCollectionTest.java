@@ -4,11 +4,15 @@ import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.model.*;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.stac.model.AssetModel;
+import au.org.aodn.stac.model.Citation;
+import au.org.aodn.stac.model.ConceptModel;
 import au.org.aodn.stac.model.ContactsAddressModel;
 import au.org.aodn.stac.model.ContactsModel;
 import au.org.aodn.stac.model.ContactsPhoneModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.stac.model.SummariesModel;
+import au.org.aodn.stac.model.ThemesModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
@@ -94,7 +98,7 @@ public class StacToCollectionTest {
                 .aiGroup("ai-group")
                 .description("description")
                 .build();
-        var theme = ThemeModel.builder()
+        var theme = ThemesModel.builder()
                 .scheme("scheme")
                 .concepts(Collections.singletonList(
                         ConceptModel.builder().id("id").url("url").description("description").title("title").build()
@@ -150,8 +154,8 @@ public class StacToCollectionTest {
         Assertions.assertEquals(credits, collection.getProperties().get(CollectionProperty.credits));
         Assertions.assertEquals(Collections.singletonList(contact), collection.getProperties().get(CollectionProperty.contacts));
         Assertions.assertEquals(Collections.singletonList(theme), collection.getProperties().get(CollectionProperty.themes));
-        Assertions.assertInstanceOf(CitationModel.class, collection.getProperties().get(CollectionProperty.citation));
-        var citationToCheck = (CitationModel) collection.getProperties().get(CollectionProperty.citation);
+        Assertions.assertInstanceOf(Citation.class, collection.getProperties().get(CollectionProperty.citation));
+        var citationToCheck = (Citation) collection.getProperties().get(CollectionProperty.citation);
         Assertions.assertEquals("this is suggested Citation", citationToCheck.getSuggestedCitation());
         Assertions.assertEquals(Arrays.asList("this is useLimitations1", "this is useLimitations2"), citationToCheck.getUseLimitations());
         Assertions.assertEquals(Arrays.asList("this is otherConstraints1", "this is otherConstraints2"), citationToCheck.getOtherConstraints());
