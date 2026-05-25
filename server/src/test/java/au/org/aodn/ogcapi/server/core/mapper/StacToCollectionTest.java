@@ -4,6 +4,9 @@ import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.model.*;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.stac.model.ContactsAddressModel;
+import au.org.aodn.stac.model.ContactsModel;
+import au.org.aodn.stac.model.ContactsPhoneModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.stac.model.SummariesModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
@@ -57,7 +60,7 @@ public class StacToCollectionTest {
         StacToCollection stacToCollection = new StacToCollectionImpl();
 
         List<String> credits = Arrays.asList("credit1", "credit2");
-        var address = AddressModel.builder()
+        var address = ContactsAddressModel.builder()
                 .city("city")
                 .country("country")
                 .postalCode("postalCode")
@@ -65,15 +68,15 @@ public class StacToCollectionTest {
                 .deliveryPoint(Arrays.asList("deliveryPoint1", "deliveryPoint2"))
                 .build();
         var link = LinkModel.builder().rel("rel").href("href").type("type").title("title").build();
-        var contact = ContactModel.builder()
+        var contact = ContactsModel.builder()
                 .addresses(Collections.singletonList(address))
                 .name("name")
                 .organization("organization")
                 .roles(Collections.singletonList("roles"))
                 .emails(Arrays.asList("email1", "email2"))
                 .links(Collections.singletonList(link))
-                .phones(Collections.singletonList(InfoModel.builder().value("value").build())
-                ).build();
+                .phones(Collections.singletonList(ContactsPhoneModel.builder().value("value").build()))
+                .build();
         var link1 = LinkModel.builder()
                 .rel("related")
                 .href("https://example.com/data")

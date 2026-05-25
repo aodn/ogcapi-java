@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model;
 
+import au.org.aodn.stac.model.ContactsModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.stac.model.SummariesModel;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -22,7 +23,7 @@ public class StacCollectionModel {
     protected ExtentModel extent;
     protected SummariesModel summaries;
     protected List<LinkModel> links;
-    protected List<ContactModel> contacts;
+    protected List<ContactsModel> contacts;
     protected List<ThemeModel> themes;
     protected String license;
     protected Map<String, AssetModel> assets;
