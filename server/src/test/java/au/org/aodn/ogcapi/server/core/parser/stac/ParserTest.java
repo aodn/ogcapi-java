@@ -2,7 +2,7 @@ package au.org.aodn.ogcapi.server.core.parser.stac;
 
 import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.mapper.Converter;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;

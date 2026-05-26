@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.features.model.PointGeoJSON;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureProperty;
+import au.org.aodn.stac.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.util.DatasetSummarizer;
 import org.openapitools.jackson.nullable.JsonNullable;
 

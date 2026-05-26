@@ -12,6 +12,7 @@ import au.org.aodn.stac.model.ContactsModel;
 import au.org.aodn.stac.model.ContactsPhoneModel;
 import au.org.aodn.stac.model.ExtentModel;
 import au.org.aodn.stac.model.LinkModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.stac.model.SummariesModel;
 import au.org.aodn.stac.model.ThemesModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;

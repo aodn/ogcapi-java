@@ -5,7 +5,7 @@ import au.org.aodn.ogcapi.server.core.configuration.GeoServerConfigTest;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.configuration.GeoServerConfig;
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
