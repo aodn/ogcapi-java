@@ -6,7 +6,9 @@ import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.*;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -26,6 +28,10 @@ public class DownloadWfsDataService {
     protected final int chunkSize;
     protected final ObjectMapper objectMapper;
     protected static final int SAMPLES_SIZE = 500;    // A not too small sample for download size estimation
+
+    @Autowired
+    @Lazy
+    protected DownloadWfsDataService self;
 
     public DownloadWfsDataService(
             WfsServer wfsServer,
@@ -88,13 +94,61 @@ public class DownloadWfsDataService {
     }
 
     /**
-     * We just need to estimate the download size, the way we do it is issue two query:
-     * a. Issue a query and get the number or record hit
-     * b. Issue a query with data download but then limit the records size, and do a liner interpolation
+     * Unfiltered total feature count for a layer
+     * Cached per (uuid, layerName)
+     */
+    @Cacheable(CacheConfig.DOWNLOADABLE_SIZE)
+    public BigInteger getUnfilteredRecordCount(String uuid, String layerName) {
+        String countUrl = prepareWfsRequestUrl(
+                uuid, null, null, null, null, layerName, "application/json", 1L, false
+        );
+
+        ResponseEntity<String> response = restTemplate.exchange(countUrl, HttpMethod.GET, pretendUserEntity, String.class);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            try {
+                JsonNode root = objectMapper.readTree(response.getBody());
+                if (!root.has("totalFeatures")) {
+                    throw new RuntimeException("GeoServer GeoJSON response missing totalFeatures field");
+                }
+                return BigInteger.valueOf(root.get("totalFeatures").asLong());
+            } catch (IOException e) {
+                log.error("Failed to parse unfiltered count response for {}/{}", uuid, layerName, e);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Average bytes per record for the layer in the requested output format.
+     * Issues an unfiltered sample download so the result can be reused across calls
+     * Cached per (uuid, layerName, outputFormat).
+     */
+    @Cacheable(CacheConfig.DOWNLOADABLE_SIZE)
+    public BigInteger getBytesPerRecord(String uuid, String layerName, String outputFormat) {
+        BigInteger totalCount = self.getUnfilteredRecordCount(uuid, layerName);
+        if (totalCount == null || totalCount.equals(BigInteger.ZERO)) {
+            return BigInteger.ZERO;
+        }
+
+        long sampleSize = totalCount.longValue() < SAMPLES_SIZE ? totalCount.longValue() : SAMPLES_SIZE;
+
+        String sampleUrl = prepareWfsRequestUrl(
+                uuid, null, null, null, null, layerName, outputFormat, sampleSize, false
+        );
+
+        ResponseEntity<byte[]> bytes = restTemplate.exchange(sampleUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
+        if (bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
+            return BigInteger.valueOf(bytes.getBody().length).divide(BigInteger.valueOf(sampleSize));
+        }
+        return null;
+    }
+
+    /**
+     * Estimate download size for the user's subset. Runs the inherently subset-dependent
+     * count query, then multiplies by the cached bytes-per-record sample.
      *
      * @return The estimated file size
      */
-    @Cacheable(CacheConfig.DOWNLOADABLE_SIZE)
     public BigInteger estimateDownloadSize(
             String uuid,
             String layerName,
@@ -104,7 +158,7 @@ public class DownloadWfsDataService {
             List<String> fields,
             String outputFormat) throws IllegalArgumentException {
 
-        // Get total feature count via GeoJSON response
+        // Subset-filtered count — not cacheable here because the subset would explode the key space.
         String countUrl = prepareWfsRequestUrl(
                 uuid, startDate, endDate, multiPolygon, fields, layerName, "application/json", 1L, false
         );
@@ -118,26 +172,17 @@ public class DownloadWfsDataService {
                     throw new RuntimeException("GeoServer GeoJSON response missing totalFeatures field");
                 }
                 BigInteger featureCount = BigInteger.valueOf(root.get("totalFeatures").asLong());
-                log.debug("Total record hits {}", featureCount);
+                log.debug("Subset record hits {}", featureCount);
 
                 if (featureCount.equals(BigInteger.ZERO)) {
                     return BigInteger.ZERO;
                 }
 
-                // In case the records we have is smaller than our predefined SAMPLES_SIZE, we use smaller one.
-                long sampleSize = featureCount.longValue() < SAMPLES_SIZE ? featureCount.longValue() : SAMPLES_SIZE;
-
-                // Download a small sample to measure bytes per record in the requested output format
-                String sampleUrl = prepareWfsRequestUrl(
-                        uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, sampleSize, false
-                );
-
-                ResponseEntity<byte[]> bytes = restTemplate.exchange(sampleUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
-                if (bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
-                    return featureCount
-                            .multiply(BigInteger.valueOf(bytes.getBody().length))
-                            .divide(BigInteger.valueOf(sampleSize));
+                BigInteger bytesPerRecord = self.getBytesPerRecord(uuid, layerName, outputFormat);
+                if (bytesPerRecord == null) {
+                    return null;
                 }
+                return featureCount.multiply(bytesPerRecord);
             } catch (IOException e) {
                 log.error("Fail to get feature count for estimate", e);
             }
