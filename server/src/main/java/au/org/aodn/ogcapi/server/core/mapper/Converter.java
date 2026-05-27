@@ -45,23 +45,33 @@ public interface Converter<F, T> {
 
     T convert(F from, Filter param);
 
-    private static List<List<Date>> parseTemporal(List<List<String>> raw) {
-        if (raw == null) {
+    /**
+     * Parse temporal interval string to Date object, the string should be in ISO 8601 format, e.g. "2020-01-01T00:00:00Z/2020-12-31T23:59:59Z"
+     * Structure of the input:
+     * - Outer list = one or more temporal intervals.
+     * - Inner list = a [start, end] pair. STAC encodes an unbounded endpoint as null
+     * (e.g. [start, null] = "from start, ongoing").
+     *
+     * @param intervalStrings
+     * @return
+     */
+    private static List<List<Date>> parseTemporal(List<List<String>> intervalStrings) {
+        if (intervalStrings == null) {
             return null;
         }
-        List<List<Date>> out = new ArrayList<>(raw.size());
-        for (List<String> inner : raw) {
-            if (inner == null) {
-                out.add(null);
+        List<List<Date>> intervals = new ArrayList<>(intervalStrings.size());
+        for (List<String> endpoints : intervalStrings) {
+            if (endpoints == null) {
+                intervals.add(null);
                 continue;
             }
-            List<Date> innerOut = new ArrayList<>(inner.size());
-            for (String s : inner) {
-                innerOut.add(s == null ? null : Date.from(Instant.parse(s)));
+            List<Date> parsedEndpoints = new ArrayList<>(endpoints.size());
+            for (String timestamp : endpoints) {
+                parsedEndpoints.add(timestamp == null ? null : Date.from(Instant.parse(timestamp)));
             }
-            out.add(innerOut);
+            intervals.add(parsedEndpoints);
         }
-        return out;
+        return intervals;
     }
 
     default au.org.aodn.ogcapi.features.model.Link getSelfCollectionLink(String hostname, String id) {
@@ -184,16 +194,14 @@ public interface Converter<F, T> {
                             // filter have values if user CQL contains BBox, hence our centroid point needs to be
                             // the noland geometry intersect with BBox and centroid point will be within the BBox
                             Geometry g = null;
-                            if(filter != null) {
+                            if (filter != null) {
                                 Object geo = filter.accept(visitor, input);
                                 if (geo instanceof PreparedGeometry) {
                                     g = ((PreparedGeometry) geo).getGeometry();
-                                }
-                                else if (geo != null) {
+                                } else if (geo != null) {
                                     g = (Geometry) geo;
                                 }
-                            }
-                            else {
+                            } else {
                                 g = input.getGeometry();
                             }
 
@@ -250,7 +258,7 @@ public interface Converter<F, T> {
                 collection.getProperties().put(CollectionProperty.aiUpdateFrequency, m.getSummaries().getAiUpdateFrequency());
             }
 
-            if(m.getSummaries().getScope() != null) {
+            if (m.getSummaries().getScope() != null) {
                 collection.getProperties().put(CollectionProperty.scope, m.getSummaries().getScope());
             }
 

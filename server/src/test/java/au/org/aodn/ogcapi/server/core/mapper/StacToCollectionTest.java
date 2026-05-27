@@ -30,6 +30,7 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 
 import static au.org.aodn.ogcapi.server.BaseTestClass.readResourceFile;
@@ -59,6 +60,81 @@ public class StacToCollectionTest {
 
         // Empty bbox no issue
         stacToCollection.convert(model, null);
+    }
+
+    @Test
+    public void verifyTemporalIntervalParsing() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        // Two intervals: one bounded, one with an unbounded end (ongoing).
+        // Mirrors STAC's [start, null] convention for "from start, ongoing".
+        List<List<String>> temporal = Arrays.asList(
+                Arrays.asList("2020-01-01T00:00:00Z", "2020-12-31T23:59:59Z"),
+                Arrays.asList("2021-06-15T12:00:00Z", null)
+        );
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .extent(new ExtentModel(Collections.singletonList(Collections.emptyList()), temporal))
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+
+        List<List<Date>> interval = collection.getExtent().getTemporal().getInterval();
+        Assertions.assertNotNull(interval);
+        Assertions.assertEquals(2, interval.size());
+
+        Assertions.assertEquals(Date.from(Instant.parse("2020-01-01T00:00:00Z")), interval.get(0).get(0));
+        Assertions.assertEquals(Date.from(Instant.parse("2020-12-31T23:59:59Z")), interval.get(0).get(1));
+
+        Assertions.assertEquals(Date.from(Instant.parse("2021-06-15T12:00:00Z")), interval.get(1).get(0));
+        Assertions.assertNull(interval.get(1).get(1), "Unbounded interval end must remain null");
+    }
+
+    @Test
+    public void verifyTemporalIntervalParsingPreservesNullInnerList() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        // A null inner list should be preserved as null (not flattened or skipped).
+        List<List<String>> temporal = new ArrayList<>();
+        temporal.add(null);
+        temporal.add(Arrays.asList("2022-03-01T00:00:00Z", "2022-03-31T23:59:59Z"));
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .extent(new ExtentModel(Collections.singletonList(Collections.emptyList()), temporal))
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+
+        List<List<Date>> interval = collection.getExtent().getTemporal().getInterval();
+        Assertions.assertNotNull(interval);
+        Assertions.assertEquals(2, interval.size());
+        Assertions.assertNull(interval.get(0), "Null inner interval list must be preserved as null");
+        Assertions.assertEquals(Date.from(Instant.parse("2022-03-01T00:00:00Z")), interval.get(1).get(0));
+        Assertions.assertEquals(Date.from(Instant.parse("2022-03-31T23:59:59Z")), interval.get(1).get(1));
+    }
+
+    @Test
+    public void verifyTemporalIntervalParsingNormalisesNonZOffset() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        // Instant.parse accepts RFC 3339 offsets beyond 'Z' and normalises to UTC,
+        // so 00:00+10:00 lands at the previous day 14:00Z.
+        List<List<String>> temporal = Collections.singletonList(
+                Arrays.asList("2020-01-01T00:00:00+10:00", "2020-12-31T23:59:59+10:00")
+        );
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .extent(new ExtentModel(Collections.singletonList(Collections.emptyList()), temporal))
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+        List<List<Date>> interval = collection.getExtent().getTemporal().getInterval();
+
+        Assertions.assertEquals(Date.from(Instant.parse("2019-12-31T14:00:00Z")), interval.get(0).get(0));
+        Assertions.assertEquals(Date.from(Instant.parse("2020-12-31T13:59:59Z")), interval.get(0).get(1));
     }
 
     @Test
