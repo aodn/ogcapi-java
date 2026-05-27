@@ -256,6 +256,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 for (String t : keywords) {
                     should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(t));
                     should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(t));
+                    should.add(CQLFields.phrase_title.getPropertyEqualToQuery(t));
+                    should.add(CQLFields.phrase_desc.getPropertyEqualToQuery(t));
                     should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(t));
                     should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(t));
                     should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(t));

@@ -269,6 +269,31 @@ public enum CQLFields implements CQLFieldsInterface {
                     .query(literal))._toQuery(),
             null
     ),
+    // Phrase match on title for acronym-synonym support.
+    // When an acronym is expanded into its multi-word full name by the
+    // search-time synonym filter, match_phrase requires those words to
+    // appear consecutively and in order, which avoids the loose-word
+    // noise that match with Operator.And alone still allows.
+    // Note: match_phrase does not support fuzziness, so this is added
+    // ALONGSIDE fuzzy_title, not as a replacement for it.
+    phrase_title(
+            null,
+            StacBasicField.Title.displayField,
+            (literal) -> MatchPhraseQuery.of(m -> m
+                    .field(StacBasicField.Title.searchField)
+                    .boost(2.0F)   // keep title weighting consistent with fuzzy_title
+                    .query(literal))._toQuery(),
+            null
+    ),
+    // Phrase match on description for acronym-synonym support (ticket #8387).
+    phrase_desc(
+            null,
+            StacBasicField.Description.displayField,
+            (literal) -> MatchPhraseQuery.of(m -> m
+                    .field(StacBasicField.Description.searchField)
+                    .query(literal))._toQuery(),
+            null
+    ),
     // Contains cloud-optimized data
     assets_summary(
             StacBasicField.AssetsSummary.searchField,
