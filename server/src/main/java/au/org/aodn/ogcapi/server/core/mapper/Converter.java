@@ -52,8 +52,9 @@ public interface Converter<F, T> {
      * - Inner list = a [start, end] pair. STAC encodes an unbounded endpoint as null
      * (e.g. [start, null] = "from start, ongoing").
      *
-     * @param intervalStrings
-     * @return
+     * @param intervalStrings outer list of [start, end] string pairs
+     * @return outer list of [start, end] pairs preserving the input's null structure,
+     * or null if intervalStrings is null
      */
     private static List<List<Date>> parseTemporal(List<List<String>> intervalStrings) {
         if (intervalStrings == null) {
