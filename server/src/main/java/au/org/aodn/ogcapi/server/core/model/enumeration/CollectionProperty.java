@@ -26,7 +26,11 @@ public enum CollectionProperty {
     aiUpdateFrequency("ai:update_frequency"),
     scope("scope"),
     parameterVocabs("parameter_vocabs"),
-    aiParameterVocabs("ai:parameter_vocabs");
+    aiParameterVocabs("ai:parameter_vocabs"),
+    platformVocabs("platform_vocabs"),
+    organisationVocabs("organisation_vocabs"),
+    aiPlatformVocabs("ai:platform_vocabs"),
+    datasetProvider("dataset_provider");
 
     private final String value;
 

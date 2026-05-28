@@ -269,6 +269,22 @@ public interface Converter<F, T> {
             if (m.getSummaries().getAiParameterVocabs() != null && !m.getSummaries().getAiParameterVocabs().isEmpty()) {
                 collection.getProperties().put(CollectionProperty.aiParameterVocabs, m.getSummaries().getAiParameterVocabs());
             }
+
+            if (m.getSummaries().getPlatformVocabs() != null && !m.getSummaries().getPlatformVocabs().isEmpty()) {
+                collection.getProperties().put(CollectionProperty.platformVocabs, m.getSummaries().getPlatformVocabs());
+            }
+
+            if (m.getSummaries().getOrganisationVocabs() != null && !m.getSummaries().getOrganisationVocabs().isEmpty()) {
+                collection.getProperties().put(CollectionProperty.organisationVocabs, m.getSummaries().getOrganisationVocabs());
+            }
+
+            if (m.getSummaries().getAiPlatformVocabs() != null && !m.getSummaries().getAiPlatformVocabs().isEmpty()) {
+                collection.getProperties().put(CollectionProperty.aiPlatformVocabs, m.getSummaries().getAiPlatformVocabs());
+            }
+
+            if (m.getSummaries().getDatasetProvider() != null) {
+                collection.getProperties().put(CollectionProperty.datasetProvider, m.getSummaries().getDatasetProvider());
+            }
         }
 
         return collection;

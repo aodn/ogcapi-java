@@ -200,6 +200,10 @@ public class StacToCollectionTest {
         scope.put("name", "IMOS publication");
 
         List<String> parameterVocabs = Arrays.asList("wave", "temperature");
+        List<String> platformVocabs = Arrays.asList("vessel", "satellite");
+        List<String> organisationVocabs = Arrays.asList("IMOS", "AODN");
+        List<String> aiPlatformVocabs = Arrays.asList("ai-vessel", "ai-satellite");
+        String datasetProvider = "IMOS";
 
         StacCollectionModel model = StacCollectionModel
                 .builder()
@@ -216,6 +220,10 @@ public class StacToCollectionTest {
                                 .aiDescription(aiDescription)
                                 .scope(scope)
                                 .parameterVocabs(parameterVocabs)
+                                .platformVocabs(platformVocabs)
+                                .organisationVocabs(organisationVocabs)
+                                .aiPlatformVocabs(aiPlatformVocabs)
+                                .datasetProvider(datasetProvider)
                                 .build()
                 )
                 .license("Attribution 4.0")
@@ -246,6 +254,10 @@ public class StacToCollectionTest {
         Assertions.assertEquals("document",
                 ((Map<String, String>) collection.getProperties().get(CollectionProperty.scope)).get("code"));
         Assertions.assertEquals(parameterVocabs, collection.getProperties().get(CollectionProperty.parameterVocabs));
+        Assertions.assertEquals(platformVocabs, collection.getProperties().get(CollectionProperty.platformVocabs));
+        Assertions.assertEquals(organisationVocabs, collection.getProperties().get(CollectionProperty.organisationVocabs));
+        Assertions.assertEquals(aiPlatformVocabs, collection.getProperties().get(CollectionProperty.aiPlatformVocabs));
+        Assertions.assertEquals(datasetProvider, collection.getProperties().get(CollectionProperty.datasetProvider));
         Assertions.assertNotNull(collection.getLinks());
         Assertions.assertEquals(3, collection.getLinks().size());
 
@@ -255,6 +267,31 @@ public class StacToCollectionTest {
                 .orElseThrow();
 
         Assertions.assertEquals(List.of("download"), convertedLink1.getAiRole());
+    }
+
+    @Test
+    public void verifyNewSummariesFieldsGuardsSkipEmptyAndNullValues() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .summaries(
+                        SummariesModel
+                                .builder()
+                                .platformVocabs(Collections.emptyList())
+                                .organisationVocabs(null)
+                                .aiPlatformVocabs(Collections.emptyList())
+                                .datasetProvider(null)
+                                .build()
+                )
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.platformVocabs));
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.organisationVocabs));
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.aiPlatformVocabs));
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.datasetProvider));
     }
 
     @Test
