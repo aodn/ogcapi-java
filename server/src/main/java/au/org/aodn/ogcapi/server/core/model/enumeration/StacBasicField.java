@@ -21,7 +21,6 @@ public enum StacBasicField {
             "summaries.organisation_vocabs"
     ),
     Links("links", "links"),
-    LinksTitle("links.title", "links.title"),
     LinksAiRole("links.ai:role", "links.ai:role"),
     Collection("collection", "collection", "collection.keyword"),
     AssetsSummary("assets", "assets"),

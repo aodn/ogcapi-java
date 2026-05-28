@@ -179,21 +179,6 @@ public enum CQLFields implements CQLFieldsInterface {
             null,
             null
     ),
-    links_title_contains(
-            StacBasicField.LinksTitle.searchField,
-            StacBasicField.LinksTitle.displayField,
-            (literal) -> NestedQuery.of(m -> m
-                    .path(StacBasicField.Links.searchField)
-                    // We want the words exact so need to add space in front and end
-                    .query(q -> q
-                            .match(mq -> mq
-                                    .field(StacBasicField.LinksTitle.searchField)
-                                    .query(literal)
-                            )
-                    )
-            )._toQuery(),
-            null
-    ),
     links_airole_contains(
             StacBasicField.LinksAiRole.searchField,
             StacBasicField.LinksAiRole.displayField,
