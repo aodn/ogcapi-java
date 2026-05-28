@@ -9,7 +9,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
-import au.org.aodn.stac.model.Citation;
+import au.org.aodn.stac.model.CitationModel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -176,7 +176,7 @@ public interface Converter<F, T> {
         }
 
         if (m.getCitation() != null && !m.getCitation().isEmpty()) {
-            ConstructUtils.constructByJsonString(m.getCitation(), Citation.class).ifPresent(
+            ConstructUtils.constructByJsonString(m.getCitation(), CitationModel.class).ifPresent(
                     citation -> collection.getProperties().put(CollectionProperty.citation, citation)
             );
         }
