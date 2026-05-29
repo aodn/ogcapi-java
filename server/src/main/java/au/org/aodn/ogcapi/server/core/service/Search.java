@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import co.elastic.clients.transport.endpoints.BinaryResponse;

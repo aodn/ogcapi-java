@@ -2,8 +2,8 @@ package au.org.aodn.ogcapi.server.core.service.geoserver.wms;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.GeoserverLayersNotFoundException;
-import au.org.aodn.ogcapi.server.core.model.LinkModel;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
+import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;

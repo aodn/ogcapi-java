@@ -2,8 +2,8 @@ package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.GeoserverLayersNotFoundException;
-import au.org.aodn.ogcapi.server.core.model.LinkModel;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
+import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.*;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
@@ -82,6 +82,7 @@ public class WfsServer implements Server {
         this.pretendUserEntity = entity;
         this.wfsDefaultParam = wfsDefaultParam;
     }
+
     /**
      * Build CQL filter for temporal and spatial constraints
      */
@@ -145,6 +146,7 @@ public class WfsServer implements Server {
 
         return cqlFilter.toString();
     }
+
     /**
      * Build WFS GetFeature URL
      */
@@ -164,17 +166,16 @@ public class WfsServer implements Server {
         );
         param.put("typeName", layerName);
 
-        if(outputFormat != null) {
-            if(!outputFormat.isEmpty()) {
+        if (outputFormat != null) {
+            if (!outputFormat.isEmpty()) {
                 param.put("outputFormat", outputFormat);
             }
-        }
-        else {
+        } else {
             // Default to csv
             param.put("outputFormat", "text/csv");
         }
 
-        if(maxRecordNum > 0) {
+        if (maxRecordNum > 0) {
             param.put("maxFeatures", String.valueOf(maxRecordNum));
         }
 

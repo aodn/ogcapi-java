@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.Collections;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import org.mapstruct.Mapper;
 import org.opengis.filter.Filter;

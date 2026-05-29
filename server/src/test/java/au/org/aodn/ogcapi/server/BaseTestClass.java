@@ -113,10 +113,12 @@ public class BaseTestClass {
     protected void createElasticIndex() {
 
         schemas.forEach(schema -> {
-            try {
-                // TODO: This file should come from indexer jar when CodeArtifact in place
-                File f = ResourceUtils.getFile(String.format("classpath:%s", schema.get("mapping")));
-                try (Reader reader = new FileReader(f)) {
+            String resourcePath = "/schema/" + schema.get("mapping");
+            try (InputStream stream = getClass().getResourceAsStream(resourcePath)) {
+                if (stream == null) {
+                    throw new FileNotFoundException("Schema not found on classpath: " + resourcePath);
+                }
+                try (Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
                     CreateIndexRequest req = CreateIndexRequest.of(b -> b
                         .index(schema.get("name"))
                         .withJson(reader)

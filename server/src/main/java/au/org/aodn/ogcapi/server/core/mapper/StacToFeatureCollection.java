@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.core.mapper;
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.ogcapi.features.model.PointGeoJSON;
-import au.org.aodn.ogcapi.server.core.model.StacItemModel;
+import au.org.aodn.stac.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import org.mapstruct.Mapper;
 import org.openapitools.jackson.nullable.JsonNullable;
