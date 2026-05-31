@@ -72,6 +72,8 @@ public class DownloadWfsDataServiceTest {
         downloadWfsDataService = new DownloadWfsDataService(
                 wfsServer, restTemplate, pretendUserEntity, 16384, new ObjectMapper()
         );
+
+        downloadWfsDataService.self = downloadWfsDataService;
     }
 
     /**
@@ -268,6 +270,7 @@ public class DownloadWfsDataServiceTest {
         );
         assertEquals("https://test.com/geoserver/wfs?VERSION=1.0.0&typeName=test:layer&SERVICE=WFS&REQUEST=GetFeature&outputFormat=shape-zip&cql_filter=((timestamp DURING 2024-01-01T00:00:00Z/2024-12-31T23:59:59Z))", result, "Correct url 1");
     }
+
     /**
      * Make sure the url generated contains the correct polygon
      *
@@ -302,6 +305,7 @@ public class DownloadWfsDataServiceTest {
                 result,
                 "Correct url 1");
     }
+
     /**
      * Verify estimate size on success request
      */
@@ -315,25 +319,28 @@ public class DownloadWfsDataServiceTest {
         List<String> fields = List.of("name", "area");
         String format = "application/json";
 
-        // 1. Count response: GeoJSON with totalFeatures (1 record requested, but totalFeatures = full count)
+        // 1. Count response: GeoJSON with totalFeatures (1 record requested, but totalFeatures = full count).
+        //    Returned for BOTH the subset-filtered count and the unfiltered count probe inside
+        //    getBytesPerRecord — both URLs use maxFeatures=1.
         String countJson = "{\"totalFeatures\": 227193, \"features\": []}";
         ResponseEntity<String> countResponse = new ResponseEntity<>(countJson, HttpStatus.OK);
 
-        // 2. Sample response (small payload in requested format)
-        byte[] sampleBytes = "fake data".getBytes();
+        // 2. Sample response. Use a payload >= SAMPLES_SIZE so bytesPerRecord = sampleBytes / 500
+        //    yields a non-zero integer (10 bytes/record here).
+        byte[] sampleBytes = new byte[DownloadWfsDataService.SAMPLES_SIZE * 10];
         ResponseEntity<byte[]> sampleResponse = new ResponseEntity<>(sampleBytes, HttpStatus.OK);
 
         doReturn(countResponse)
                 .when(restTemplate).exchange(
-                    argThat((String url) -> url != null && url.contains("maxFeatures=1")),
-                    eq(HttpMethod.GET),
-                    any(HttpEntity.class),
-                    eq(String.class));
+                        argThat((String url) -> url != null && url.contains("maxFeatures=1")),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        eq(String.class));
 
         doReturn(sampleResponse)
                 .when(restTemplate).exchange(
-                    argThat((String url) -> url != null && url.contains("maxFeatures=" + DownloadWfsDataService.SAMPLES_SIZE)),
-                    eq(HttpMethod.GET), any(), eq(byte[].class));
+                        argThat((String url) -> url != null && url.contains("maxFeatures=" + DownloadWfsDataService.SAMPLES_SIZE)),
+                        eq(HttpMethod.GET), any(), eq(byte[].class));
 
         doReturn(Optional.of("http://dummy.com/wfs"))
                 .when(wfsServer).getFeatureServerUrl(eq(uuid), anyString());
@@ -350,26 +357,87 @@ public class DownloadWfsDataServiceTest {
         BigInteger size = downloadWfsDataService.estimateDownloadSize(
                 uuid, layer, start, end, multiPolygon, fields, format);
 
-        // Should call with maxFeatures=1 to get totalFeatures count via GeoJSON
+        // Subset-filtered count (carries the cql_filter built from start/end dates)
         verify(restTemplate).exchange(
-                argThat((String url) -> url != null && url.contains("maxFeatures=1") && url.contains("outputFormat=application")),
+                argThat((String url) -> url != null
+                        && url.contains("maxFeatures=1")
+                        && url.contains("outputFormat=application")
+                        && url.contains("cql_filter")),
                 eq(HttpMethod.GET),
                 any(),
                 eq(String.class)
         );
 
-        // Should also call with maxFeatures=500 to sample bytes for size interpolation
+        // Unfiltered count probe issued inside getBytesPerRecord — same maxFeatures=1
+        // pattern but without cql_filter. Acceptance criterion: sample/count path ignores subsetting.
         verify(restTemplate).exchange(
-                argThat((String url) -> url != null && url.contains("maxFeatures=" + DownloadWfsDataService.SAMPLES_SIZE)),
+                argThat((String url) -> url != null
+                        && url.contains("maxFeatures=1")
+                        && url.contains("outputFormat=application")
+                        && !url.contains("cql_filter")),
+                eq(HttpMethod.GET),
+                any(),
+                eq(String.class)
+        );
+
+        // Sample download with maxFeatures=500, also without subset params.
+        verify(restTemplate).exchange(
+                argThat((String url) -> url != null
+                        && url.contains("maxFeatures=" + DownloadWfsDataService.SAMPLES_SIZE)
+                        && !url.contains("cql_filter")),
                 eq(HttpMethod.GET),
                 any(),
                 eq(byte[].class)
         );
 
-        // totalFeatures=227193, sampleBytes=9 bytes, SAMPLES_SIZE=500
-        long expected = 227193L * sampleBytes.length / DownloadWfsDataService.SAMPLES_SIZE;
+        // bytesPerRecord = sampleBytes.length / SAMPLES_SIZE; total = featureCount * bytesPerRecord
+        long bytesPerRecord = sampleBytes.length / DownloadWfsDataService.SAMPLES_SIZE;
+        long expected = 227193L * bytesPerRecord;
         assertEquals(BigInteger.valueOf(expected), size, "Size match");
     }
+
+    @Test
+    void shouldReturnZeroWhenTotalFeaturesIsZero() {
+        String uuid = "lyr-123";
+        String layer = "water_bodies";
+        String start = "2024-01-01";
+        String end = "2024-12-31";
+        Object multiPolygon = new Object();
+        List<String> fields = List.of("name", "area");
+        String format = "application/json";
+
+        String countJson = "{\"totalFeatures\": 0, \"features\": []}";
+        ResponseEntity<String> countResponse = new ResponseEntity<>(countJson, HttpStatus.OK);
+
+        doReturn(countResponse)
+                .when(restTemplate).exchange(
+                        argThat((String url) -> url != null && url.contains("maxFeatures=1")),
+                        eq(HttpMethod.GET),
+                        any(HttpEntity.class),
+                        eq(String.class));
+
+        doReturn(Optional.of("http://dummy.com/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), anyString());
+
+        WfsFields fs = WfsFields.builder()
+                .fields(List.of(
+                        WfsField.builder().type("dateTime").name("time").build()
+                ))
+                .build();
+
+        doReturn(fs)
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
+
+        BigInteger size = downloadWfsDataService.estimateDownloadSize(
+                uuid, layer, start, end, multiPolygon, fields, format);
+
+        assertEquals(BigInteger.ZERO, size, "Size should be zero when totalFeatures is 0");
+        // No sample download should be made
+        verify(restTemplate, never()).exchange(
+                argThat((String url) -> url != null && url.contains("maxFeatures=0")),
+                eq(HttpMethod.GET), any(), eq(byte[].class));
+    }
+
     /**
      * Expect RuntimeException when GeoServer returns JSON without the totalFeatures field
      * (e.g. GeoServer returned an error JSON or unexpected structure)
@@ -448,8 +516,53 @@ public class DownloadWfsDataServiceTest {
                 .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
 
         BigInteger size = downloadWfsDataService.estimateDownloadSize(
-                        uuid, layer, start, end, multiPolygon, fields, format);
+                uuid, layer, start, end, multiPolygon, fields, format);
 
         assertNull(size, "Size should be null when JSON parsing fails");
+    }
+
+    @Test
+    void sampleRequestIgnoresSubsetFilter() throws JsonProcessingException {
+        String uuid = "lyr-123";
+        String layer = "test:layer";
+        String start = "2024-01-01";
+        String end = "2024-12-31";
+        Object multiPolygon = new ObjectMapper().readValue(
+                "{ \"type\": \"MultiPolygon\", \"coordinates\": [[[[0,0],[1,0],[1,1],[0,1],[0,0]]]] }",
+                HashMap.class
+        );
+        List<String> fields = List.of("name", "area");
+        String format = "text/csv";
+
+        String countJson = "{\"totalFeatures\": 1000, \"features\": []}";
+        ResponseEntity<String> countResponse = new ResponseEntity<>(countJson, HttpStatus.OK);
+        byte[] sampleBytes = new byte[DownloadWfsDataService.SAMPLES_SIZE * 4];
+        ResponseEntity<byte[]> sampleResponse = new ResponseEntity<>(sampleBytes, HttpStatus.OK);
+
+        doReturn(countResponse)
+                .when(restTemplate).exchange(
+                        argThat((String url) -> url != null && url.contains("maxFeatures=1")),
+                        eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
+        doReturn(sampleResponse)
+                .when(restTemplate).exchange(
+                        argThat((String url) -> url != null
+                                && url.contains("maxFeatures=" + DownloadWfsDataService.SAMPLES_SIZE)),
+                        eq(HttpMethod.GET), any(), eq(byte[].class));
+
+        doReturn(Optional.of("http://dummy.com/wfs"))
+                .when(wfsServer).getFeatureServerUrl(eq(uuid), anyString());
+        doReturn(createTestWFSFieldModel())
+                .when(wfsServer).getDownloadableFields(eq(uuid), any(WfsServer.WfsFeatureRequest.class));
+
+        downloadWfsDataService.estimateDownloadSize(uuid, layer, start, end, multiPolygon, fields, format);
+
+        // Sample URL must NOT carry the subset filter (no cql_filter, no DURING, no INTERSECTS).
+        verify(restTemplate).exchange(
+                argThat((String url) -> url != null
+                        && url.contains("maxFeatures=" + DownloadWfsDataService.SAMPLES_SIZE)
+                        && !url.contains("cql_filter")
+                        && !url.contains("DURING")
+                        && !url.contains("INTERSECTS")),
+                eq(HttpMethod.GET), any(), eq(byte[].class));
     }
 }

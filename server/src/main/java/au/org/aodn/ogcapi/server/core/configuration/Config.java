@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
+import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,6 +28,8 @@ public class Config {
 
     @PostConstruct
     public void init() {
+        // register modudle for json serializing
+        mapper.registerModule(new JsonNullableModule());
         // configure ObjectMapper to exclude null fields while serializing
         mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
     }

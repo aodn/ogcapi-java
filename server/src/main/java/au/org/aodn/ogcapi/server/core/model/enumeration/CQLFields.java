@@ -12,10 +12,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * We do not want to expose the internal field to outsider, the CQL field in the filtler is therefore mapped to our
+ * We do not want to expose the internal field to outsider, the CQL field in the
+ * filtler is therefore mapped to our
  * internal stac field.
  * searchField is the field that you do the search
- * displayField is the field that you want to return from the elastic search result
+ * displayField is the field that you want to return from the elastic search
+ * result
  *
  */
 public enum CQLFields implements CQLFieldsInterface {
@@ -170,7 +172,11 @@ public enum CQLFields implements CQLFieldsInterface {
     id(
             StacBasicField.UUID.searchField,
             StacBasicField.UUID.displayField,
-            null,
+            // Make sure if id match, it will show up as the first result
+            (literal) -> MatchPhraseQuery.of(builder -> builder
+                    .field(StacBasicField.UUID.searchField)
+                    .query(literal)
+                    .boost(100.0F))._toQuery(),
             (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.UUID.sortField).order(order))
     ),
     links(
@@ -300,116 +306,119 @@ public enum CQLFields implements CQLFieldsInterface {
             null
     ),
     ;
-    private final String searchField;
 
-    // null value indicate it cannot be sort by that field, elastic schema change need to add keyword field in order to
-    // do search
-    @Getter
-    private final Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder;
+        private final String searchField;
 
-    // We provided a default match query but there are cases where it isn't enough and need more complex
-    // match, one example is multiple field. Move this logic out of the parser make it easier to read
-    @Getter
-    private final Function<String, Query> overridePropertyEqualsToQuery;
+        // null value indicate it cannot be sort by that field, elastic schema change
+        // need to add keyword field in order to
+        // do search
+        @Getter
+        private final Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder;
 
-    @Getter
-    private final List<String> displayField;
+        // We provided a default match query but there are cases where it isn't enough
+        // and need more complex
+        // match, one example is multiple field. Move this logic out of the parser make
+        // it easier to read
+        @Getter
+        private final Function<String, Query> overridePropertyEqualsToQuery;
 
-    CQLFields(String fields,
-              String displayField,
-              Function<String, Query> overridePropertyEqualsToQuery,
-              Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
+        @Getter
+        private final List<String> displayField;
 
-        this(fields, List.of(displayField), overridePropertyEqualsToQuery, sortBuilder);
-    }
+        CQLFields(String fields,
+                        String displayField,
+                        Function<String, Query> overridePropertyEqualsToQuery,
+                        Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
-    CQLFields(String fields,
-              List<String> displayField,
-              Function<String, Query> overridePropertyEqualsToQuery,
-              Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
-
-        this.searchField = fields;
-        this.displayField = displayField;
-        this.overridePropertyEqualsToQuery = overridePropertyEqualsToQuery;
-        this.sortBuilder = sortBuilder;
-    }
-
-    @Override
-    public Query getPropertyEqualToQuery(String literal) {
-        if (getOverridePropertyEqualsToQuery() == null) {
-            return MatchPhraseQuery.of(builder -> builder
-                    .field(this.searchField)
-                    .query(literal)
-            )._toQuery();
-        } else {
-            return getOverridePropertyEqualsToQuery().apply(literal);
+                this(fields, List.of(displayField), overridePropertyEqualsToQuery, sortBuilder);
         }
-    }
 
-    @Override
-    public Query getPropertyGreaterThanOrEqualsToQuery(String literal) {
-        return RangeQuery.of(builder -> builder
-                // set as untyped because the property type is uncertain
-                .untyped(u -> u
-                        .field(this.searchField)
-                        .gte(JsonData.of(literal)))
-        )._toQuery();
-    }
+        CQLFields(String fields,
+                        List<String> displayField,
+                        Function<String, Query> overridePropertyEqualsToQuery,
+                        Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
-    @Override
-    public Query getIntersectsQuery(String literal) {
-        return new GeoShapeQuery.Builder()
-                .field(this.searchField)
-                .shape(builder -> builder
-                        .relation(GeoShapeRelation.Intersects)
-                        .shape(JsonData.from(new StringReader(literal))))
-                .build()
-                ._toQuery();
-    }
+                this.searchField = fields;
+                this.displayField = displayField;
+                this.overridePropertyEqualsToQuery = overridePropertyEqualsToQuery;
+                this.sortBuilder = sortBuilder;
+        }
 
-    @Override
-    public Query getBoundingBoxQuery(TopLeftBottomRightGeoBounds tlbr) {
-        return new GeoBoundingBoxQuery.Builder()
-                .field(this.searchField)
-                .boundingBox(builder -> builder.tlbr(tlbr))
-                .build()
-                ._toQuery();
-    }
+        @Override
+        public Query getPropertyEqualToQuery(String literal) {
+                if (getOverridePropertyEqualsToQuery() == null) {
+                        return MatchPhraseQuery.of(builder -> builder
+                                        .field(this.searchField)
+                                        .query(literal))._toQuery();
+                } else {
+                        return getOverridePropertyEqualsToQuery().apply(literal);
+                }
+        }
 
-    @Override
-    public Query getIsNullQuery() {
-        Query fieldExist = ExistsQuery.of(f -> f
-                .field(this.searchField))._toQuery();
+        @Override
+        public Query getPropertyGreaterThanOrEqualsToQuery(String literal) {
+                return RangeQuery.of(builder -> builder
+                                // set as untyped because the property type is uncertain
+                                .untyped(u -> u
+                                                .field(this.searchField)
+                                                .gte(JsonData.of(literal))))
+                                ._toQuery();
+        }
 
-        return BoolQuery.of(b -> b
-                .mustNot(fieldExist))._toQuery();
-    }
+        @Override
+        public Query getIntersectsQuery(String literal) {
+                return new GeoShapeQuery.Builder()
+                                .field(this.searchField)
+                                .shape(builder -> builder
+                                                .relation(GeoShapeRelation.Intersects)
+                                                .shape(JsonData.from(new StringReader(literal))))
+                                .build()
+                                ._toQuery();
+        }
 
-    @Override
-    public Query getLikeQuery(String literal) {
-        return RegexpQuery.of(f -> f
-                .field(this.searchField)
-                .caseInsensitive(true)
-                .flags("ALL")
-                .value(literal))._toQuery();
-    }
+        @Override
+        public Query getBoundingBoxQuery(TopLeftBottomRightGeoBounds tlbr) {
+                return new GeoBoundingBoxQuery.Builder()
+                                .field(this.searchField)
+                                .boundingBox(builder -> builder.tlbr(tlbr))
+                                .build()
+                                ._toQuery();
+        }
 
-    /**
-     * Given param, find any of those is not a valid CQLCollectionsField
-     *
-     * @param args -
-     * @return Invalid enum
-     */
-    public static List<String> findInvalidEnum(List<String> args) {
-        return args.stream()
-                .filter(str -> {
-                    try {
-                        CQLFields.valueOf(str);
-                        return false;
-                    } catch (IllegalArgumentException e) {
-                        return true;
-                    }
-                })
-                .collect(Collectors.toList());
-    }
+        @Override
+        public Query getIsNullQuery() {
+                Query fieldExist = ExistsQuery.of(f -> f
+                                .field(this.searchField))._toQuery();
+
+                return BoolQuery.of(b -> b
+                                .mustNot(fieldExist))._toQuery();
+        }
+
+        @Override
+        public Query getLikeQuery(String literal) {
+                return RegexpQuery.of(f -> f
+                                .field(this.searchField)
+                                .caseInsensitive(true)
+                                .flags("ALL")
+                                .value(literal))._toQuery();
+        }
+
+        /**
+         * Given param, find any of those is not a valid CQLCollectionsField
+         *
+         * @param args -
+         * @return Invalid enum
+         */
+        public static List<String> findInvalidEnum(List<String> args) {
+                return args.stream()
+                                .filter(str -> {
+                                        try {
+                                                CQLFields.valueOf(str);
+                                                return false;
+                                        } catch (IllegalArgumentException e) {
+                                                return true;
+                                        }
+                                })
+                                .collect(Collectors.toList());
+        }
 }

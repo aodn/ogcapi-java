@@ -8,6 +8,7 @@ import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -35,12 +36,13 @@ public class ParserTest {
             .builder()
             .cqlCrsType(CQLCrsType.EPSG4326)
             .build();
-    protected static ObjectMapper mapper = new ObjectMapper();
+    protected static ObjectMapper mapper = JsonMapper.builder()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .defaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_NULL, JsonInclude.Include.NON_NULL))
+            .build();
 
     @BeforeAll
     public static void init() {
-        mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         factory.setCqlCrsType(CQLCrsType.EPSG4326);
     }
     /**
@@ -73,7 +75,7 @@ public class ParserTest {
         String json = BaseTestClass.readResourceFile("classpath:databag/00462296-be7a-452f-afaf-36c809cd51f8.json");
         StacCollectionModel model = mapper.readValue(json, StacCollectionModel.class);
 
-        Filter filter = CompilerUtil.parseFilter(Language.CQL, param.getFilter(), factory);
+        Filter filter = CompilerUtil.parseFilter(Language.ECQL, param.getFilter(), factory);
         Optional<PreparedGeometry> geo = GeometryUtils.readPreparedGeometry(model.getSummaries().getGeometryNoLand());
 
         Assertions.assertTrue(geo.isPresent(), "Parse no land correct");

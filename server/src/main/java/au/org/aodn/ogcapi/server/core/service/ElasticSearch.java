@@ -5,7 +5,6 @@ import au.org.aodn.ogcapi.server.core.model.EsFeatureCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.SearchSuggestionsModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.*;
-import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -22,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
+import org.openapitools.jackson.nullable.JsonNullable;
 import org.opengis.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
@@ -67,35 +67,49 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         this.setCacheNoLandGeometry(cacheNoLandGeometry);
         this.defaultElasticSetting = CQLToElasticFilterFactory.getDefaultSetting();
     }
-
+    /**
+     * TODO: need to observe the behaviour of different types and pick the best one for our needs,
+     * phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
+     *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
+     *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
+     * ElasticSearch recommends using bool_prefix type: <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html">...</a>
+     *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
+     *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
+     * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
+     *   > Fuzziness not allowed for type [phrase_prefix]
+     * <a href="https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params">...</a>
+     *
+     * @param input - The input text
+     * @param suggestField - The field name that you want to search
+     */
     protected Query generateSearchAsYouTypeQuery(String input, String suggestField) {
-        return Query.of(q -> q.multiMatch(mm -> mm
-            .query(input)
-            .fuzziness("AUTO")
-            /*
-             * TODO: need to observe the behaviour of different types and pick the best one for our needs,
-             * phrase_prefix type produces the most similar effect to the completion suggester but ElasticSearch says it is not the best choice:
-             *   > To search for documents that strictly match the query terms in order, or to search using other properties of phrase queries, use a match_phrase_prefix query on the root field.
-             *   > A match_phrase query can also be used if the last term should be matched exactly, and not as a prefix. Using phrase queries may be less efficient than using the match_bool_prefix query.
-             * ElasticSearch recommends using bool_prefix type: https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html
-             *   > The most efficient way of querying to serve a search-as-you-type use case is usually a multi_match query of type bool_prefix that targets the root search_as_you_type field and its shingle subfields.
-             *   > This can match the query terms in any order, but will score documents higher if they contain the terms in order in a shingle subfield.
-             * Also, if using phrase_prefix, it is not allowed to use fuzziness parameter:
-             *   > Fuzziness not allowed for type [phrase_prefix]
-             */
-            .type(TextQueryType.BoolPrefix)
-            // https://www.elastic.co/guide/en/elasticsearch/reference/current/search-as-you-type.html#specific-params
-            .fields(Arrays.asList(suggestField, suggestField+"._2gram", suggestField+"._3gram"))
+        return Query.of(q -> q.bool(b -> b
+                .should(s -> s.multiMatch(mm -> mm
+                        .query(input)
+                        .type(TextQueryType.BoolPrefix)
+                        .fuzziness("AUTO")
+                        .fields(Arrays.asList(
+                                suggestField + "^10",         // 1. Root field is most relevant
+                                suggestField + "._2gram^5",   // 2. Pair matches (shingles)
+                                suggestField + "._3gram^2"    // 3. Triple matches
+                        ))
+                ))
+                // 4. Add a "Phrase" boost: If they type words in the exact order,
+                // give it an extra push to the top.
+                .should(s -> s.matchPhrasePrefix(mpp -> mpp
+                        .field(suggestField)
+                        .query(input)
+                        .boost(15f)
+                ))
         ));
     }
 
     protected List<Hit<SearchSuggestionsModel>> getSuggestionsByField(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        // create query
-        List<Query> suggestFieldsQueries = new ArrayList<>();
-        Stream.of(searchAsYouTypeEnabledFields).forEach(field -> {
-            String suggestField = searchAsYouTypeFieldsPath + "." + field;
-            suggestFieldsQueries.add(this.generateSearchAsYouTypeQuery(input, suggestField));
-        });
+        // 1. Map fields directly to Queries and collect to a List
+        List<Query> suggestFieldsQueries = Stream.of(searchAsYouTypeEnabledFields)
+                .map(field -> generateSearchAsYouTypeQuery(input, searchAsYouTypeFieldsPath + "." + field))
+                .toList();
+
         Query searchAsYouTypeQuery = Query.of(q -> q.nested(n -> n
                 .path(searchAsYouTypeFieldsPath)
                 .query(bQ -> bQ.bool(b -> b.should(suggestFieldsQueries)))
@@ -111,7 +125,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         List<Query> filters;
         if (cql != null) {
             CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
-            Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
+            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
             if (filter instanceof QueryHandler elasticFilter) {
                 filters = List.of(elasticFilter.getQuery());
             } else {
@@ -254,15 +268,35 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 should = new ArrayList<>();
 
                 for (String t : keywords) {
-                    should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.phrase_title.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.phrase_desc.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.id.getPropertyEqualToQuery(t));
-                    should.add(CQLFields.credit_contains.getPropertyEqualToQuery(t));
+                    // If user's input (keywords) starts and ends with quote ", and the text is not empty
+                    // treat the user intend to search with the exact term,
+                    // instead of searching in fuzzy fields i.e., fuzzy_title and fuzzy_desc,
+                    // search in the original title and description fields
+                    // other fields are searched with the same term regardless of exact match or not, as they do not use fuzzy matching.
+                    boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+                    // If search text with double quote, remove quotes,
+                    // otherwise keeps same
+                    String term = isExact ? t.substring(1, t.length() - 1) : t;
+
+                    if (isExact) {
+                        // Match phrase in original title and description, not use fuzzy fields
+                        should.add(CQLFields.title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.description.getPropertyEqualToQuery(term));
+                    }
+                    else {
+                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                        // Phrase match for acronym-synonym support (ticket #8387): when an acronym
+                        // is expanded into its multi-word full name, match_phrase requires those
+                        // words to appear consecutively, alongside (not replacing) fuzzy matching.
+                        should.add(CQLFields.phrase_title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.phrase_desc.getPropertyEqualToQuery(term));
+                    }
+                    should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.id.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
                 }
             }
 
@@ -270,26 +304,31 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
             if(cql != null) {
-                Filter filter = CompilerUtil.parseFilter(Language.CQL, cql, factory);
-
-                if(filter instanceof QueryHandler handler) {
-                    if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
-                        if(handler.getQuery() != null) {
-                            // There is no error during parsing
-                            filters = List.of(handler.getQuery());
+                try {
+                    Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+                    if(filter instanceof QueryHandler handler) {
+                        if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
+                            if(handler.getQuery() != null) {
+                                // There is no error during parsing
+                                filters = List.of(handler.getQuery());
+                            }
+                        }
+                        else {
+                            throw new IllegalArgumentException(
+                                    "ECQL Parse Error",
+                                    handler.getErrors()
+                                            .stream()
+                                            .reduce(null, (e1, e2) -> {
+                                                if (e1 == null) return e2;
+                                                e1.addSuppressed(e2);
+                                                return e1;
+                                            }));
                         }
                     }
-                    else {
-                        throw new IllegalArgumentException(
-                                "CQL Parse Error",
-                                handler.getErrors()
-                                        .stream()
-                                        .reduce(null, (e1, e2) -> {
-                                            if (e1 == null) return e2;
-                                            e1.addSuppressed(e2);
-                                            return e1;
-                                        }));
-                    }
+                }
+                catch(CQLException ce) {
+                    log.error("Error parsing ECQL", ce);
+                    throw ce;
                 }
             }
             // Get the page size after parsing
@@ -669,17 +708,17 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     for (FeatureGeoJSON feature : documentFeatures) {
                         // add key in property field for each feature
                         if (datasetKey != null) {
-                            Object featurePropsObj = feature.getProperties();
+                            JsonNullable<Object> propertiesWrapper = feature.getProperties();
+                            Map<String, Object> featurePropsMap = new HashMap<>();
 
-                            if (featurePropsObj instanceof Map) {
-                                @SuppressWarnings("unchecked")
-                                Map<String, Object> featurePropsMap = (Map<String, Object>) featurePropsObj;
-                                featurePropsMap.put("key", datasetKey);
-                            } else {
-                                Map<String, Object> newPropsMap = new HashMap<>();
-                                newPropsMap.put("key", datasetKey);
-                                feature.setProperties(newPropsMap);
+                            if (propertiesWrapper != null
+                                    && propertiesWrapper.isPresent()
+                                    && propertiesWrapper.get() instanceof Map<?, ?> existingProps) {
+                                existingProps.forEach((k, v) -> featurePropsMap.put(String.valueOf(k), v));
                             }
+
+                            featurePropsMap.put("key", datasetKey);
+                            feature.setProperties(JsonNullable.of(featurePropsMap));
                         }
                         features.add(feature);
                     }

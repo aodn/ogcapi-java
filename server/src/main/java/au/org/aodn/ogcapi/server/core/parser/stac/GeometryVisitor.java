@@ -116,17 +116,31 @@ public class GeometryVisitor extends DefaultFilterVisitor {
 
     @Override
     public Object visit(BBOX filter, Object data) {
-        if(filter instanceof BBoxImpl<?> impl) {
-            if(impl.getGeometry() != null && (data instanceof Polygon || data instanceof PreparedGeometry)) {
+        if (filter instanceof BBoxImpl<?> impl) {
+            if (impl.getGeometry() != null && (data instanceof Polygon || data instanceof PreparedGeometry)) {
                 PreparedGeometry input = (PreparedGeometry) data;
+                Geometry bboxGeom = impl.getGeometry();
+
+                Envelope inputEnv = input.getGeometry().getEnvelopeInternal();
+                Envelope bboxEnv = bboxGeom.getEnvelopeInternal();
+
+                // Fast Disjoint Check
+                if (!inputEnv.intersects(bboxEnv)) {
+                    return null;
+                }
+
+                // Optimized Intersect Check
+                if (!input.intersects(bboxGeom)) {
+                    return null;
+                }
+
                 // buffer is expensive
                 try {
-                    return input.getGeometry().intersection(impl.getGeometry());
+                    return input.getGeometry().intersection(bboxGeom);
                 }
                 catch(Exception e) {
-                    return impl.getGeometry().intersection(input.getGeometry().buffer(0.0));
+                    return bboxGeom.intersection(input.getGeometry().buffer(0.0));
                 }
-                //return impl.getGeometry().intersection(input.buffer(0.0));
             }
             else {
                 return data;

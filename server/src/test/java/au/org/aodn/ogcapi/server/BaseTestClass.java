@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server;
 
 import au.org.aodn.ogcapi.server.core.model.VocabDto;
 import au.org.aodn.ogcapi.server.core.model.VocabModel;
+import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
@@ -17,8 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -66,8 +65,6 @@ public class BaseTestClass {
     @Value("${elasticsearch.cloud_optimized_index.name}")
     protected String data_index_name;
 
-    protected Logger logger = LoggerFactory.getLogger(BaseTestClass.class);
-
     protected String getBasePath() {
         return "http://localhost:" + port + "/api/v1/ogc";
     }
@@ -89,7 +86,7 @@ public class BaseTestClass {
 
     protected void clearElasticIndex() {
 
-        logger.debug("Clear elastic index");
+        log.debug("Clear elastic index");
         try {
             schemas.forEach(schema -> {
                 try {
@@ -173,11 +170,11 @@ public class BaseTestClass {
             }
 
         } catch (IOException e) {
-            logger.error("Failed to ingest test vocabs to {}", vocabs_index_name);
+            log.error("Failed to ingest test vocabs to {}", vocabs_index_name);
             throw new RuntimeException(e);
         }
 
-        logger.info("Indexing all vocabs to {}", vocabs_index_name);
+        log.info("Indexing all vocabs to {}", vocabs_index_name);
         bulkIndexVocabs(vocabs);
     }
 
@@ -203,10 +200,10 @@ public class BaseTestClass {
 
         // Log errors, if any
         if (result.errors()) {
-            logger.error("Bulk had errors");
+            log.error("Bulk had errors");
             for (BulkResponseItem item: result.items()) {
                 if (item.error() != null) {
-                    logger.error("{} {}", item.error().reason(), item.error().causedBy());
+                    log.error("{} {}", item.error().reason(), item.error().causedBy());
                 }
             }
         }
@@ -222,9 +219,9 @@ public class BaseTestClass {
                         .index(index)
                         .withJson(reader));
 
-                logger.info("Sample file {}, indexed with response : {}", filename, indexResponse);
+                log.info("Sample file {}, indexed with response : {}", filename, indexResponse);
             } catch (IOException e) {
-                logger.error("Error indexing file {}: {}", filename, e);
+                log.error("Error indexing file {}: {}", filename, e);
             }
         }
         // Must all, otherwise index is not rebuild immediately
@@ -236,15 +233,15 @@ public class BaseTestClass {
                 .query(QueryBuilders.matchAll().build()._toQuery());
 
         SearchRequest request = b.build();
-        logger.debug("Elastic search payload for verification {}", request.toString());
+        log.debug("Elastic search payload for verification {}", request.toString());
 
         SearchResponse<ObjectNode> response = client.search(request, ObjectNode.class);
-        logger.debug(response.toString());
+        log.debug(response.toString());
 
         assertEquals(filenames.length, response.hits().hits().size(), "Number of docs stored is correct");
         for (Hit<ObjectNode> hit : response.hits().hits()) {
             if(hit.source() != null) {
-                logger.debug("Stored the following id {}", hit.source().get("id"));
+                log.debug("Stored the following id {}", hit.source().get("id"));
             }
         }
     }
@@ -270,4 +267,13 @@ public class BaseTestClass {
         File f = ResourceUtils.getFile(path);
         return Files.readString(f.toPath(), StandardCharsets.UTF_8);
     }
+
+    public static boolean isJsonEqual(String json1, String json2) {
+        try {
+            return GeometryUtils.getMapper().readTree(json1).equals(GeometryUtils.getMapper().readTree(json2));
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
 }

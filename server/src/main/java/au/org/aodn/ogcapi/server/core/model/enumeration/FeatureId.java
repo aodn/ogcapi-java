@@ -8,6 +8,7 @@ public enum FeatureId {
     wave_buoy_first_data_available("wave_buoy_first_data_available"),
     wave_buoy_latest_date("wave_buoy_latest_date"),
     wave_buoy_timeseries("wave_buoy_timeseries"),
+    wave_buoy_all("wave_buoy_all"),
     wms_map_tile("wms_map_tile"),
     wms_map_feature("wms_map_feature"),
     wms_layers("wms_layers"), // Get all available layers from WMS GetCapabilities
