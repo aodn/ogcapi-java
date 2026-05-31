@@ -1,0 +1,17 @@
+{
+  "id": "acdemo01-0000-0000-0000-000000000001",
+  "title": "NRMN Reef Survey Data 2024",
+  "description": "Reef benthic cover survey data collected at standard NRMN sites along the Australian coast.",
+  "extent": {
+    "bbox": [[110.0, -45.0, 155.0, -10.0]],
+    "temporal": [["2024-01-01T00:00:00Z", "2024-12-31T23:59:59Z"]]
+  },
+  "summaries": {
+    "score": 50,
+    "status": "completed",
+    "scope": { "code": "dataset", "name": "Demo - only acronym in title/description" },
+    "parameter_vocabs": [],
+    "platform_vocabs": [],
+    "organisation_vocabs": []
+  }
+}

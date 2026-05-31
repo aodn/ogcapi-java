@@ -1,0 +1,17 @@
+{
+  "id": "acdemo03-0000-0000-0000-000000000003",
+  "title": "Ocean Temperature Observations off Tasmania",
+  "description": "Hourly sea surface temperature measurements collected by moored buoys.",
+  "extent": {
+    "bbox": [[143.0, -45.0, 150.0, -40.0]],
+    "temporal": [["2024-01-01T00:00:00Z", "2024-12-31T23:59:59Z"]]
+  },
+  "summaries": {
+    "score": 50,
+    "status": "completed",
+    "scope": { "code": "dataset", "name": "Demo - unrelated negative sample" },
+    "parameter_vocabs": [],
+    "platform_vocabs": [],
+    "organisation_vocabs": []
+  }
+}

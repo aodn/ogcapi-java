@@ -1,0 +1,17 @@
+{
+  "id": "acdemo02-0000-0000-0000-000000000002",
+  "title": "National Reef Monitoring Network Sub-Facility Survey",
+  "description": "Long-term observations of reef benthic and fish communities conducted by the National Reef Monitoring Network across temperate and tropical Australia.",
+  "extent": {
+    "bbox": [[110.0, -45.0, 155.0, -10.0]],
+    "temporal": [["2024-01-01T00:00:00Z", "2024-12-31T23:59:59Z"]]
+  },
+  "summaries": {
+    "score": 50,
+    "status": "completed",
+    "scope": { "code": "dataset", "name": "Demo - only full name in title/description" },
+    "parameter_vocabs": [],
+    "platform_vocabs": [],
+    "organisation_vocabs": []
+  }
+}

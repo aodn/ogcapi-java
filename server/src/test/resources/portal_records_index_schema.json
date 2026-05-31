@@ -5,17 +5,17 @@
         "custom_analyser": {
           "type": "custom",
           "tokenizer": "standard",
-          "filter": [
-            "lowercase",
-            "english_stop"
-          ]
+          "filter": ["lowercase", "english_stop"]
+        },
+        "acronym_search_analyser": {
+          "type": "custom",
+          "tokenizer": "standard",
+          "filter": ["lowercase", "english_stop", "acronym_synonym_filter"]
         },
         "shingle_analyser": {
           "type": "custom",
           "tokenizer": "standard",
-          "char_filter": [
-            "html_strip"
-          ],
+          "char_filter": ["html_strip"],
           "filter": [
             "lowercase",
             "asciifolding",
@@ -35,6 +35,12 @@
         "english_stop": {
           "type": "stop",
           "stopwords": "_english_"
+        },
+        "acronym_synonym_filter": {
+          "type": "synonym_graph",
+          "synonyms": [
+            "nrmn => national reef monitoring network"
+          ]
         },
         "shingle_filter": {
           "type": "shingle",
@@ -57,7 +63,7 @@
           "pattern": "\\b\\d+\\b",
           "replacement": ""
         },
-        "token_limit" : {
+        "token_limit": {
           "type": "limit",
           "max_token_count": 350
         },
@@ -94,6 +100,8 @@
       },
       "title": {
         "type": "text",
+        "analyzer": "custom_analyser",
+        "search_analyzer": "acronym_search_analyser",
         "fields": {
           "keyword": {
             "type": "keyword"
@@ -150,7 +158,9 @@
         }
       },
       "description": {
-        "type": "text"
+        "type": "text",
+        "analyzer": "custom_analyser",
+        "search_analyzer": "acronym_search_analyser"
       },
       "license": {
         "type": "keyword",

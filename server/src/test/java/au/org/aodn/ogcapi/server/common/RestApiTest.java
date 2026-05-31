@@ -128,6 +128,30 @@ public class RestApiTest extends BaseTestClass {
                 collections.getBody().getCollections().get(1).getId(),
                 "Correct UUID - 9fdb1eee-bc28-43a9-88c5-972324784837");
     }
+
+    /** Searching an acronym ("NRMN") matches records that only contain its full form ("National Reef Monitoring Network"). */
+    @Test
+    public void verifyAcronymSynonymSearch() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "acronym_demo_only_acronym.json",
+                "acronym_demo_only_fullname.json",
+                "acronym_demo_unrelated.json"
+        );
+
+        // Search the acronym -> should hit B (the full-name-only record) via synonym expansion.
+        ResponseEntity<ExtendedCollections> byAcronym = testRestTemplate.getForEntity(
+                getBasePath() + "/collections?q=NRMN", ExtendedCollections.class);
+        assertEquals(1,
+                Objects.requireNonNull(byAcronym.getBody()).getTotal(),
+                "Searching 'NRMN' should find the full-name-only record via synonym expansion"
+        );
+        assertEquals(
+                "acdemo02-0000-0000-0000-000000000002",
+                byAcronym.getBody().getCollections().get(0).getId(),
+                "The matched record should be the full-name-only fixture (B)"
+        );
+    }
+
     /**
      * The datetime field after xxx/.. xxx/ etc. It uses CQL internally so no need to test Before After During in CQL
      */
