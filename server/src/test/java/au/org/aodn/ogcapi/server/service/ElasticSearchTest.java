@@ -152,18 +152,16 @@ public class ElasticSearchTest {
             } else {
                 should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
                 should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                should.add(CQLFields.phrase_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.phrase_desc.getPropertyEqualToQuery(term));
             }
             should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.id.getPropertyEqualToQuery(term));
-            should.add(BoolQuery.of(b -> b
-                    .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
-                    .boost(0.5f)  // lower boost to reduce promotion of link-title-only matches
-            )._toQuery());
             should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
         }
-        assertEquals(8, should.size(), "Exact match should produce 8 queries (title + description + other fields)");
+        assertEquals(7, should.size(), "Exact match should produce 7 queries (title + description + 5 other fields)");
         assertTrue(should.get(0).isMatchPhrase(), "Title query should be MatchPhraseQuery");
         assertTrue(should.get(1).isMatchPhrase(), "Description query should be MatchPhraseQuery");
     }
@@ -182,18 +180,16 @@ public class ElasticSearchTest {
             } else {
                 should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
                 should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                should.add(CQLFields.phrase_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.phrase_desc.getPropertyEqualToQuery(term));
             }
             should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.id.getPropertyEqualToQuery(term));
-            should.add(BoolQuery.of(b -> b
-                    .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
-                    .boost(0.5f)  // lower boost to reduce promotion of link-title-only matches
-            )._toQuery());
             should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
         }
-        assertEquals(8, should.size(), "Fuzzy match should produce 8 queries");
+        assertEquals(9, should.size(), "Fuzzy match should produce 9 queries (fuzzy + phrase title/desc + 5 other fields)");
         assertTrue(should.get(0).isMatch(), "fuzzy_title should be MatchQuery");
     }
 }
