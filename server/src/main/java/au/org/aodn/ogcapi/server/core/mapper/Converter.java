@@ -1,15 +1,15 @@
 package au.org.aodn.ogcapi.server.core.mapper;
 
 import au.org.aodn.ogcapi.features.model.*;
-import au.org.aodn.ogcapi.server.core.model.CitationModel;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollection;
 import au.org.aodn.ogcapi.server.core.model.ExtendedLink;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.GeometryVisitor;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
+import au.org.aodn.stac.model.CitationModel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +20,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import static au.org.aodn.ogcapi.server.core.util.GeometryUtils.createCentroid;
@@ -41,6 +44,36 @@ public interface Converter<F, T> {
     }
 
     T convert(F from, Filter param);
+
+    /**
+     * Parse temporal interval string to Date object, the string should be in ISO 8601 format, e.g. "2020-01-01T00:00:00Z/2020-12-31T23:59:59Z"
+     * Structure of the input:
+     * - Outer list = one or more temporal intervals.
+     * - Inner list = a [start, end] pair. STAC encodes an unbounded endpoint as null
+     * (e.g. [start, null] = "from start, ongoing").
+     *
+     * @param intervalStrings outer list of [start, end] string pairs
+     * @return outer list of [start, end] pairs preserving the input's null structure,
+     * or null if intervalStrings is null
+     */
+    private static List<List<Date>> parseTemporal(List<List<String>> intervalStrings) {
+        if (intervalStrings == null) {
+            return null;
+        }
+        List<List<Date>> intervals = new ArrayList<>(intervalStrings.size());
+        for (List<String> endpoints : intervalStrings) {
+            if (endpoints == null) {
+                intervals.add(null);
+                continue;
+            }
+            List<Date> parsedEndpoints = new ArrayList<>(endpoints.size());
+            for (String timestamp : endpoints) {
+                parsedEndpoints.add(timestamp == null ? null : Date.from(Instant.parse(timestamp)));
+            }
+            intervals.add(parsedEndpoints);
+        }
+        return intervals;
+    }
 
     default au.org.aodn.ogcapi.features.model.Link getSelfCollectionLink(String hostname, String id) {
         au.org.aodn.ogcapi.features.model.Link self = new au.org.aodn.ogcapi.features.model.Link();
@@ -100,7 +133,7 @@ public interface Converter<F, T> {
             }
 
             extent.setTemporal(new ExtentTemporal());
-            extent.getTemporal().interval(m.getExtent().getTemporal());
+            extent.getTemporal().interval(parseTemporal(m.getExtent().getTemporal()));
             collection.setExtent(extent);
         }
 
@@ -162,16 +195,14 @@ public interface Converter<F, T> {
                             // filter have values if user CQL contains BBox, hence our centroid point needs to be
                             // the noland geometry intersect with BBox and centroid point will be within the BBox
                             Geometry g = null;
-                            if(filter != null) {
+                            if (filter != null) {
                                 Object geo = filter.accept(visitor, input);
                                 if (geo instanceof PreparedGeometry) {
                                     g = ((PreparedGeometry) geo).getGeometry();
-                                }
-                                else if (geo != null) {
+                                } else if (geo != null) {
                                     g = (Geometry) geo;
                                 }
-                            }
-                            else {
+                            } else {
                                 g = input.getGeometry();
                             }
 
@@ -228,7 +259,7 @@ public interface Converter<F, T> {
                 collection.getProperties().put(CollectionProperty.aiUpdateFrequency, m.getSummaries().getAiUpdateFrequency());
             }
 
-            if(m.getSummaries().getScope() != null) {
+            if (m.getSummaries().getScope() != null) {
                 collection.getProperties().put(CollectionProperty.scope, m.getSummaries().getScope());
             }
 
@@ -238,6 +269,22 @@ public interface Converter<F, T> {
 
             if (m.getSummaries().getAiParameterVocabs() != null && !m.getSummaries().getAiParameterVocabs().isEmpty()) {
                 collection.getProperties().put(CollectionProperty.aiParameterVocabs, m.getSummaries().getAiParameterVocabs());
+            }
+
+            if (m.getSummaries().getPlatformVocabs() != null && !m.getSummaries().getPlatformVocabs().isEmpty()) {
+                collection.getProperties().put(CollectionProperty.platformVocabs, m.getSummaries().getPlatformVocabs());
+            }
+
+            if (m.getSummaries().getOrganisationVocabs() != null && !m.getSummaries().getOrganisationVocabs().isEmpty()) {
+                collection.getProperties().put(CollectionProperty.organisationVocabs, m.getSummaries().getOrganisationVocabs());
+            }
+
+            if (m.getSummaries().getAiPlatformVocabs() != null && !m.getSummaries().getAiPlatformVocabs().isEmpty()) {
+                collection.getProperties().put(CollectionProperty.aiPlatformVocabs, m.getSummaries().getAiPlatformVocabs());
+            }
+
+            if (m.getSummaries().getDatasetProvider() != null) {
+                collection.getProperties().put(CollectionProperty.datasetProvider, m.getSummaries().getDatasetProvider());
             }
         }
 

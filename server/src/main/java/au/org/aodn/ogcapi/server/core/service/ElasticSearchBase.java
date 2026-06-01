@@ -1,10 +1,11 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
+import au.org.aodn.ogcapi.server.core.util.LinkUtils;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.aggregations.*;
@@ -562,7 +563,9 @@ public abstract class ElasticSearchBase {
         try {
             if(nodes != null) {
                 String json = nodes.toString();
-                return mapper.readValue(json, StacCollectionModel.class);
+                StacCollectionModel result = mapper.readValue(json, StacCollectionModel.class);
+                fixupPackedLinkTitles(result);
+                return result;
             }
             else {
                 log.error("Failed to serialize text to StacCollectionModel");
@@ -572,6 +575,22 @@ public abstract class ElasticSearchBase {
         catch (JsonProcessingException e) {
             log.error("Exception failed to convert text to StacCollectionModel", e);
             return null;
+        }
+    }
+
+    private static void fixupPackedLinkTitles(StacCollectionModel collection) {
+        if (collection == null) {
+            return;
+        }
+        if (collection.getLinks() != null) {
+            collection.getLinks().forEach(LinkUtils::applyParsedTitle);
+        }
+        if (collection.getContacts() != null) {
+            collection.getContacts().forEach(contact -> {
+                if (contact != null && contact.getLinks() != null) {
+                    contact.getLinks().forEach(LinkUtils::applyParsedTitle);
+                }
+            });
         }
     }
 }

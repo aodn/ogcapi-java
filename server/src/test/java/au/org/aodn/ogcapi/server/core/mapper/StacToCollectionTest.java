@@ -4,6 +4,17 @@ import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.TestConfig;
 import au.org.aodn.ogcapi.server.core.model.*;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.stac.model.AssetModel;
+import au.org.aodn.stac.model.CitationModel;
+import au.org.aodn.stac.model.ConceptModel;
+import au.org.aodn.stac.model.ContactsAddressModel;
+import au.org.aodn.stac.model.ContactsModel;
+import au.org.aodn.stac.model.ContactsPhoneModel;
+import au.org.aodn.stac.model.ExtentModel;
+import au.org.aodn.stac.model.LinkModel;
+import au.org.aodn.stac.model.StacCollectionModel;
+import au.org.aodn.stac.model.SummariesModel;
+import au.org.aodn.stac.model.ThemesModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
@@ -19,6 +30,7 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.*;
 
 import static au.org.aodn.ogcapi.server.BaseTestClass.readResourceFile;
@@ -51,11 +63,86 @@ public class StacToCollectionTest {
     }
 
     @Test
+    public void verifyTemporalIntervalParsing() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        // Two intervals: one bounded, one with an unbounded end (ongoing).
+        // Mirrors STAC's [start, null] convention for "from start, ongoing".
+        List<List<String>> temporal = Arrays.asList(
+                Arrays.asList("2020-01-01T00:00:00Z", "2020-12-31T23:59:59Z"),
+                Arrays.asList("2021-06-15T12:00:00Z", null)
+        );
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .extent(new ExtentModel(Collections.singletonList(Collections.emptyList()), temporal))
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+
+        List<List<Date>> interval = collection.getExtent().getTemporal().getInterval();
+        Assertions.assertNotNull(interval);
+        Assertions.assertEquals(2, interval.size());
+
+        Assertions.assertEquals(Date.from(Instant.parse("2020-01-01T00:00:00Z")), interval.get(0).get(0));
+        Assertions.assertEquals(Date.from(Instant.parse("2020-12-31T23:59:59Z")), interval.get(0).get(1));
+
+        Assertions.assertEquals(Date.from(Instant.parse("2021-06-15T12:00:00Z")), interval.get(1).get(0));
+        Assertions.assertNull(interval.get(1).get(1), "Unbounded interval end must remain null");
+    }
+
+    @Test
+    public void verifyTemporalIntervalParsingPreservesNullInnerList() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        // A null inner list should be preserved as null (not flattened or skipped).
+        List<List<String>> temporal = new ArrayList<>();
+        temporal.add(null);
+        temporal.add(Arrays.asList("2022-03-01T00:00:00Z", "2022-03-31T23:59:59Z"));
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .extent(new ExtentModel(Collections.singletonList(Collections.emptyList()), temporal))
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+
+        List<List<Date>> interval = collection.getExtent().getTemporal().getInterval();
+        Assertions.assertNotNull(interval);
+        Assertions.assertEquals(2, interval.size());
+        Assertions.assertNull(interval.get(0), "Null inner interval list must be preserved as null");
+        Assertions.assertEquals(Date.from(Instant.parse("2022-03-01T00:00:00Z")), interval.get(1).get(0));
+        Assertions.assertEquals(Date.from(Instant.parse("2022-03-31T23:59:59Z")), interval.get(1).get(1));
+    }
+
+    @Test
+    public void verifyTemporalIntervalParsingNormalisesNonZOffset() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        // Instant.parse accepts RFC 3339 offsets beyond 'Z' and normalises to UTC,
+        // so 00:00+10:00 lands at the previous day 14:00Z.
+        List<List<String>> temporal = Collections.singletonList(
+                Arrays.asList("2020-01-01T00:00:00+10:00", "2020-12-31T23:59:59+10:00")
+        );
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .extent(new ExtentModel(Collections.singletonList(Collections.emptyList()), temporal))
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+        List<List<Date>> interval = collection.getExtent().getTemporal().getInterval();
+
+        Assertions.assertEquals(Date.from(Instant.parse("2019-12-31T14:00:00Z")), interval.get(0).get(0));
+        Assertions.assertEquals(Date.from(Instant.parse("2020-12-31T13:59:59Z")), interval.get(0).get(1));
+    }
+
+    @Test
     public void verifyAddingPropertyWorks() {
         StacToCollection stacToCollection = new StacToCollectionImpl();
 
         List<String> credits = Arrays.asList("credit1", "credit2");
-        var address = AddressModel.builder()
+        var address = ContactsAddressModel.builder()
                 .city("city")
                 .country("country")
                 .postalCode("postalCode")
@@ -63,15 +150,15 @@ public class StacToCollectionTest {
                 .deliveryPoint(Arrays.asList("deliveryPoint1", "deliveryPoint2"))
                 .build();
         var link = LinkModel.builder().rel("rel").href("href").type("type").title("title").build();
-        var contact = ContactModel.builder()
+        var contact = ContactsModel.builder()
                 .addresses(Collections.singletonList(address))
                 .name("name")
                 .organization("organization")
                 .roles(Collections.singletonList("roles"))
                 .emails(Arrays.asList("email1", "email2"))
                 .links(Collections.singletonList(link))
-                .phones(Collections.singletonList(InfoModel.builder().value("value").build())
-                ).build();
+                .phones(Collections.singletonList(ContactsPhoneModel.builder().value("value").build()))
+                .build();
         var link1 = LinkModel.builder()
                 .rel("related")
                 .href("https://example.com/data")
@@ -89,7 +176,7 @@ public class StacToCollectionTest {
                 .aiGroup("ai-group")
                 .description("description")
                 .build();
-        var theme = ThemeModel.builder()
+        var theme = ThemesModel.builder()
                 .scheme("scheme")
                 .concepts(Collections.singletonList(
                         ConceptModel.builder().id("id").url("url").description("description").title("title").build()
@@ -113,6 +200,10 @@ public class StacToCollectionTest {
         scope.put("name", "IMOS publication");
 
         List<String> parameterVocabs = Arrays.asList("wave", "temperature");
+        List<String> platformVocabs = Arrays.asList("vessel", "satellite");
+        List<String> organisationVocabs = Arrays.asList("IMOS", "AODN");
+        List<String> aiPlatformVocabs = Arrays.asList("ai-vessel", "ai-satellite");
+        String datasetProvider = "IMOS";
 
         StacCollectionModel model = StacCollectionModel
                 .builder()
@@ -129,6 +220,10 @@ public class StacToCollectionTest {
                                 .aiDescription(aiDescription)
                                 .scope(scope)
                                 .parameterVocabs(parameterVocabs)
+                                .platformVocabs(platformVocabs)
+                                .organisationVocabs(organisationVocabs)
+                                .aiPlatformVocabs(aiPlatformVocabs)
+                                .datasetProvider(datasetProvider)
                                 .build()
                 )
                 .license("Attribution 4.0")
@@ -159,6 +254,10 @@ public class StacToCollectionTest {
         Assertions.assertEquals("document",
                 ((Map<String, String>) collection.getProperties().get(CollectionProperty.scope)).get("code"));
         Assertions.assertEquals(parameterVocabs, collection.getProperties().get(CollectionProperty.parameterVocabs));
+        Assertions.assertEquals(platformVocabs, collection.getProperties().get(CollectionProperty.platformVocabs));
+        Assertions.assertEquals(organisationVocabs, collection.getProperties().get(CollectionProperty.organisationVocabs));
+        Assertions.assertEquals(aiPlatformVocabs, collection.getProperties().get(CollectionProperty.aiPlatformVocabs));
+        Assertions.assertEquals(datasetProvider, collection.getProperties().get(CollectionProperty.datasetProvider));
         Assertions.assertNotNull(collection.getLinks());
         Assertions.assertEquals(3, collection.getLinks().size());
 
@@ -168,6 +267,31 @@ public class StacToCollectionTest {
                 .orElseThrow();
 
         Assertions.assertEquals(List.of("download"), convertedLink1.getAiRole());
+    }
+
+    @Test
+    public void verifyNewSummariesFieldsGuardsSkipEmptyAndNullValues() {
+        StacToCollection stacToCollection = new StacToCollectionImpl();
+
+        StacCollectionModel model = StacCollectionModel
+                .builder()
+                .summaries(
+                        SummariesModel
+                                .builder()
+                                .platformVocabs(Collections.emptyList())
+                                .organisationVocabs(null)
+                                .aiPlatformVocabs(Collections.emptyList())
+                                .datasetProvider(null)
+                                .build()
+                )
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) stacToCollection.convert(model, null);
+
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.platformVocabs));
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.organisationVocabs));
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.aiPlatformVocabs));
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.datasetProvider));
     }
 
     @Test

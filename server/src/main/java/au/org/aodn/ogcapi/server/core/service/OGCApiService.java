@@ -2,7 +2,7 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;

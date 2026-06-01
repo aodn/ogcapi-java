@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.model.StacCollectionModel;
+import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
