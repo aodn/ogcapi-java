@@ -32,6 +32,15 @@ public class IBoundaryFunctionTest {
     }
 
     @Test
+    public void testMeowKeyNormalization() {
+        // Meow.json has ECO_CODE like 20192.0 (as JSON number), React/JS does String(20192.0) === '20192'
+        // so loadStaticMap must store keys without trailing .0 to avoid lookup mismatch
+        assertNotNull(IBoundaryFunction.MEOW.get("20192"), "Expected key '20192' for MEOW (from 20192.0)");
+        assertNotNull(IBoundaryFunction.MEOW.get("20053"));
+        assertNull(IBoundaryFunction.MEOW.get("20192.0"), "Should not have .0 suffixed key");
+    }
+
+    @Test
     public void testIBoundaryWithCQL() throws Exception {
         // Parse full CQL2 string
         String cql = "INTERSECTS(geometry, IBOUNDARY('ACA', '1'))";
