@@ -34,7 +34,12 @@ public class IBoundaryFunction extends FunctionImpl {
                     if (properties != null) {
                         JsonNode objectId = properties.get(keyField);
                         if (objectId != null) {
-                            String key = objectId.asText();
+                            // This is used to avoid the trailing zeros in the number, for example 123.0 in key,
+                            // where the React frontend with javascript number type will parse the number to 123
+                            // and cause the key mismatch with the map.
+                            final String key = objectId.isNumber()
+                                    ? objectId.decimalValue().stripTrailingZeros().toPlainString()
+                                    : objectId.asText();
                             JsonNode geometry = feature.get("geometry");
                             if (geometry != null) {
                                 String geoJson = mapper.writeValueAsString(geometry);
@@ -82,8 +87,11 @@ public class IBoundaryFunction extends FunctionImpl {
     public Object evaluate(Object feature) {
         String name = getParameters().get(0).evaluate(feature, String.class);
         String id = getParameters().get(1).evaluate(feature, String.class);
-
-        return getGeoJsonFromMap(name, id);
+        Geometry geometry = getGeoJsonFromMap(name, id);
+        if(geometry == null) {
+            log.warn("IBoundaryFunction lookup failed: name={}, id={}", name, id);
+        }
+        return geometry;
     }
 
     @Override

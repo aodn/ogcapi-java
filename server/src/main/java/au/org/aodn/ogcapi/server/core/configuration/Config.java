@@ -30,8 +30,13 @@ public class Config {
     public void init() {
         // register modudle for json serializing
         mapper.registerModule(new JsonNullableModule());
-        // configure ObjectMapper to exclude null fields while serializing
-        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        // Configure ObjectMapper to exclude null fields while serializing
+        mapper.setDefaultPropertyInclusion(
+                JsonInclude.Value.construct(
+                        JsonInclude.Include.NON_NULL,
+                        JsonInclude.Include.USE_DEFAULTS
+                )
+        );
     }
 
     @Bean
