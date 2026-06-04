@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +39,9 @@ public class RestServices {
 
     @Autowired
     private DownloadWfsDataService downloadWfsDataService;
+
+    @Autowired
+    private DasService dasService;
 
     public RestServices(BatchClient batchClient, ObjectMapper objectMapper, String batchJobDefinition, String batchJobQueue) {
         this.batchClient = batchClient;
@@ -343,6 +348,128 @@ public class RestServices {
                 WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
             }
         });
+        return emitter;
+    }
+
+    /**
+     * Estimate the download size of a cloud-optimised (zarr/parquet) subset over SSE.
+     * <p>
+     * Opens an SSE stream, calls the data-access-service estimate endpoint with the
+     * same parameters that drive the batch download (so the estimate matches what
+     * the real download would produce), forwards the size estimate as a single
+     * event, then closes the stream.
+     */
+    public SseEmitter estimateCloudOptimisedDownloadWithSse(String uuid,
+                                                            String key,
+                                                            String startDate,
+                                                            String endDate,
+                                                            Object multiPolygon,
+                                                            List<String> columns,
+                                                            String outputFormat) {
+
+        final SseEmitter emitter = new SseEmitter(0L);
+
+        // Set up references for resources that need to be cleaned up
+        AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
+        AtomicReference<ScheduledExecutorService> keepAliveExecutorRef = new AtomicReference<>();
+
+        // Set up cleanup function to clear up resources
+        Runnable cleanupResources = () -> {
+            try {
+                ScheduledFuture<?> keepAliveTask = keepAliveTaskRef.get();
+                if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
+                    keepAliveTask.cancel(false);
+                }
+
+                ScheduledExecutorService keepAliveExecutor = keepAliveExecutorRef.get();
+                if (keepAliveExecutor != null && !keepAliveExecutor.isShutdown()) {
+                    keepAliveExecutor.shutdown();
+                }
+            } catch (Exception e) {
+                log.error("Error during cleanup for CO estimate UUID: {}", uuid, e);
+            }
+        };
+
+        emitter.onCompletion(() -> {
+            log.info("CO estimate SSE stream completion");
+            cleanupResources.run();
+        });
+
+        emitter.onTimeout(() -> {
+            log.warn("CO estimate SSE stream timed out");
+            cleanupResources.run();
+        });
+
+        emitter.onError(throwable -> WfsErrorHandler.handleError((Exception) throwable, uuid, emitter, cleanupResources));
+
+        // Validate parameters
+        if (uuid == null) {
+            IllegalArgumentException exception = new IllegalArgumentException("Uuid is required");
+            WfsErrorHandler.handleError(exception, uuid, emitter, cleanupResources);
+            return emitter;
+        }
+
+        // batch-style key handling: comma-separated string -> list; null/blank/"*"
+        // -> null, which the data-access-service expands to all keys of the uuid.
+        final List<String> keys = (key == null || key.isBlank() || key.equals("*"))
+                ? null
+                : Arrays.stream(key.split(",")).map(String::trim).toList();
+
+        // Start async estimate with SSE progress updates
+        CompletableFuture.runAsync(() -> {
+            try {
+                // STEP 1: Send connection established event
+                emitter.send(SseEmitter.event()
+                        .name("connection-established")
+                        .data(Map.of(
+                                "status", "connected",
+                                "message", "Starting cloud-optimised size estimate for UUID: " + uuid,
+                                "timestamp", System.currentTimeMillis()
+                        )));
+
+                // STEP 2: Start keep-alive mechanism while data-access-service computes the estimate
+                ScheduledExecutorService keepAliveExecutor = Executors.newSingleThreadScheduledExecutor();
+                ScheduledFuture<?> keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> {
+                    try {
+                        emitter.send(SseEmitter.event()
+                                .name("keep-alive")
+                                .data(Map.of(
+                                        "status", "estimating",
+                                        "message", "Estimating download size...",
+                                        "timestamp", System.currentTimeMillis()
+                                )));
+                    } catch (Exception e) {
+                        WfsErrorHandler.handleError(e, uuid, emitter, cleanupResources);
+                    }
+                }, 20, 20, TimeUnit.SECONDS);
+
+                keepAliveTaskRef.set(keepAliveTask);
+                keepAliveExecutorRef.set(keepAliveExecutor);
+
+                // STEP 3: Call the data-access-service estimate endpoint and forward the result
+                try {
+                    String estimateJson = dasService.estimateCloudOptimisedDownloadSize(
+                            uuid, keys, startDate, endDate, multiPolygon, columns, outputFormat
+                    );
+                    emitter.send(SseEmitter.event()
+                            .name("estimate-complete")
+                            .data(estimateJson));
+                } catch (Exception e) {
+                    log.warn("Cloud-optimised size estimation failed for UUID {}: {}", uuid, e.getMessage());
+                    emitter.send(SseEmitter.event()
+                            .name("estimate-failed")
+                            .data(Map.of(
+                                    "message", "Size estimation failed: " + e.getMessage(),
+                                    "timestamp", System.currentTimeMillis()
+                            )));
+                } finally {
+                    emitter.complete();
+                }
+            } catch (Exception e) {
+                WfsErrorHandler.handleError(e, uuid, emitter, cleanupResources);
+            }
+        });
+
         return emitter;
     }
 }

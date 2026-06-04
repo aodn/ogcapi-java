@@ -7,6 +7,7 @@ public enum ProcessIdEnum {
     DOWNLOAD_DATASET("download"),
     DOWNLOAD_WFS_SSE("downloadWfs"),
     DOWNLOAD_WFS_ESTIMATE("estimateWfsDownload"),
+    DOWNLOAD_CO_ESTIMATE("estimateCOdownload"),
     UNKNOWN("");
 
     private final String value;
