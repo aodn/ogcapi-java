@@ -131,17 +131,27 @@ public class RestApi implements ProcessesApi {
         try {
             String uuid = DatasetDownloadEnums.Parameter.UUID.getStringInput(body);
             String layerName = DatasetDownloadEnums.Parameter.LAYER_NAME.getStringInput(body);
+            String key = DatasetDownloadEnums.Parameter.KEY.getStringInput(body);
             String startDate = DatasetDownloadEnums.Parameter.START_DATE.getStringInput(body);
             String endDate = DatasetDownloadEnums.Parameter.END_DATE.getStringInput(body);
             String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
             Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
             List<String> fields = DatasetDownloadEnums.Parameter.FIELDS.getListInput(body);
 
+            ProcessIdEnum id = ProcessIdEnum.fromString(processId);
+
+            // Cloud-optimised (zarr/parquet) size estimate uses uuid + key, not a
+            // WFS layer name, so handle it before the WFS-specific validation below.
+            if (id == ProcessIdEnum.DOWNLOAD_CO_ESTIMATE) {
+                return restServices.estimateCloudOptimisedDownloadWithSse(
+                        uuid, key, startDate, endDate, multiPolygon, null, outputFormat
+                );
+            }
+
             if(uuid == null || layerName == null) {
                 throw new IllegalArgumentException("UUID and LayerName cannot null");
             }
 
-            ProcessIdEnum id = ProcessIdEnum.fromString(processId);
             SseEmitter emitter;
 
             switch (id) {
