@@ -8,8 +8,9 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -255,6 +256,22 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
+    protected SortOptions parameterVocabsPrioritySort(Collection<String> terms) {
+        String parameterVocabsField = StacBasicField.ParameterVocabs.searchField;
+        return SortOptions.of(so -> so
+                .script(s -> s
+                        .type(ScriptSortType.Number)
+                        .script(sc -> sc
+                                .lang("painless")
+                                .params("terms", JsonData.of(new ArrayList<>(terms)))
+                                .source("if (!doc.containsKey('" + parameterVocabsField + ".keyword') || " +
+                                        "doc['" + parameterVocabsField + ".keyword'].empty) { return 0; } " +
+                                        "for (def value : doc['" + parameterVocabsField + ".keyword']) { " +
+                                        "if (params.terms.contains(value)) { return 1; } } " +
+                                        "return 0;"))
+                        .order(SortOrder.Desc)));
+    }
+
     @Override
     public ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
@@ -376,13 +393,24 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         .toList();
             }
 
+            List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
+            // When the filter searches parameter_vocabs, prepend a value-aware priority sort key
+            // so matching human-curated records rank above AI-generated fallback records. This is
+            // the first sort key; existing -score,-rank ordering is preserved within each tier.
+            if (factory.isParameterPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, parameterVocabsPrioritySort(factory.getParameterPrioritySortTerms()));
+            }
+
             return searchCollectionBy(
                     null,
                     should,
                     filters,
                     properties,
                     searchAfter,
-                    createSortOptions(sortBy, CQLFields.class),
+                    sortOptions,
                     score,
                     maxSize
             );
