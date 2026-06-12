@@ -70,6 +70,12 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     @Getter
     protected Set<String> parameterPrioritySortTerms = new HashSet<>();
 
+    @Getter
+    protected boolean platformPrioritySort = false;
+
+    @Getter
+    protected Set<String> platformPrioritySortTerms = new HashSet<>();
+
     public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass) {
         this(cqlCoorSystem, tClass, new HashMap<>());
     }
@@ -273,13 +279,17 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
             return setting;
         }
 
-        // If the filter compares parameter_vocabs, collect the searched term so the caller can
+        // If the filter compares curated vocab fields, collect the searched term so the caller can
         // add a value-aware sort key that ranks matching human-curated records above AI ones.
         if (expression instanceof AttributeExpressionImpl attribute && expression1 instanceof LiteralExpressionImpl literal) {
             String fieldName = attribute.toString().toLowerCase();
             if (fieldName.equals("parameter_vocabs")) {
                 this.parameterPrioritySort = true;
                 this.parameterPrioritySortTerms.add(literal.toString());
+            }
+            if (fieldName.equals("platform_vocabs")) {
+                this.platformPrioritySort = true;
+                this.platformPrioritySortTerms.add(literal.toString());
             }
         }
 

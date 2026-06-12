@@ -257,18 +257,23 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     protected SortOptions parameterVocabsPrioritySort(Collection<String> terms) {
-        String parameterVocabsField = StacBasicField.ParameterVocabs.searchField;
+        return vocabPrioritySort(StacBasicField.ParameterVocabs.searchField);
+    }
+
+    protected SortOptions platformVocabsPrioritySort(Collection<String> terms) {
+        return vocabPrioritySort(StacBasicField.PlatformVocabs.searchField);
+    }
+
+    protected SortOptions vocabPrioritySort(String vocabField) {
         return SortOptions.of(so -> so
                 .script(s -> s
                         .type(ScriptSortType.Number)
                         .script(sc -> sc
                                 .lang("painless")
-                                .params("terms", JsonData.of(new ArrayList<>(terms)))
-                                .source("if (!doc.containsKey('" + parameterVocabsField + ".keyword') || " +
-                                        "doc['" + parameterVocabsField + ".keyword'].empty) { return 0; } " +
-                                        "for (def value : doc['" + parameterVocabsField + ".keyword']) { " +
-                                        "if (params.terms.contains(value)) { return 1; } } " +
-                                        "return 0;"))
+                                .source(
+                                        "return doc.containsKey('" + vocabField + ".keyword') && " +
+                                                "!doc['" + vocabField + ".keyword'].empty ? 1 : 0;"
+                                ))
                         .order(SortOrder.Desc)));
     }
 
@@ -394,7 +399,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             }
 
             List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
-            // When the filter searches parameter_vocabs, prepend a value-aware priority sort key
+            // When the filter searches curated vocab fields, prepend value-aware priority sort keys
             // so matching human-curated records rank above AI-generated fallback records. This is
             // the first sort key; existing -score,-rank ordering is preserved within each tier.
             if (factory.isParameterPrioritySort()) {
@@ -402,6 +407,12 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     sortOptions = new ArrayList<>();
                 }
                 sortOptions.add(0, parameterVocabsPrioritySort(factory.getParameterPrioritySortTerms()));
+            }
+            if (factory.isPlatformPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, platformVocabsPrioritySort(factory.getPlatformPrioritySortTerms()));
             }
 
             return searchCollectionBy(
