@@ -66,7 +66,7 @@ public class DasService {
                 .encode()
                 .toUriString();
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
+        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET, httpEntity, byte[].class).getBody();
     }
 
     public byte[] getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
@@ -91,11 +91,7 @@ public class DasService {
 
     /**
      * Call the data-access-service cloud-optimised size estimate endpoint.
-     *
-     * POST /api/v1/das/data/{uuid}/estimate_size with a JSON body matching
-     * EstimateSizeRequest. The endpoint is multi-key and aggregates server-side:
-     * a null/"*" keys list means "all keys of the uuid" (same as the batch
-     * download). Returns the raw JSON response body so the SSE layer can forward
+     * Returns the raw JSON response body so the SSE layer can forward
      * it to the frontend unchanged.
      */
     public String estimateCloudOptimisedDownloadSize(
@@ -111,11 +107,8 @@ public class DasService {
                 .encode()
                 .toUriString();
 
-        // Body mirrors EstimateSizeRequest. Send the raw frontend date strings
-        // (or "non-specified" when null) so data-access-service applies the same
-        // resolve/supply/trim chain the batch download uses.
         Map<String, Object> body = new HashMap<>();
-        body.put("keys", keys); // null => all keys of the uuid
+        body.put("keys", keys);
         body.put("start_date", startDate != null ? startDate : "non-specified");
         body.put("end_date", endDate != null ? endDate : "non-specified");
         body.put("output_format", outputFormat);
@@ -143,6 +136,7 @@ public class DasService {
         return httpClient.exchange(url, HttpMethod.POST, entity, String.class, uriVars).getBody();
     }
 
+<<<<<<< HEAD
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
         ResponseEntity<DatasetMetadata> response = httpClient.exchange(
                 dasConfig.host() + "/api/v1/das/metadata/" + datasetId,
@@ -155,5 +149,10 @@ public class DasService {
                 .status(response.getStatusCode())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response.getBody());
+=======
+    public boolean isCollectionSupported(String collectionId) {
+        final String waveBuoyRealtimeCollectionID = "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc";
+        return waveBuoyRealtimeCollectionID.contentEquals(collectionId);
+>>>>>>> f53cac28 (refactor to extract SSE wrapper)
     }
 }
