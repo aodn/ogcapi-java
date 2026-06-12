@@ -13,6 +13,15 @@ public class OrImpl extends QueryHandler implements Or {
 
     protected List<Filter> children = new ArrayList<>();
 
+    private static boolean containsElasticSetting(Filter filter) {
+        if (filter instanceof ElasticSetting) {
+            return true;
+        }
+
+        return filter instanceof OrImpl orFilter
+                && orFilter.getChildren().stream().anyMatch(OrImpl::containsElasticSetting);
+    }
+
     /**
      * Recursively extracts leaf Elasticsearch queries from nested OR filters and returns them as a flat list.
      * The caller uses this list to construct a single bool/should query.
@@ -40,6 +49,10 @@ public class OrImpl extends QueryHandler implements Or {
      * vocabulary selections.
      */
     private void buildQuery(List<Filter> filters) {
+        if (filters.stream().anyMatch(OrImpl::containsElasticSetting)) {
+            throw new IllegalArgumentException("Or combine with query setting do not make sense");
+        }
+
         List<Query> queries = filters.stream()
                 .flatMap(filter -> collectQueries(filter).stream())
                 .toList();
@@ -65,8 +78,6 @@ public class OrImpl extends QueryHandler implements Or {
         }
     }
 
-    // Flatten the bool should query so that to avoid when many parameters are selected,
-    // the nested query cause Elasticsearch error
     public OrImpl(List<Filter> filters) {
         children.addAll(filters);
         buildQuery(children);

@@ -282,20 +282,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     /**
-     * Creates an Elasticsearch equality filter and records metadata used to build the search
-     * request.
-     *
-     * <p>Query-setting expressions such as {@code page_size=11} are stored in
-     * {@link #querySetting} and returned without creating a normal Elasticsearch field query.
-     * Equality filters on {@code parameter_vocabs} or {@code platform_vocabs} enable the
-     * corresponding priority sort and collect the literal filter value. All other expressions are
-     * converted directly to a {@link PropertyEqualToImpl}.
-     *
-     * @param expression the field expression on the left side of the equality comparison
-     * @param expression1 the value expression on the right side of the equality comparison
-     * @param b whether string comparison should be case-sensitive
-     * @param matchAction how a multi-valued property should be matched
-     * @return an Elasticsearch query setting or equality filter
+     * Creates an Elasticsearch equality filter and records metadata used to build the search request.
      */
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {

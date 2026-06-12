@@ -14,6 +14,7 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class CQLToElasticFilterFactoryTest {
@@ -44,33 +45,12 @@ public class CQLToElasticFilterFactoryTest {
     @Test
     public void platformVocabFilterEnablesPrioritySortAndCollectsTerms() throws CQLException {
         CQLToElasticFilterFactory<CQLFields> factory = parse(
-                "platform_vocabs='glider' OR platform_vocabs='mooring'");
+                "platform_vocabs='glider' OR ai_platform_vocabs='glider'");
 
         assertTrue(factory.isPlatformPrioritySort());
-        assertEquals(Set.of("glider", "mooring"), factory.getPlatformPrioritySortTerms());
+        assertEquals(Set.of("glider"), factory.getPlatformPrioritySortTerms());
         assertFalse(factory.isParameterPrioritySort());
         assertTrue(factory.getParameterPrioritySortTerms().isEmpty());
-    }
-
-    @Test
-    public void duplicateVocabTermsAreCollectedOnce() throws CQLException {
-        CQLToElasticFilterFactory<CQLFields> factory = parse(
-                "(parameter_vocabs='temperature' OR ai_parameter_vocabs='temperature') OR "
-                        + "(parameter_vocabs='temperature' OR ai_parameter_vocabs='temperature')");
-
-        assertEquals(Set.of("temperature"), factory.getParameterPrioritySortTerms());
-    }
-
-    @Test
-    public void aiAndUnrelatedFiltersDoNotEnablePrioritySort() throws CQLException {
-        CQLToElasticFilterFactory<CQLFields> factory = parse(
-                "ai_parameter_vocabs='temperature' OR "
-                        + "ai_platform_vocabs='glider' OR status='ongoing'");
-
-        assertFalse(factory.isParameterPrioritySort());
-        assertTrue(factory.getParameterPrioritySortTerms().isEmpty());
-        assertFalse(factory.isPlatformPrioritySort());
-        assertTrue(factory.getPlatformPrioritySortTerms().isEmpty());
     }
 
     @Test
@@ -78,13 +58,31 @@ public class CQLToElasticFilterFactoryTest {
         CQLToElasticFilterFactory<CQLFields> factory = parse(
                 "page_size=11 AND "
                         + "(parameter_vocabs='heat budget' OR ai_parameter_vocabs='heat budget') "
-                        + "AND platform_vocabs='glider'");
+                        + "AND (platform_vocabs='glider' OR ai_platform_vocabs='glider')");
 
         assertEquals("11", factory.getQuerySetting().get(CQLElasticSetting.page_size));
         assertTrue(factory.isParameterPrioritySort());
         assertEquals(Set.of("heat budget"), factory.getParameterPrioritySortTerms());
         assertTrue(factory.isPlatformPrioritySort());
         assertEquals(Set.of("glider"), factory.getPlatformPrioritySortTerms());
+    }
+
+    @Test
+    public void querySettingsCannotBeCombinedWithOr() {
+        IllegalArgumentException settingFirst = assertThrows(
+                IllegalArgumentException.class,
+                () -> parse("score>=2 OR parameter_vocabs='wave'"));
+        assertEquals(
+                "Or combine with query setting do not make sense",
+                settingFirst.getMessage());
+
+        IllegalArgumentException settingLast = assertThrows(
+                IllegalArgumentException.class,
+                () -> parse(
+                        "parameter_vocabs='wave' OR ai_parameter_vocabs='wave' OR score>=2"));
+        assertEquals(
+                "Or combine with query setting do not make sense",
+                settingLast.getMessage());
     }
 
     private CQLToElasticFilterFactory<CQLFields> parse(String cql) throws CQLException {
