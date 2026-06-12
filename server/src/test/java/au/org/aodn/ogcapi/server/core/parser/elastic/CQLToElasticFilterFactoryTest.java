@@ -9,8 +9,6 @@ import org.geotools.filter.text.cql2.CQLException;
 import org.junit.jupiter.api.Test;
 import org.opengis.filter.Filter;
 
-import java.util.Set;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -20,19 +18,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class CQLToElasticFilterFactoryTest {
 
     @Test
-    public void parameterVocabFilterEnablesPrioritySortAndCollectsTerms() throws CQLException {
-        String cql = "parameter_vocabs='acoustics' OR ai_parameter_vocabs='acoustics' OR "
-                + "parameter_vocabs='aerosols' OR ai_parameter_vocabs='aerosols' OR "
-                + "parameter_vocabs='air pressure' OR ai_parameter_vocabs='air pressure'";
+    public void parameterVocabFilterEnablesPrioritySort() throws CQLException {
+        String cql = "(parameter_vocabs='acoustics' OR ai_parameter_vocabs='acoustics') OR "
+                + "(parameter_vocabs='aerosols' OR ai_parameter_vocabs='aerosols') OR "
+                + "(parameter_vocabs='air pressure' OR ai_parameter_vocabs='air pressure')";
         CQLToElasticFilterFactory<CQLFields> factory = newFactory();
         Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
 
         assertTrue(factory.isParameterPrioritySort());
-        assertEquals(
-                Set.of("acoustics", "aerosols", "air pressure"),
-                factory.getParameterPrioritySortTerms());
         assertFalse(factory.isPlatformPrioritySort());
-        assertTrue(factory.getPlatformPrioritySortTerms().isEmpty());
 
         OrImpl parameterFilter = assertInstanceOf(OrImpl.class, filter);
         assertTrue(parameterFilter.getQuery().isBool());
@@ -43,28 +37,34 @@ public class CQLToElasticFilterFactoryTest {
     }
 
     @Test
-    public void platformVocabFilterEnablesPrioritySortAndCollectsTerms() throws CQLException {
-        CQLToElasticFilterFactory<CQLFields> factory = parse(
-                "platform_vocabs='glider' OR ai_platform_vocabs='glider'");
+    public void platformVocabFilterEnablesPrioritySort() throws CQLException {
+        String cql = "(platform_vocabs='satellite' OR ai_platform_vocabs='satellite') OR "
+                + "(platform_vocabs='glider' OR ai_platform_vocabs='glider')";
+        CQLToElasticFilterFactory<CQLFields> factory = newFactory();
+        Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
 
         assertTrue(factory.isPlatformPrioritySort());
-        assertEquals(Set.of("glider"), factory.getPlatformPrioritySortTerms());
         assertFalse(factory.isParameterPrioritySort());
-        assertTrue(factory.getParameterPrioritySortTerms().isEmpty());
+
+        OrImpl platformFilter = assertInstanceOf(OrImpl.class, filter);
+        assertTrue(platformFilter.getQuery().isBool());
+        assertEquals(4, platformFilter.getQuery().bool().should().size());
+        assertTrue(
+                platformFilter.getQuery().bool().should().stream().noneMatch(query -> query.isBool()),
+                "Grouped platform vocabulary clauses should be flattened into one should list");
     }
 
     @Test
     public void prioritySortMetadataIsCollectedAlongsideQuerySettings() throws CQLException {
         CQLToElasticFilterFactory<CQLFields> factory = parse(
                 "page_size=11 AND "
-                        + "(parameter_vocabs='heat budget' OR ai_parameter_vocabs='heat budget') "
-                        + "AND (platform_vocabs='glider' OR ai_platform_vocabs='glider')");
+                        + "((parameter_vocabs='heat budget' OR ai_parameter_vocabs='heat budget')) "
+                        + "AND ((platform_vocabs='satellite' OR ai_platform_vocabs='satellite') OR "
+                        + "(platform_vocabs='glider' OR ai_platform_vocabs='glider'))");
 
         assertEquals("11", factory.getQuerySetting().get(CQLElasticSetting.page_size));
         assertTrue(factory.isParameterPrioritySort());
-        assertEquals(Set.of("heat budget"), factory.getParameterPrioritySortTerms());
         assertTrue(factory.isPlatformPrioritySort());
-        assertEquals(Set.of("glider"), factory.getPlatformPrioritySortTerms());
     }
 
     @Test

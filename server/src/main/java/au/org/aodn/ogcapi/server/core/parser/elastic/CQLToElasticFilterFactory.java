@@ -72,23 +72,11 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     protected boolean parameterPrioritySort = false;
 
     /**
-     * Parameter vocabulary values collected from equality filters while parsing the CQL query.
-     */
-    @Getter
-    protected Set<String> parameterPrioritySortTerms = new HashSet<>();
-
-    /**
      * Indicates that a platform vocabulary filter was found and curated platform values (platform_vocabs) should be
      * prioritised in the Elasticsearch result ordering.
      */
     @Getter
     protected boolean platformPrioritySort = false;
-
-    /**
-     * Platform vocabulary values collected from equality filters while parsing the CQL query.
-     */
-    @Getter
-    protected Set<String> platformPrioritySortTerms = new HashSet<>();
 
     public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass) {
         this(cqlCoorSystem, tClass, new HashMap<>());
@@ -297,15 +285,13 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
         }
 
         // Record curated vocabulary filters so the search service can prioritise curated records.
-        if (expression instanceof AttributeExpressionImpl attribute && expression1 instanceof LiteralExpressionImpl literal) {
+        if (expression instanceof AttributeExpressionImpl attribute && expression1 instanceof LiteralExpressionImpl) {
             String fieldName = attribute.toString().toLowerCase();
             if (fieldName.equals("parameter_vocabs")) {
                 this.parameterPrioritySort = true;
-                this.parameterPrioritySortTerms.add(literal.toString());
             }
             if (fieldName.equals("platform_vocabs")) {
                 this.platformPrioritySort = true;
-                this.platformPrioritySortTerms.add(literal.toString());
             }
         }
 

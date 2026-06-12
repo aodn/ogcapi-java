@@ -256,11 +256,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
-    protected SortOptions parameterVocabsPrioritySort(Collection<String> terms) {
+    protected SortOptions parameterVocabsPrioritySort() {
         return vocabPrioritySort(StacBasicField.ParameterVocabs.searchField);
     }
 
-    protected SortOptions platformVocabsPrioritySort(Collection<String> terms) {
+    protected SortOptions platformVocabsPrioritySort() {
         return vocabPrioritySort(StacBasicField.PlatformVocabs.searchField);
     }
 
@@ -399,20 +399,20 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             }
 
             List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
-            // When the filter searches curated vocab fields, prepend value-aware priority sort keys
+            // When the filter searches curated vocab fields, prepend presence-based priority sort keys
             // so matching human-curated records rank above AI-generated fallback records. This is
             // the first sort key; existing -score,-rank ordering is preserved within each tier.
             if (factory.isParameterPrioritySort()) {
                 if (sortOptions == null) {
                     sortOptions = new ArrayList<>();
                 }
-                sortOptions.add(0, parameterVocabsPrioritySort(factory.getParameterPrioritySortTerms()));
+                sortOptions.add(0, parameterVocabsPrioritySort());
             }
             if (factory.isPlatformPrioritySort()) {
                 if (sortOptions == null) {
                     sortOptions = new ArrayList<>();
                 }
-                sortOptions.add(0, platformVocabsPrioritySort(factory.getPlatformPrioritySortTerms()));
+                sortOptions.add(0, platformVocabsPrioritySort());
             }
 
             return searchCollectionBy(
