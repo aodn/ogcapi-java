@@ -8,12 +8,15 @@ import org.opengis.filter.Or;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class OrImpl extends QueryHandler implements Or {
 
     protected List<Filter> children = new ArrayList<>();
 
+    /**
+     * Recursively extracts leaf Elasticsearch queries from nested OR filters and returns them as a flat list.
+     * The caller uses this list to construct a single bool/should query.
+     */
     private static List<Query> collectQueries(Filter filter) {
         if (filter instanceof OrImpl orFilter) {
             return orFilter.getChildren().stream()
@@ -28,6 +31,14 @@ public class OrImpl extends QueryHandler implements Or {
         return List.of();
     }
 
+
+    /**
+     * Builds the Elasticsearch representation of an OR expression.
+     *
+     * A single query is returned directly. Multiple queries are combined into
+     * one flat bool/should query to avoid deeply nested bool queries for large
+     * vocabulary selections.
+     */
     private void buildQuery(List<Filter> filters) {
         List<Query> queries = filters.stream()
                 .flatMap(filter -> collectQueries(filter).stream())
@@ -54,6 +65,8 @@ public class OrImpl extends QueryHandler implements Or {
         }
     }
 
+    // Flatten the bool should query so that to avoid when many parameters are selected,
+    // the nested query cause Elasticsearch error
     public OrImpl(List<Filter> filters) {
         children.addAll(filters);
         buildQuery(children);

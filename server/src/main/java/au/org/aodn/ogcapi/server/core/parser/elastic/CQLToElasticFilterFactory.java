@@ -64,15 +64,29 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     @Getter
     protected Map<CQLElasticSetting, String> querySetting;
 
+    /**
+     * Indicates that a parameter vocabulary filter was found and curated parameter values (parameter_vocabs) should
+     * be prioritised in the Elasticsearch result ordering.
+     */
     @Getter
     protected boolean parameterPrioritySort = false;
 
+    /**
+     * Parameter vocabulary values collected from equality filters while parsing the CQL query.
+     */
     @Getter
     protected Set<String> parameterPrioritySortTerms = new HashSet<>();
 
+    /**
+     * Indicates that a platform vocabulary filter was found and curated platform values (platform_vocabs) should be
+     * prioritised in the Elasticsearch result ordering.
+     */
     @Getter
     protected boolean platformPrioritySort = false;
 
+    /**
+     * Platform vocabulary values collected from equality filters while parsing the CQL query.
+     */
     @Getter
     protected Set<String> platformPrioritySortTerms = new HashSet<>();
 
@@ -267,6 +281,22 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
         return equal(expression, expression1, b, null);
     }
 
+    /**
+     * Creates an Elasticsearch equality filter and records metadata used to build the search
+     * request.
+     *
+     * <p>Query-setting expressions such as {@code page_size=11} are stored in
+     * {@link #querySetting} and returned without creating a normal Elasticsearch field query.
+     * Equality filters on {@code parameter_vocabs} or {@code platform_vocabs} enable the
+     * corresponding priority sort and collect the literal filter value. All other expressions are
+     * converted directly to a {@link PropertyEqualToImpl}.
+     *
+     * @param expression the field expression on the left side of the equality comparison
+     * @param expression1 the value expression on the right side of the equality comparison
+     * @param b whether string comparison should be case-sensitive
+     * @param matchAction how a multi-valued property should be matched
+     * @return an Elasticsearch query setting or equality filter
+     */
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
@@ -279,8 +309,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
             return setting;
         }
 
-        // If the filter compares curated vocab fields, collect the searched term so the caller can
-        // add a value-aware sort key that ranks matching human-curated records above AI ones.
+        // Record curated vocabulary filters so the search service can prioritise curated records.
         if (expression instanceof AttributeExpressionImpl attribute && expression1 instanceof LiteralExpressionImpl literal) {
             String fieldName = attribute.toString().toLowerCase();
             if (fieldName.equals("parameter_vocabs")) {
