@@ -84,7 +84,7 @@ public class DownloadWfsDataServiceTest {
         }).when(emitter).send(any(SseEmitter.SseEventBuilder.class));
 
 
-        service.executeWfsRequestWithSse(
+        service.streamWfsDataWithSse(
                 "http://mock/wfs?...",
                 "uuid-123",
                 "layer:test",
@@ -194,7 +194,7 @@ public class DownloadWfsDataServiceTest {
         }).when(emitter).send(any(SseEmitter.SseEventBuilder.class));
 
 
-        service.executeWfsRequestWithSse(
+        service.streamWfsDataWithSse(
                 "http://mock/wfs?...",
                 "uuid-123",
                 "layer:test",
