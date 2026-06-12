@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.exception.wfs;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
+import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -50,7 +51,7 @@ public class WfsErrorHandler {
                 case VALIDATION_ERROR -> {
                     log.warn("Invalid parameter error for UUID {}: {}", uuid, e.getMessage());
                     emitter.send(SseEmitter.event()
-                            .name("error")
+                            .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
                                     "message", "Invalid parameter error",
                                     "timestamp", System.currentTimeMillis()
@@ -61,7 +62,7 @@ public class WfsErrorHandler {
                 case UNAUTHORIZED_SERVER_ERROR -> {
                     log.warn("Unauthorized wfs server for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
-                            .name("error")
+                            .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
                                     "message", "Unauthorized wfs server",
                                     "timestamp", System.currentTimeMillis()
@@ -72,7 +73,7 @@ public class WfsErrorHandler {
                 case DOWNLOADABLE_FIELDS_ERROR -> {
                     log.warn("No downloadable fields found for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
-                            .name("error")
+                            .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
                                     "message", "No downloadable fields found",
                                     "timestamp", System.currentTimeMillis()
@@ -83,7 +84,7 @@ public class WfsErrorHandler {
                 case UNKNOWN_ERROR -> {
                     log.warn("Unknown error for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
-                            .name("error")
+                            .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
                                     "message", "Unknown error: " + e.getMessage(),
                                     "timestamp", System.currentTimeMillis()

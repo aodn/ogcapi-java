@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
+import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -191,9 +192,9 @@ public class DownloadWfsDataService {
     }
 
     /**
-     * Execute WFS request with SSE support
+     * Call the WFS server and stream the downloaded data to the client over SSE
      */
-    public void executeWfsRequestWithSse(
+    public void streamWfsDataWithSse(
             String wfsRequestUrl,
             String uuid,
             String layerName,
@@ -213,7 +214,7 @@ public class DownloadWfsDataService {
 
                     // Send download started confirmation
                     emitter.send(SseEmitter.event()
-                            .name("download-started")
+                            .name(SseEventName.DOWNLOAD_STARTED.getValue())
                             .data(Map.of(
                                     "message", "WFS server responded, starting data stream...",
                                     "timestamp", System.currentTimeMillis()
@@ -236,7 +237,7 @@ public class DownloadWfsDataService {
                             String encodedData = Base64.getEncoder().encodeToString(chunkBytes);
 
                             emitter.send(SseEmitter.event()
-                                    .name("file-chunk")
+                                    .name(SseEventName.FILE_CHUNK.getValue())
                                     .data(Map.of(
                                             "chunkNumber", ++chunkNumber,
                                             "data", encodedData,
@@ -254,7 +255,7 @@ public class DownloadWfsDataService {
                     if (chunkBuffer.size() > 0) {
                         String encodedData = Base64.getEncoder().encodeToString(chunkBuffer.toByteArray());
                         emitter.send(SseEmitter.event()
-                                .name("file-chunk")
+                                .name(SseEventName.FILE_CHUNK.getValue())
                                 .data(Map.of(
                                         "chunkNumber", ++chunkNumber,
                                         "data", encodedData,
@@ -266,7 +267,7 @@ public class DownloadWfsDataService {
 
                     // Send completion event
                     emitter.send(SseEmitter.event()
-                            .name("download-complete")
+                            .name(SseEventName.DOWNLOAD_COMPLETE.getValue())
                             .data(Map.of(
                                     "totalBytes", totalBytes,
                                     "totalChunks", chunkNumber,

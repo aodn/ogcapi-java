@@ -1,9 +1,11 @@
 package au.org.aodn.ogcapi.server.processes;
 
-import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
+import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.service.sse.SseStreamHandler;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,9 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 public class RestServices {
@@ -104,7 +104,7 @@ public class RestServices {
         if (polygons == null || polygons.toString().isEmpty()) {
             throw new IllegalArgumentException("Polygons parameter should now be null. If users didn't specify polygons, a 'non-specified' should be sent.");
 
-        // String (e.g. "non-specified") is working weird with function ObjectMapper.writeValueAsString(), so handle it separately
+            // String (e.g. "non-specified") is working weird with function ObjectMapper.writeValueAsString(), so handle it separately
         } else if (polygons.toString().equals("non-specified")) {
             parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), polygons.toString());
         } else {
@@ -203,156 +203,100 @@ public class RestServices {
                                              Object multiPolygon,
                                              List<String> fields,
                                              String layerName,
-                                             String outputFormat,
-                                             boolean estimateSizeOnly) {
+                                             String outputFormat) {
 
-        final SseEmitter emitter = new SseEmitter(0L);
+        return SseStreamHandler.stream(uuid, session -> {
+            validateWfsSseInputs(uuid, layerName, outputFormat);
 
-        // Set up references for resources that need to be cleaned up
-        AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
-        AtomicReference<ScheduledExecutorService> keepAliveExecutorRef = new AtomicReference<>();
+            SseEmitter emitter = session.getEmitter();
 
-        // Set up cleanup function to clear up resources
-        Runnable cleanupWfsResources = () -> {
-            try {
-                ScheduledFuture<?> keepAliveTask = keepAliveTaskRef.get();
-                if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
-                    keepAliveTask.cancel(false);
-                }
+            // STEP 1: Send connection established event
+            session.send(SseEventName.CONNECTION_ESTABLISHED, Map.of(
+                    "message", "Starting WFS download for UUID: " + uuid,
+                    "timestamp", System.currentTimeMillis()
+            ));
 
-                ScheduledExecutorService keepAliveExecutor = keepAliveExecutorRef.get();
-                if (keepAliveExecutor != null && !keepAliveExecutor.isShutdown()) {
-                    keepAliveExecutor.shutdown();
-                }
-            } catch (Exception e) {
-                log.error("Error during cleanup for UUID: {}", uuid, e);
-            }
-        };
+            // STEP 2: Start keep-alive mechanism for WFS server wait time. The
+            // payload reflects whether the WFS server has started responding.
+            AtomicBoolean wfsServerResponded = new AtomicBoolean(false);
+            session.startKeepAlive(20, () -> Map.of(
+                    "message", wfsServerResponded.get() ?
+                            "WFS data streaming in progress..." : "Waiting for WFS server response...",
+                    "timestamp", System.currentTimeMillis()
+            ));
 
-        // Set up emitter callbacks
-        emitter.onCompletion(() -> {
-            log.info("WFS SSE stream completion");
-            cleanupWfsResources.run();
+            // STEP 3: Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
+            String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
+                    uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat, -1L, false
+            );
+
+            // STEP 4: Make the WFS call: Streaming the response directly to client via SSE
+            downloadWfsDataService.streamWfsDataWithSse(
+                    wfsRequestUrl,
+                    uuid,
+                    layerName,
+                    outputFormat,
+                    emitter,
+                    wfsServerResponded
+            );
         });
+    }
 
-        emitter.onTimeout(() -> {
-            log.warn("WFS SSE stream timed out");
-            cleanupWfsResources.run();
-        });
+    /**
+     * Estimate the download size of a WFS (GeoServer) subset over SSE.
+     */
+    public SseEmitter estimateWfsDownloadWithSse(String uuid,
+                                                 String startDate,
+                                                 String endDate,
+                                                 Object multiPolygon,
+                                                 List<String> fields,
+                                                 String layerName,
+                                                 String outputFormat) {
 
-        emitter.onError(throwable -> WfsErrorHandler.handleError((Exception) throwable, uuid, emitter, cleanupWfsResources));
+        return SseStreamHandler.stream(uuid, session -> {
+            validateWfsSseInputs(uuid, layerName, outputFormat);
 
-        // Validate parameters
-        if (uuid == null || layerName == null || layerName.trim().isEmpty()) {
-            IllegalArgumentException exception = new IllegalArgumentException("Layer name and Uuid are required");
-            WfsErrorHandler.handleError(exception, uuid, emitter, cleanupWfsResources);
-            return emitter;
-        }
+            // STEP 1: Send connection established event
+            session.send(SseEventName.CONNECTION_ESTABLISHED, Map.of(
+                    "message", "Starting WFS download size estimate for UUID: " + uuid,
+                    "timestamp", System.currentTimeMillis()
+            ));
 
-        // Start async download with SSE progress updates
-        CompletableFuture.runAsync(() -> {
+            // STEP 2: Start keep-alive mechanism while waiting for the WFS server
+            session.startKeepAlive(20, () -> Map.of(
+                    "message", "Waiting for WFS server response...",
+                    "timestamp", System.currentTimeMillis()
+            ));
+
+            // STEP 3: Compute the size estimate and forward it as a single event
             try {
-                // STEP 1: Send connection established event
-                emitter.send(SseEmitter.event()
-                        .name("connection-established")
-                        .data(Map.of(
-                                "status", "connected",
-                                "message", "Starting WFS download for UUID: " + uuid,
-                                "timestamp", System.currentTimeMillis()
-                        )));
-
-                // STEP 2: Start keep-alive mechanism for WFS server wait time
-                ScheduledExecutorService keepAliveExecutor = Executors.newSingleThreadScheduledExecutor();
-                AtomicBoolean wfsServerResponded = new AtomicBoolean(false);
-
-                // Send keep-alive every 20 seconds
-                ScheduledFuture<?> keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> {
-                    try {
-                        String status = wfsServerResponded.get() ? "streaming" : "waiting-for-wfs-server";
-                        emitter.send(SseEmitter.event()
-                                .name("keep-alive")
-                                .data(Map.of(
-                                        "status", status,
-                                        "timestamp", System.currentTimeMillis(),
-                                        "message", wfsServerResponded.get() ?
-                                                "WFS data streaming in progress..." : "Waiting for WFS server response..."
-                                )));
-                    } catch (Exception e) {
-                        WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
-                    }
-                }, 20, 20, TimeUnit.SECONDS);
-
-                keepAliveTaskRef.set(keepAliveTask);
-                keepAliveExecutorRef.set(keepAliveExecutor);
-
-                emitter.send(SseEmitter.event()
-                        .name("wfs-request-ready")
-                        .data(Map.of(
-                                "message", "Connecting to WFS server...",
-                                "timestamp", System.currentTimeMillis()
-                        )));
-
-                if(!estimateSizeOnly) {
-                    // STEP 3: Do preparation work: Collection lookup from Elasticsearch, WFS validation, Field retrieval, URL building
-                    String wfsRequestUrl = downloadWfsDataService.prepareWfsRequestUrl(
-                            uuid, startDate, endDate, multiPolygon, fields, layerName, outputFormat,  -1L, false
-                    );
-
-                    // STEP 4: Make the WFS call: Streaming the response directly to client via SSE
-                    downloadWfsDataService.executeWfsRequestWithSse(
-                            wfsRequestUrl,
-                            uuid,
-                            layerName,
-                            outputFormat,
-                            emitter,
-                            wfsServerResponded
-                    );
-                }
-                else {
-                    try {
-                        BigInteger est = downloadWfsDataService.estimateDownloadSize(
-                                uuid,
-                                layerName,
-                                startDate,
-                                endDate,
-                                multiPolygon,
-                                fields,
-                                outputFormat
-                        );
-                        emitter.send(SseEmitter.event()
-                                .name(est != null ? "estimate-complete" : "estimate-failed")
-                                .data(Map.of(
-                                        "size", est != null ? est : "",
-                                        "timestamp", System.currentTimeMillis()
-                                )));
-                    }
-                    catch(Exception e) {
-                        log.warn("Unexpected error during size estimation for UUID {}: {}", uuid, e.getMessage());
-                        emitter.send(SseEmitter.event()
-                                .name("estimate-failed")
-                                .data(Map.of(
-                                        "message", "Size estimation failed: " + e.getMessage(),
-                                        "timestamp", System.currentTimeMillis()
-                                )));
-                    }
-                    finally {
-                        emitter.complete();
-                    }
-                }
+                BigInteger est = downloadWfsDataService.estimateDownloadSize(
+                        uuid,
+                        layerName,
+                        startDate,
+                        endDate,
+                        multiPolygon,
+                        fields,
+                        outputFormat
+                );
+                session.send(est != null ? SseEventName.ESTIMATE_COMPLETE : SseEventName.ESTIMATE_FAILED, Map.of(
+                        "size", est != null ? est : "",
+                        "timestamp", System.currentTimeMillis()
+                ));
             } catch (Exception e) {
-                WfsErrorHandler.handleError(e, uuid, emitter, cleanupWfsResources);
+                log.warn("Unexpected error during size estimation for UUID {}: {}", uuid, e.getMessage());
+                session.send(SseEventName.ESTIMATE_FAILED, Map.of(
+                        "message", "Size estimation failed: " + e.getMessage(),
+                        "timestamp", System.currentTimeMillis()
+                ));
+            } finally {
+                session.complete();
             }
         });
-        return emitter;
     }
 
     /**
      * Estimate the download size of a cloud-optimised (zarr/parquet) subset over SSE.
-     * <p>
-     * Opens an SSE stream, calls the data-access-service estimate endpoint with the
-     * same parameters that drive the batch download (so the estimate matches what
-     * the real download would produce), forwards the size estimate as a single
-     * event, then closes the stream.
      */
     public SseEmitter estimateCloudOptimisedDownloadWithSse(String uuid,
                                                             String key,
@@ -362,109 +306,56 @@ public class RestServices {
                                                             List<String> columns,
                                                             String outputFormat) {
 
-        final SseEmitter emitter = new SseEmitter(0L);
-
-        // Set up references for resources that need to be cleaned up
-        AtomicReference<ScheduledFuture<?>> keepAliveTaskRef = new AtomicReference<>();
-        AtomicReference<ScheduledExecutorService> keepAliveExecutorRef = new AtomicReference<>();
-
-        // Set up cleanup function to clear up resources
-        Runnable cleanupResources = () -> {
-            try {
-                ScheduledFuture<?> keepAliveTask = keepAliveTaskRef.get();
-                if (keepAliveTask != null && !keepAliveTask.isCancelled()) {
-                    keepAliveTask.cancel(false);
-                }
-
-                ScheduledExecutorService keepAliveExecutor = keepAliveExecutorRef.get();
-                if (keepAliveExecutor != null && !keepAliveExecutor.isShutdown()) {
-                    keepAliveExecutor.shutdown();
-                }
-            } catch (Exception e) {
-                log.error("Error during cleanup for CO estimate UUID: {}", uuid, e);
+        return SseStreamHandler.stream(uuid, session -> {
+            // Validate parameters
+            if (uuid == null || outputFormat == null) {
+                throw new IllegalArgumentException("Missing uuid or output format");
             }
-        };
 
-        emitter.onCompletion(() -> {
-            log.info("CO estimate SSE stream completion");
-            cleanupResources.run();
+            // batch-style key handling: comma-separated string -> list; null/blank/"*" -> null
+            List<String> keys = (key == null || key.isBlank() || key.equals("*"))
+                    ? null
+                    : Arrays.stream(key.split(",")).map(String::trim).toList();
+
+            // STEP 1: Send connection established event
+            session.send(SseEventName.CONNECTION_ESTABLISHED, Map.of(
+                    "message", "Starting cloud-optimised size estimate for UUID: " + uuid,
+                    "timestamp", System.currentTimeMillis()
+            ));
+
+            // STEP 2: Start keep-alive mechanism while data-access-service computes the estimate
+            session.startKeepAlive(20, () -> Map.of(
+                    "message", "Estimating download size...",
+                    "timestamp", System.currentTimeMillis()
+            ));
+
+            // STEP 3: Call the data-access-service estimate endpoint and forward the result
+            try {
+                String estimateJson = dasService.estimateCloudOptimisedDownloadSize(
+                        uuid, keys, startDate, endDate, multiPolygon, columns, outputFormat
+                );
+                session.send(SseEventName.ESTIMATE_COMPLETE, estimateJson);
+            } catch (Exception e) {
+                log.warn("Cloud-optimised size estimation failed for UUID {}: {}", uuid, e.getMessage());
+                session.send(SseEventName.ESTIMATE_FAILED, Map.of(
+                        "message", "Size estimation failed: " + e.getMessage(),
+                        "timestamp", System.currentTimeMillis()
+                ));
+            } finally {
+                session.complete();
+            }
         });
+    }
 
-        emitter.onTimeout(() -> {
-            log.warn("CO estimate SSE stream timed out");
-            cleanupResources.run();
-        });
-
-        emitter.onError(throwable -> WfsErrorHandler.handleError((Exception) throwable, uuid, emitter, cleanupResources));
-
-        // Validate parameters
-        if (uuid == null) {
-            IllegalArgumentException exception = new IllegalArgumentException("Uuid is required");
-            WfsErrorHandler.handleError(exception, uuid, emitter, cleanupResources);
-            return emitter;
+    /**
+     * Shared input validation for the two WFS SSE flows.
+     */
+    private void validateWfsSseInputs(String uuid, String layerName, String outputFormat) {
+        if (uuid == null || layerName == null || layerName.trim().isEmpty()) {
+            throw new IllegalArgumentException("Layer name and Uuid are required");
         }
-
-        // batch-style key handling: comma-separated string -> list; null/blank/"*"
-        // -> null, which the data-access-service expands to all keys of the uuid.
-        final List<String> keys = (key == null || key.isBlank() || key.equals("*"))
-                ? null
-                : Arrays.stream(key.split(",")).map(String::trim).toList();
-
-        // Start async estimate with SSE progress updates
-        CompletableFuture.runAsync(() -> {
-            try {
-                // STEP 1: Send connection established event
-                emitter.send(SseEmitter.event()
-                        .name("connection-established")
-                        .data(Map.of(
-                                "status", "connected",
-                                "message", "Starting cloud-optimised size estimate for UUID: " + uuid,
-                                "timestamp", System.currentTimeMillis()
-                        )));
-
-                // STEP 2: Start keep-alive mechanism while data-access-service computes the estimate
-                ScheduledExecutorService keepAliveExecutor = Executors.newSingleThreadScheduledExecutor();
-                ScheduledFuture<?> keepAliveTask = keepAliveExecutor.scheduleAtFixedRate(() -> {
-                    try {
-                        emitter.send(SseEmitter.event()
-                                .name("keep-alive")
-                                .data(Map.of(
-                                        "status", "estimating",
-                                        "message", "Estimating download size...",
-                                        "timestamp", System.currentTimeMillis()
-                                )));
-                    } catch (Exception e) {
-                        WfsErrorHandler.handleError(e, uuid, emitter, cleanupResources);
-                    }
-                }, 20, 20, TimeUnit.SECONDS);
-
-                keepAliveTaskRef.set(keepAliveTask);
-                keepAliveExecutorRef.set(keepAliveExecutor);
-
-                // STEP 3: Call the data-access-service estimate endpoint and forward the result
-                try {
-                    String estimateJson = dasService.estimateCloudOptimisedDownloadSize(
-                            uuid, keys, startDate, endDate, multiPolygon, columns, outputFormat
-                    );
-                    emitter.send(SseEmitter.event()
-                            .name("estimate-complete")
-                            .data(estimateJson));
-                } catch (Exception e) {
-                    log.warn("Cloud-optimised size estimation failed for UUID {}: {}", uuid, e.getMessage());
-                    emitter.send(SseEmitter.event()
-                            .name("estimate-failed")
-                            .data(Map.of(
-                                    "message", "Size estimation failed: " + e.getMessage(),
-                                    "timestamp", System.currentTimeMillis()
-                            )));
-                } finally {
-                    emitter.complete();
-                }
-            } catch (Exception e) {
-                WfsErrorHandler.handleError(e, uuid, emitter, cleanupResources);
-            }
-        });
-
-        return emitter;
+        if (FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
+            throw new IllegalArgumentException(String.format("Missing output format [%s]", outputFormat));
+        }
     }
 }
