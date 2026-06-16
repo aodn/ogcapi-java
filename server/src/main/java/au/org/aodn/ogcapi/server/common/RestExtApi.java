@@ -55,7 +55,7 @@ public class RestExtApi {
         return searchService.getAutocompleteSuggestions(input, cql, CQLCrsType.convertFromUrl("https://epsg.io/4326"));
     }
 
-    @GetMapping(path="/collections/explain")
+    @GetMapping(path="/explain")
     public ResponseEntity<JsonNode> getCollectionsExplain(
             @Parameter(in = ParameterIn.QUERY, description = "Keyword search terms")
             @Valid @RequestParam(value = "q", required = false) List<String> q,
