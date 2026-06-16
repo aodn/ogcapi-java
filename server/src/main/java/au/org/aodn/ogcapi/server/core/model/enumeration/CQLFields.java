@@ -249,6 +249,24 @@ public enum CQLFields implements CQLFieldsInterface {
                                         .operator(Operator.And)// ensure all terms are matched with fuzziness
                                         .query(literal))._toQuery(),
                         null),
+        // Acronym match on the synonyms sub-fields (search-time expansion), e.g. "SOOP" -> "ships of opportunity".
+        acronym_title(
+                        StacBasicField.Title.searchField + ".synonyms",
+                        StacBasicField.Title.displayField,
+                        (literal) -> MatchQuery.of(m -> m
+                                        .field(StacBasicField.Title.searchField + ".synonyms")
+                                        .operator(Operator.And)// all expanded terms must match
+                                        .boost(2.0F)// align with fuzzy_title weighting
+                                        .query(literal))._toQuery(),
+                        null),
+        acronym_desc(
+                        StacBasicField.Description.searchField + ".synonyms",
+                        StacBasicField.Description.displayField,
+                        (literal) -> MatchQuery.of(m -> m
+                                        .field(StacBasicField.Description.searchField + ".synonyms")
+                                        .operator(Operator.And)
+                                        .query(literal))._toQuery(),
+                        null),
         // Contains cloud-optimized data
         assets_summary(
                         StacBasicField.AssetsSummary.searchField,
