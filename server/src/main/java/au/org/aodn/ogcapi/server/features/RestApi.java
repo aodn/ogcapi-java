@@ -115,7 +115,6 @@ public class RestApi implements CollectionsApi {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 }
             }
-            // new
             case wave_buoys_between_dates -> {
                 return featuresService.getWaveBuoysBetweenDates( request.getStartDateTime(), request.getEndDateTime());
             }

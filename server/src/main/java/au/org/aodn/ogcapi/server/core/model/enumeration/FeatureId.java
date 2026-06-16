@@ -5,7 +5,6 @@ public enum FeatureId {
     wfs_fields("wfs_fields"), // Query field based on pure wfs and given layer
     wfs_field_value("wfs_field_value"),
     wms_fields("wms_fields"), // Query field based on value from wms describe layer query
-    //new
     wave_buoys_between_dates("wave_buoys_between_dates"),
     wave_buoys_latest_available_date("wave_buoys_latest_available_date"),
     wave_buoy_details_between_dates("wave_buoy_details_between_dates"),

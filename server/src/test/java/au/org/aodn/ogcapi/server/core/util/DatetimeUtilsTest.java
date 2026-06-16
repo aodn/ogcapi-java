@@ -129,4 +129,39 @@ public class DatetimeUtilsTest {
         });
         assertTrue(exception.getMessage().contains("Date must be in MM-YYYY or YYYY-MM-DD format"));
     }
+
+    @Test
+    public void testParseUtcDateTime_ValidUtcZulu() {
+        java.time.OffsetDateTime result = DatetimeUtils.parseUtcDateTime("2026-06-16T00:00:00Z");
+        assertEquals(java.time.ZoneOffset.UTC, result.getOffset());
+        assertEquals(2026, result.getYear());
+    }
+
+    @Test
+    public void testParseUtcDateTime_ValidZeroOffsetIsUtc() {
+        // +00:00 is equivalent to UTC and should be accepted
+        java.time.OffsetDateTime result = DatetimeUtils.parseUtcDateTime("2026-06-16T10:30:00+00:00");
+        assertEquals(java.time.ZoneOffset.UTC, result.getOffset());
+    }
+
+    @Test
+    public void testParseUtcDateTime_NonUtcOffsetRejected() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                DatetimeUtils.parseUtcDateTime("2026-06-16T10:30:00+10:00"));
+        assertTrue(exception.getMessage().contains("UTC"));
+    }
+
+    @Test
+    public void testParseUtcDateTime_MalformedRejected() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () ->
+                DatetimeUtils.parseUtcDateTime("not-a-date"));
+        assertTrue(exception.getMessage().contains("ISO-8601"));
+    }
+
+    @Test
+    public void testParseUtcDateTime_DateOnlyRejected() {
+        // A bare date has no time/offset and is not a valid OffsetDateTime
+        assertThrows(IllegalArgumentException.class, () ->
+                DatetimeUtils.parseUtcDateTime("2026-06-16"));
+    }
 }
