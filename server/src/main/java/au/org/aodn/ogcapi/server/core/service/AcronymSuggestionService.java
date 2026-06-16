@@ -52,11 +52,16 @@ public class AcronymSuggestionService {
 
     /** Suggest the full names whose acronym starts with the typed text, e.g. "aad" -> ["Australian Antarctic Division"]. */
     public List<String> suggestFullNames(String typedText) {
+        return matchByPrefix(acronymDictionary(), typedText);
+    }
+
+    /** Core matching (pure, so it's unit-testable): display labels whose acronym starts with the typed text. */
+    static List<String> matchByPrefix(Map<String, String> dictionary, String typedText) {
         if (typedText == null || typedText.isBlank()) {
             return List.of();
         }
         String prefix = typedText.trim().toLowerCase();
-        return acronymDictionary().entrySet().stream()
+        return dictionary.entrySet().stream()
                 .filter(entry -> entry.getKey().startsWith(prefix))
                 .map(entry -> toDisplayLabel(entry.getValue()))
                 .toList();
@@ -108,7 +113,7 @@ public class AcronymSuggestionService {
     }
 
     /** Parse one rule and add it: "aad => australian antarctic division" becomes aad -> australian antarctic division. */
-    private static void addRuleToDictionary(String rule, Map<String, String> dictionary) {
+    static void addRuleToDictionary(String rule, Map<String, String> dictionary) {
         String[] acronymAndFullName = rule.split("=>", 2);
         if (acronymAndFullName.length == 2) {
             String acronym = acronymAndFullName[0].trim().toLowerCase();
