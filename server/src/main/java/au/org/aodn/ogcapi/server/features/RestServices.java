@@ -16,6 +16,7 @@ import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsDefaultParam;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wms.WmsServer;
 import au.org.aodn.ogcapi.server.core.util.CommonUtils;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.feature.FeatureCollection;
@@ -224,74 +225,64 @@ public class RestServices extends OGCApiService {
         }
     }
 
+
     /**
-     * @param collectionID - uuid
-     * @param from         -
-     * @return -
+     * Validate that startDateTime/endDateTime (when provided) are UTC ISO-8601 values and that the
+     * range is ordered.
+     *
+     * @return a bad-request response describing the problem, or empty if the range is valid
      */
-    public ResponseEntity<?> getWaveBuoys(String collectionID, String from) {
-        if (!dasService.isCollectionSupported(collectionID)) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-        }
-        if (from == null) {
-            return ResponseEntity.badRequest().body("Parameter 'datetime' is required and must be in 'from/to' format");
+    private Optional<ResponseEntity<?>> validateUtcDateRange(String startDateTime, String endDateTime) {
+        java.time.OffsetDateTime start;
+        java.time.OffsetDateTime end;
+        try {
+            start = startDateTime == null ? null : DatetimeUtils.parseUtcDateTime(startDateTime);
+            end = endDateTime == null ? null : DatetimeUtils.parseUtcDateTime(endDateTime);
+        } catch (IllegalArgumentException e) {
+            return Optional.of(ResponseEntity.badRequest().body(e.getMessage()));
         }
 
-        java.time.ZonedDateTime fromDateTime = java.time.ZonedDateTime.parse(from);
-        String to = fromDateTime.plusDays(1)
-                .format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSSSSSSS'Z'"));
+        if (start != null && end != null && start.isAfter(end)) {
+            return Optional.of(ResponseEntity.badRequest().body("Parameter 'startDateTime' must not be after 'endDateTime'"));
+        }
+        return Optional.empty();
+    }
+
+    public ResponseEntity<?> getWaveBuoysBetweenDates(String startDateTime, String endDateTime) {
+        log.info(startDateTime, endDateTime);
+        Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
+        if (validationError.isPresent()) {
+            return validationError.get();
+        }
+
         try {
             return ResponseEntity
                     .ok()
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoys(from, to));
+                    .body(dasService.getWaveBuoysBetweenDates(startDateTime, endDateTime));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoys data: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
+
     }
 
-    public ResponseEntity<?> getWaveBuoysLatestDate(String collectionID) {
-        if (!dasService.isCollectionSupported(collectionID)) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-        }
 
-        try {
-            return ResponseEntity
-                    .ok()
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoysLatestDate());
-
-        } catch (Exception e) {
-            log.error("Error fetching wave buoys latest date: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    public ResponseEntity<?> getWaveBuoyData(String collectionID, String datetime, String buoy) {
-        if (!dasService.isCollectionSupported(collectionID)) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-        }
-        if (datetime == null) {
-            return ResponseEntity.badRequest().body("Parameter 'datetime' is required and must be in 'from/to' format");
-        }
-        if (!datetime.contains("/")) {
-            return ResponseEntity.badRequest().body("Parameter 'datetime' must be in 'from/to' format");
+    public ResponseEntity<?> getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
+        Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
+        if (validationError.isPresent()) {
+            return validationError.get();
         }
         if (buoy == null) {
             return ResponseEntity.badRequest().body("Parameter 'waveBuoy' is required");
         }
 
         try {
-            String[] parts = datetime.split("/", 2);
-            String from = parts[0];
-            String to = parts[1];
-
             return ResponseEntity
                     .ok()
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoyData(from, to, buoy));
+                    .body(dasService.getWaveBuoyDetailsBetweenDates(startDateTime, endDateTime, buoy));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoy historical data: {}", e.getMessage());
@@ -299,25 +290,72 @@ public class RestServices extends OGCApiService {
         }
     }
 
-    /**
-     * This is to get all buoy sites with their latest available observation
-     *
-     * @param collectionID - uuid
-     * @return -
-     */
-    public ResponseEntity<?> getLatestWaveBuoySites(String collectionID) {
-        if (!dasService.isCollectionSupported(collectionID)) {
-            return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-        }
+
+    public ResponseEntity<?> getWaveBuoysLatestAvailableDate() {
         try {
             return ResponseEntity
                     .ok()
                     .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getLatestWaveBuoySites());
+                    .body(dasService.getWaveBuoysLatestAvailableDate());
 
         } catch (Exception e) {
-            log.error("Error fetching wave buoy all unique sites date: {}", e.getMessage());
+            log.error("Error fetching wave buoys latest date: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    public ResponseEntity<?> getMooringsBetweenDates(String startDateTime, String endDateTime) {
+        Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
+        if (validationError.isPresent()) {
+            return validationError.get();
+        }
+
+        try {
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getMooringsBetweenDates(startDateTime, endDateTime));
+
+        } catch (Exception e) {
+            log.error("Error fetching moorings data: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    public ResponseEntity<?> getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
+        Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
+        if (validationError.isPresent()) {
+            return validationError.get();
+        }
+        if (mooring == null) {
+            return ResponseEntity.badRequest().body("Parameter 'mooring' is required");
+        }
+
+        try {
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getMooringDetailsBetweenDates(startDateTime, endDateTime, mooring));
+
+        } catch (Exception e) {
+            log.error("Error fetching mooring historical data: {}", e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    public ResponseEntity<?> getMooringsLatestAvailableDate() {
+        try {
+            return ResponseEntity
+                    .ok()
+                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
+                    .body(dasService.getMooringsLatestAvailableDate());
+
+        } catch (Exception e) {
+            log.error("Error fetching moorings latest date: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
         }
     }
 }
+
+
+

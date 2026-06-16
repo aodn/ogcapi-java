@@ -87,6 +87,9 @@ public class FeatureRequest implements Serializable {
     @Schema(description = "Wave buoy name")
     private String waveBuoy;
 
+    @Schema(description = "Mooring name")
+    private String mooring;
+
     @Schema(description = "Enable or disable geoserver whitelist")
     @Builder.Default
     private Boolean enableGeoServerWhiteList = Boolean.TRUE;
