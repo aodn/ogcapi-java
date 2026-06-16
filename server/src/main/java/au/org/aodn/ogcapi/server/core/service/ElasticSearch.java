@@ -23,6 +23,7 @@ import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
 import org.openapitools.jackson.nullable.JsonNullable;
 import org.opengis.filter.Filter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -51,6 +52,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
+
+    @Autowired
+    protected AcronymSuggestionService acronymSuggestionService;
 
     public ElasticSearch(ElasticsearchClient client,
                          CacheNoLandGeometry cacheNoLandGeometry,
@@ -189,6 +193,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
         searchSuggestions.put("suggested_phrases", abstractPhrases);
+
+        // acronym full names, in their own bucket so the UI can show them on top
+        Set<String> acronymSuggestions = new LinkedHashSet<>(acronymSuggestionService.suggestFullNames(input));
+        searchSuggestions.put("suggested_acronyms", acronymSuggestions);
 
         return new ResponseEntity<>(searchSuggestions, HttpStatus.OK);
     }
