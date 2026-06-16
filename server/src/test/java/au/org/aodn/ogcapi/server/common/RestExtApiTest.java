@@ -71,7 +71,7 @@ public class RestExtApiTest extends BaseTestClass {
                 .encode()
                 .toUri();
         URI explainUri = UriComponentsBuilder
-                .fromUriString(getExternalBasePath() + "/collections/explain")
+                .fromUriString(getExternalBasePath() + "/explain")
                 .queryParam("q", "dataset")
                 .queryParam("filter", "page_size=3")
                 .build()
@@ -109,7 +109,7 @@ public class RestExtApiTest extends BaseTestClass {
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
         URI explainUri = UriComponentsBuilder
-                .fromUriString(getExternalBasePath() + "/collections/explain")
+                .fromUriString(getExternalBasePath() + "/explain")
                 .queryParam("filter", "parameter_vocabs='temperature'")
                 .build()
                 .encode()
