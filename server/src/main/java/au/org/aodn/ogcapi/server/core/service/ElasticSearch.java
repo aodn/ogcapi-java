@@ -256,27 +256,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
-    protected SortOptions parameterVocabsPrioritySort() {
-        return vocabPrioritySort(StacBasicField.ParameterVocabs.searchField);
-    }
-
-    protected SortOptions platformVocabsPrioritySort() {
-        return vocabPrioritySort(StacBasicField.PlatformVocabs.searchField);
-    }
-
-    protected SortOptions vocabPrioritySort(String vocabField) {
-        return SortOptions.of(so -> so
-                .script(s -> s
-                        .type(ScriptSortType.Number)
-                        .script(sc -> sc
-                                .lang("painless")
-                                .source(
-                                        "return doc.containsKey('" + vocabField + ".keyword') && " +
-                                                "!doc['" + vocabField + ".keyword'].empty ? 1 : 0;"
-                                ))
-                        .order(SortOrder.Desc)));
-    }
-
     @Override
     public ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
@@ -406,13 +385,13 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 if (sortOptions == null) {
                     sortOptions = new ArrayList<>();
                 }
-                sortOptions.add(0, parameterVocabsPrioritySort());
+                sortOptions.add(0, CQLFields.parameter_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
             }
             if (factory.isPlatformPrioritySort()) {
                 if (sortOptions == null) {
                     sortOptions = new ArrayList<>();
                 }
-                sortOptions.add(0, platformVocabsPrioritySort());
+                sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
             }
 
             return searchCollectionBy(

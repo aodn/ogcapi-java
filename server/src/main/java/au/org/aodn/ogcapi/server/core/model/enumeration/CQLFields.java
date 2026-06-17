@@ -137,12 +137,12 @@ public enum CQLFields implements CQLFieldsInterface {
                         StacBasicField.ParameterVocabs.searchField,
                         StacBasicField.ParameterVocabs.displayField,
                         null,
-                        null),
+                        vocabPrioritySortBuilder(StacBasicField.ParameterVocabs.searchField)),
         platform_vocabs(
                         StacBasicField.PlatformVocabs.searchField,
                         StacBasicField.PlatformVocabs.displayField,
                         null,
-                        null),
+                        vocabPrioritySortBuilder(StacBasicField.PlatformVocabs.searchField)),
         ai_parameter_vocabs(
                         StacSummeries.AiParameterVocabs.searchField,
                         StacSummeries.AiParameterVocabs.displayField,
@@ -304,6 +304,16 @@ public enum CQLFields implements CQLFieldsInterface {
                 this.displayField = displayField;
                 this.overridePropertyEqualsToQuery = overridePropertyEqualsToQuery;
                 this.sortBuilder = sortBuilder;
+        }
+
+        private static Function<SortOrder, ObjectBuilder<SortOptions>> vocabPrioritySortBuilder(String vocabField) {
+                return (order) -> new SortOptions.Builder().script(s -> s
+                                .type(ScriptSortType.Number)
+                                .script(sc -> sc
+                                                .lang("painless")
+                                                .source("return doc.containsKey('" + vocabField + ".keyword') && "
+                                                                + "!doc['" + vocabField + ".keyword'].empty ? 1 : 0;"))
+                                .order(order));
         }
 
         @Override
