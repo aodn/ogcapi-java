@@ -555,11 +555,11 @@ public class RestApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json"
         );
         // Make sure AND operation works
-        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND parameter_vocabs='wave'", Collections.class);
+        ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND (parameter_vocabs='wave' OR ai_parameter_vocabs='wave')", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
         // Make sure OR not work as it didn't make sense to use or with setting
-        ResponseEntity<ErrorResponse> error = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR parameter_vocabs='wave'", ErrorResponse.class);
+        ResponseEntity<ErrorResponse> error = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 OR (parameter_vocabs='wave' OR ai_parameter_vocabs='wave')", ErrorResponse.class);
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, error.getStatusCode());
         assertEquals("Or combine with query setting do not make sense", Objects.requireNonNull(error.getBody()).getMessage(), "correct error");
 
@@ -621,7 +621,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Edge case on sort by with 1 item, but typo in argument sortBy, it should be sortby. Hence use API default sort -score
         // https://docs.ogc.org/DRAFTS/20-004.html#sorting-parameter-sortby
-        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND parameter_vocabs='wave'&sortBy=-score,+title", ExtendedCollections.class);
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=score>=2 AND (parameter_vocabs='wave' OR ai_parameter_vocabs='wave')&sortBy=-score,+title", ExtendedCollections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
 
         // Now return result should sort by score then title, since no query here, the score will auto adjust to 1 as all search without query default score is 1

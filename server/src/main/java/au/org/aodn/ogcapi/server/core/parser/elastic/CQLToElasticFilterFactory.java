@@ -64,6 +64,20 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     @Getter
     protected Map<CQLElasticSetting, String> querySetting;
 
+    /**
+     * Indicates that a parameter vocabulary filter was found and curated parameter values (parameter_vocabs) should
+     * be prioritised in the Elasticsearch result ordering.
+     */
+    @Getter
+    protected boolean parameterPrioritySort = false;
+
+    /**
+     * Indicates that a platform vocabulary filter was found and curated platform values (platform_vocabs) should be
+     * prioritised in the Elasticsearch result ordering.
+     */
+    @Getter
+    protected boolean platformPrioritySort = false;
+
     public CQLToElasticFilterFactory(CQLCrsType cqlCoorSystem, Class<T> tClass) {
         this(cqlCoorSystem, tClass, new HashMap<>());
     }
@@ -255,6 +269,9 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
         return equal(expression, expression1, b, null);
     }
 
+    /**
+     * Creates an Elasticsearch equality filter and records metadata used to build the search request.
+     */
     @Override
     public PropertyIsEqualTo equal(Expression expression, Expression expression1, boolean b, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("PropertyIsEqualTo {} {}, {} {}", expression, expression1, b, matchAction);
@@ -265,6 +282,17 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
         if(setting.isValid()) {
             querySetting.put(setting.getElasticSettingName(), setting.getElasticSettingValue());
             return setting;
+        }
+
+        // Record curated vocabulary filters so the search service can prioritise curated records.
+        if (expression instanceof AttributeExpressionImpl attribute && expression1 instanceof LiteralExpressionImpl) {
+            String fieldName = attribute.toString().toLowerCase();
+            if (fieldName.equals("parameter_vocabs")) {
+                this.parameterPrioritySort = true;
+            }
+            if (fieldName.equals("platform_vocabs")) {
+                this.platformPrioritySort = true;
+            }
         }
 
         return new PropertyEqualToImpl<>(expression, expression1, b, matchAction, collectionFieldType);
