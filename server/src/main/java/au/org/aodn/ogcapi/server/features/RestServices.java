@@ -248,8 +248,12 @@ public class RestServices extends OGCApiService {
         return Optional.empty();
     }
 
+    /**
+     * Returns wave buoy sites recorded within the given UTC date range.
+     *
+     * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
+     */
     public ResponseEntity<?> getWaveBuoysBetweenDates(String startDateTime, String endDateTime) {
-        log.info(startDateTime, endDateTime);
         Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
         if (validationError.isPresent()) {
             return validationError.get();
@@ -269,6 +273,12 @@ public class RestServices extends OGCApiService {
     }
 
 
+    /**
+     * Returns detailed data for a single wave buoy within the given UTC date range.
+     *
+     * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
+     * @param buoy the wave buoy identifier; required.
+     */
     public ResponseEntity<?> getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
         Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
         if (validationError.isPresent()) {
@@ -291,6 +301,9 @@ public class RestServices extends OGCApiService {
     }
 
 
+    /**
+     * Returns the latest date for which wave buoy data is available.
+     */
     public ResponseEntity<?> getWaveBuoysLatestAvailableDate() {
         try {
             return ResponseEntity
@@ -304,6 +317,11 @@ public class RestServices extends OGCApiService {
         }
     }
 
+    /**
+     * Returns mooring observations recorded within the given UTC date range.
+     *
+     * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
+     */
     public ResponseEntity<?> getMooringsBetweenDates(String startDateTime, String endDateTime) {
         Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
         if (validationError.isPresent()) {
@@ -322,6 +340,12 @@ public class RestServices extends OGCApiService {
         }
     }
 
+    /**
+     * Returns detailed observations for a single mooring within the given UTC date range.
+     *
+     * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
+     * @param mooring the mooring identifier; required.
+     */
     public ResponseEntity<?> getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
         Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
         if (validationError.isPresent()) {
@@ -343,6 +367,9 @@ public class RestServices extends OGCApiService {
         }
     }
 
+    /**
+     * Returns the latest date for which mooring data is available.
+     */
     public ResponseEntity<?> getMooringsLatestAvailableDate() {
         try {
             return ResponseEntity
