@@ -136,7 +136,6 @@ public class DasService {
         return httpClient.exchange(url, HttpMethod.POST, entity, String.class, uriVars).getBody();
     }
 
-<<<<<<< HEAD
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
         ResponseEntity<DatasetMetadata> response = httpClient.exchange(
                 dasConfig.host() + "/api/v1/das/metadata/" + datasetId,
@@ -149,10 +148,5 @@ public class DasService {
                 .status(response.getStatusCode())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response.getBody());
-=======
-    public boolean isCollectionSupported(String collectionId) {
-        final String waveBuoyRealtimeCollectionID = "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc";
-        return waveBuoyRealtimeCollectionID.contentEquals(collectionId);
->>>>>>> f53cac28 (refactor to extract SSE wrapper)
     }
 }

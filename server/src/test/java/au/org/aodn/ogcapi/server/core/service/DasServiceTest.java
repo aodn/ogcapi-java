@@ -5,10 +5,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,7 +28,8 @@ import static org.mockito.Mockito.when;
 /**
  * Unit tests for DasService URL building. Verifies that null date params are omitted (so they are
  * never passed to URI template expansion) and that buoy/mooring identifiers are sent as path
- * variables for single, correct encoding.
+ * variables for single, correct encoding. Also covers the cloud-optimised size-estimate call
+ * (request body shape, auth headers, and error propagation).
  */
 public class DasServiceTest {
 
@@ -116,6 +122,74 @@ public class DasServiceTest {
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         verify(httpClient).exchange(urlCaptor.capture(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class));
         assertEquals(HOST + "/api/v1/das/data/feature-collection/wave-buoy/latest", urlCaptor.getValue());
+    }
+
+    @SuppressWarnings("unchecked")
+    private HttpEntity<Map<String, Object>> callEstimateAndCaptureEntity(
+            String uuid, List<String> keys, String startDate, String endDate,
+            Object multiPolygon, List<String> columns, String outputFormat) {
+
+        when(httpClient.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class), anyMap()))
+                .thenReturn(ResponseEntity.ok("{\"estimated_output_bytes\":123}"));
+
+        String result = dasService.estimateCloudOptimisedDownloadSize(
+                uuid, keys, startDate, endDate, multiPolygon, columns, outputFormat);
+        assertEquals("{\"estimated_output_bytes\":123}", result, "Raw das JSON should be returned unchanged");
+
+        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, String>> uriVarsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(httpClient).exchange(urlCaptor.capture(), eq(HttpMethod.POST), entityCaptor.capture(), eq(String.class), uriVarsCaptor.capture());
+
+        assertEquals(HOST + "/api/v1/das/data/{uuid}/estimate_size", urlCaptor.getValue());
+        assertEquals(uuid, uriVarsCaptor.getValue().get("uuid"));
+
+        return (HttpEntity<Map<String, Object>>) entityCaptor.getValue();
+    }
+
+    @Test
+    public void testEstimatePostsJsonBodyWithApiKey() {
+        HttpEntity<Map<String, Object>> entity = callEstimateAndCaptureEntity(
+                "test-uuid", List.of("a.zarr", "b.zarr"), "2023-01-01", "2023-01-31",
+                "non-specified", null, "netcdf");
+
+        HttpHeaders headers = entity.getHeaders();
+        assertEquals("test-secret", headers.getFirst("X-API-KEY"));
+        assertEquals(MediaType.APPLICATION_JSON_VALUE, headers.getFirst(HttpHeaders.CONTENT_TYPE));
+
+        Map<String, Object> body = entity.getBody();
+        assertNotNull(body);
+        assertEquals(List.of("a.zarr", "b.zarr"), body.get("keys"));
+        assertEquals("2023-01-01", body.get("start_date"));
+        assertEquals("2023-01-31", body.get("end_date"));
+        assertEquals("netcdf", body.get("output_format"));
+        assertEquals("non-specified", body.get("multi_polygon"));
+        assertFalse(body.containsKey("columns"), "columns must be omitted when not provided");
+    }
+
+    @Test
+    public void testEstimateNullDatesBecomeNonSpecifiedAndOptionalFieldsOmitted() {
+        HttpEntity<Map<String, Object>> entity = callEstimateAndCaptureEntity(
+                "test-uuid", null, null, null, null, null, "csv");
+
+        Map<String, Object> body = entity.getBody();
+        assertNotNull(body);
+        assertNull(body.get("keys"), "null keys means all keys of the uuid");
+        assertEquals("non-specified", body.get("start_date"));
+        assertEquals("non-specified", body.get("end_date"));
+        assertEquals("csv", body.get("output_format"));
+        assertFalse(body.containsKey("multi_polygon"), "multi_polygon must be omitted when null");
+        assertFalse(body.containsKey("columns"), "columns must be omitted when null");
+    }
+
+    @Test
+    public void testEstimateNon2xxPropagates() {
+        when(httpClient.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class), anyMap()))
+                .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, null, null));
+
+        assertThrows(HttpClientErrorException.class, () ->
+                dasService.estimateCloudOptimisedDownloadSize(
+                        "bad-uuid", List.of("missing.zarr"), null, null, null, null, "netcdf"));
     }
 
     private record CapturedRequest(String url, Map<String, String> params) {
