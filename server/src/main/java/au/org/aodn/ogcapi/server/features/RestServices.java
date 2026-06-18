@@ -383,6 +383,3 @@ public class RestServices extends OGCApiService {
         }
     }
 }
-
-
-
