@@ -8,8 +8,9 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
+import co.elastic.clients.json.JsonData;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
@@ -376,13 +377,30 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         .toList();
             }
 
+            List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
+            // When the filter searches curated vocab fields, prepend presence-based priority sort keys
+            // so matching human-curated records rank above AI-generated fallback records. This is
+            // the first sort key; existing -score,-rank ordering is preserved within each tier.
+            if (factory.isParameterPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, CQLFields.parameter_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+            }
+            if (factory.isPlatformPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+            }
+
             return searchCollectionBy(
                     null,
                     should,
                     filters,
                     properties,
                     searchAfter,
-                    createSortOptions(sortBy, CQLFields.class),
+                    sortOptions,
                     score,
                     maxSize
             );
