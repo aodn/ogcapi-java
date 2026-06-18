@@ -302,12 +302,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
                     should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
                     should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
-                    // links_title_contains and credit_contains use match query by default, exact match is not applied here
-                    // links_title_contains weighted lower as it may contain combined title+description content
-                    should.add(BoolQuery.of(b -> b
-                            .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
-                            .boost(0.5f)  // lower boost to reduce promotion of link-title-only matches
-                    )._toQuery());
+                    // credit_contains uses match query by default, exact match is not applied here
                     should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
                 }
             }
