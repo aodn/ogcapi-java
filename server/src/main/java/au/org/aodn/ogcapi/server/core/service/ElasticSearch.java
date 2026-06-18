@@ -305,6 +305,28 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 components.maxSize()));
     }
 
+    @Override
+    public JsonNode explainByUuid(
+            String id,
+            List<String> keywords,
+            String cql,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor) throws IOException, CQLException {
+        boolean isEmptySearch = (keywords == null || keywords.isEmpty()) && cql == null;
+        QueryComponents components = buildQueryComponents(keywords, cql, sortBy, coor);
+
+        return explainCollectionById(id, buildCollectionSearchRequestSupplier(
+                components.queries(),
+                components.should(),
+                components.filters(),
+                isEmptySearch ? null : properties,
+                components.searchAfter(),
+                components.sortOptions(),
+                components.score(),
+                components.maxSize()));
+    }
+
     private QueryComponents buildQueryComponents(
             List<String> keywords,
             String cql,

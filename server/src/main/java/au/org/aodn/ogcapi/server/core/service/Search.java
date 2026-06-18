@@ -37,6 +37,15 @@ public interface Search {
             CQLCrsType coor
     ) throws Exception;
 
+    JsonNode explainByUuid(
+            String uuid,
+            List<String> targets,
+            String filter,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor
+    ) throws Exception;
+
     BinaryResponse searchCollectionVectorTile(
             List<String> ids,
             Integer tileMatrix,

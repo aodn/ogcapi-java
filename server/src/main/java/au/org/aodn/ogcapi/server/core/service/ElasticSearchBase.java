@@ -14,6 +14,8 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.CountRequest;
 import co.elastic.clients.elasticsearch.core.CountResponse;
+import co.elastic.clients.elasticsearch.core.ExplainRequest;
+import co.elastic.clients.elasticsearch.core.ExplainResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
@@ -338,6 +340,25 @@ public abstract class ElasticSearchBase {
                 item.putNull("explanation");
             }
         }
+
+        return result;
+    }
+
+    protected JsonNode explainCollectionById(String id, Supplier<SearchRequest.Builder> requestSupplier) throws IOException {
+        SearchRequest searchRequest = requestSupplier.get().build();
+        ExplainRequest request = new ExplainRequest.Builder()
+                .index(indexName)
+                .id(id)
+                .query(searchRequest.query())
+                .source(s -> s.fetch(false))
+                .build();
+
+        log.debug("Final elastic search explain by id payload {}", request);
+        ExplainResponse<ObjectNode> response = esClient.explain(request, ObjectNode.class);
+
+        ObjectNode result = mapper.createObjectNode();
+        result.set("request", toJsonNode(request));
+        result.set("response", toJsonNode(response));
 
         return result;
     }
