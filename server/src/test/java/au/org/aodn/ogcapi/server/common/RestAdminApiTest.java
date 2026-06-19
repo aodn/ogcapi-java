@@ -48,7 +48,7 @@ public class RestAdminApiTest extends BaseTestClass {
 
     @Test
     public void explainEndpointMatchesNormalSearchOrdering() throws IOException {
-        insertRecordsWithExplicitIds(
+        super.insertJsonToElasticRecordIndex(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
@@ -97,7 +97,7 @@ public class RestAdminApiTest extends BaseTestClass {
 
     @Test
     public void explainEndpointAppliesCqlFilter() throws IOException {
-        insertRecordsWithExplicitIds(
+        super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
@@ -121,7 +121,7 @@ public class RestAdminApiTest extends BaseTestClass {
     @Test
     public void explainUuidEndpointUsesDocumentId() throws IOException {
         String uuid = "7709f541-fc0c-4318-b5b9-9053aa474e0e";
-        insertRecordsWithExplicitIds(uuid + ".json");
+        super.insertJsonToElasticRecordIndex(uuid + ".json");
 
         URI explainUri = UriComponentsBuilder
                 .fromUriString(getAdminBasePath() + "/explain/" + uuid)
@@ -142,18 +142,4 @@ public class RestAdminApiTest extends BaseTestClass {
         return getBasePath() + "/admin";
     }
 
-    private void insertRecordsWithExplicitIds(String... filenames) throws IOException {
-        for (String filename : filenames) {
-            File file = ResourceUtils.getFile("classpath:databag/" + filename);
-            String id = filename.substring(0, filename.length() - ".json".length());
-
-            try (Reader reader = new FileReader(file)) {
-                client.index(i -> i
-                        .index(record_index_name)
-                        .id(id)
-                        .withJson(reader));
-            }
-        }
-        client.indices().refresh();
-    }
 }
