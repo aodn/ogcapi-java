@@ -12,7 +12,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import jakarta.annotation.PostConstruct;
 
-import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -35,20 +34,34 @@ public class DasService {
         httpEntity = new HttpEntity<>(headers);
     }
 
-    public byte[] getWaveBuoys(String from, String to){
-        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy")
-                .queryParam("start_date","{start_date}")
-                .queryParam("end_date","{end_date}")
-                .encode()
-                .toUriString();
-        Map<String,String> params = new HashMap<>();
-        params.put("start_date", from);
-        params.put("end_date",to);
+    /**
+     * GET a feature-collection from the DAS, optionally bounded by start/end date. Only the date
+     * query params that are non-null are added, so a null value is never passed to URI template
+     * expansion (which would throw). Any path variables in {@code path} are supplied via
+     * {@code pathVariables}.
+     */
+    private byte[] getFeatureCollection(String path, String start, String end, Map<String, String> pathVariables) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasConfig.host + path);
+        Map<String, String> params = new HashMap<>(pathVariables);
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class,params).getBody();
+        if (start != null) {
+            builder.queryParam("start_date", "{start_date}");
+            params.put("start_date", start);
+        }
+        if (end != null) {
+            builder.queryParam("end_date", "{end_date}");
+            params.put("end_date", end);
+        }
+
+        String url = builder.encode().toUriString();
+        return httpClient.exchange(url, HttpMethod.GET, httpEntity, byte[].class, params).getBody();
     }
 
-    public byte[] getWaveBuoysLatestDate(){
+    public byte[] getWaveBuoysBetweenDates(String start, String end) {
+        return getFeatureCollection("/api/v1/das/data/feature-collection/wave-buoy", start, end, Map.of());
+    }
+
+    public byte[] getWaveBuoysLatestAvailableDate() {
         String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/latest")
                 .encode()
                 .toUriString();
@@ -56,33 +69,23 @@ public class DasService {
         return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
     }
 
-    public byte[] getWaveBuoyData(String from, String to, String buoy){
-        String encodedBuoy = URLEncoder.encode(buoy, java.nio.charset.StandardCharsets.UTF_8);
-
-        String waveBuoyDataUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/" + encodedBuoy)
-                .queryParam("start_date","{start_date}")
-                .queryParam("end_date","{end_date}")
-                .encode()
-                .toUriString();
-        Map<String,String> params = new HashMap<>();
-        params.put("start_date", from);
-        params.put("end_date",to);
-
-        return httpClient.exchange(waveBuoyDataUrlTemplate, HttpMethod.GET,httpEntity,byte[].class,params).getBody();
+    public byte[] getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
+        return getFeatureCollection("/api/v1/das/data/feature-collection/wave-buoy/{buoy}", startDateTime, endDateTime, Map.of("buoy", buoy));
     }
 
-    public byte[] getLatestWaveBuoySites(){
-        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/wave-buoy/all")
+    public byte[] getMooringsBetweenDates(String start, String end) {
+        return getFeatureCollection("/api/v1/das/data/feature-collection/mooring", start, end, Map.of());
+    }
+
+    public byte[] getMooringsLatestAvailableDate() {
+        String mooringsUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host + "/api/v1/das/data/feature-collection/mooring/latest")
                 .encode()
                 .toUriString();
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
+        return httpClient.exchange(mooringsUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
     }
 
-    public boolean isCollectionSupported(String collectionId){
-        final String waveBuoyRealtimeCollectionID = "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc";
-        return waveBuoyRealtimeCollectionID.contentEquals(collectionId);
+    public byte[] getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
+        return getFeatureCollection("/api/v1/das/data/feature-collection/mooring/{mooring}", startDateTime, endDateTime, Map.of("mooring", mooring));
     }
-
-
 }

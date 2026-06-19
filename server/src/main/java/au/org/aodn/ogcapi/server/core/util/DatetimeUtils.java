@@ -62,4 +62,25 @@ public class DatetimeUtils {
             throw new IllegalArgumentException("Date must be in MM-YYYY or YYYY-MM-DD format: " + dateInput);
         }
     }
+
+    /**
+     * Parse an ISO-8601 date-time and verify it is in UTC (offset 'Z').
+     *
+     * @param dateTime ISO-8601 date-time string, e.g. "2026-06-16T00:00:00Z"
+     * @return the parsed date-time
+     * @throws IllegalArgumentException if the value is not a valid ISO-8601 date-time or is not in UTC
+     */
+    public static java.time.OffsetDateTime parseUtcDateTime(String dateTime) {
+        java.time.OffsetDateTime parsed;
+        try {
+            parsed = java.time.OffsetDateTime.parse(dateTime);
+        } catch (java.time.format.DateTimeParseException e) {
+            throw new IllegalArgumentException("Date-time must be a valid ISO-8601 UTC value (e.g. '2026-06-16T00:00:00Z'): " + dateTime);
+        }
+
+        if (!parsed.getOffset().equals(java.time.ZoneOffset.UTC)) {
+            throw new IllegalArgumentException("Date-time must be in UTC (offset 'Z'): " + dateTime);
+        }
+        return parsed;
+    }
 }
