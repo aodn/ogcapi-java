@@ -14,13 +14,19 @@ import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.QueryBuilders;
 import co.elastic.clients.elasticsearch.core.CountRequest;
 import co.elastic.clients.elasticsearch.core.CountResponse;
+import co.elastic.clients.elasticsearch.core.ExplainRequest;
+import co.elastic.clients.elasticsearch.core.ExplainResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.SourceConfig;
+import co.elastic.clients.json.JsonpSerializable;
+import co.elastic.clients.json.JsonpUtils;
 import co.elastic.clients.util.ObjectBuilder;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.Getter;
 import lombok.Setter;
@@ -142,24 +148,24 @@ public abstract class ElasticSearchBase {
                 .sort(so -> so.score(v -> v.order(SortOrder.Desc)))
                 .build();
     }
+
     /**
-     * Core function to do the search, it used pageableSearch to make sure all records are return.
-     *
+     * Build SearchRequest supplier
      * @param queries - The query come from text query
      * @param should - This query will use in the should block of elastic search
      * @param filters - The Query coming from CQL parser
      * @param properties - The fields you want to return in the search, you can search a field but not include in the return
-     * @return - The search result from Elastic query and format in StacCollectionModel
+     * @return - The constructed builderSupplier
      */
-    protected SearchResult<StacCollectionModel> searchCollectionBy(final List<Query> queries,
-                                                           final List<Query> should,
-                                                           final List<Query> filters,
-                                                           final List<String> properties,
-                                                           final List<FieldValue> searchAfter,
-                                                           final List<SortOptions> sortOptions,
-                                                           final Double score,
-                                                           final Long maxSize) {
-        Supplier<SearchRequest.Builder> builderSupplier = () -> {
+    protected Supplier<SearchRequest.Builder> buildCollectionSearchRequestSupplier(final List<Query> queries,
+                                                                                   final List<Query> should,
+                                                                                   final List<Query> filters,
+                                                                                   final List<String> properties,
+                                                                                   final List<FieldValue> searchAfter,
+                                                                                   final List<SortOptions> sortOptions,
+                                                                                   final Double score,
+                                                                                   final Long maxSize) {
+        return () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
             builder.index(indexName)
                     // If user query request a page that is smaller then the internal default, then
@@ -302,6 +308,28 @@ public abstract class ElasticSearchBase {
             }
             return builder;
         };
+    }
+
+    /**
+     * Core function to do the search, it used pageableSearch to make sure all records are return.
+     *
+     * @param queries - The query come from text query
+     * @param should - This query will use in the should block of elastic search
+     * @param filters - The Query coming from CQL parser
+     * @param properties - The fields you want to return in the search, you can search a field but not include in the return
+     * @return - The search result from Elastic query and format in StacCollectionModel
+     */
+    protected SearchResult<StacCollectionModel> searchCollectionBy(final List<Query> queries,
+                                                                   final List<Query> should,
+                                                                   final List<Query> filters,
+                                                                   final List<String> properties,
+                                                                   final List<FieldValue> searchAfter,
+                                                                   final List<SortOptions> sortOptions,
+                                                                   final Double score,
+                                                                   final Long maxSize) {
+        Supplier<SearchRequest.Builder> builderSupplier = buildCollectionSearchRequestSupplier(
+                queries, should, filters, properties, searchAfter, sortOptions, score, maxSize
+        );
 
         try {
             log.info("Start search {} {}", ZonedDateTime.now(), Thread.currentThread().getName());
@@ -355,6 +383,72 @@ public abstract class ElasticSearchBase {
             log.warn("Elastic exception on query, reason is {}", ee.error().rootCause());
             throw ee;
         }
+    }
+
+    protected JsonNode explainCollectionBy(Supplier<SearchRequest.Builder> requestSupplier) throws IOException {
+        SearchRequest request = requestSupplier.get()
+                .explain(true)
+                .trackTotalHits(t -> t.enabled(true))
+                .source(s -> s.fetch(false))
+                .build();
+
+        log.debug("Final elastic search explain payload {}", request);
+        SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);
+
+        ObjectNode result = mapper.createObjectNode();
+        result.set("request", toJsonNode(request));
+
+        ObjectNode total = result.putObject("total");
+        if (response.hits().total() != null) {
+            total.put("value", response.hits().total().value());
+            total.put("relation", response.hits().total().relation().jsonValue());
+        }
+
+        ArrayNode hits = result.putArray("hits");
+        for (Hit<ObjectNode> hit : response.hits().hits()) {
+            ObjectNode item = hits.addObject();
+            item.put("id", hit.id());
+
+            if (hit.score() != null) {
+                item.put("score", hit.score());
+            }
+            else {
+                item.putNull("score");
+            }
+
+            if (hit.explanation() != null) {
+                item.set("explanation", toJsonNode(hit.explanation()));
+            }
+            else {
+                item.putNull("explanation");
+            }
+        }
+
+        return result;
+    }
+
+    protected JsonNode explainCollectionById(String id, Supplier<SearchRequest.Builder> requestSupplier) throws IOException {
+        SearchRequest searchRequest = requestSupplier.get().build();
+        ExplainRequest request = new ExplainRequest.Builder()
+                .index(indexName)
+                .id(id)
+                .query(searchRequest.query())
+                .source(s -> s.fetch(false))
+                .build();
+
+        log.debug("Final elastic search explain by id payload {}", request);
+        ExplainResponse<ObjectNode> response = esClient.explain(request, ObjectNode.class);
+
+        ObjectNode result = mapper.createObjectNode();
+        result.set("request", toJsonNode(request));
+        result.set("response", toJsonNode(response));
+
+        return result;
+    }
+
+    protected JsonNode toJsonNode(JsonpSerializable value) throws JsonProcessingException {
+        String json = JsonpUtils.toJsonString(value, esClient._transport().jsonpMapper());
+        return mapper.readTree(json);
     }
     /**
      * Count the total number hit. There are two ways to get the total, one is use search but set the size to 0,

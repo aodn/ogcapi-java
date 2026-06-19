@@ -24,7 +24,7 @@ public class RestAdminService {
      * for other environments, use default false value.
      */
     public boolean isElasticsearchExplainEnabled() {
-        return !elasticsearchExplainEnabled;
+        return elasticsearchExplainEnabled;
     }
 
     public JsonNode explainByParameters(
