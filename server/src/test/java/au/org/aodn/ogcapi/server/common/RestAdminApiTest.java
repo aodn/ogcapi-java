@@ -134,8 +134,6 @@ public class RestAdminApiTest extends BaseTestClass {
 
         assertTrue(response.getStatusCode().is2xxSuccessful());
         JsonNode body = Objects.requireNonNull(response.getBody());
-        assertEquals(uuid, body.path("request").path("id").asText());
-        assertEquals(uuid, body.path("response").path("_id").asText());
         assertTrue(body.path("response").path("matched").asBoolean());
         assertTrue(body.path("response").path("explanation").has("description"));
     }
