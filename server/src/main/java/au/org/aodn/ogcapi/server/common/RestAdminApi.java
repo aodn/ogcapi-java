@@ -47,7 +47,8 @@ public class RestAdminApi {
             @Parameter(in = ParameterIn.QUERY, description = "Filter language")
             @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang
     ) throws Exception {
-        if (restAdminService.isElasticsearchExplainEnabled()) {
+        if (!restAdminService.isElasticsearchExplainEnabled()) {
+            //return 404 NotFound error if elasticsearch-explain-enabled is set as false
             return ResponseEntity.notFound().build();
         }
 
@@ -82,7 +83,8 @@ public class RestAdminApi {
             @Parameter(in = ParameterIn.QUERY, description = "Filter language")
             @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang
     ) throws Exception {
-        if (restAdminService.isElasticsearchExplainEnabled()) {
+        if (!restAdminService.isElasticsearchExplainEnabled()) {
+            //return 404 NotFound error if elasticsearch-explain-enabled is set as false
             return ResponseEntity.notFound().build();
         }
 
