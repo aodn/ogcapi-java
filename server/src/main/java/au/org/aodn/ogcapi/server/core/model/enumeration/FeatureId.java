@@ -5,10 +5,12 @@ public enum FeatureId {
     wfs_fields("wfs_fields"), // Query field based on pure wfs and given layer
     wfs_field_value("wfs_field_value"),
     wms_fields("wms_fields"), // Query field based on value from wms describe layer query
-    wave_buoy_first_data_available("wave_buoy_first_data_available"),
-    wave_buoy_latest_date("wave_buoy_latest_date"),
-    wave_buoy_timeseries("wave_buoy_timeseries"),
-    wave_buoy_all("wave_buoy_all"),
+    wave_buoys_between_dates("wave_buoys_between_dates"),
+    wave_buoys_latest_available_date("wave_buoys_latest_available_date"),
+    wave_buoy_details_between_dates("wave_buoy_details_between_dates"),
+    moorings_between_dates("moorings_between_dates"),
+    moorings_latest_available_date("moorings_latest_available_date"),
+    mooring_details_between_dates("mooring_details_between_dates"),
     wms_map_tile("wms_map_tile"),
     wms_map_feature("wms_map_feature"),
     wms_layers("wms_layers"), // Get all available layers from WMS GetCapabilities

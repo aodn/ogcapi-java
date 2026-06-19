@@ -115,17 +115,23 @@ public class RestApi implements CollectionsApi {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
                 }
             }
-            case wave_buoy_first_data_available -> {
-                return featuresService.getWaveBuoys(collectionId, request.getDatetime());
+            case wave_buoys_between_dates -> {
+                return featuresService.getWaveBuoysBetweenDates( request.getStartDateTime(), request.getEndDateTime());
             }
-            case wave_buoy_latest_date -> {
-                return featuresService.getWaveBuoysLatestDate(collectionId);
+            case wave_buoys_latest_available_date -> {
+                return featuresService.getWaveBuoysLatestAvailableDate();
             }
-            case wave_buoy_timeseries -> {
-                return featuresService.getWaveBuoyData(collectionId, request.getDatetime(), request.getWaveBuoy());
+            case wave_buoy_details_between_dates -> {
+                return featuresService.getWaveBuoyDetailsBetweenDates(request.getStartDateTime(), request.getEndDateTime(), request.getWaveBuoy());
             }
-            case wave_buoy_all -> {
-                return featuresService.getLatestWaveBuoySites(collectionId);
+            case moorings_between_dates -> {
+                return featuresService.getMooringsBetweenDates(request.getStartDateTime(), request.getEndDateTime());
+            }
+            case moorings_latest_available_date -> {
+                return featuresService.getMooringsLatestAvailableDate();
+            }
+            case mooring_details_between_dates -> {
+                return featuresService.getMooringDetailsBetweenDates(request.getStartDateTime(), request.getEndDateTime(), request.getMooring());
             }
             case wfs_fields -> {
                 return featuresService.getWfsFields(collectionId, request);
