@@ -48,24 +48,6 @@ public class RestExtApi {
         return searchService.getAutocompleteSuggestions(input, cql, CQLCrsType.convertFromUrl("https://epsg.io/4326"));
     }
     /**
-     * Explain the detail relevance score of a search query
-     * Internal debugging/troubleshooting usage only
-     * */
-    @GetMapping(path="/explain")
-    public ResponseEntity<List<JsonNode>> getExplainByParameters() {
-        // todo
-        return null;
-    }
-    /**
-     * Explain an uuid matches a search query or not
-     * Internal debugging/troubleshooting usage only
-     * */
-    @GetMapping(path="/explain/{uuid}")
-    public ResponseEntity<List<JsonNode>> getExplainByParametersUuid() {
-        // todo
-        return null;
-    }
-    /**
      * Value cached to avoid excessive load
      * @return - List of Json Vocabs
      */
