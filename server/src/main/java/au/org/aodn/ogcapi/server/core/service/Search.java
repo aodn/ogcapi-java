@@ -3,8 +3,8 @@ package au.org.aodn.ogcapi.server.core.service;
 import au.org.aodn.ogcapi.features.model.FeatureGeoJSON;
 import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.springframework.http.ResponseEntity;
 
 import java.io.IOException;
@@ -21,6 +21,23 @@ public interface Search {
     ElasticSearchBase.SearchResult<FeatureGeoJSON>searchFeatureSummary(String collectionId, List<String> properties, String filter) throws Exception;
 
     ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(
+            List<String> targets,
+            String filter,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor
+    ) throws Exception;
+
+    JsonNode explainByParameters(
+            List<String> targets,
+            String filter,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor
+    ) throws Exception;
+
+    JsonNode explainByUuid(
+            String uuid,
             List<String> targets,
             String filter,
             List<String> properties,

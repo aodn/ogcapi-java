@@ -8,65 +8,84 @@ import org.opengis.filter.Or;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class OrImpl extends QueryHandler implements Or {
 
     protected List<Filter> children = new ArrayList<>();
 
+    private static boolean containsElasticSetting(Filter filter) {
+        if (filter instanceof ElasticSetting) {
+            return true;
+        }
+
+        return filter instanceof OrImpl orFilter
+                && orFilter.getChildren().stream().anyMatch(OrImpl::containsElasticSetting);
+    }
+
+    /**
+     * Recursively extracts leaf Elasticsearch queries from nested OR filters and returns them as a flat list.
+     * The caller uses this list to construct a single bool/should query.
+     */
+    private static List<Query> collectQueries(Filter filter) {
+        if (filter instanceof OrImpl orFilter) {
+            return orFilter.getChildren().stream()
+                    .flatMap(child -> collectQueries(child).stream())
+                    .toList();
+        }
+
+        if (filter instanceof QueryHandler handler && handler.getQuery() != null) {
+            return List.of(handler.getQuery());
+        }
+
+        return List.of();
+    }
+
+
+    /**
+     * Builds the Elasticsearch representation of an OR expression.
+     *
+     * A single query is returned directly. Multiple queries are combined into
+     * one flat bool/should query to avoid deeply nested bool queries for large
+     * vocabulary selections.
+     */
+    private void buildQuery(List<Filter> filters) {
+        if (filters.stream().anyMatch(OrImpl::containsElasticSetting)) {
+            throw new IllegalArgumentException("Or combine with query setting do not make sense");
+        }
+
+        List<Query> queries = filters.stream()
+                .flatMap(filter -> collectQueries(filter).stream())
+                .toList();
+
+        if (queries.size() == 1) {
+            this.query = queries.get(0);
+        } else if (!queries.isEmpty()) {
+            this.query = BoolQuery.of(b -> b.should(queries))._toQuery();
+        }
+    }
+
     public OrImpl(Filter filter1, Filter filter2) {
+        children.add(filter1);
+        children.add(filter2);
 
-        if(filter1 instanceof ElasticSetting && filter2 instanceof QueryHandler elasticFilter2) {
-            this.addErrors(elasticFilter2.getErrors());
-            throw new IllegalArgumentException("Or combine with query setting do not make sense");
+        buildQuery(children);
+
+        if (filter1 instanceof QueryHandler handler) {
+            addErrors(handler.getErrors());
         }
-        else if(filter2 instanceof ElasticSetting && filter1 instanceof QueryHandler elasticFilter1){
-            this.addErrors(elasticFilter1.getErrors());
-            throw new IllegalArgumentException("Or combine with query setting do not make sense");
-        }
-        else if(filter1 instanceof QueryHandler elasticFilter1 && filter2 instanceof QueryHandler elasticFilter2) {
-            // If the CQL contains ElasticSetting then the query will be null, this check is used to make sure
-            // we ignore those null query
-            if(elasticFilter1.query != null && elasticFilter2.query != null) {
-                this.query = BoolQuery.of(f -> f
-                        .should(elasticFilter1.query, elasticFilter2.query)
-                )._toQuery();
-            }
-            else if(elasticFilter1.query != null) {
-                this.query = elasticFilter1.query;
-            }
-            else {
-                this.query = elasticFilter2.query;
-            }
-
-            children.add(filter1);
-            children.add(filter2);
-
-            // Remember to copy the error from child
-            this.addErrors(elasticFilter1.getErrors());
-            this.addErrors(elasticFilter2.getErrors());
+        if (filter2 instanceof QueryHandler handler) {
+            addErrors(handler.getErrors());
         }
     }
 
     public OrImpl(List<Filter> filters) {
-        // Extract query object in the filters, it must be an ElasitcFilter
-        List<QueryHandler> elasticFilters = filters.stream()
-                .filter(f -> f instanceof QueryHandler)
-                .map(m -> (QueryHandler)m)
-                .collect(Collectors.toList());
-
-        List<Query> queries = elasticFilters.stream()
-                .map(m -> m.query)
-                .collect(Collectors.toList());
-
-        this.query = BoolQuery.of(f -> f
-                .should(queries))
-                ._toQuery();
-
         children.addAll(filters);
+        buildQuery(children);
 
-        // Copy child error if any
-        elasticFilters.stream().forEach(elasticFilter -> {this.addErrors(elasticFilter.getErrors());});
+        filters.stream()
+                .filter(QueryHandler.class::isInstance)
+                .map(QueryHandler.class::cast)
+                .forEach(handler -> addErrors(handler.getErrors()));
     }
 
     @Override

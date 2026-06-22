@@ -48,8 +48,6 @@ public class RestServicesTest {
 
     private AutoCloseable closeableMock;
 
-    private static final String SUPPORTED_COLLECTION_ID = "b299cdcd-3dee-48aa-abdd-e0fcdbb9cadc";
-
     @BeforeEach
     public void setUp() {
         closeableMock = MockitoAnnotations.openMocks(this);
@@ -60,64 +58,209 @@ public class RestServicesTest {
         closeableMock.close();
     }
 
-    @Test
-    public void testGetWaveBuoysLatestDateSuccess() {
-        byte[] mockResponse = "{\"latest_date\":\"2024-01-01\"}".getBytes();
-        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
-        when(dasService.getWaveBuoysLatestDate()).thenReturn(mockResponse);
+    private static final String VALID_START = "2024-01-01T00:00:00Z";
+    private static final String VALID_END = "2024-01-02T00:00:00Z";
 
-        ResponseEntity<?> response = restServices.getWaveBuoysLatestDate(SUPPORTED_COLLECTION_ID);
+    // ----- wave_buoys_between_dates -----
+
+    @Test
+    public void testGetWaveBuoysBetweenDatesSuccess() {
+        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(mockResponse, response.getBody());
     }
 
     @Test
-    public void testGetWaveBuoysLatestDateUnsupportedCollection() {
-        when(dasService.isCollectionSupported("unsupported-id")).thenReturn(false);
+    public void testGetWaveBuoysBetweenDatesNullDatesPassThrough() {
+        // Both dates null is allowed; the service is still called (with nulls) and the result returned
+        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getWaveBuoysBetweenDates(null, null)).thenReturn(mockResponse);
 
-        ResponseEntity<?> response = restServices.getWaveBuoysLatestDate("unsupported-id");
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(null, null);
 
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        verify(dasService).getWaveBuoysBetweenDates(null, null);
     }
 
     @Test
-    public void testGetWaveBuoysLatestDateServiceError() {
-        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
-        when(dasService.getWaveBuoysLatestDate()).thenThrow(new RuntimeException("Connection refused"));
+    public void testGetWaveBuoysBetweenDatesNonUtcRejected() {
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates("2024-01-01T00:00:00+10:00", VALID_END);
 
-        ResponseEntity<?> response = restServices.getWaveBuoysLatestDate(SUPPORTED_COLLECTION_ID);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getWaveBuoysBetweenDates(anyString(), anyString());
+    }
+
+    @Test
+    public void testGetWaveBuoysBetweenDatesMalformedRejected() {
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates("not-a-date", VALID_END);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getWaveBuoysBetweenDates(anyString(), anyString());
+    }
+
+    @Test
+    public void testGetWaveBuoysBetweenDatesStartAfterEndRejected() {
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_END, VALID_START);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getWaveBuoysBetweenDates(anyString(), anyString());
+    }
+
+    @Test
+    public void testGetWaveBuoysBetweenDatesServiceError() {
+        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END))
+                .thenThrow(new RuntimeException("Connection refused"));
+
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
-    @Test
-    public void testGetLatestWaveBuoySitesSuccess() {
-        byte[] mockResponse = "[{\"site_code\":\"SITE1\"}]".getBytes();
-        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
-        when(dasService.getLatestWaveBuoySites()).thenReturn(mockResponse);
+    // ----- wave_buoys_latest_available_date -----
 
-        ResponseEntity<?> response = restServices.getLatestWaveBuoySites(SUPPORTED_COLLECTION_ID);
+    @Test
+    public void testGetWaveBuoysLatestAvailableDateSuccess() {
+        byte[] mockResponse = "{\"latest_date\":\"2024-01-01\"}".getBytes();
+        when(dasService.getWaveBuoysLatestAvailableDate()).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getWaveBuoysLatestAvailableDate();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(mockResponse, response.getBody());
     }
 
     @Test
-    public void testGetLatestWaveBuoySitesUnsupportedCollection() {
-        when(dasService.isCollectionSupported("unsupported-id")).thenReturn(false);
+    public void testGetWaveBuoysLatestAvailableDateServiceError() {
+        when(dasService.getWaveBuoysLatestAvailableDate()).thenThrow(new RuntimeException("Connection refused"));
 
-        ResponseEntity<?> response = restServices.getLatestWaveBuoySites("unsupported-id");
+        ResponseEntity<?> response = restServices.getWaveBuoysLatestAvailableDate();
 
-        assertEquals(HttpStatus.NOT_IMPLEMENTED, response.getStatusCode());
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    // ----- wave_buoy_details_between_dates -----
+
+    @Test
+    public void testGetWaveBuoyDetailsBetweenDatesSuccess() {
+        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1")).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockResponse, response.getBody());
     }
 
     @Test
-    public void testGetLatestWaveBuoySitesServiceError() {
-        when(dasService.isCollectionSupported(SUPPORTED_COLLECTION_ID)).thenReturn(true);
-        when(dasService.getLatestWaveBuoySites()).thenThrow(new RuntimeException("Connection refused"));
+    public void testGetWaveBuoyDetailsBetweenDatesNullBuoyRejected() {
+        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, null);
 
-        ResponseEntity<?> response = restServices.getLatestWaveBuoySites(SUPPORTED_COLLECTION_ID);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getWaveBuoyDetailsBetweenDates(anyString(), anyString(), any());
+    }
+
+    @Test
+    public void testGetWaveBuoyDetailsBetweenDatesInvalidDateRejected() {
+        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates("not-a-date", VALID_END, "BUOY-1");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getWaveBuoyDetailsBetweenDates(anyString(), anyString(), any());
+    }
+
+    @Test
+    public void testGetWaveBuoyDetailsBetweenDatesServiceError() {
+        when(dasService.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1"))
+                .thenThrow(new RuntimeException("Connection refused"));
+
+        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    // ----- moorings_between_dates -----
+
+    @Test
+    public void testGetMooringsBetweenDatesSuccess() {
+        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getMooringsBetweenDates(VALID_START, VALID_END)).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getMooringsBetweenDates(VALID_START, VALID_END);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockResponse, response.getBody());
+    }
+
+    @Test
+    public void testGetMooringsBetweenDatesStartAfterEndRejected() {
+        ResponseEntity<?> response = restServices.getMooringsBetweenDates(VALID_END, VALID_START);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getMooringsBetweenDates(anyString(), anyString());
+    }
+
+    @Test
+    public void testGetMooringsBetweenDatesServiceError() {
+        when(dasService.getMooringsBetweenDates(VALID_START, VALID_END))
+                .thenThrow(new RuntimeException("Connection refused"));
+
+        ResponseEntity<?> response = restServices.getMooringsBetweenDates(VALID_START, VALID_END);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    // ----- moorings_latest_available_date -----
+
+    @Test
+    public void testGetMooringsLatestAvailableDateSuccess() {
+        byte[] mockResponse = "{\"latest_date\":\"2024-01-01\"}".getBytes();
+        when(dasService.getMooringsLatestAvailableDate()).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getMooringsLatestAvailableDate();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockResponse, response.getBody());
+    }
+
+    @Test
+    public void testGetMooringsLatestAvailableDateServiceError() {
+        when(dasService.getMooringsLatestAvailableDate()).thenThrow(new RuntimeException("Connection refused"));
+
+        ResponseEntity<?> response = restServices.getMooringsLatestAvailableDate();
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    // ----- mooring_details_between_dates -----
+
+    @Test
+    public void testGetMooringDetailsBetweenDatesSuccess() {
+        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1")).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = restServices.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(mockResponse, response.getBody());
+    }
+
+    @Test
+    public void testGetMooringDetailsBetweenDatesNullMooringRejected() {
+        ResponseEntity<?> response = restServices.getMooringDetailsBetweenDates(VALID_START, VALID_END, null);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getMooringDetailsBetweenDates(anyString(), anyString(), any());
+    }
+
+    @Test
+    public void testGetMooringDetailsBetweenDatesServiceError() {
+        when(dasService.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1"))
+                .thenThrow(new RuntimeException("Connection refused"));
+
+        ResponseEntity<?> response = restServices.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1");
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }

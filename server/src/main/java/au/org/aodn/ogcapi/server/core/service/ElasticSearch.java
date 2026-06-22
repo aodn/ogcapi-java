@@ -8,7 +8,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.*;
 import au.org.aodn.ogcapi.server.core.parser.elastic.CQLToElasticFilterFactory;
 import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
-import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
@@ -16,6 +16,7 @@ import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -33,6 +34,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.function.Supplier;
 
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.ELASTIC_SEARCH_UUID_ONLY;
 
@@ -205,8 +207,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         List<Query> queries = new ArrayList<>();
         queries.add(MatchQuery.of(m -> m
-                            .field(StacType.searchField)
-                            .query(StacType.Collection.value))._toQuery());
+                .field(StacType.searchField)
+                .query(StacType.Collection.value))._toQuery());
 
         if(isWithGeometry) {
             queries.add(ExistsQuery.of(m -> m
@@ -261,6 +263,125 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Override
     public ElasticSearchBase.SearchResult<StacCollectionModel> searchAllCollections(String sortBy) {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
+    }
+
+
+    /**
+     * Build SearchRequest for searchByParameters and explainByParameters
+     * */
+    protected Supplier<SearchRequest.Builder> buildParameterSearchRequestSupplier(
+            List<String> keywords,
+            String cql,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor) throws CQLException {
+
+        if ((keywords == null || keywords.isEmpty()) && cql == null) {
+            List<Query> queries = new ArrayList<>();
+            queries.add(MatchQuery.of(m -> m
+                    .field(StacType.searchField)
+                    .query(StacType.Collection.value))._toQuery());
+
+            return buildCollectionSearchRequestSupplier(
+                    queries,
+                    null,
+                    null,
+                    null,
+                    null,
+                    createSortOptions(sortBy, CQLFields.class),
+                    null,
+                    null);
+        }
+
+        List<Query> should = null;
+        if (keywords != null && !keywords.isEmpty()) {
+            should = new ArrayList<>();
+
+            for (String t : keywords) {
+                boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+                String term = isExact ? t.substring(1, t.length() - 1) : t;
+
+                if (isExact) {
+                    should.add(CQLFields.title.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.description.getPropertyEqualToQuery(term));
+                }
+                else {
+                    should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                }
+
+                should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+                should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+                should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+                should.add(CQLFields.id.getPropertyEqualToQuery(term));
+                // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
+                should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
+                // credit_contains uses match query by default, exact match is not applied here
+                should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
+            }
+        }
+
+        List<Query> filters = new ArrayList<>();
+        CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
+
+        if (cql != null) {
+            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+            if (filter instanceof QueryHandler handler) {
+                if (handler.getErrors() == null || handler.getErrors().isEmpty()) {
+                    if (handler.getQuery() != null) {
+                        filters = List.of(handler.getQuery());
+                    }
+                }
+                else {
+                    throw new IllegalArgumentException("ECQL Parse Error");
+                }
+            }
+        }
+
+        Map<CQLElasticSetting, String> setting = factory.getQuerySetting();
+
+        Long maxSize = setting.get(CQLElasticSetting.page_size) == null
+                || setting.get(CQLElasticSetting.page_size).isBlank()
+                ? null
+                : Long.parseLong(setting.get(CQLElasticSetting.page_size));
+
+        Double score = setting.get(CQLElasticSetting.score) == null
+                || setting.get(CQLElasticSetting.score).isBlank()
+                ? null
+                : Double.parseDouble(setting.get(CQLElasticSetting.score));
+
+        List<FieldValue> searchAfter = null;
+        if (setting.get(CQLElasticSetting.search_after) != null
+                && !setting.get(CQLElasticSetting.search_after).isBlank()) {
+            searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after).split(searchAfterSplitRegex))
+                    .filter(v -> !v.isBlank())
+                    .map(String::trim)
+                    .map(ElasticSearch::toFieldValue)
+                    .toList();
+        }
+
+        List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
+
+        if (factory.isParameterPrioritySort()) {
+            if (sortOptions == null) sortOptions = new ArrayList<>();
+            sortOptions.add(0, CQLFields.parameter_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+        }
+
+        if (factory.isPlatformPrioritySort()) {
+            if (sortOptions == null) sortOptions = new ArrayList<>();
+            sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+        }
+
+        return buildCollectionSearchRequestSupplier(
+                null,
+                should,
+                filters,
+                properties,
+                searchAfter,
+                sortOptions,
+                score,
+                maxSize);
     }
 
     @Override
@@ -343,7 +464,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             Long maxSize = null;
             try {
                 if(setting.get(CQLElasticSetting.page_size) != null &&
-                    !setting.get(CQLElasticSetting.page_size).isBlank()) {
+                        !setting.get(CQLElasticSetting.page_size).isBlank()) {
                     maxSize = Long.parseLong(setting.get(CQLElasticSetting.page_size));
                 }
             }
@@ -372,11 +493,28 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     !setting.get(CQLElasticSetting.search_after).isBlank()) {
                 // Convert the regex separate string to List<FieldValue>
                 searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after)
-                        .split(searchAfterSplitRegex))
+                                .split(searchAfterSplitRegex))
                         .filter(v -> !v.isBlank())
                         .map(String::trim)
                         .map(ElasticSearch::toFieldValue)
                         .toList();
+            }
+
+            List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
+            // When the filter searches curated vocab fields, prepend presence-based priority sort keys
+            // so matching human-curated records rank above AI-generated fallback records. This is
+            // the first sort key; existing -score,-rank ordering is preserved within each tier.
+            if (factory.isParameterPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, CQLFields.parameter_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+            }
+            if (factory.isPlatformPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
             }
 
             return searchCollectionBy(
@@ -385,11 +523,24 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     filters,
                     properties,
                     searchAfter,
-                    createSortOptions(sortBy, CQLFields.class),
+                    sortOptions,
                     score,
                     maxSize
             );
         }
+    }
+
+    @Override
+    public JsonNode explainByParameters(List<String> targets, String filter, List<String> properties, String sortBy, CQLCrsType coor) throws Exception {
+        return explainCollectionBy(
+                buildParameterSearchRequestSupplier(targets, filter, properties, sortBy, coor));
+    }
+
+    @Override
+    public JsonNode explainByUuid(String uuid, List<String> targets, String filter, List<String> properties, String sortBy, CQLCrsType coor) throws Exception {
+        return explainCollectionById(
+                uuid,
+                buildParameterSearchRequestSupplier(targets, filter, properties, sortBy, coor));
     }
 
     @Override
