@@ -174,16 +174,16 @@ public enum CQLFields implements CQLFieldsInterface {
                         null,
                         null),
         links_title_contains(
-                        StacBasicField.LinksTitle.searchField,
-                        StacBasicField.LinksTitle.displayField,
-                        (literal) -> NestedQuery.of(m -> m
-                                        .path(StacBasicField.Links.searchField)// We want the words exact so need to add space in front and end
-                                        .query(q -> q
-                                                        .match(mq -> mq
-                                                                        .field(StacBasicField.LinksTitle.searchField)
-                                                                        .query(literal))))
-                                        ._toQuery(),
-                        null),
+                StacBasicField.LinksTitle.searchField,
+                StacBasicField.LinksTitle.displayField,
+                (literal) -> NestedQuery.of(m -> m
+                                .path(StacBasicField.Links.searchField)
+                                .query(q -> q
+                                        .matchPhrase(mp -> mp
+                                                .field(StacBasicField.LinksTitle.searchField)
+                                                .query(literal))))
+                        ._toQuery(),
+                null),
         links_airole_contains(
                         StacBasicField.LinksAiRole.searchField,
                         StacBasicField.LinksAiRole.displayField,
@@ -196,12 +196,12 @@ public enum CQLFields implements CQLFieldsInterface {
                                         ._toQuery(),
                         null),
         credit_contains(
-                        StacSummeries.Credits.searchField,
-                        StacSummeries.Credits.displayField,
-                        (literal) -> MatchQuery.of(m -> m// We want the words exact so need to add space in front and end
-                                        .field(StacSummeries.Credits.searchField)
-                                        .query(literal))._toQuery(),
-                        null),
+                StacSummeries.Credits.searchField,
+                StacSummeries.Credits.displayField,
+                (literal) -> MatchPhraseQuery.of(m -> m
+                        .field(StacSummeries.Credits.searchField)
+                        .query(literal))._toQuery(),
+                null),
         status(
                         StacSummeries.Status.searchField,
                         StacSummeries.Status.displayField,
