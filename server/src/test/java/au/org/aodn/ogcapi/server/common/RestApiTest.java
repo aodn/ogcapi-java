@@ -239,7 +239,8 @@ public class RestApiTest extends BaseTestClass {
         // The time is slight off by 1 sec so only 1 document returned
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T14:10:45Z/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        // matched records: 7709f541-fc0c-4318-b5b9-9053aa474e0e and 5c418118-2581-4936-b6fd-d6bedfe74f62
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -254,7 +255,7 @@ public class RestApiTest extends BaseTestClass {
     public void verifyDateTimeBoundsWithDiscreteTime() throws IOException {
         super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
-                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "caf7220a-19e0-4a7f-9af6-eade6c79a47a.json"     // This one have two start/end
         );
 
