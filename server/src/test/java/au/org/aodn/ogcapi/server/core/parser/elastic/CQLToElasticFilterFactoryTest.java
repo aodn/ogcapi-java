@@ -3,11 +3,15 @@ package au.org.aodn.ogcapi.server.core.parser.elastic;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
+import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
+import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
 import org.junit.jupiter.api.Test;
 import org.opengis.filter.Filter;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -68,6 +72,41 @@ public class CQLToElasticFilterFactoryTest {
     }
 
     @Test
+    public void temporalDuringUsesOverlapRangeQueryAndIncludesOngoingRecords() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "temporal DURING 2025-06-25T00:00:00Z/2026-06-25T00:00:00Z",
+                newFactory());
+
+        DuringImpl<?> duringFilter = assertInstanceOf(DuringImpl.class, filter);
+        assertTrue(duringFilter.getQuery().isNested());
+
+        List<Query> must = duringFilter.getQuery().nested().query().bool().must();
+        assertEquals(2, must.size());
+
+        Query startRange = findDateRange(must, StacSummeries.TemporalStart.searchField);
+        assertEquals("strict_date_optional_time", startRange.range().date().format());
+        assertTrue(startRange.range().date().lte().contains("2026-06-25"));
+
+        Query endAfterFilterStartOrOngoing = must.stream()
+                .filter(Query::isBool)
+                .findFirst()
+                .orElseThrow();
+        assertEquals("1", endAfterFilterStartOrOngoing.bool().minimumShouldMatch());
+
+        List<Query> should = endAfterFilterStartOrOngoing.bool().should();
+        Query endRange = findDateRange(should, StacSummeries.TemporalEnd.searchField);
+        assertEquals("strict_date_optional_time", endRange.range().date().format());
+        assertTrue(endRange.range().date().gte().contains("2025-06-25"));
+
+        assertTrue(should.stream()
+                .filter(Query::isBool)
+                .flatMap(query -> query.bool().mustNot().stream())
+                .anyMatch(query -> query.isExists()
+                        && StacSummeries.TemporalEnd.searchField.equals(query.exists().field())));
+    }
+
+    @Test
     public void querySettingsCannotBeCombinedWithOr() {
         IllegalArgumentException settingFirst = assertThrows(
                 IllegalArgumentException.class,
@@ -93,5 +132,14 @@ public class CQLToElasticFilterFactoryTest {
 
     private CQLToElasticFilterFactory<CQLFields> newFactory() {
         return new CQLToElasticFilterFactory<>(CQLCrsType.EPSG4326, CQLFields.class);
+    }
+
+    private Query findDateRange(List<Query> queries, String field) {
+        return queries.stream()
+                .filter(Query::isRange)
+                .filter(query -> query.range().isDate())
+                .filter(query -> field.equals(query.range().date().field()))
+                .findFirst()
+                .orElseThrow();
     }
 }

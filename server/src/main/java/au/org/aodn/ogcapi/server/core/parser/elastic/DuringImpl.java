@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.ExistsQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.RangeQuery;
@@ -67,15 +68,23 @@ public class DuringImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHan
                 if(type instanceof CQLFields cqlFields
                         && cqlFields == CQLFields.temporal) {
 
-                    Query gte = RangeQuery.of(r -> r
+                    Query endAfterOrAtFilterStart = RangeQuery.of(r -> r
                             .date(d -> d
-                                    .field(StacSummeries.TemporalStart.searchField)
+                                    .field(StacSummeries.TemporalEnd.searchField)
                                     .gte(dateFormatter.format(period.getBeginning().getPosition().getDate()))
                                     .format("strict_date_optional_time")))._toQuery();
 
-                    Query lte = RangeQuery.of(r -> r
+                    Query missingEndDate = BoolQuery.of(b -> b
+                            .mustNot(ExistsQuery.of(e -> e
+                                    .field(StacSummeries.TemporalEnd.searchField))._toQuery()))._toQuery();
+
+                    Query endAfterFilterStartOrOngoing = BoolQuery.of(b -> b
+                            .should(endAfterOrAtFilterStart, missingEndDate)
+                            .minimumShouldMatch("1"))._toQuery();
+
+                    Query startBeforeOrAtFilterEnd = RangeQuery.of(r -> r
                             .date(d -> d
-                                    .field(StacSummeries.TemporalEnd.searchField)
+                                    .field(StacSummeries.TemporalStart.searchField)
                                     .lte(dateFormatter.format(period.getEnding().getPosition().getDate()))
                                     .format("strict_date_optional_time")))._toQuery();
 
@@ -83,7 +92,7 @@ public class DuringImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHan
                     this.query = NestedQuery.of(n -> n
                             .path(StacSummeries.Temporal.searchField)
                             .query(BoolQuery.of(q -> q
-                                    .must(gte, lte))._toQuery()
+                                    .must(endAfterFilterStartOrOngoing, startBeforeOrAtFilterEnd))._toQuery()
                             )
                     )._toQuery();
                 }
