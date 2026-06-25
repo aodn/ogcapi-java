@@ -267,8 +267,8 @@ public class RestApiTest extends BaseTestClass {
                 collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - caf7220a-19e0-4a7f-9af6-eade6c79a47a");
 
-        // The start datetime is 1 sec more then one of the start date in the record, however it still fit into the next start/end slot, so should return same result
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1991-12-31T13:00:01Z/2013-06-16T14:00:00Z", Collections.class);
+        // The query start time is the first end , the queried time range should overlap the next start/end slot, so should return same result
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1995-01-30T13:00:00Z/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, this record have 2 start/end");
         assertEquals(
