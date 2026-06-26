@@ -218,7 +218,8 @@ public class RestApiTest extends BaseTestClass {
         // The time is slight off by 1 sec so only 1 document returned
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1870-07-16T14:10:45Z/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
+        // matched records: 7709f541-fc0c-4318-b5b9-9053aa474e0e and 5c418118-2581-4936-b6fd-d6bedfe74f62
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 2");
         assertEquals(
                 "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
@@ -233,7 +234,7 @@ public class RestApiTest extends BaseTestClass {
     public void verifyDateTimeBoundsWithDiscreteTime() throws IOException {
         super.insertJsonToElasticRecordIndex(
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
-                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "caf7220a-19e0-4a7f-9af6-eade6c79a47a.json"     // This one have two start/end
         );
 
@@ -245,8 +246,8 @@ public class RestApiTest extends BaseTestClass {
                 collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - caf7220a-19e0-4a7f-9af6-eade6c79a47a");
 
-        // The start datetime is 1 sec more then one of the start date in the record, however it still fit into the next start/end slot, so should return same result
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1991-12-31T13:00:01Z/2013-06-16T14:00:00Z", Collections.class);
+        // The query start time is the first end, the queried time range should overlap the next start/end slot, so should return same result
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1995-01-30T13:00:00Z/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, this record have 2 start/end");
         assertEquals(
@@ -255,13 +256,13 @@ public class RestApiTest extends BaseTestClass {
                 "Correct UUID - caf7220a-19e0-4a7f-9af6-eade6c79a47a");
 
         // Now we check the before which should include the same record as it match one of the start/end time
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/1995-03-30T13:00:00Z", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/1994-02-21T13:00:00Z", Collections.class);
         // There are only 3 docs
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, this record have 2 start/end");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
         assertEquals(
-                "caf7220a-19e0-4a7f-9af6-eade6c79a47a",
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
-                "Correct UUID - caf7220a-19e0-4a7f-9af6-eade6c79a47a");
+                "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
