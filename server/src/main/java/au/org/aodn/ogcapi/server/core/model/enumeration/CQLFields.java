@@ -173,17 +173,6 @@ public enum CQLFields implements CQLFieldsInterface {
                         StacBasicField.Links.displayField,
                         null,
                         null),
-        links_title_contains(
-                StacBasicField.LinksTitle.searchField,
-                StacBasicField.LinksTitle.displayField,
-                (literal) -> NestedQuery.of(m -> m
-                                .path(StacBasicField.Links.searchField)
-                                .query(q -> q
-                                        .matchPhrase(mp -> mp
-                                                .field(StacBasicField.LinksTitle.searchField)
-                                                .query(literal))))
-                        ._toQuery(),
-                null),
         links_airole_contains(
                         StacBasicField.LinksAiRole.searchField,
                         StacBasicField.LinksAiRole.displayField,
@@ -196,12 +185,12 @@ public enum CQLFields implements CQLFieldsInterface {
                                         ._toQuery(),
                         null),
         credit_contains(
-                StacSummeries.Credits.searchField,
-                StacSummeries.Credits.displayField,
-                (literal) -> MatchPhraseQuery.of(m -> m
-                        .field(StacSummeries.Credits.searchField)
-                        .query(literal))._toQuery(),
-                null),
+                        StacSummeries.Credits.searchField,
+                        StacSummeries.Credits.displayField,
+                        (literal) -> MatchQuery.of(m -> m// We want the words exact so need to add space in front and end
+                                        .field(StacSummeries.Credits.searchField)
+                                        .query(literal))._toQuery(),
+                        null),
         status(
                         StacSummeries.Status.searchField,
                         StacSummeries.Status.displayField,
@@ -247,6 +236,24 @@ public enum CQLFields implements CQLFieldsInterface {
                                         .field(StacBasicField.Description.searchField)
                                         .prefixLength(4)// Use 4 to deal with NRMN short form may match NRM records
                                         .operator(Operator.And)// ensure all terms are matched with fuzziness
+                                        .query(literal))._toQuery(),
+                        null),
+        // Acronym match on the synonyms sub-fields (search-time expansion), e.g. "SOOP" -> "ships of opportunity".
+        acronym_title(
+                        StacBasicField.Title.searchField + ".synonyms",
+                        StacBasicField.Title.displayField,
+                        (literal) -> MatchQuery.of(m -> m
+                                        .field(StacBasicField.Title.searchField + ".synonyms")
+                                        .operator(Operator.And)// all expanded terms must match
+                                        .boost(2.0F)// align with fuzzy_title weighting
+                                        .query(literal))._toQuery(),
+                        null),
+        acronym_desc(
+                        StacBasicField.Description.searchField + ".synonyms",
+                        StacBasicField.Description.displayField,
+                        (literal) -> MatchQuery.of(m -> m
+                                        .field(StacBasicField.Description.searchField + ".synonyms")
+                                        .operator(Operator.And)
                                         .query(literal))._toQuery(),
                         null),
         // Contains cloud-optimized data
