@@ -154,8 +154,8 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(8, capturingSearch.should.size(),
-                "Exact match should produce 8 queries (title + description + other fields)");
+        assertEquals(9, capturingSearch.should.size(),
+                "Exact match should produce 9 queries (title + description + other fields)");
         assertTrue(capturingSearch.should.get(0).isMatchPhrase(), "Title query should be MatchPhraseQuery");
         assertTrue(capturingSearch.should.get(1).isMatchPhrase(), "Description query should be MatchPhraseQuery");
     }
@@ -171,7 +171,7 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(8, capturingSearch.should.size(), "Fuzzy match should produce 8 queries");
+        assertEquals(9, capturingSearch.should.size(), "Fuzzy match should produce 9 queries");
         assertTrue(capturingSearch.should.get(0).isMatch(), "fuzzy_title should be MatchQuery");
     }
 
@@ -214,7 +214,7 @@ public class ElasticSearchTest {
         assertEquals("captured", result.path("status").asText());
         assertEquals(100, capturingSearch.explainRequest.size());
         assertTrue(capturingSearch.explainRequest.query().isScriptScore());
-        assertEquals(8, capturingSearch.explainRequest.query().scriptScore()
+        assertEquals(9, capturingSearch.explainRequest.query().scriptScore()
                 .query().bool().should().size());
         assertNotNull(capturingSearch.explainRequest.source());
         assertTrue(capturingSearch.explainRequest.source().isFilter());
