@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
+import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
@@ -74,6 +75,16 @@ public class RestServices extends OGCApiService {
         } else {
             log.error("UUID {} not found", id);
             return ResponseEntity.notFound().build();
+        }
+    }
+
+    public ResponseEntity<DatasetMetadata> getDatasetMetadata(String id) {
+        try {
+            return dasService.getDatasetMetadata(id);
+        }
+        catch (Exception e) {
+            log.error("Error fetching metadata of id: {}, {}", id, e.getMessage());
+            return ResponseEntity.internalServerError().build();
         }
     }
 

@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 
 public enum FeatureId {
     summary("summary"),
+    dataset_metadata("dataset_metadata"),
     wfs_fields("wfs_fields"), // Query field based on pure wfs and given layer
     wfs_field_value("wfs_field_value"),
     wms_fields("wms_fields"), // Query field based on value from wms describe layer query
