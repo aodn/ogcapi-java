@@ -306,9 +306,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
                 should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
                 should.add(CQLFields.id.getPropertyEqualToQuery(term));
-                should.add(BoolQuery.of(b -> b
-                        .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
-                        .boost(0.5f))._toQuery());
+                // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
+                should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
+                // credit_contains uses match query by default, exact match is not applied here
                 should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
             }
         }
@@ -411,15 +412,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
                     should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
                     should.add(CQLFields.id.getPropertyEqualToQuery(term));
-                    // A request to not using acronym in title and description in metadata, hence these
-                    // acronym moved to links, for example NRMN record is mentioned in the link title.
-                    // This is a work-around to the requirement but still allow use of NRMN
-                    // links_title_contains and credit_contains use match query by default, exact match is not applied here
-                    // links_title_contains weighted lower as it may contain combined title+description content
-                    should.add(BoolQuery.of(b -> b
-                            .should(CQLFields.links_title_contains.getPropertyEqualToQuery(term))
-                            .boost(0.5f)  // lower boost to reduce promotion of link-title-only matches
-                    )._toQuery());
+                    // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
+                    should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
+                    // credit_contains uses match query by default, exact match is not applied here
                     should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
                 }
             }
