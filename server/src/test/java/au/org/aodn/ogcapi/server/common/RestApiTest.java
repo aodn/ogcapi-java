@@ -267,7 +267,7 @@ public class RestApiTest extends BaseTestClass {
                 collections.getBody().getCollections().get(0).getId(),
                 "Correct UUID - caf7220a-19e0-4a7f-9af6-eade6c79a47a");
 
-        // The query start time is the first end , the queried time range should overlap the next start/end slot, so should return same result
+        // The query start time is the first end, the queried time range should overlap the next start/end slot, so should return same result
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=1995-01-30T13:00:00Z/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, this record have 2 start/end");
@@ -277,13 +277,13 @@ public class RestApiTest extends BaseTestClass {
                 "Correct UUID - caf7220a-19e0-4a7f-9af6-eade6c79a47a");
 
         // Now we check the before which should include the same record as it match one of the start/end time
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/1995-03-30T13:00:00Z", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/1994-02-21T13:00:00Z", Collections.class);
         // There are only 3 docs
-        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, this record have 2 start/end");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
         assertEquals(
-                "caf7220a-19e0-4a7f-9af6-eade6c79a47a",
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
-                "Correct UUID - caf7220a-19e0-4a7f-9af6-eade6c79a47a");
+                "Correct UUID - 5c418118-2581-4936-b6fd-d6bedfe74f62");
 
         collections = testRestTemplate.getForEntity(getBasePath() + "/collections?datetime=/2013-06-16T14:00:00Z", Collections.class);
         // There are only 3 docs
