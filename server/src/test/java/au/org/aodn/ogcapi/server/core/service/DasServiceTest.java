@@ -36,9 +36,7 @@ public class DasServiceTest {
     public void setUp() {
         httpClient = mock(RestTemplate.class);
 
-        DASConfig config = new DASConfig();
-        config.host = HOST;
-        config.secret = "test-secret";
+        DASConfig config = new DASConfig(HOST, "test-secret", "");
 
         dasService = new DasService();
         dasService.dasConfig = config;
