@@ -49,18 +49,18 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Test bbox coordinate order follows the frontend BBoxConditionCard (N, W, S, E)
+     * Test bbox coordinate order groups latitude bounds then longitude bounds (N, S, W, E)
      */
     @Test
     void testBboxCoordinateOrder() {
         String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
 
         int n = html.indexOf("N: -40.0");
-        int w = html.indexOf("W: 145.0");
         int s = html.indexOf("S: -41.0");
+        int w = html.indexOf("W: 145.0");
         int e = html.indexOf("E: 146.0");
 
-        assertTrue(n < w && w < s && s < e, "Expected order N, W, S, E");
+        assertTrue(n < s && s < w && w < e, "Expected order N, S, W, E");
     }
 
     /**
@@ -327,8 +327,8 @@ public class EmailUtilsTest {
         String html = EmailUtils.buildPolygonSection(vertices, 0);
 
         assertTrue(html.contains("Polygon Selection"));
-        assertTrue(html.contains("Point 1: (145.0, -40.0)"));
-        assertTrue(html.contains("Point 5: (144.5, -41.0)"));
+        assertTrue(html.contains("Point 1: (-40.0, 145.0)"));
+        assertTrue(html.contains("Point 5: (-41.0, 144.5)"));
     }
 
     /**
@@ -366,8 +366,8 @@ public class EmailUtilsTest {
 
         String html = EmailUtils.buildPolygonSection(vertices, 0);
 
-        assertTrue(html.contains("Point 1: (150.11111, -35.12345)"));
-        assertTrue(html.contains("Point 2: (151.99999, -36.54321)"));
+        assertTrue(html.contains("Point 1: (-35.12345, 150.11111)"));
+        assertTrue(html.contains("Point 2: (-36.54321, 151.99999)"));
     }
 
     /**

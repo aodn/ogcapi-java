@@ -582,9 +582,10 @@ public class EmailUtils {
         StringBuilder coordinateRows = new StringBuilder();
         for (int i = 0; i < vertices.size(); i++) {
             List<BigDecimal> point = vertices.get(i);
+            // GeoJSON stores [lon, lat]; display latitude-first per geographic convention.
             String lon = point.get(0).toPlainString();
             String lat = point.get(1).toPlainString();
-            coordinateRows.append(buildCoordinateRow("Point " + (i + 1) + ": (" + lon + ", " + lat + ")"));
+            coordinateRows.append(buildCoordinateRow("Point " + (i + 1) + ": (" + lat + ", " + lon + ")"));
         }
 
         return "<tr>" +
@@ -634,12 +635,12 @@ public class EmailUtils {
     protected static String buildBboxSection(String north, String south, String west, String east, int index) {
         String title = index > 0 ? "Bounding Box " + index : "Bounding Box Selection";
 
-        // Coordinate display order mirrors the frontend BBoxConditionCard reading order (N, W, S, E).
+        // Coordinate display order groups the latitude bounds (N, S) then the longitude bounds (W, E).
         // Keep this list as the single source of truth for the order.
         List<String[]> coordinates = List.of(
                 new String[]{"N", north},
-                new String[]{"W", west},
                 new String[]{"S", south},
+                new String[]{"W", west},
                 new String[]{"E", east}
         );
 
