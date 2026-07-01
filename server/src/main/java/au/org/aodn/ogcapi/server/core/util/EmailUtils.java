@@ -10,6 +10,7 @@ import org.locationtech.jts.geom.Polygon;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -45,41 +46,53 @@ public class EmailUtils {
             ObjectMapper objectMapper
     ) {
         try {
-            // Format dates
-            String displayStartDate = (startDate != null && !startDate.equals(DatetimeUtils.NON_SPECIFIED_DATE))
-                    ? startDate.replace("-", "/") : "";
-            String displayEndDate = (endDate != null && !endDate.equals(DatetimeUtils.NON_SPECIFIED_DATE))
-                    ? endDate.replace("-", "/") : "";
+            // Format dates in the Australian display format (dd/MM/yyyy), matching the frontend
+            String displayStartDate = DatetimeUtils.toDisplayDate(startDate);
+            String displayEndDate = DatetimeUtils.toDisplayDate(endDate);
+
+            // The frontend default full range (1970-01-01 to now) means "no temporal subset" - treat as unspecified
+            boolean isOpenRange = DatetimeUtils.isDefaultLowerBound(startDate) && DatetimeUtils.isOpenUpperBound(endDate);
 
             // Check if dates are specified
-            boolean hasDateSubsetting = !displayStartDate.isEmpty() || !displayEndDate.isEmpty();
+            boolean hasDateSubsetting = (!displayStartDate.isEmpty() || !displayEndDate.isEmpty()) && !isOpenRange;
 
-            // Check if bbox is specified
-            boolean hasBboxSubsetting = multipolygon != null && !isEmptyMultiPolygon(multipolygon);
+            // Check if spatial selection is specified
+            boolean hasSpatialSubsetting = multipolygon != null && !isEmptyMultiPolygon(multipolygon);
 
-            // If no subsetting at all, return empty string
-            if (!hasDateSubsetting && !hasBboxSubsetting) {
+            // Separate bbox and polygon HTML
+            String bboxHtml = "";
+            String polygonHtml = "";
+            if (hasSpatialSubsetting) {
+                bboxHtml = generateBboxHtml(multipolygon, objectMapper);
+                polygonHtml = generatePolygonHtml(multipolygon, objectMapper);
+            }
+            boolean hasBboxes = !bboxHtml.isEmpty();
+            boolean hasPolygons = !polygonHtml.isEmpty();
+
+            // If no subsetting data at all, return empty string
+            if (!hasDateSubsetting && !hasBboxes && !hasPolygons) {
                 return "";
             }
 
             StringBuilder html = new StringBuilder();
+            html.append(buildSubsettingHeader());
 
-            // Add subsetting header
-            if (hasBboxSubsetting || hasDateSubsetting) {
-                html.append(buildSubsettingHeader());
+            // Add bbox section
+            if (hasBboxes) {
+                html.append(buildBboxWrapper(bboxHtml));
             }
 
-            // Add bbox section if present
-            if (hasBboxSubsetting) {
-                html.append(buildBboxWrapper(generateBboxHtml(multipolygon, objectMapper)));
+            // Add polygon section
+            if (hasPolygons) {
+                html.append(buildBboxWrapper(polygonHtml));
             }
 
-            // Add spacing between bbox and time range if both exist
-            if (hasBboxSubsetting && hasDateSubsetting) {
+            // Add spacing before time range if spatial sections exist
+            if ((hasBboxes || hasPolygons) && hasDateSubsetting) {
                 html.append(buildSpacerSection());
             }
 
-            // Add time range section if present
+            // Add time range section
             if (hasDateSubsetting) {
                 html.append(buildTimeRangeWrapper(displayStartDate, displayEndDate));
             }
@@ -93,11 +106,12 @@ public class EmailUtils {
     }
 
     /**
-     * Generate HTML content for bounding box data only (without wrapper)
+     * Generate HTML for bounding box selections only (rectangles with 4 or fewer unique vertices).
+     * Freeform polygons are handled separately by {@link #generatePolygonHtml}.
      *
      * @param multipolygon - the multipolygon object
      * @param objectMapper - Jackson ObjectMapper for JSON processing
-     * @return HTML string for bbox data rows
+     * @return HTML string for bbox data rows, or empty string if there are none
      */
     public static String generateBboxHtml(Object multipolygon, ObjectMapper objectMapper) {
         try {
@@ -105,9 +119,7 @@ public class EmailUtils {
                 return "";
             }
 
-            // Extract coordinates directly from the object
             List<List<List<List<BigDecimal>>>> coordinates = extractCoordinates(multipolygon, objectMapper);
-
             if (coordinates == null || coordinates.isEmpty()) {
                 return "";
             }
@@ -115,59 +127,122 @@ public class EmailUtils {
             StringBuilder html = new StringBuilder();
             int bboxCounter = 0;
 
-            // Process each polygon separately
             for (List<List<List<BigDecimal>>> polygon : coordinates) {
-                // Find min/max for THIS polygon only
+                List<List<BigDecimal>> ring = polygon.isEmpty() ? List.of() : polygon.get(0);
+                List<List<BigDecimal>> uniqueVertices = removeClosingPoint(ring);
+
+                // Skip freeform polygons, those are handled by generatePolygonHtml
+                if (uniqueVertices.size() > 4) {
+                    continue;
+                }
+
                 double minLon = Double.MAX_VALUE;
                 double maxLon = Double.NEGATIVE_INFINITY;
                 double minLat = Double.MAX_VALUE;
                 double maxLat = Double.NEGATIVE_INFINITY;
 
-                for (List<List<BigDecimal>> ring : polygon) {
-                    for (List<BigDecimal> point : ring) {
-                        if (point.size() >= 2) {
-                            double lon = point.get(0).doubleValue();
-                            double lat = point.get(1).doubleValue();
-                            minLon = Math.min(minLon, lon);
-                            maxLon = Math.max(maxLon, lon);
-                            minLat = Math.min(minLat, lat);
-                            maxLat = Math.max(maxLat, lat);
-                        }
+                for (List<BigDecimal> point : ring) {
+                    if (point.size() >= 2) {
+                        double lon = point.get(0).doubleValue();
+                        double lat = point.get(1).doubleValue();
+                        minLon = Math.min(minLon, lon);
+                        maxLon = Math.max(maxLon, lon);
+                        minLat = Math.min(minLat, lat);
+                        maxLat = Math.max(maxLat, lat);
                     }
                 }
 
-                // Use BboxUtils to normalize this polygon's bbox
                 MultiPolygon normalizedBbox = BboxUtils.normalizeBbox(minLon, maxLon, minLat, maxLat);
 
-                // Build HTML for each normalized bbox
                 for (int i = 0; i < normalizedBbox.getNumGeometries(); i++) {
-                    Polygon normalizedPolygon = (Polygon) normalizedBbox.getGeometryN(i);
-                    Envelope envelope = normalizedPolygon.getEnvelopeInternal();
-
-                    String north = "" + envelope.getMaxY();
-                    String south = "" + envelope.getMinY();
-                    String west = "" + envelope.getMinX();
-                    String east = "" + envelope.getMaxX();
-
-                    // Add spacing between multiple bboxes
                     if (bboxCounter > 0) {
                         html.append("<tr><td style=\"font-size:0;padding:0;word-break:break-word;\">")
                                 .append("<div style=\"height:24px;line-height:24px;\">&#8202;</div>")
                                 .append("</td></tr>");
                     }
 
+                    Polygon normalizedPolygon = (Polygon) normalizedBbox.getGeometryN(i);
+                    Envelope envelope = normalizedPolygon.getEnvelopeInternal();
+
+                    String north = String.valueOf(envelope.getMaxY());
+                    String south = String.valueOf(envelope.getMinY());
+                    String west = String.valueOf(envelope.getMinX());
+                    String east = String.valueOf(envelope.getMaxX());
+
                     bboxCounter++;
-                    int displayIndex = (coordinates.size() > 1 || normalizedBbox.getNumGeometries() > 1) ? bboxCounter : 0;
+                    int displayIndex = bboxCounter > 1 ? bboxCounter : 0;
                     html.append(buildBboxSection(north, south, west, east, displayIndex));
                 }
             }
 
             return html.toString();
-
         } catch (Exception e) {
             log.error("Error generating bbox HTML", e);
             return "";
         }
+    }
+
+    /**
+     * Generate HTML for freeform polygon selections (more than 4 unique vertices).
+     * Bounding boxes are handled separately by {@link #generateBboxHtml}.
+     *
+     * @param multipolygon - the multipolygon object
+     * @param objectMapper - Jackson ObjectMapper for JSON processing
+     * @return HTML string for polygon data rows, or empty string if there are none
+     */
+    public static String generatePolygonHtml(Object multipolygon, ObjectMapper objectMapper) {
+        try {
+            if (multipolygon == null) {
+                return "";
+            }
+
+            List<List<List<List<BigDecimal>>>> coordinates = extractCoordinates(multipolygon, objectMapper);
+            if (coordinates == null || coordinates.isEmpty()) {
+                return "";
+            }
+
+            StringBuilder html = new StringBuilder();
+            int polygonCounter = 0;
+
+            for (List<List<List<BigDecimal>>> polygon : coordinates) {
+                List<List<BigDecimal>> ring = polygon.isEmpty() ? List.of() : polygon.get(0);
+                List<List<BigDecimal>> uniqueVertices = removeClosingPoint(ring);
+
+                // Skip bounding boxes, those are handled by generateBboxHtml
+                if (uniqueVertices.size() <= 4) {
+                    continue;
+                }
+
+                if (polygonCounter > 0) {
+                    html.append("<tr><td style=\"font-size:0;padding:0;word-break:break-word;\">")
+                            .append("<div style=\"height:24px;line-height:24px;\">&#8202;</div>")
+                            .append("</td></tr>");
+                }
+
+                polygonCounter++;
+                int displayIndex = polygonCounter > 1 ? polygonCounter : 0;
+                html.append(buildPolygonSection(uniqueVertices, displayIndex));
+            }
+
+            return html.toString();
+        } catch (Exception e) {
+            log.error("Error generating polygon HTML", e);
+            return "";
+        }
+    }
+
+    /**
+     * Remove the GeoJSON closing point (where the last vertex repeats the first) to get the unique vertices.
+     *
+     * @param ring - the outer ring of a polygon, as a list of [lon, lat] points
+     * @return the ring's unique vertices, without the repeated closing point
+     */
+    private static List<List<BigDecimal>> removeClosingPoint(List<List<BigDecimal>> ring) {
+        List<List<BigDecimal>> vertices = new ArrayList<>(ring);
+        if (vertices.size() > 1 && vertices.get(0).equals(vertices.get(vertices.size() - 1))) {
+            vertices.remove(vertices.size() - 1);
+        }
+        return vertices;
     }
 
     /**
@@ -474,8 +549,104 @@ public class EmailUtils {
                 "<!--[if mso | IE]></td></tr></table></td></tr><tr><td width=\"600px\"><table align=\"center\" border=\"0\" cellpadding=\"0\" cellspacing=\"0\" role=\"presentation\" style=\"width:568px;\" width=\"568\"><tr><td style=\"line-height:0;font-size:0;mso-line-height-rule:exactly;\"><![endif]-->";
     }
 
+    /**
+     * Build a single coordinate row for polygon vertex display
+     */
+    private static String buildCoordinateRow(String text) {
+        return "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
+                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">" + text + "</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
+                "<div style=\"height:8px;line-height:8px;\">&#8203;</div>" +
+                "</td>" +
+                "</tr>";
+    }
+
+    /**
+     * Build polygon selection section showing individual vertex coordinates
+     */
+    protected static String buildPolygonSection(List<List<BigDecimal>> vertices, int index) {
+        String title = index > 0 ? "Polygon Selection " + index : "Polygon Selection";
+
+        StringBuilder coordinateRows = new StringBuilder();
+        for (int i = 0; i < vertices.size(); i++) {
+            List<BigDecimal> point = vertices.get(i);
+            String lon = point.get(0).toPlainString();
+            String lat = point.get(1).toPlainString();
+            coordinateRows.append(buildCoordinateRow("Point " + (i + 1) + ": (" + lon + ", " + lat + ")"));
+        }
+
+        return "<tr>" +
+                "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
+                "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
+                "<tr>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"32\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\"> <img alt width=\"32\" style=\"display:block;width:32px;height:32px;\" src=\"{{POLYGON_IMG}}\"></td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\"></td>" +
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
+                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
+                "<tr>" +
+                "<td align=\"left\" width=\"100%\">" +
+                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 500; line-height: 157%; text-align: left; color: #090c02\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">" + title + "</p>" +
+                "</div>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "</table>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td style=\"font-size:0;padding:0;word-break:break-word;\">" +
+                "<div style=\"height:8px;line-height:8px;\">&#8202;</div>" +
+                "</td>" +
+                "</tr>" +
+                "<tr>" +
+                "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0px 48px 0px 48px;word-break:break-word;\">" +
+                "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
+                coordinateRows +
+                "</table>" +
+                "</td>" +
+                "</tr>";
+    }
+
+    /**
+     * Build a bounding box section showing its north, west, south and east bounds
+     */
     protected static String buildBboxSection(String north, String south, String west, String east, int index) {
         String title = index > 0 ? "Bounding Box " + index : "Bounding Box Selection";
+
+        // Coordinate display order mirrors the frontend BBoxConditionCard reading order (N, W, S, E).
+        // Keep this list as the single source of truth for the order.
+        List<String[]> coordinates = List.of(
+                new String[]{"N", north},
+                new String[]{"W", west},
+                new String[]{"S", south},
+                new String[]{"E", east}
+        );
+
+        StringBuilder coordinateRows = new StringBuilder();
+        for (String[] coordinate : coordinates) {
+            coordinateRows.append(buildCoordinateRow(coordinate[0] + ": " + coordinate[1]));
+        }
 
         return "<tr>" +
                 "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
@@ -512,73 +683,7 @@ public class EmailUtils {
                 "<tr>" +
                 "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0px 48px 0px 48px;word-break:break-word;\">" +
                 "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
-                "<tr>" +
-                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
-                "<tr>" +
-                "<td align=\"left\" width=\"100%\">" +
-                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">N: " + north + " </p>" +
-                "</div>" +
-                "</td>" +
-                "</tr>" +
-                "</table>" +
-                "</td>" +
-                "</tr>" +
-                "<tr>" +
-                "<td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
-                "<div style=\"height:8px;line-height:8px;\">&#8203;</div>" +
-                "</td>" +
-                "</tr>" +
-                "<tr>" +
-                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
-                "<tr>" +
-                "<td align=\"left\" width=\"100%\">" +
-                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">S: " + south + "</p>" +
-                "</div>" +
-                "</td>" +
-                "</tr>" +
-                "</table>" +
-                "</td>" +
-                "</tr>" +
-                "<tr>" +
-                "<td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
-                "<div style=\"height:8px;line-height:8px;\">&#8203;</div>" +
-                "</td>" +
-                "</tr>" +
-                "<tr>" +
-                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
-                "<tr>" +
-                "<td align=\"left\" width=\"100%\">" +
-                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">W: " + west + "</p>" +
-                "</div>" +
-                "</td>" +
-                "</tr>" +
-                "</table>" +
-                "</td>" +
-                "</tr>" +
-                "<tr>" +
-                "<td style=\"font-size:0;padding:0;padding-bottom:0;word-break:break-word;color:transparent;\" aria-hidden=\"true\">" +
-                "<div style=\"height:8px;line-height:8px;\">&#8203;</div>" +
-                "</td>" +
-                "</tr>" +
-                "<tr>" +
-                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"432\">" +
-                "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
-                "<tr>" +
-                "<td align=\"left\" width=\"100%\">" +
-                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 400; line-height: 157%; text-align: left; color: #3c3c3c\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">E: " + east + "</p>" +
-                "</div>" +
-                "</td>" +
-                "</tr>" +
-                "</table>" +
-                "</td>" +
-                "</tr>" +
+                coordinateRows +
                 "</table>" +
                 "</td>" +
                 "</tr>";
