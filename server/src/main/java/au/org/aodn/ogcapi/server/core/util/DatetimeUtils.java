@@ -7,9 +7,55 @@ public class DatetimeUtils {
     private static final Pattern MM_YYYY_PATTERN = Pattern.compile("^(\\d{2})-(\\d{4})$");
     private static final Pattern YYYY_MM_DD_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final DateTimeFormatter ISO_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+    // Australian display format (dd/MM/yyyy), matching the frontend DISPLAY_FORMAT
+    private static final DateTimeFormatter AU_DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     public static final String NON_SPECIFIED_DATE = "non-specified";
+    // Frontend default lower bound (dateDefault.min); its default upper bound is "now"
+    public static final String DEFAULT_MIN_DATE = "1970-01-01";
 
     private DatetimeUtils() {
+    }
+
+    /**
+     * A lower bound is "open" (no real start) when it is null/empty/non-specified,
+     * or equals the frontend default minimum (1970-01-01).
+     */
+    public static boolean isDefaultLowerBound(String date) {
+        if (date == null || date.trim().isEmpty() || NON_SPECIFIED_DATE.equalsIgnoreCase(date.trim())) {
+            return true;
+        }
+        return DEFAULT_MIN_DATE.equals(date.trim());
+    }
+
+    /**
+     * An upper bound is "open" (no real end) when it is null/empty/non-specified,
+     * or falls on today or later (the frontend default maximum is "now").
+     * Avoids an exact today-equality check so it is not fragile across timezones/midnight.
+     */
+    public static boolean isOpenUpperBound(String date) {
+        if (date == null || date.trim().isEmpty() || NON_SPECIFIED_DATE.equalsIgnoreCase(date.trim())) {
+            return true;
+        }
+        try {
+            return !java.time.LocalDate.parse(date.trim(), ISO_DATE_FORMAT).isBefore(java.time.LocalDate.now());
+        } catch (java.time.format.DateTimeParseException e) {
+            return false;
+        }
+    }
+
+    /**
+     * Format an ISO date (yyyy-MM-dd) for display in the Australian format (dd/MM/yyyy).
+     * Returns "" for null/empty/non-specified, and falls back to the raw input if it cannot be parsed.
+     */
+    public static String toDisplayDate(String isoDate) {
+        if (isoDate == null || isoDate.trim().isEmpty() || NON_SPECIFIED_DATE.equalsIgnoreCase(isoDate.trim())) {
+            return "";
+        }
+        try {
+            return java.time.LocalDate.parse(isoDate.trim(), ISO_DATE_FORMAT).format(AU_DISPLAY_DATE_FORMAT);
+        } catch (java.time.format.DateTimeParseException e) {
+            return isoDate;
+        }
     }
 
     public static String formatOGCDateTime(String startDate, String endDate) {
