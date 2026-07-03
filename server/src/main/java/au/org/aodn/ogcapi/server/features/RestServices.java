@@ -83,7 +83,7 @@ public class RestServices extends OGCApiService {
             return dasService.getDatasetMetadata(id);
         }
         catch (Exception e) {
-            log.error("Error fetching metadata of id: {}, {}", id, e.getMessage());
+            log.error("Error fetching metadata of id: {}", id, e);
             return ResponseEntity.internalServerError().build();
         }
     }

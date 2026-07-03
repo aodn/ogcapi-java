@@ -28,7 +28,7 @@ public class DatasetMetadata {
         private String dname;
         private CoordinateBounds lat;
         private CoordinateBounds lng;
-        private Double depth;
+        private DepthBounds depth;
     }
 
     @Data
@@ -37,5 +37,14 @@ public class DatasetMetadata {
     public static class CoordinateBounds {
         private Double min;
         private Double max;
+    }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class DepthBounds {
+        private Double min;
+        private Double max;
+        private String unit;
     }
 }
