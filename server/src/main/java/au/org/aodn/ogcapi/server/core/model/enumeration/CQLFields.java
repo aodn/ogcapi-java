@@ -197,10 +197,16 @@ public enum CQLFields implements CQLFieldsInterface {
                         null,
                         null),
         scope(
-                        StacSummeries.Scope.searchField,
-                        StacSummeries.Scope.displayField,
-                        null,
-                        null),
+                StacSummeries.Scope.searchField,
+                StacSummeries.Scope.displayField,
+                (literal) -> NestedQuery.of(m -> m
+                                .path(StacSummeries.Scope.displayField)
+                                .query(q -> q
+                                        .term(t -> t
+                                                .field(StacSummeries.Scope.searchField)
+                                                .value(literal))))
+                        ._toQuery(),
+                null),
         score(
                         CQLElasticSetting.score.getSetting(),
                         CQLElasticSetting.score.getSetting(),
