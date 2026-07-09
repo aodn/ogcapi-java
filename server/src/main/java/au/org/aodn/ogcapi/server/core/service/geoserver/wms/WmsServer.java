@@ -552,6 +552,69 @@ public class WmsServer {
     }
 
     /**
+     * Get the WMS GetLegendGraphic image (image/png) for a layer.
+     *
+     * @param collectionId - The uuid
+     * @param request      - The request param, layer name is used
+     * @return - The legend png bytes, or null if none could be produced
+     * @throws URISyntaxException - Not expected
+     */
+    public byte[] getLegend(String collectionId, FeatureRequest request) throws URISyntaxException {
+        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+        log.debug("legend request for uuid {} layername {}", collectionId, request.getLayerName());
+        if (mapServerUrl.isPresent()) {
+            String url = createLegendUrl(mapServerUrl.get(), request);
+            if (url != null) {
+                log.debug("legend request for layer name {} url {} ", request.getLayerName(), url);
+                ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, byte[].class), byte[].class, pretendUserEntity);
+                // Unlike getMapTile, a non-image response here just means the layer has
+                // no legend (e.g. ncWMS), so return null (-> 404) rather than throwing.
+                if (response.getStatusCode().is2xxSuccessful()
+                        && response.getHeaders().getContentType() != null
+                        && response.getHeaders().getContentType().getType().equals("image")) {
+                    return response.getBody();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Build a GetLegendGraphic url against the same host/path as the layer's WMS server.
+     *
+     * @param url     - The WMS server url from the collection link
+     * @param request - The request, layer name is used as the LAYER param
+     * @return - The legend url, or null on syntax error
+     */
+    protected String createLegendUrl(String url, FeatureRequest request) {
+        try {
+            UriComponents components = UriComponentsBuilder.fromUriString(url).build();
+            if (components.getPath() != null) {
+                Map<String, String> param = new HashMap<>(wmsDefaultParam.getLegend());
+                // GetLegendGraphic uses LAYER (singular), unlike GetMap's LAYERS
+                param.put("LAYER", request.getLayerName());
+
+                UriComponentsBuilder builder = UriComponentsBuilder
+                        .newInstance()
+                        .scheme("https")   // hardcode https to avoid a redirect, as elsewhere
+                        .port(components.getPort())
+                        .host(components.getHost())
+                        .path(components.getPath());
+
+                param.forEach((key, value) -> {
+                    if (value != null) {
+                        builder.queryParam(key, value);
+                    }
+                });
+                return builder.build().toUriString();
+            }
+        } catch (Exception e) {
+            log.error("URL syntax error {}", url, e);
+        }
+        return null;
+    }
+
+    /**
      * Query by using WMS's DescriberLayer function to find out the associated WFS layer and fields
      *
      * @param collectionId - The uuid
