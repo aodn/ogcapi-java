@@ -563,6 +563,8 @@ public class WmsServer {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
         log.debug("legend request for uuid {} layername {}", collectionId, request.getLayerName());
         if (mapServerUrl.isPresent()) {
+            // createLegendUrl validates the user-supplied layer name (SSRF guard) and
+            // returns null when it is unsafe.
             String url = createLegendUrl(mapServerUrl.get(), request);
             if (url != null) {
                 log.debug("legend request for layer name {} url {} ", request.getLayerName(), url);
@@ -587,12 +589,18 @@ public class WmsServer {
      * @return - The legend url, or null on syntax error
      */
     protected String createLegendUrl(String url, FeatureRequest request) {
+        String layerName = request.getLayerName();
+        // SSRF guard: the layer name is the only user-supplied part of the URL, so
+        // restrict it to safe WMS characters and use this validated value below.
+        if (layerName == null || !layerName.matches("[A-Za-z0-9_:/.\\-]+")) {
+            return null;
+        }
         try {
             UriComponents components = UriComponentsBuilder.fromUriString(url).build();
             if (components.getPath() != null) {
                 Map<String, String> param = new HashMap<>(wmsDefaultParam.getLegend());
                 // GetLegendGraphic uses LAYER (singular), unlike GetMap's LAYERS
-                param.put("LAYER", request.getLayerName());
+                param.put("LAYER", layerName);
 
                 UriComponentsBuilder builder = UriComponentsBuilder
                         .newInstance()

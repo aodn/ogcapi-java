@@ -707,6 +707,17 @@ public class WmsServerTest {
     }
 
     @Test
+    public void createLegendUrl_rejectsUnsafeLayerName() {
+        String base = "https://geoserver-123.aodn.org.au/geoserver/wms";
+        // A normal layer name builds a url
+        assertNotNull(wmsServer.createLegendUrl(base,
+                FeatureRequest.builder().layerName("imos:argo_profile_map").build()));
+        // A crafted layer name is rejected (SSRF guard) -> null
+        assertNull(wmsServer.createLegendUrl(base,
+                FeatureRequest.builder().layerName("x?SERVICE=WMS&url=http://evil").build()));
+    }
+
+    @Test
     public void getLegend_returnsImageBytesFromServer() {
         String id = "id";
         FeatureRequest request = FeatureRequest.builder().layerName("imos:argo_profile_map").build();
