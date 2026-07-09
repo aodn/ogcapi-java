@@ -15,6 +15,12 @@ public class AwsConfig {
     @Value("${aws.region}")
     private String awsRegion;
 
+    @Value("${aws.batch.job.definition}")
+    private String batchJobDefinition;
+
+    @Value("${aws.batch.job.queue}")
+    private String batchJobQueue;
+
     @Bean
     public BatchClient batchClient() {
         return BatchClient
@@ -26,6 +32,6 @@ public class AwsConfig {
 
     @Bean
     public RestServices awsBatchService(BatchClient batchClient, ObjectMapper objectMapper) {
-        return new RestServices(batchClient, objectMapper);
+        return new RestServices(batchClient, objectMapper, batchJobDefinition, batchJobQueue);
     }
 }

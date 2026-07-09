@@ -25,6 +25,10 @@ elasticsearch:
 
 aws:
   region: ap-southeast-2
+  batch:
+    job:
+        queue: data-access-service-batch-job-queueb
+        definition: data-access-service-batch-job-definition
 
 wfs-default-param:
   fields:
