@@ -177,6 +177,7 @@ public class RestServices {
                     .replace("{{collectionTitle}}", collectionTitle != null ? collectionTitle : "")
                     .replace("{{subsettingSection}}", subsettingSection)
                     .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))
+                    .replace("{{POLYGON_IMG}}", EmailUtils.readBase64Image("polygon.txt"))
                     .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
                     .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
                     .replace("{{fullMetadataLink}}", fullMetadataLink != null ? fullMetadataLink : "")

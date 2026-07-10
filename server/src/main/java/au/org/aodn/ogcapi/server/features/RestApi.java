@@ -148,6 +148,9 @@ public class RestApi implements CollectionsApi {
             case wms_map_tile -> {
                 return featuresService.getWmsMapTile(collectionId, request);
             }
+            case wms_legend -> {
+                return featuresService.getWmsLegend(collectionId, request);
+            }
             case wms_map_feature -> {
                 return featuresService.getWmsMapFeature(collectionId, request);
             }

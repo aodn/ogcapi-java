@@ -64,7 +64,7 @@ public class DatasetDownloadEnums {
 
     @Getter
     public enum JobDefinition {
-        GENERATE_CSV_DATA_FILE("generate-csv-data-file");
+        GENERATE_CSV_DATA_FILE("data-access-service-batch-job-definition");
 
         private final String value;
 
@@ -75,7 +75,7 @@ public class DatasetDownloadEnums {
 
     @Getter
     public enum JobQueue {
-        GENERATING_CSV_DATA_FILE("generate-csv-data-file");
+        GENERATING_CSV_DATA_FILE("data-access-service-batch-job-queue");
 
         private final String value;
 
