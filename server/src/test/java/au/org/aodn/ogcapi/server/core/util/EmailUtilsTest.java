@@ -39,7 +39,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testSingleBbox() {
-        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
+        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
 
         assertTrue(html.contains("Bounding Box Selection"));
         assertTrue(html.contains("N: -40.0"));
@@ -53,7 +53,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testBboxCoordinateOrder() {
-        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
+        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
 
         int n = html.indexOf("N: -40.0");
         int s = html.indexOf("S: -41.0");
@@ -64,15 +64,16 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Test multiple bboxes with numbers
+     * Test that every bbox always shows "Bounding Box Selection", never a number
      */
     @Test
     void testMultipleBboxes() {
-        String html1 = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 1);
-        String html2 = EmailUtils.buildBboxSection("-38.0", "-39.0", "147.0", "148.0", 2);
+        String html1 = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
+        String html2 = EmailUtils.buildBboxSection("-38.0", "-39.0", "147.0", "148.0");
 
-        assertTrue(html1.contains("Bounding Box 1"));
-        assertTrue(html2.contains("Bounding Box 2"));
+        assertTrue(html1.contains("Bounding Box Selection"));
+        assertTrue(html2.contains("Bounding Box Selection"));
+        assertFalse(html2.contains("Bounding Box 2"));
     }
 
     /**
@@ -80,7 +81,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testDecimalFormat() {
-        String html = EmailUtils.buildBboxSection("-35.12345", "-36.54321", "150.11111", "151.99999", 0);
+        String html = EmailUtils.buildBboxSection("-35.12345", "-36.54321", "150.11111", "151.99999");
 
         assertTrue(html.contains("N: -35.12345"));
         assertTrue(html.contains("S: -36.54321"));
@@ -93,7 +94,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testScientificNotation() {
-        String html = EmailUtils.buildBboxSection("4.9E-324", "-11.919807423710694", "-45.42305428582753", "4.9E-324", 0);
+        String html = EmailUtils.buildBboxSection("4.9E-324", "-11.919807423710694", "-45.42305428582753", "4.9E-324");
 
         assertTrue(html.contains("N: 4.9E-324"));
         assertTrue(html.contains("S: -11.919807423710694"));
@@ -106,7 +107,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testImagePlaceholder() {
-        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
+        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
 
         assertTrue(html.contains("{{BBOX_IMG}}"));
     }

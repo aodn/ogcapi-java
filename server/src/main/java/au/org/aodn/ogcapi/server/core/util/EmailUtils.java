@@ -170,8 +170,7 @@ public class EmailUtils {
                     String east = String.valueOf(envelope.getMaxX());
 
                     bboxCounter++;
-                    int displayIndex = bboxCounter > 1 ? bboxCounter : 0;
-                    html.append(buildBboxSection(north, south, west, east, displayIndex));
+                    html.append(buildBboxSection(north, south, west, east));
                 }
             }
 
@@ -632,8 +631,8 @@ public class EmailUtils {
     /**
      * Build a bounding box section showing its north, west, south and east bounds
      */
-    protected static String buildBboxSection(String north, String south, String west, String east, int index) {
-        String title = index > 0 ? "Bounding Box " + index : "Bounding Box Selection";
+    protected static String buildBboxSection(String north, String south, String west, String east) {
+        String title = "Bounding Box Selection";
 
         // Coordinate display order groups the latitude bounds (N, S) then the longitude bounds (W, E).
         // Keep this list as the single source of truth for the order.
