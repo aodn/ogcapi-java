@@ -10,6 +10,7 @@ import org.locationtech.jts.geom.Polygon;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -164,10 +165,10 @@ public class EmailUtils {
                     Polygon normalizedPolygon = (Polygon) normalizedBbox.getGeometryN(i);
                     Envelope envelope = normalizedPolygon.getEnvelopeInternal();
 
-                    String north = String.valueOf(envelope.getMaxY());
-                    String south = String.valueOf(envelope.getMinY());
-                    String west = String.valueOf(envelope.getMinX());
-                    String east = String.valueOf(envelope.getMaxX());
+                    String north = formatCoordinate(envelope.getMaxY());
+                    String south = formatCoordinate(envelope.getMinY());
+                    String west = formatCoordinate(envelope.getMinX());
+                    String east = formatCoordinate(envelope.getMaxX());
 
                     bboxCounter++;
                     html.append(buildBboxSection(north, south, west, east));
@@ -228,6 +229,13 @@ public class EmailUtils {
             log.error("Error generating polygon HTML", e);
             return "";
         }
+    }
+
+    /**
+     * Format a coordinate to a fixed 5 decimal places (~1m precision), avoiding scientific notation.
+     */
+    protected static String formatCoordinate(double value) {
+        return BigDecimal.valueOf(value).setScale(5, RoundingMode.HALF_UP).toPlainString();
     }
 
     /**
@@ -582,8 +590,8 @@ public class EmailUtils {
         for (int i = 0; i < vertices.size(); i++) {
             List<BigDecimal> point = vertices.get(i);
             // GeoJSON stores [lon, lat]; display latitude-first per geographic convention.
-            String lon = point.get(0).toPlainString();
-            String lat = point.get(1).toPlainString();
+            String lon = formatCoordinate(point.get(0).doubleValue());
+            String lat = formatCoordinate(point.get(1).doubleValue());
             coordinateRows.append(buildCoordinateRow("Point " + (i + 1) + ": (" + lat + ", " + lon + ")"));
         }
 
