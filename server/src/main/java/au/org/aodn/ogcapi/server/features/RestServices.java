@@ -28,6 +28,7 @@ import org.opengis.feature.simple.SimpleFeatureType;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URISyntaxException;
+import java.time.Duration;
 import java.util.*;
 
 @Slf4j
@@ -102,6 +104,29 @@ public class RestServices extends OGCApiService {
             return ResponseEntity.ok()
                     .contentType(MediaType.IMAGE_PNG)
                     .body(wmsServer.getMapTile(collectionId, request));
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Proxy the WMS GetLegendGraphic image (colour-bar / symbol legend) for a layer.
+     *
+     * @param collectionId - The uuid of the dataset
+     * @param request      - Request holding the layer name
+     * @return - The legend as an image/png, or 404 if no legend could be built
+     */
+    public ResponseEntity<byte[]> getWmsLegend(String collectionId, FeatureRequest request) {
+        try {
+            byte[] legend = wmsServer.getLegend(collectionId, request);
+            if (legend == null) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.ok()
+                    .contentType(MediaType.IMAGE_PNG)
+                    // Legends are stable per layer/style, so let the browser/CDN cache them
+                    .cacheControl(CacheControl.maxAge(Duration.ofHours(24)).cachePublic())
+                    .body(legend);
         } catch (Throwable e) {
             throw new RuntimeException(e);
         }

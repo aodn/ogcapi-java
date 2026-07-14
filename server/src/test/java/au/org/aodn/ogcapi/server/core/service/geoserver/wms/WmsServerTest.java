@@ -21,7 +21,10 @@ import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.web.client.RestTemplate;
@@ -674,5 +677,72 @@ public class WmsServerTest {
         String url4 = "https://example.com/geoserver/wfs";
         String result4 = WmsServer.rewriteUrlWithWorkSpace(url4, req);
         assertEquals("https://example.com/geoserver/xxx/wfs", result4);
+    }
+
+    @Test
+    public void verifyLegendUrlGenCorrect() {
+        FeatureRequest request = FeatureRequest.builder()
+                .layerName("imos:argo_profile_map")
+                .build();
+
+        String url = wmsServer.createLegendUrl("http://geoserver-123.aodn.org.au/geoserver/wms", request);
+        assertNotNull(url);
+
+        // Legend is forced to https, uses REQUEST=GetLegendGraphic and the default image/png
+        String expectedUrl = "https://geoserver-123.aodn.org.au/geoserver/wms?SERVICE=WMS&VERSION=1.1.1&REQUEST=GetLegendGraphic&FORMAT=image/png&LEGEND_OPTIONS=forceLabels:on&LAYER=imos:argo_profile_map";
+        UriComponents expected = UriComponentsBuilder.fromUriString(expectedUrl).build();
+        UriComponents result = UriComponentsBuilder.fromUriString(url).build();
+
+        assertEquals(expected.getScheme(), result.getScheme());
+        assertEquals(expected.getHost(), result.getHost());
+        assertEquals(expected.getPath(), result.getPath());
+
+        expected.getQueryParams()
+                .forEach((key, value) ->
+                        assertEquals(value, result.getQueryParams().get(key), key)
+                );
+
+        // GetLegendGraphic uses LAYER (singular), never GetMap's LAYERS
+        assertNull(result.getQueryParams().get("LAYERS"));
+    }
+
+    @Test
+    public void createLegendUrl_rejectsUnsafeLayerName() {
+        String base = "https://geoserver-123.aodn.org.au/geoserver/wms";
+        // A normal layer name builds a url
+        assertNotNull(wmsServer.createLegendUrl(base,
+                FeatureRequest.builder().layerName("imos:argo_profile_map").build()));
+        // A crafted layer name is rejected (SSRF guard) -> null
+        assertNull(wmsServer.createLegendUrl(base,
+                FeatureRequest.builder().layerName("x?SERVICE=WMS&url=http://evil").build()));
+    }
+
+    @Test
+    public void getLegend_returnsImageBytesFromServer() {
+        String id = "id";
+        FeatureRequest request = FeatureRequest.builder().layerName("imos:argo_profile_map").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(new ArrayList<>());
+        stac.getCollections().add(
+                StacCollectionModel.builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .href("http://geoserver-123.aodn.org.au/geoserver/wms")
+                                        .title(request.getLayerName())
+                                        .aiGroup(WMS_LINK_MARKER)
+                                        .build()))
+                        .build()
+        );
+        when(search.searchCollections(eq(id))).thenReturn(stac);
+
+        byte[] png = new byte[]{(byte) 0x89, 'P', 'N', 'G'};
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        when(restTemplate.exchange(anyString(), eq(HttpMethod.GET), eq(entity), eq(byte[].class)))
+                .thenReturn(new ResponseEntity<>(png, headers, HttpStatus.OK));
+
+        byte[] result = assertDoesNotThrow(() -> wmsServer.getLegend(id, request));
+        assertArrayEquals(png, result);
     }
 }

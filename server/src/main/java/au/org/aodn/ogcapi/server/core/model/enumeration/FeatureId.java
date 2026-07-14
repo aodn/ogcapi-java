@@ -13,6 +13,7 @@ public enum FeatureId {
     moorings_latest_available_date("moorings_latest_available_date"),
     mooring_details_between_dates("mooring_details_between_dates"),
     wms_map_tile("wms_map_tile"),
+    wms_legend("wms_legend"), // Get the WMS GetLegendGraphic image (image/png) for a layer
     wms_map_feature("wms_map_feature"),
     wms_layers("wms_layers"), // Get all available layers from WMS GetCapabilities
     wfs_layers("wfs_layers"); // Get all available feature types from WFS GetCapabilities
