@@ -53,7 +53,7 @@ public class RestApiSseTest {
 
     @BeforeEach
     public void setUp() {
-        RestServices restServices = new RestServices(batchClient, objectMapper);
+        RestServices restServices = new RestServices(batchClient, objectMapper, "test-job-definition", "test-job-queue");
         ReflectionTestUtils.setField(restServices, "downloadWfsDataService", downloadWfsDataService);
         ReflectionTestUtils.setField(restServices, "dasService", dasService);
 
@@ -77,12 +77,16 @@ public class RestApiSseTest {
     /**
      * The SSE work runs on a separate thread, so poll the mock response until the
      * expected marker shows up (or time out and let the caller's assert fail with
-     * the content collected so far).
+     * the content collected so far). The emitter writes an event's name and data
+     * lines separately, so also wait for the blank line that terminates the
+     * marker's event — otherwise callers could assert on a half-written payload.
      */
     private String awaitContent(MockHttpServletResponse response, String expectedMarker) throws Exception {
         long deadline = System.currentTimeMillis() + 5000;
         String content = response.getContentAsString();
-        while (System.currentTimeMillis() < deadline && !content.contains(expectedMarker)) {
+        while (System.currentTimeMillis() < deadline
+                && (!content.contains(expectedMarker)
+                    || !content.substring(content.indexOf(expectedMarker)).contains("\n\n"))) {
             Thread.sleep(50);
             content = response.getContentAsString();
         }
