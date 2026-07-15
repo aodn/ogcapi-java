@@ -27,7 +27,7 @@ aws:
   region: ap-southeast-2
   batch:
     job:
-        queue: data-access-service-batch-job-queueb
+        queue: data-access-service-batch-job-queue
         definition: data-access-service-batch-job-definition
 
 wfs-default-param:
