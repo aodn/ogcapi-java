@@ -39,7 +39,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testSingleBbox() {
-        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
+        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
 
         assertTrue(html.contains("Bounding Box Selection"));
         assertTrue(html.contains("N: -40.0"));
@@ -53,7 +53,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testBboxCoordinateOrder() {
-        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
+        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
 
         int n = html.indexOf("N: -40.0");
         int s = html.indexOf("S: -41.0");
@@ -64,41 +64,61 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Test multiple bboxes with numbers
+     * Test that every bbox always shows "Bounding Box Selection", never a number
      */
     @Test
     void testMultipleBboxes() {
-        String html1 = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 1);
-        String html2 = EmailUtils.buildBboxSection("-38.0", "-39.0", "147.0", "148.0", 2);
+        String html1 = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
+        String html2 = EmailUtils.buildBboxSection("-38.0", "-39.0", "147.0", "148.0");
 
-        assertTrue(html1.contains("Bounding Box 1"));
-        assertTrue(html2.contains("Bounding Box 2"));
+        assertTrue(html1.contains("Bounding Box Selection"));
+        assertTrue(html2.contains("Bounding Box Selection"));
+        assertFalse(html2.contains("Bounding Box 2"));
     }
 
     /**
-     * Test decimal formatting - now tests that original string values are preserved
+     * Test coordinates are rounded to a fixed 5 decimal places
      */
     @Test
-    void testDecimalFormat() {
-        String html = EmailUtils.buildBboxSection("-35.12345", "-36.54321", "150.11111", "151.99999", 0);
-
-        assertTrue(html.contains("N: -35.12345"));
-        assertTrue(html.contains("S: -36.54321"));
-        assertTrue(html.contains("W: 150.11111"));
-        assertTrue(html.contains("E: 151.99999"));
+    void testCoordinateRoundsToFiveDecimals() {
+        assertEquals("-35.12346", EmailUtils.formatCoordinate(-35.123456789));
+        assertEquals("145.00000", EmailUtils.formatCoordinate(145.0));
     }
 
     /**
-     * Test scientific notation values are preserved
+     * Test coordinates never use scientific notation
      */
     @Test
-    void testScientificNotation() {
-        String html = EmailUtils.buildBboxSection("4.9E-324", "-11.919807423710694", "-45.42305428582753", "4.9E-324", 0);
+    void testCoordinateAvoidsScientificNotation() {
+        assertEquals("0.00000", EmailUtils.formatCoordinate(4.9E-324));
+        assertEquals("-11.91981", EmailUtils.formatCoordinate(-11.919807423710694));
+    }
 
-        assertTrue(html.contains("N: 4.9E-324"));
-        assertTrue(html.contains("S: -11.919807423710694"));
-        assertTrue(html.contains("W: -45.42305428582753"));
-        assertTrue(html.contains("E: 4.9E-324"));
+    /**
+     * Test that generated bbox HTML rounds high-precision input to 5 decimals with no scientific notation
+     */
+    @Test
+    void testGenerateBboxHtmlRoundsCoordinates() {
+        Map<String, Object> bbox = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(145.123456789, -40.987654321),
+                                        List.of(145.123456789, -41.0),
+                                        List.of(146.0, -41.0),
+                                        List.of(146.0, -40.987654321),
+                                        List.of(145.123456789, -40.987654321)
+                                )
+                        )
+                )
+        );
+
+        String html = EmailUtils.generateBboxHtml(bbox, new ObjectMapper());
+
+        assertTrue(html.contains("W: 145.12346"));
+        assertTrue(html.contains("N: -40.98765"));
+        assertFalse(html.contains("E-"));
     }
 
     /**
@@ -106,7 +126,7 @@ public class EmailUtilsTest {
      */
     @Test
     void testImagePlaceholder() {
-        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0", 0);
+        String html = EmailUtils.buildBboxSection("-40.0", "-41.0", "145.0", "146.0");
 
         assertTrue(html.contains("{{BBOX_IMG}}"));
     }
@@ -327,8 +347,8 @@ public class EmailUtilsTest {
         String html = EmailUtils.buildPolygonSection(vertices, 0);
 
         assertTrue(html.contains("Polygon Selection"));
-        assertTrue(html.contains("Point 1: (-40.0, 145.0)"));
-        assertTrue(html.contains("Point 5: (-41.0, 144.5)"));
+        assertTrue(html.contains("Point 1: (-40.00000, 145.00000)"));
+        assertTrue(html.contains("Point 5: (-41.00000, 144.50000)"));
     }
 
     /**
@@ -352,12 +372,12 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Test polygon vertices preserve full precision (no scientific notation)
+     * Test polygon vertices are rounded to 5 decimals (no scientific notation)
      */
     @Test
     void testPolygonDecimalFormat() {
         List<List<BigDecimal>> vertices = List.of(
-                List.of(new BigDecimal("150.11111"), new BigDecimal("-35.12345")),
+                List.of(new BigDecimal("150.123456"), new BigDecimal("-35.123454")),
                 List.of(new BigDecimal("151.99999"), new BigDecimal("-36.54321")),
                 List.of(new BigDecimal("152.50000"), new BigDecimal("-37.00001")),
                 List.of(new BigDecimal("151.00000"), new BigDecimal("-38.00002")),
@@ -366,7 +386,7 @@ public class EmailUtilsTest {
 
         String html = EmailUtils.buildPolygonSection(vertices, 0);
 
-        assertTrue(html.contains("Point 1: (-35.12345, 150.11111)"));
+        assertTrue(html.contains("Point 1: (-35.12345, 150.12346)"));
         assertTrue(html.contains("Point 2: (-36.54321, 151.99999)"));
     }
 
