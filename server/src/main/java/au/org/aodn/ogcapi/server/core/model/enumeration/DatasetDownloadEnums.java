@@ -61,26 +61,4 @@ public class DatasetDownloadEnums {
             this.value = value;
         }
     }
-
-    @Getter
-    public enum JobDefinition {
-        GENERATE_CSV_DATA_FILE("data-access-service-batch-job-definition");
-
-        private final String value;
-
-        JobDefinition(String value) {
-            this.value = value;
-        }
-    }
-
-    @Getter
-    public enum JobQueue {
-        GENERATING_CSV_DATA_FILE("data-access-service-batch-job-queue");
-
-        private final String value;
-
-        JobQueue(String value) {
-            this.value = value;
-        }
-    }
 }

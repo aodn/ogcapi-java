@@ -32,13 +32,17 @@ public class RestServices {
 
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
+    private final String batchJobDefinition;
+    private final String batchJobQueue;
 
     @Autowired
     private DownloadWfsDataService downloadWfsDataService;
 
-    public RestServices(BatchClient batchClient, ObjectMapper objectMapper) {
+    public RestServices(BatchClient batchClient, ObjectMapper objectMapper, String batchJobDefinition, String batchJobQueue) {
         this.batchClient = batchClient;
         this.objectMapper = objectMapper;
+        this.batchJobDefinition = batchJobDefinition;
+        this.batchJobQueue = batchJobQueue;
     }
 
     public void notifyUser(String recipient, String uuid, String startDate, String endDate, Object multiPolygon, String collectionTitle,
@@ -113,10 +117,10 @@ public class RestServices {
 
         String jobId = submitJob(
                 "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
-                DatasetDownloadEnums.JobQueue.GENERATING_CSV_DATA_FILE.getValue(),
-                DatasetDownloadEnums.JobDefinition.GENERATE_CSV_DATA_FILE.getValue(),
+                this.batchJobQueue,
+                this.batchJobDefinition,
                 parameters);
-        log.info("Job submitted with ID: " + jobId);
+        log.info("Job submitted with ID: {}", jobId);
         return ResponseEntity.ok("Job submitted with ID: " + jobId);
     }
 
