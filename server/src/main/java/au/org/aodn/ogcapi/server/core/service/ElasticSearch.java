@@ -257,151 +257,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
-    /**
-     * Holds the reusable pieces of a parameter/CQL search, computed once and consumed by
-     * both searchByParameters (via searchCollectionBy) and the explain endpoints
-     * (via buildParameterSearchRequestSupplier -> buildCollectionSearchRequestSupplier).
-     */
-    protected record ParameterSearchContext(
-            List<Query> should,
-            List<Query> filters,
-            List<FieldValue> searchAfter,
-            List<SortOptions> sortOptions,
-            Double score,
-            Long maxSize) {}
-
-    protected ParameterSearchContext createParameterSearchContext(
-            List<String> keywords, String cql, String sortBy, CQLCrsType coor) throws CQLException {
-
-        List<Query> should = null;
-        if (keywords != null && !keywords.isEmpty()) {
-            should = new ArrayList<>();
-            for (String t : keywords) {
-                // If user's input starts and ends with a quote " (and is non-empty), treat it as an
-                // exact-term search against the original title/description instead of the fuzzy fields.
-                // All other fields are searched with the same term regardless, as they do not use fuzzy matching.
-                boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
-                String term = isExact ? t.substring(1, t.length() - 1) : t;
-
-                if (isExact) {
-                    should.add(CQLFields.title.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.description.getPropertyEqualToQuery(term));
-                }
-                else {
-                    should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
-                }
-                should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
-                should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
-                should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
-                should.add(CQLFields.id.getPropertyEqualToQuery(term));
-                // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
-                should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
-                should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
-                // credit_contains uses match query by default, exact match is not applied here
-                should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
-            }
-        }
-
-        List<Query> filters = new ArrayList<>();
-        CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
-        if (cql != null) {
-            try {
-                Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
-                if (filter instanceof QueryHandler handler) {
-                    if (handler.getErrors() == null || handler.getErrors().isEmpty()) {
-                        if (handler.getQuery() != null) {
-                            filters = List.of(handler.getQuery());
-                        }
-                    }
-                    else {
-                        throw new IllegalArgumentException(
-                                "ECQL Parse Error",
-                                handler.getErrors()
-                                        .stream()
-                                        .reduce(null, (e1, e2) -> {
-                                            if (e1 == null) return e2;
-                                            e1.addSuppressed(e2);
-                                            return e1;
-                                        }));
-                    }
-                }
-            }
-            catch (CQLException ce) {
-                log.error("Error parsing ECQL", ce);
-                throw ce;
-            }
-        }
-
-        // Get the page size after parsing
-        Map<CQLElasticSetting, String> setting = factory.getQuerySetting();
-        Long maxSize = null;
-        try {
-            if (setting.get(CQLElasticSetting.page_size) != null
-                    && !setting.get(CQLElasticSetting.page_size).isBlank()) {
-                maxSize = Long.parseLong(setting.get(CQLElasticSetting.page_size));
-            }
-        }
-        catch (NumberFormatException pe) {
-            // Nothing to do as accept null as default
-        }
-
-        // Get the score after parsing
-        // TODO: !! It is not good to set score due to fact that the text search include match on filter
-        // in case of text where filter is the only match, the score will become null (only fuzzy match have score)
-        // then if you set a score, you have nothing match. In the future, this score should be removed if we
-        // do not encounter a good use case. !!
-        Double score = null;
-        try {
-            if (setting.get(CQLElasticSetting.score) != null
-                    && !setting.get(CQLElasticSetting.score).isBlank()) {
-                score = Double.parseDouble(setting.get(CQLElasticSetting.score));
-            }
-        }
-        catch (Exception e) {
-            log.warn("Error parsing score assume null", e);
-            // OK to ignore as accept null as the value
-        }
-
-        // Get the search after
-        List<FieldValue> searchAfter = null;
-        if (setting.get(CQLElasticSetting.search_after) != null
-                && !setting.get(CQLElasticSetting.search_after).isBlank()) {
-            searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after)
-                            .split(searchAfterSplitRegex))
-                    .filter(v -> !v.isBlank())
-                    .map(String::trim)
-                    .map(ElasticSearch::toFieldValue)
-                    .toList();
-        }
-
-        List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
-        // When the filter searches curated vocab fields, prepend presence-based priority sort keys
-        // so matching human-curated records rank above AI-generated fallback records. This is the
-        // first sort key; existing -score,-rank ordering is preserved within each tier.
-        if (factory.isParameterPrioritySort()) {
-            sortOptions = prependPrioritySort(sortOptions, CQLFields.parameter_vocabs);
-        }
-        if (factory.isPlatformPrioritySort()) {
-            sortOptions = prependPrioritySort(sortOptions, CQLFields.platform_vocabs);
-        }
-
-        return new ParameterSearchContext(should, filters, searchAfter, sortOptions, score, maxSize);
-    }
-
-    private List<SortOptions> prependPrioritySort(List<SortOptions> sortOptions, CQLFields field) {
-        if (sortOptions == null) {
-            sortOptions = new ArrayList<>();
-        }
-        sortOptions.add(0, field.getSortBuilder().apply(SortOrder.Desc).build());
-        return sortOptions;
-    }
-
-
 
     /**
      * Build SearchRequest for searchByParameters and explainByParameters
-     */
+     * */
     protected Supplier<SearchRequest.Builder> buildParameterSearchRequestSupplier(
             List<String> keywords,
             String cql,
@@ -416,40 +275,251 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     .query(StacType.Collection.value))._toQuery());
 
             return buildCollectionSearchRequestSupplier(
-                    queries, null, null, null, null,
-                    createSortOptions(sortBy, CQLFields.class), null, null);
+                    queries,
+                    null,
+                    null,
+                    null,
+                    null,
+                    createSortOptions(sortBy, CQLFields.class),
+                    null,
+                    null);
         }
 
-        ParameterSearchContext ctx = createParameterSearchContext(keywords, cql, sortBy, coor);
+        List<Query> should = null;
+        if (keywords != null && !keywords.isEmpty()) {
+            should = new ArrayList<>();
+
+            for (String t : keywords) {
+                boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+                String term = isExact ? t.substring(1, t.length() - 1) : t;
+
+                if (isExact) {
+                    should.add(CQLFields.title.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.description.getPropertyEqualToQuery(term));
+                }
+                else {
+                    should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                }
+
+                should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+                should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+                should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+                should.add(CQLFields.id.getPropertyEqualToQuery(term));
+                // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
+                should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
+                // credit_contains uses match query by default, exact match is not applied here
+                should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
+            }
+        }
+
+        List<Query> filters = new ArrayList<>();
+        CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
+
+        if (cql != null) {
+            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+            if (filter instanceof QueryHandler handler) {
+                if (handler.getErrors() == null || handler.getErrors().isEmpty()) {
+                    if (handler.getQuery() != null) {
+                        filters = List.of(handler.getQuery());
+                    }
+                }
+                else {
+                    throw new IllegalArgumentException("ECQL Parse Error");
+                }
+            }
+        }
+
+        Map<CQLElasticSetting, String> setting = factory.getQuerySetting();
+
+        Long maxSize = setting.get(CQLElasticSetting.page_size) == null
+                || setting.get(CQLElasticSetting.page_size).isBlank()
+                ? null
+                : Long.parseLong(setting.get(CQLElasticSetting.page_size));
+
+        Double score = setting.get(CQLElasticSetting.score) == null
+                || setting.get(CQLElasticSetting.score).isBlank()
+                ? null
+                : Double.parseDouble(setting.get(CQLElasticSetting.score));
+
+        List<FieldValue> searchAfter = null;
+        if (setting.get(CQLElasticSetting.search_after) != null
+                && !setting.get(CQLElasticSetting.search_after).isBlank()) {
+            searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after).split(searchAfterSplitRegex))
+                    .filter(v -> !v.isBlank())
+                    .map(String::trim)
+                    .map(ElasticSearch::toFieldValue)
+                    .toList();
+        }
+
+        List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
+
+        if (factory.isParameterPrioritySort()) {
+            if (sortOptions == null) sortOptions = new ArrayList<>();
+            sortOptions.add(0, CQLFields.parameter_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+        }
+
+        if (factory.isPlatformPrioritySort()) {
+            if (sortOptions == null) sortOptions = new ArrayList<>();
+            sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+        }
+
         return buildCollectionSearchRequestSupplier(
                 null,
-                ctx.should(),
-                ctx.filters(),
+                should,
+                filters,
                 properties,
-                ctx.searchAfter(),
-                ctx.sortOptions(),
-                ctx.score(),
-                ctx.maxSize());
+                searchAfter,
+                sortOptions,
+                score,
+                maxSize);
     }
 
     @Override
-    public ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(
-            List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
+    public ElasticSearchBase.SearchResult<StacCollectionModel> searchByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
 
-        if ((keywords == null || keywords.isEmpty()) && cql == null) {
+        if((keywords == null || keywords.isEmpty()) && cql == null) {
             return searchAllCollections(sortBy);
         }
+        else {
 
-        ParameterSearchContext ctx = createParameterSearchContext(keywords, cql, sortBy, coor);
-        return searchCollectionBy(
-                null,
-                ctx.should(),
-                ctx.filters(),
-                properties,
-                ctx.searchAfter(),
-                ctx.sortOptions(),
-                ctx.score(),
-                ctx.maxSize());
+            List<Query> should = null;
+            if(keywords != null && !keywords.isEmpty()) {
+                should = new ArrayList<>();
+
+                for (String t : keywords) {
+                    // If user's input (keywords) starts and ends with quote ", and the text is not empty
+                    // treat the user intend to search with the exact term,
+                    // instead of searching in fuzzy fields i.e., fuzzy_title and fuzzy_desc,
+                    // search in the original title and description fields
+                    // other fields are searched with the same term regardless of exact match or not, as they do not use fuzzy matching.
+                    boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+                    // If search text with double quote, remove quotes,
+                    // otherwise keeps same
+                    String term = isExact ? t.substring(1, t.length() - 1) : t;
+
+                    if (isExact) {
+                        // Match phrase in original title and description, not use fuzzy fields
+                        should.add(CQLFields.title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.description.getPropertyEqualToQuery(term));
+                    }
+                    else {
+                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                    }
+                    should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.id.getPropertyEqualToQuery(term));
+                    // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
+                    should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
+                    // credit_contains uses match query by default, exact match is not applied here
+                    should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
+                }
+            }
+
+            List<Query> filters = new ArrayList<>();
+
+            CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
+            if(cql != null) {
+                try {
+                    Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+                    if(filter instanceof QueryHandler handler) {
+                        if(handler.getErrors() == null || handler.getErrors().isEmpty()) {
+                            if(handler.getQuery() != null) {
+                                // There is no error during parsing
+                                filters = List.of(handler.getQuery());
+                            }
+                        }
+                        else {
+                            throw new IllegalArgumentException(
+                                    "ECQL Parse Error",
+                                    handler.getErrors()
+                                            .stream()
+                                            .reduce(null, (e1, e2) -> {
+                                                if (e1 == null) return e2;
+                                                e1.addSuppressed(e2);
+                                                return e1;
+                                            }));
+                        }
+                    }
+                }
+                catch(CQLException ce) {
+                    log.error("Error parsing ECQL", ce);
+                    throw ce;
+                }
+            }
+            // Get the page size after parsing
+            Map<CQLElasticSetting, String> setting = factory.getQuerySetting();
+            Long maxSize = null;
+            try {
+                if(setting.get(CQLElasticSetting.page_size) != null &&
+                        !setting.get(CQLElasticSetting.page_size).isBlank()) {
+                    maxSize = Long.parseLong(setting.get(CQLElasticSetting.page_size));
+                }
+            }
+            catch(NumberFormatException pe) {
+                // Nothing to do as except null as default
+            }
+            // Get the score after parsing
+            // TODO: !! It is not good to set score due to fact that the text search include match on filter
+            // in case of text where filter is the only match, the score will become null (only fuzzy match have score)
+            // then if you set a score, you have nothing match. In the future, this score should be removed if we
+            // do not encounter a good use case. !!
+            Double score = null;
+            try {
+                if (setting.get(CQLElasticSetting.score) != null &&
+                        !setting.get(CQLElasticSetting.score).isBlank()) {
+                    score = Double.parseDouble(setting.get(CQLElasticSetting.score));
+                }
+            }
+            catch(Exception e) {
+                log.warn("Error parsing score assume null", e);
+                // OK to ignore as accept null as the value
+            }
+            // Get the search after
+            List<FieldValue> searchAfter = null;
+            if (setting.get(CQLElasticSetting.search_after) != null &&
+                    !setting.get(CQLElasticSetting.search_after).isBlank()) {
+                // Convert the regex separate string to List<FieldValue>
+                searchAfter = Arrays.stream(setting.get(CQLElasticSetting.search_after)
+                                .split(searchAfterSplitRegex))
+                        .filter(v -> !v.isBlank())
+                        .map(String::trim)
+                        .map(ElasticSearch::toFieldValue)
+                        .toList();
+            }
+
+            List<SortOptions> sortOptions = createSortOptions(sortBy, CQLFields.class);
+            // When the filter searches curated vocab fields, prepend presence-based priority sort keys
+            // so matching human-curated records rank above AI-generated fallback records. This is
+            // the first sort key; existing -score,-rank ordering is preserved within each tier.
+            if (factory.isParameterPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, CQLFields.parameter_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+            }
+            if (factory.isPlatformPrioritySort()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+            }
+
+            return searchCollectionBy(
+                    null,
+                    should,
+                    filters,
+                    properties,
+                    searchAfter,
+                    sortOptions,
+                    score,
+                    maxSize
+            );
+        }
     }
 
     @Override
