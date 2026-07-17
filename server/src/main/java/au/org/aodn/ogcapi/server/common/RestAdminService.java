@@ -20,8 +20,8 @@ public class RestAdminService {
     protected Search searchService;
 
     /**
-     * Value defined in application-*.yml, for dev and test, this value is set as true,
-     * for other environments, use default false value.
+     * Value defined in application-*.yml, set as true for dev, edge, staging, production and test.
+     * The default is false, so any environment that does not set it explicitly has explain disabled.
      */
     public boolean isElasticsearchExplainEnabled() {
         return elasticsearchExplainEnabled;
