@@ -7,3 +7,7 @@ management:
 logging:
   level:
     au.org.aodn.ogcapi.server: info
+
+ogcapi:
+  debug:
+    elasticsearch-explain-enabled: true
