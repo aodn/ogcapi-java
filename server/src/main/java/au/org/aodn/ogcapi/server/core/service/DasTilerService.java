@@ -15,6 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
@@ -47,7 +48,16 @@ public class DasTilerService {
     @Autowired
     protected DASConfig dasConfig;
 
-    @Autowired
+    /**
+     * Deliberately NOT {@code @Autowired} onto the app-wide {@code RestTemplate} bean (see
+     * {@code Config#createRestTemplate}), which has 20-minute connect/read timeouts sized for
+     * large WFS/WMS downloads. This service backs a public, unauthenticated map-tile route: a
+     * stalled upstream must not be able to pin a servlet thread for minutes, and a handful of
+     * such stalls during a DAS incident could exhaust the shared Tomcat thread pool and take
+     * down unrelated routes with it. Built directly in {@link #init} (only when a test hasn't
+     * already injected a mock) rather than as a second competing {@code RestTemplate} bean,
+     * which would collide with {@code TestConfig}'s {@code @Primary} test-wide HTTP mock.
+     */
     protected RestTemplate httpClient;
 
     /**
@@ -65,6 +75,13 @@ public class DasTilerService {
 
     @PostConstruct
     public void init() {
+        if (httpClient == null) {
+            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+            factory.setConnectTimeout(5000);
+            factory.setReadTimeout(30000); // generous for a cold Zarr/S3 read; tune against measured latency later
+            httpClient = new RestTemplate(factory);
+        }
+
         HttpHeaders headers = new HttpHeaders();
         headers.set("X-API-KEY", dasConfig.secret());
         if (dasConfig.internal() != null) {
@@ -108,10 +125,15 @@ public class DasTilerService {
      * Fetches one visual tile from DAS. If {@code cv} is supplied it is checked against the
      * cached manifest's {@code cache_version} first — a mismatch means the caller's URL is
      * stale under the immutable {@code Cache-Control} contract, so this throws 410 rather than
-     * serving (possibly wrong) bytes. DAS itself ignores {@code cv} — it is only forwarded so
-     * browser/CDN/EhCache cache keys vary with it.
+     * serving (possibly wrong) bytes.
+     * <p>
+     * This check deliberately lives on a plain (non-cached) method that delegates to the
+     * {@code @Cacheable} {@link #fetchVisualTile}: {@code @Cacheable} short-circuits before the
+     * method body runs on a cache hit, so a check placed inside the cached method itself would
+     * only ever run once per key — a stale {@code cv} on an already-cached tile would silently
+     * keep returning 200 with old bytes instead of 410. Splitting the two means every request,
+     * hit or miss, re-validates {@code cv} against the (separately, short-TTL-cached) manifest.
      */
-    @Cacheable(CacheConfig.CACHE_TILER_TILE)
     public DasTileResult getVisualTile(String productId, String date, int z, int x, int y, String ext,
                                         String colormap, String rescale, String cv) {
         if (cv != null) {
@@ -121,7 +143,19 @@ public class DasTilerService {
                 throw DasUpstreamException.withDetail(HttpStatus.GONE, "cache_version '" + cv + "' is stale");
             }
         }
+        return self.fetchVisualTile(productId, date, z, x, y, ext, colormap, rescale, cv);
+    }
 
+    /**
+     * The actual DAS call + cache for {@link #getVisualTile}, split out so the cv-staleness
+     * check above always runs regardless of cache hit/miss. {@code cv} is included both in the
+     * cache key (so a version bump can't collide with old cached bytes) and, per the plan's
+     * contract, forwarded to DAS itself (DAS currently ignores it — this is future-proofing plus
+     * keeping any intermediary cache on the ogcapi-to-DAS path keyed by version too).
+     */
+    @Cacheable(CacheConfig.CACHE_TILER_TILE)
+    public DasTileResult fetchVisualTile(String productId, String date, int z, int x, int y, String ext,
+                                          String colormap, String rescale, String cv) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(dasConfig.host() + VISUAL_TILES_BASE + "/{product}/{date}/{z}/{x}/{y}.{ext}");
         Map<String, Object> params = new HashMap<>();
@@ -139,6 +173,10 @@ public class DasTilerService {
         if (rescale != null) {
             builder.queryParam("rescale", "{rescale}");
             params.put("rescale", rescale);
+        }
+        if (cv != null) {
+            builder.queryParam("cv", "{cv}");
+            params.put("cv", cv);
         }
 
         return exchangeForImage(builder, params, "image/" + ext);

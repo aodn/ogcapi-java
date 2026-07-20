@@ -112,6 +112,22 @@ public class DasTilerServiceTest {
     }
 
     @Test
+    public void testGetVisualTileForwardsCvToDas() {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode manifest = mapper.createObjectNode().put("cache_version", "cv1");
+        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(JsonNode.class)))
+                .thenReturn(ResponseEntity.ok(manifest));
+        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, "cv1");
+
+        CapturedRequest captured = captureImageRequest();
+        assertTrue(captured.url.contains("cv={cv}"), "cv must be forwarded to DAS per the plan's contract, got: " + captured.url);
+        assertEquals("cv1", captured.params.get("cv"));
+    }
+
+    @Test
     public void testGetVisualTileForwardsContentTypeAndCacheControl() {
         when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));

@@ -25,6 +25,9 @@ import java.util.Map;
 @RequestMapping(value = "/api/v1/ogc")
 public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSetsApi, TilesApi {
 
+    // OGC's WebMercatorQuad well-known TileMatrixSet defines levels 0-24.
+    private static final int MAX_ZOOM = 24;
+
     @Autowired
     protected RestService restService;
 
@@ -96,6 +99,21 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
         if (!"WebMercatorQuad".equals(tileMatrixSetId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("detail", "Unsupported tileMatrixSetId, only WebMercatorQuad is supported"));
+        }
+        // Bounds-check z/x/y before any upstream I/O: this route is public and unauthenticated,
+        // and DAS computes (1 << z) - 1 with no floor/ceiling of its own — negative z throws an
+        // uncaught error there, very large positive z builds an arbitrary-precision integer. Both
+        // are cheap for a client to trigger, so reject them here rather than passing them through.
+        if (tileMatrix == null || tileMatrix < 0 || tileMatrix > MAX_ZOOM) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("detail", "tileMatrix (z) must be between 0 and " + MAX_ZOOM));
+        }
+        int maxIndex = (1 << tileMatrix) - 1;
+        if (tileRow == null || tileRow < 0 || tileRow > maxIndex
+                || tileCol == null || tileCol < 0 || tileCol > maxIndex) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("detail", "tileRow/tileCol out of range for tileMatrix=" + tileMatrix
+                            + "; valid range is 0-" + maxIndex));
         }
         if (product == null || product.isBlank()) {
             return ResponseEntity.badRequest().body(Map.of("detail", "product is required"));

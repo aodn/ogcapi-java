@@ -153,6 +153,47 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @Test
+    public void verifyVisualMapTileNegativeZoomReturns400() {
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/-1/0/0?product=p1&datetime=2024-01-01",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileZoomAboveMaxReturns400() {
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/25/0/0?product=p1&datetime=2024-01-01",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileRowColOutOfRangeForZoomReturns400() {
+        // At z=2 valid row/col range is 0-3; 4 is one past the edge.
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/4/0?product=p1&datetime=2024-01-01",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileMaxZoomBoundaryIsAccepted() {
+        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(24), eq(0), eq(0), eq("png"), isNull(), isNull(), isNull()))
+                .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", null));
+
+        ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/24/0/0?product=p1&datetime=2024-01-01",
+                byte[].class
+        );
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
     public void verifyVisualMapTileProductNotInCollectionReturns404() {
         // isProductInCollection defaults to false on the mock (unstubbed boolean).
         ResponseEntity<String> response = testRestTemplate.getForEntity(
