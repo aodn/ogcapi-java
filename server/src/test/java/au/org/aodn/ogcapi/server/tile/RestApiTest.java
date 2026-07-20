@@ -1,19 +1,34 @@
 package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.BaseTestClass;
+import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
+import au.org.aodn.ogcapi.server.core.service.DasTilerService;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
+
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class RestApiTest extends BaseTestClass {
+
+    @MockitoBean
+    protected DasTilerService dasTilerService;
 
     @BeforeAll
     public void beforeClass() {
@@ -93,6 +108,106 @@ public class RestApiTest extends BaseTestClass {
         );
 
         // No meaningful verify can be done here, we keep it here so that we know that test case considered.
+    }
+
+    /**
+     * Tests for the DAS visual-tile proxy route
+     * /collections/{collectionId}/map/tiles/WebMercatorQuad/{z}/{x}/{y}. dasTilerService is
+     * mocked so these don't need a running DAS — they verify routing (the @Hidden generated
+     * stub must not shadow the hand-written mapping), param validation, and status mirroring.
+     */
+    @Test
+    public void verifyVisualMapTileMissingProductReturns400() {
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?datetime=2024-01-01",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileMissingDatetimeReturns400() {
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?product=p1",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileBadDatetimeReturns400() {
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?product=p1&datetime=2024-01-1",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileWrongTileMatrixSetReturns404() {
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WorldCRS84Quad/2/1/1?product=p1&datetime=2024-01-01",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileProductNotInCollectionReturns404() {
+        // isProductInCollection defaults to false on the mock (unstubbed boolean).
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?product=p1&datetime=2024-01-01",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileForwardsZXYAndReturnsImageWithCors() {
+        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull(), isNull()))
+                .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
+
+        HttpHeaders requestHeaders = new HttpHeaders();
+        requestHeaders.set(HttpHeaders.ORIGIN, "http://localhost:5173");
+        ResponseEntity<byte[]> response = testRestTemplate.exchange(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01",
+                HttpMethod.GET, new HttpEntity<>(requestHeaders), byte[].class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertArrayEquals("tile-bytes".getBytes(), response.getBody());
+        Assertions.assertEquals(MediaType.IMAGE_PNG, response.getHeaders().getContentType());
+        Assertions.assertEquals("*", response.getHeaders().getFirst(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
+    }
+
+    @Test
+    public void verifyVisualMapTileFormatWebpMapsToWebpExt() {
+        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("webp"), isNull(), isNull(), isNull()))
+                .thenReturn(new DasTilerService.DasTileResult("webp-bytes".getBytes(), "image/webp", null));
+
+        ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01&f=webp",
+                byte[].class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertArrayEquals("webp-bytes".getBytes(), response.getBody());
+    }
+
+    @Test
+    public void verifyVisualMapTileUpstreamErrorMirrored() {
+        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull(), isNull()))
+                .thenThrow(DasUpstreamException.withDetail(HttpStatus.NOT_FOUND, "no such date"));
+
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01",
+                String.class
+        );
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
     }
 
 }

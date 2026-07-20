@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.exception;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -62,6 +63,13 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
+    }
+
+    @ExceptionHandler(DasUpstreamException.class)
+    public ResponseEntity<byte[]> handleDasUpstreamException(DasUpstreamException ex) {
+        return ResponseEntity.status(ex.getStatus())
+                .contentType(ex.getContentType() != null ? ex.getContentType() : MediaType.APPLICATION_JSON)
+                .body(ex.getBody());
     }
 
     @ExceptionHandler(GeoserverLayersNotFoundException.class)

@@ -4,15 +4,19 @@ import au.org.aodn.ogcapi.server.core.mapper.BinaryResponseToBytes;
 import au.org.aodn.ogcapi.server.core.mapper.StacToTileSetWmWGS84Q;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
+import au.org.aodn.ogcapi.server.core.service.DasTilerService;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Implements the rest api of tile
@@ -33,6 +37,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     @Autowired
     protected BinaryResponseToBytes binaryResponseToByte;
 
+    @Autowired
+    protected DasTilerService dasTilerService;
+
     @Override
     public ResponseEntity<String> collectionCoverageGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String f) {
         return null;
@@ -48,9 +55,71 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
         return null;
     }
 
+    /**
+     * Generated stub for the OGC collection-map-tile route — disabled via {@code @Hidden} (see
+     * {@code CustomMvcRegistrations}, which skips request-mapping registration for any method
+     * carrying that annotation) so {@link #getCollectionVisualMapTile} below can serve the same
+     * path with a hand-written signature instead.
+     */
+    @Hidden
     @Override
     public ResponseEntity<String> collectionMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {
         return null;
+    }
+
+    /**
+     * Serves a DAS "visual tile" (colourised raster PNG/WebP for a gridded Zarr ocean product)
+     * through the OGC API - Tiles collection map-tile route, attaching the DAS API key
+     * server-side so the DAS origin itself never needs to be browser-facing.
+     * <p>
+     * Deliberately non-strict OGC: {@code tileMatrix}=z, {@code tileRow}=x, {@code tileCol}=y
+     * (slippy {z}/{x}/{y}), matching the convention already shipped by the vector-tile route
+     * ({@code ElasticSearch.searchCollectionVectorTile}, used by {@code datasetVectorGetTile}
+     * below) and the frontend's {@code VectorTileLayers.tsx} template — not strict OGC
+     * row=y/col=x semantics. A generic OGC client would disagree; Mapbox does not care.
+     */
+    @CrossOrigin(origins = "*")
+    @GetMapping(value = "/collections/{collectionId}/map/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}")
+    public ResponseEntity<?> getCollectionVisualMapTile(
+            @PathVariable String collectionId,
+            @PathVariable String tileMatrixSetId,
+            @PathVariable Integer tileMatrix,
+            @PathVariable Integer tileRow,
+            @PathVariable Integer tileCol,
+            @RequestParam(required = false) String product,
+            @RequestParam(required = false) String datetime,
+            @RequestParam(required = false) String colormap,
+            @RequestParam(required = false) String rescale,
+            @RequestParam(required = false) String cv,
+            @RequestParam(required = false, defaultValue = "png") String f) {
+
+        if (!"WebMercatorQuad".equals(tileMatrixSetId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("detail", "Unsupported tileMatrixSetId, only WebMercatorQuad is supported"));
+        }
+        if (product == null || product.isBlank()) {
+            return ResponseEntity.badRequest().body(Map.of("detail", "product is required"));
+        }
+        if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
+            return ResponseEntity.badRequest().body(Map.of("detail", "datetime is required and must be YYYY-MM-DD"));
+        }
+        if (!"png".equals(f) && !"webp".equals(f)) {
+            return ResponseEntity.badRequest().body(Map.of("detail", "f must be 'png' or 'webp'"));
+        }
+        if (!dasTilerService.isProductInCollection(collectionId, product)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("detail", "product '" + product + "' not found in collection '" + collectionId + "'"));
+        }
+
+        DasTilerService.DasTileResult tile = dasTilerService.getVisualTile(
+                product, datetime, tileMatrix, tileRow, tileCol, f, colormap, rescale, cv);
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok()
+                .contentType(MediaType.parseMediaType(tile.contentType()));
+        if (tile.cacheControl() != null) {
+            response.header(HttpHeaders.CACHE_CONTROL, tile.cacheControl());
+        }
+        return response.body(tile.body());
     }
 
     @Override
