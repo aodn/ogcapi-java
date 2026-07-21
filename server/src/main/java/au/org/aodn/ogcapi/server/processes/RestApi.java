@@ -173,7 +173,6 @@ public class RestApi implements ProcessesApi {
                             startDate,
                             endDate,
                             multiPolygon,
-                            null,
                             outputFormat
                     );
                     break;

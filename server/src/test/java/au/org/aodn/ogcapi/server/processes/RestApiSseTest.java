@@ -21,7 +21,6 @@ import software.amazon.awssdk.services.batch.BatchClient;
 
 import java.math.BigInteger;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -103,9 +102,9 @@ public class RestApiSseTest {
     // ---------- estimateCOdownload ----------
 
     @Test
-    public void testEstimateCODownloadHappyPathSplitsKeyCsv() throws Exception {
+    public void testEstimateCODownloadForwardsBatchStyleParameters() throws Exception {
         String dasJson = "{\"estimated_output_bytes\":12345}";
-        when(dasService.estimateCloudOptimisedDownloadSize(any(), any(), any(), any(), any(), any(), any()))
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap()))
                 .thenReturn(dasJson);
 
         Map<String, Object> inputs = new HashMap<>();
@@ -123,37 +122,47 @@ public class RestApiSseTest {
         assertTrue(content.contains(dasJson), "das JSON should be forwarded unchanged in: " + content);
 
         @SuppressWarnings("unchecked")
-        ArgumentCaptor<List<String>> keysCaptor = ArgumentCaptor.forClass(List.class);
-        verify(dasService).estimateCloudOptimisedDownloadSize(
-                eq("test-uuid"), keysCaptor.capture(), eq("2023-01-01"), eq("2023-01-31"),
-                eq("non-specified"), isNull(), eq("netcdf"));
-        assertEquals(List.of("a.zarr", "b.zarr"), keysCaptor.getValue(), "key CSV must be split and trimmed");
+        ArgumentCaptor<Map<String, String>> paramsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(dasService).estimateCloudOptimisedDownloadSize(eq("test-uuid"), paramsCaptor.capture());
+
+        Map<String, String> params = paramsCaptor.getValue();
+        // key is forwarded raw (CSV, untrimmed) - DAS splits it, matching the batch download.
+        assertEquals("a.zarr, b.zarr", params.get(DatasetDownloadEnums.Parameter.KEY.getValue()));
+        assertEquals("2023-01-01", params.get(DatasetDownloadEnums.Parameter.START_DATE.getValue()));
+        assertEquals("2023-01-31", params.get(DatasetDownloadEnums.Parameter.END_DATE.getValue()));
+        assertEquals("non-specified", params.get(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue()));
+        assertEquals("netcdf", params.get(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue()));
     }
 
     @Test
-    public void testEstimateCODownloadWildcardKeyMeansAllKeys() throws Exception {
-        when(dasService.estimateCloudOptimisedDownloadSize(any(), any(), any(), any(), any(), any(), any()))
+    public void testEstimateCODownloadForwardsWildcardKeyRaw() throws Exception {
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap()))
                 .thenReturn("{}");
 
         Map<String, Object> inputs = new HashMap<>();
         inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
         inputs.put(DatasetDownloadEnums.Parameter.KEY.getValue(), "*");
+        inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "non-specified");
         inputs.put(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue(), "netcdf");
 
         MockHttpServletResponse response = postSse(ProcessIdEnum.DOWNLOAD_CO_ESTIMATE.getValue(), inputs);
         awaitContent(response, "event:estimate-complete");
 
-        verify(dasService).estimateCloudOptimisedDownloadSize(
-                eq("test-uuid"), isNull(), any(), any(), any(), isNull(), eq("netcdf"));
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, String>> paramsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(dasService).estimateCloudOptimisedDownloadSize(eq("test-uuid"), paramsCaptor.capture());
+        assertEquals("*", paramsCaptor.getValue().get(DatasetDownloadEnums.Parameter.KEY.getValue()),
+                "wildcard key is forwarded raw; DAS expands it to all keys");
     }
 
     @Test
     public void testEstimateCODownloadDasFailureEmitsEstimateFailed() throws Exception {
-        when(dasService.estimateCloudOptimisedDownloadSize(any(), any(), any(), any(), any(), any(), any()))
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap()))
                 .thenThrow(new RuntimeException("das returned 404"));
 
         Map<String, Object> inputs = new HashMap<>();
         inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
+        inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "non-specified");
         inputs.put(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue(), "netcdf");
 
         MockHttpServletResponse response = postSse(ProcessIdEnum.DOWNLOAD_CO_ESTIMATE.getValue(), inputs);

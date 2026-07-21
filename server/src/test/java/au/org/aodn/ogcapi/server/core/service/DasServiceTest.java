@@ -13,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -125,15 +124,12 @@ public class DasServiceTest {
     }
 
     @SuppressWarnings("unchecked")
-    private HttpEntity<Map<String, Object>> callEstimateAndCaptureEntity(
-            String uuid, List<String> keys, String startDate, String endDate,
-            Object multiPolygon, List<String> columns, String outputFormat) {
+    private HttpEntity<Map<String, String>> callEstimateAndCaptureEntity(String uuid, Map<String, String> parameters) {
 
         when(httpClient.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class), anyMap()))
                 .thenReturn(ResponseEntity.ok("{\"estimated_output_bytes\":123}"));
 
-        String result = dasService.estimateCloudOptimisedDownloadSize(
-                uuid, keys, startDate, endDate, multiPolygon, columns, outputFormat);
+        String result = dasService.estimateCloudOptimisedDownloadSize(uuid, parameters);
         assertEquals("{\"estimated_output_bytes\":123}", result, "Raw das JSON should be returned unchanged");
 
         ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
@@ -144,42 +140,27 @@ public class DasServiceTest {
         assertEquals(HOST + "/api/v1/das/data/{uuid}/estimate_size", urlCaptor.getValue());
         assertEquals(uuid, uriVarsCaptor.getValue().get("uuid"));
 
-        return (HttpEntity<Map<String, Object>>) entityCaptor.getValue();
+        return (HttpEntity<Map<String, String>>) entityCaptor.getValue();
     }
 
     @Test
-    public void testEstimatePostsJsonBodyWithApiKey() {
-        HttpEntity<Map<String, Object>> entity = callEstimateAndCaptureEntity(
-                "test-uuid", List.of("a.zarr", "b.zarr"), "2023-01-01", "2023-01-31",
-                "non-specified", null, "netcdf");
+    public void testEstimatePostsBatchStyleParametersWithApiKey() {
+        // The estimate forwards the same batch-style subset parameter map to DAS unchanged.
+        Map<String, String> parameters = Map.of(
+                "uuid", "test-uuid",
+                "key", "a.zarr,b.zarr",
+                "start_date", "2023-01-01",
+                "end_date", "2023-01-31",
+                "multi_polygon", "non-specified",
+                "output_format", "netcdf");
+
+        HttpEntity<Map<String, String>> entity = callEstimateAndCaptureEntity("test-uuid", parameters);
 
         HttpHeaders headers = entity.getHeaders();
         assertEquals("test-secret", headers.getFirst("X-API-KEY"));
         assertEquals(MediaType.APPLICATION_JSON_VALUE, headers.getFirst(HttpHeaders.CONTENT_TYPE));
 
-        Map<String, Object> body = entity.getBody();
-        assertNotNull(body);
-        assertEquals(List.of("a.zarr", "b.zarr"), body.get("keys"));
-        assertEquals("2023-01-01", body.get("start_date"));
-        assertEquals("2023-01-31", body.get("end_date"));
-        assertEquals("netcdf", body.get("output_format"));
-        assertEquals("non-specified", body.get("multi_polygon"));
-        assertFalse(body.containsKey("columns"), "columns must be omitted when not provided");
-    }
-
-    @Test
-    public void testEstimateNullDatesBecomeNonSpecifiedAndOptionalFieldsOmitted() {
-        HttpEntity<Map<String, Object>> entity = callEstimateAndCaptureEntity(
-                "test-uuid", null, null, null, null, null, "csv");
-
-        Map<String, Object> body = entity.getBody();
-        assertNotNull(body);
-        assertNull(body.get("keys"), "null keys means all keys of the uuid");
-        assertEquals("non-specified", body.get("start_date"));
-        assertEquals("non-specified", body.get("end_date"));
-        assertEquals("csv", body.get("output_format"));
-        assertFalse(body.containsKey("multi_polygon"), "multi_polygon must be omitted when null");
-        assertFalse(body.containsKey("columns"), "columns must be omitted when null");
+        assertEquals(parameters, entity.getBody(), "The batch-style parameter map must be forwarded to DAS unchanged");
     }
 
     @Test
@@ -189,7 +170,7 @@ public class DasServiceTest {
 
         assertThrows(HttpClientErrorException.class, () ->
                 dasService.estimateCloudOptimisedDownloadSize(
-                        "bad-uuid", List.of("missing.zarr"), null, null, null, null, "netcdf"));
+                        "bad-uuid", Map.of("uuid", "bad-uuid", "key", "missing.zarr", "output_format", "netcdf")));
     }
 
     private record CapturedRequest(String url, Map<String, String> params) {

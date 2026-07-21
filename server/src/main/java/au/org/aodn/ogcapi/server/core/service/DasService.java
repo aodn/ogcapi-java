@@ -11,7 +11,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 import jakarta.annotation.PostConstruct;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service("DataAccessService")
@@ -91,36 +90,16 @@ public class DasService {
 
     /**
      * Call the data-access-service cloud-optimised size estimate endpoint.
-     * Returns the raw JSON response body so the SSE layer can forward
-     * it to the frontend unchanged.
+     * The {@code parameters} map is the same batch-style subset request the
+     * download job submits (see {@code SubsetParametersUtils}), so DAS interprets
+     * the estimate and the download identically. Returns the raw JSON response
+     * body so the SSE layer can forward it to the frontend unchanged.
      */
-    public String estimateCloudOptimisedDownloadSize(
-            String uuid,
-            List<String> keys,
-            String startDate,
-            String endDate,
-            Object multiPolygon,
-            List<String> columns,
-            String outputFormat) {
+    public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
 
         String url = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/{uuid}/estimate_size")
                 .encode()
                 .toUriString();
-
-        Map<String, Object> body = new HashMap<>();
-        body.put("keys", keys);
-        body.put("start_date", startDate != null ? startDate : "non-specified");
-        body.put("end_date", endDate != null ? endDate : "non-specified");
-        body.put("output_format", outputFormat);
-        // multi_polygon is accepted as a GeoJSON object or string; forward as-is.
-        if (multiPolygon != null) {
-            body.put("multi_polygon", multiPolygon);
-        }
-        // columns is not sent today (frontend doesn't subset columns yet, and the
-        // batch download grabs all variables), keeping the estimate aligned.
-        if (columns != null) {
-            body.put("columns", columns);
-        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
@@ -128,7 +107,7 @@ public class DasService {
         headers.set("X-API-KEY", dasConfig.secret());
         headers.set("x-internal-das-header-secret", dasConfig.internal());
 
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(parameters, headers);
 
         Map<String, String> uriVars = new HashMap<>();
         uriVars.put("uuid", uuid);

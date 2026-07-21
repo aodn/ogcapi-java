@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.service.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.sse.SseStreamHandler;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
+import au.org.aodn.ogcapi.server.core.util.SubsetParametersUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +24,6 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -93,28 +92,14 @@ public class RestServices {
             String outputFormat
     ) throws JsonProcessingException {
 
-        Map<String, String> parameters = new HashMap<>();
-        parameters.put(DatasetDownloadEnums.Parameter.UUID.getValue(), id);
-        parameters.put(DatasetDownloadEnums.Parameter.KEY.getValue(), key);
-        parameters.put(DatasetDownloadEnums.Parameter.START_DATE.getValue(), startDate);
-        parameters.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), endDate);
+        // Build the shared subset filters (uuid, key, dates, multi_polygon, output
+        // format) exactly as the estimate does, then add the download-only fields.
+        Map<String, String> parameters = SubsetParametersUtils.buildSubsetParameters(
+                objectMapper, id, key, startDate, endDate, polygons, outputFormat);
         parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), recipient);
         parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), collectionTitle);
         parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), fullMetadataLink);
         parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), suggestedCitation);
-        if (outputFormat != null) {
-            parameters.put(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue(), outputFormat);
-        }
-        if (polygons == null || polygons.toString().isEmpty()) {
-            throw new IllegalArgumentException("Polygons parameter should now be null. If users didn't specify polygons, a 'non-specified' should be sent.");
-
-            // String (e.g. "non-specified") is working weird with function ObjectMapper.writeValueAsString(), so handle it separately
-        } else if (polygons.toString().equals("non-specified")) {
-            parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), polygons.toString());
-        } else {
-            parameters.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), objectMapper.writeValueAsString(polygons));
-        }
-
         parameters.put(
                 DatasetDownloadEnums.Parameter.TYPE.getValue(),
                 DatasetDownloadEnums.Type.SUB_SETTING.getValue()
@@ -308,7 +293,6 @@ public class RestServices {
                                                             String startDate,
                                                             String endDate,
                                                             Object multiPolygon,
-                                                            List<String> columns,
                                                             String outputFormat) {
 
         return SseStreamHandler.stream(uuid, session -> {
@@ -317,10 +301,10 @@ public class RestServices {
                 throw new IllegalArgumentException("Missing uuid or output format");
             }
 
-            // batch-style key handling: comma-separated string -> list; null/blank/"*" -> null
-            List<String> keys = (key == null || key.isBlank() || key.equals("*"))
-                    ? null
-                    : Arrays.stream(key.split(",")).map(String::trim).toList();
+            // Parse the request exactly as the download batch job does, so the
+            // estimate reflects what the same subset would actually produce.
+            Map<String, String> parameters = SubsetParametersUtils.buildSubsetParameters(
+                    objectMapper, uuid, key, startDate, endDate, multiPolygon, outputFormat);
 
             // STEP 1: Send connection established event
             session.send(SseEventName.CONNECTION_ESTABLISHED, Map.of(
@@ -336,9 +320,7 @@ public class RestServices {
 
             // STEP 3: Call the data-access-service estimate endpoint and forward the result
             try {
-                String estimateJson = dasService.estimateCloudOptimisedDownloadSize(
-                        uuid, keys, startDate, endDate, multiPolygon, columns, outputFormat
-                );
+                String estimateJson = dasService.estimateCloudOptimisedDownloadSize(uuid, parameters);
                 session.send(SseEventName.ESTIMATE_COMPLETE, estimateJson);
             } catch (Exception e) {
                 log.warn("Cloud-optimised size estimation failed for UUID {}: {}", uuid, e.getMessage());
