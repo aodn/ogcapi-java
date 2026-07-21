@@ -30,9 +30,6 @@ import java.time.Duration;
 public class CacheConfig {
 
     public static final String CACHE_WMS_MAP_TILE = "cache-wms-map_tile";
-    public static final String CACHE_TILER_TILE = "cache-tiler-tile";
-    public static final String CACHE_TILER_PRODUCTS = "cache-tiler-products";
-    public static final String CACHE_TILER_MANIFEST = "cache-tiler-manifest";
     public static final String GET_CAPABILITIES_WMS_LAYERS = "get-capabilities-wms-layers";
     public static final String GET_CAPABILITIES_WFS_FEATURE_TYPES = "get-capabilities-wfs-feature-types";
 
@@ -69,27 +66,6 @@ public class CacheConfig {
                                                 .disk(10, MemoryUnit.GB, true)
                                 )
                                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
-                )
-                .withCache(CACHE_TILER_TILE,
-                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                        Object.class, Object.class,
-                                        ResourcePoolsBuilder.newResourcePoolsBuilder()
-                                                .heap(100, MemoryUnit.MB)
-                                                .disk(10, MemoryUnit.GB, true)
-                                )
-                                .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
-                )
-                .withCache(CACHE_TILER_PRODUCTS,
-                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                Object.class, Object.class,
-                                ResourcePoolsBuilder.heap(50)
-                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
-                )
-                .withCache(CACHE_TILER_MANIFEST,
-                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
-                                Object.class, Object.class,
-                                ResourcePoolsBuilder.heap(50)
-                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(5)))
                 )
                 .withCache(ALL_NO_LAND_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
