@@ -183,7 +183,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileMaxZoomBoundaryIsAccepted() {
         when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(24), eq(0), eq(0), eq("png"), isNull(), isNull(), isNull()))
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(24), eq(0), eq(0), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", null));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
@@ -206,7 +206,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileForwardsZXYAndReturnsImageWithCors() {
         when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull(), isNull()))
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
         HttpHeaders requestHeaders = new HttpHeaders();
@@ -225,7 +225,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileFormatWebpMapsToWebpExt() {
         when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("webp"), isNull(), isNull(), isNull()))
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("webp"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("webp-bytes".getBytes(), "image/webp", null));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
@@ -240,7 +240,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileUpstreamErrorMirrored() {
         when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull(), isNull()))
+        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
                 .thenThrow(DasUpstreamException.withDetail(HttpStatus.NOT_FOUND, "no such date"));
 
         ResponseEntity<String> response = testRestTemplate.getForEntity(

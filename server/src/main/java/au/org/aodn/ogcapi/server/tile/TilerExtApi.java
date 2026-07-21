@@ -44,7 +44,6 @@ public class TilerExtApi {
         List<JsonNode> products = dasTilerService.productsForCollection(collectionId);
         JsonNode manifest = dasTilerService.getManifest();
         JsonNode manifestProducts = manifest != null ? manifest.path("products") : null;
-        String cacheVersion = manifest != null ? manifest.path("cache_version").asText(null) : null;
 
         ArrayNode result = mapper.createArrayNode();
         for (JsonNode product : products) {
@@ -55,9 +54,19 @@ public class TilerExtApi {
             ObjectNode entry = mapper.createObjectNode();
             entry.put("id", id);
             entry.set("variable", variable);
-            // Multi-variable products (e.g. ucur+vcur) are rejected by DAS for visual tiles;
-            // they are listed here anyway for the future data-tile phase to consume.
-            entry.put("type", isMultiVariable ? "data" : "visual");
+            // Capability list, not a classification: it states which tile kinds THIS service
+            // can currently serve for the product. Deliberately not derived from what DAS can
+            // render — DAS can also produce data tiles for scalar products, but ogcapi exposes
+            // no data-tile route yet, so advertising "data" here would promise a 404. When that
+            // route lands, "data" is appended to the existing array rather than replacing a
+            // scalar field, so the contract grows without breaking clients.
+            ArrayNode tileTypes = mapper.createArrayNode();
+            if (!isMultiVariable) {
+                // Multi-variable products (e.g. ucur+vcur) are rejected by DAS for visual
+                // tiles, so today they are listed with no servable tile type at all.
+                tileTypes.add("visual");
+            }
+            entry.set("tile_types", tileTypes);
 
             JsonNode availability = manifestProducts != null ? manifestProducts.path(id) : null;
             entry.set("available_dates", availability != null && !availability.isMissingNode()
@@ -66,23 +75,18 @@ public class TilerExtApi {
                     ? availability.path("full_date_range") : mapper.createObjectNode());
 
             String encodedId = URLEncoder.encode(id, StandardCharsets.UTF_8);
-            String cvSuffix = cacheVersion != null ? "&cv=" + cacheVersion : "";
             entry.put("tile_url_template",
                     "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{x}/{y}"
-                            + "?product=" + encodedId + "&datetime={datetime}&f=png" + cvSuffix);
+                            + "?product=" + encodedId + "&datetime={datetime}&f=png");
             // No per-product default colormap exists yet (see plan's Deferred style-catalog
             // section) — the frontend fills {colormap} in itself, e.g. from GET /colormaps.
-            entry.put("legend_url", "/api/v1/ogc/ext/tiler/colormaps/{colormap}/legend"
-                    + (cacheVersion != null ? "?cv=" + cacheVersion : ""));
+            entry.put("legend_url", "/api/v1/ogc/ext/tiler/colormaps/{colormap}/legend");
 
             result.add(entry);
         }
 
         ObjectNode body = mapper.createObjectNode();
         body.set("products", result);
-        if (cacheVersion != null) {
-            body.put("cache_version", cacheVersion);
-        }
 
         return ResponseEntity.ok()
                 .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300, must-revalidate")
@@ -100,10 +104,9 @@ public class TilerExtApi {
             @RequestParam(required = false) String rescale,
             @RequestParam(required = false) Integer width,
             @RequestParam(required = false) Integer height,
-            @RequestParam(required = false) String orientation,
-            @RequestParam(required = false) String cv) {
+            @RequestParam(required = false) String orientation) {
 
-        DasTilerService.DasTileResult legend = dasTilerService.getLegend(name, rescale, width, height, orientation, cv);
+        DasTilerService.DasTileResult legend = dasTilerService.getLegend(name, rescale, width, height, orientation);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(legend.contentType()));

@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
@@ -16,7 +18,10 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableScheduling
+@EnableConfigurationProperties(DasProperties.class)
 public class Config {
+
+    public static final String DAS_TILER_REST_TEMPLATE = "dasTilerRestTemplate";
 
     @Autowired
     ObjectMapper mapper;
@@ -28,7 +33,7 @@ public class Config {
 
     @PostConstruct
     public void init() {
-        // register modudle for json serializing
+        // register module for json serializing
         mapper.registerModule(new JsonNullableModule());
         // Configure ObjectMapper to exclude null fields while serializing
         mapper.setDefaultPropertyInclusion(
@@ -46,6 +51,15 @@ public class Config {
         factory.setReadTimeout(1200000);    // 20 minutes read timeout for large downloads
 
         return new RestTemplate(factory);
+    }
+
+    @Bean(name = DAS_TILER_REST_TEMPLATE, defaultCandidate = false)
+    public RestTemplate createDasTilerRestTemplate(RestTemplateBuilder builder, DasProperties dasProperties) {
+        return builder
+                .requestFactory(SimpleClientHttpRequestFactory.class)
+                .connectTimeout(dasProperties.tiler().connectTimeout())
+                .readTimeout(dasProperties.tiler().readTimeout())
+                .build();
     }
 
     @Bean

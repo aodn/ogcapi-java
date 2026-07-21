@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
+import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -19,6 +19,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.SocketTimeoutException;
+import java.time.Duration;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -47,15 +48,12 @@ public class DasTilerServiceTest {
     public void setUp() {
         httpClient = mock(RestTemplate.class);
 
-        DASConfig config = new DASConfig(HOST, "test-secret", "internal-secret");
+        DasProperties config = new DasProperties(
+                HOST, "test-secret", "internal-secret",
+                new DasProperties.Tiler(Duration.ofSeconds(5), Duration.ofSeconds(30))
+        );
 
-        service = new DasTilerService();
-        service.dasConfig = config;
-        service.httpClient = httpClient;
-        // No Spring context here, so there's no CGLIB caching proxy to bypass — self-referencing
-        // the plain instance is the correct stand-in (see DasTilerService.self javadoc).
-        service.self = service;
-        service.init();
+        service = new DasTilerService(config, httpClient);
     }
 
     private HttpHeaders imageHeaders() {
@@ -78,7 +76,7 @@ public class DasTilerServiceTest {
         when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
-        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null);
+        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
 
         CapturedRequest captured = captureImageRequest();
         assertTrue(captured.url.contains("/{product}/{date}/{z}/{x}/{y}.{ext}"), "product must be a path variable, got: " + captured.url);
@@ -90,7 +88,7 @@ public class DasTilerServiceTest {
         when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
-        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null);
+        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
 
         CapturedRequest captured = captureImageRequest();
         assertFalse(captured.url.contains("colormap"), "null colormap must not appear in URL");
@@ -102,7 +100,7 @@ public class DasTilerServiceTest {
         when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
-        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", "viridis", "-1,1", null);
+        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", "viridis", "-1,1");
 
         CapturedRequest captured = captureImageRequest();
         assertTrue(captured.url.contains("colormap={colormap}"));
@@ -112,27 +110,11 @@ public class DasTilerServiceTest {
     }
 
     @Test
-    public void testGetVisualTileForwardsCvToDas() {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode manifest = mapper.createObjectNode().put("cache_version", "cv1");
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(JsonNode.class)))
-                .thenReturn(ResponseEntity.ok(manifest));
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
-                .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
-
-        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, "cv1");
-
-        CapturedRequest captured = captureImageRequest();
-        assertTrue(captured.url.contains("cv={cv}"), "cv must be forwarded to DAS per the plan's contract, got: " + captured.url);
-        assertEquals("cv1", captured.params.get("cv"));
-    }
-
-    @Test
     public void testGetVisualTileForwardsContentTypeAndCacheControl() {
         when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
-        DasTilerService.DasTileResult result = service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null);
+        DasTilerService.DasTileResult result = service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
 
         assertArrayEquals("tile-bytes".getBytes(), result.body());
         assertEquals("image/png", result.contentType());
@@ -147,7 +129,7 @@ public class DasTilerServiceTest {
         when(httpClient.exchange(anyString(), eq(HttpMethod.GET), entityCaptor.capture(), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("x".getBytes(), imageHeaders(), HttpStatus.OK));
 
-        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null);
+        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
 
         HttpHeaders sentHeaders = entityCaptor.getValue().getHeaders();
         assertEquals("test-secret", sentHeaders.getFirst("X-API-KEY"));
@@ -162,7 +144,7 @@ public class DasTilerServiceTest {
                         "{\"detail\":\"bad date\"}".getBytes(), null));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "bad-date", 2, 1, 1, "png", null, null, null));
+                () -> service.getVisualTile(PRODUCT_ID, "bad-date", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
         assertEquals("{\"detail\":\"bad date\"}", new String(ex.getBody()));
@@ -175,7 +157,7 @@ public class DasTilerServiceTest {
                         HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, new byte[0], null));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null));
+                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
     }
@@ -187,7 +169,7 @@ public class DasTilerServiceTest {
                         HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders.EMPTY, new byte[0], null));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null));
+                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.SERVICE_UNAVAILABLE, ex.getStatus());
     }
@@ -199,7 +181,7 @@ public class DasTilerServiceTest {
                         HttpStatus.UNAUTHORIZED, "Unauthorized", HttpHeaders.EMPTY, new byte[0], null));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null));
+                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus(), "misconfigured secret is our fault, not the client's — must not leak as 401");
     }
@@ -211,7 +193,7 @@ public class DasTilerServiceTest {
                         HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders.EMPTY, new byte[0], null));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null));
+                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus());
     }
@@ -222,7 +204,7 @@ public class DasTilerServiceTest {
                 .thenThrow(new ResourceAccessException("timeout", new SocketTimeoutException("read timed out")));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null));
+                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.GATEWAY_TIMEOUT, ex.getStatus());
     }
@@ -233,36 +215,9 @@ public class DasTilerServiceTest {
                 .thenThrow(new ResourceAccessException("connection refused", new java.net.ConnectException()));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, null));
+                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus());
-    }
-
-    @Test
-    public void testStaleCacheVersionMappedTo410() {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode manifest = mapper.createObjectNode().put("cache_version", "cv2");
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(JsonNode.class)))
-                .thenReturn(ResponseEntity.ok(manifest));
-
-        DasUpstreamException ex = assertThrows(DasUpstreamException.class,
-                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, "cv1"));
-
-        assertEquals(HttpStatus.GONE, ex.getStatus());
-    }
-
-    @Test
-    public void testMatchingCacheVersionProceedsToFetchTile() {
-        ObjectMapper mapper = new ObjectMapper();
-        JsonNode manifest = mapper.createObjectNode().put("cache_version", "cv1");
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(JsonNode.class)))
-                .thenReturn(ResponseEntity.ok(manifest));
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
-                .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
-
-        DasTilerService.DasTileResult result = service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null, "cv1");
-
-        assertArrayEquals("tile-bytes".getBytes(), result.body());
     }
 
     @Test

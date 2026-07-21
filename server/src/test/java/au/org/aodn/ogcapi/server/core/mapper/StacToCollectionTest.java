@@ -26,6 +26,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
+import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -35,7 +36,7 @@ import java.util.*;
 
 import static au.org.aodn.ogcapi.server.BaseTestClass.readResourceFile;
 
-@SpringBootTest(classes = {TestConfig.class, Config.class, JacksonAutoConfiguration.class, CacheAutoConfiguration.class})
+@SpringBootTest(classes = {TestConfig.class, Config.class, RestTemplateAutoConfiguration.class, JacksonAutoConfiguration.class, CacheAutoConfiguration.class})
 public class StacToCollectionTest {
 
     @Autowired

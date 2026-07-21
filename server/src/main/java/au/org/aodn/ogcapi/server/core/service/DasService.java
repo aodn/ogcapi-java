@@ -1,7 +1,8 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
+import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
+import au.org.aodn.ogcapi.server.core.util.DasUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -17,7 +18,7 @@ import java.util.Map;
 public class DasService {
 
     @Autowired
-    protected DASConfig dasConfig;
+    protected DasProperties dasProperties;
 
     @Autowired
     protected RestTemplate httpClient;
@@ -26,10 +27,8 @@ public class DasService {
 
     @PostConstruct
     public void init() {
-        HttpHeaders headers = new HttpHeaders();
+        HttpHeaders headers = DasUtils.authHeaders(dasProperties);
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("X-API-KEY", dasConfig.secret());
-        headers.set("x-internal-das-header-secret", dasConfig.internal());
         httpEntity = new HttpEntity<>(headers);
     }
 
@@ -40,7 +39,7 @@ public class DasService {
      * {@code pathVariables}.
      */
     private byte[] getFeatureCollection(String path, String start, String end, Map<String, String> pathVariables) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasConfig.host() + path);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasProperties.host() + path);
         Map<String, String> params = new HashMap<>(pathVariables);
 
         if (start != null) {
@@ -61,7 +60,7 @@ public class DasService {
     }
 
     public byte[] getWaveBuoysLatestAvailableDate() {
-        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/feature-collection/wave-buoy/latest")
+        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/wave-buoy/latest")
                 .encode()
                 .toUriString();
 
@@ -77,7 +76,7 @@ public class DasService {
     }
 
     public byte[] getMooringsLatestAvailableDate() {
-        String mooringsUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/feature-collection/mooring/latest")
+        String mooringsUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/mooring/latest")
                 .encode()
                 .toUriString();
 
@@ -117,7 +116,7 @@ public class DasService {
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
         ResponseEntity<DatasetMetadata> response = httpClient.exchange(
-                dasConfig.host() + "/api/v1/das/metadata/" + datasetId,
+                dasProperties.host() + "/api/v1/das/metadata/" + datasetId,
                 HttpMethod.GET,
                 httpEntity,
                 DatasetMetadata.class

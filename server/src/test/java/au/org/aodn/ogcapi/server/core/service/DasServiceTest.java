@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
+import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -41,10 +42,13 @@ public class DasServiceTest {
     public void setUp() {
         httpClient = mock(RestTemplate.class);
 
-        DASConfig config = new DASConfig(HOST, "test-secret", "");
+        DasProperties config = new DasProperties(
+                HOST, "test-secret", "",
+                new DasProperties.Tiler(Duration.ofSeconds(5), Duration.ofSeconds(30))
+        );
 
         dasService = new DasService();
-        dasService.dasConfig = config;
+        dasService.dasProperties = config;
         dasService.httpClient = httpClient;
         dasService.init();
 

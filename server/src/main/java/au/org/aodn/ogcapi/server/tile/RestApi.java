@@ -93,7 +93,6 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             @RequestParam(required = false) String datetime,
             @RequestParam(required = false) String colormap,
             @RequestParam(required = false) String rescale,
-            @RequestParam(required = false) String cv,
             @RequestParam(required = false, defaultValue = "png") String f) {
 
         if (!"WebMercatorQuad".equals(tileMatrixSetId)) {
@@ -130,7 +129,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
         }
 
         DasTilerService.DasTileResult tile = dasTilerService.getVisualTile(
-                product, datetime, tileMatrix, tileRow, tileCol, f, colormap, rescale, cv);
+                product, datetime, tileMatrix, tileRow, tileCol, f, colormap, rescale);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(tile.contentType()));

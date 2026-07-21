@@ -1,28 +1,24 @@
 package au.org.aodn.ogcapi.server.core.service;
 
-import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
-import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
+import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
+import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
+import au.org.aodn.ogcapi.server.core.util.DasUtils;
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import java.io.Serializable;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,119 +41,53 @@ public class DasTilerService {
 
     private static final String VISUAL_TILES_BASE = "/api/v1/das/tiler/visual_tiles";
 
-    @Autowired
-    protected DASConfig dasConfig;
+    protected final DasProperties dasProperties;
 
     /**
-     * Deliberately NOT {@code @Autowired} onto the app-wide {@code RestTemplate} bean (see
-     * {@code Config#createRestTemplate}), which has 20-minute connect/read timeouts sized for
-     * large WFS/WMS downloads. This service backs a public, unauthenticated map-tile route: a
-     * stalled upstream must not be able to pin a servlet thread for minutes, and a handful of
-     * such stalls during a DAS incident could exhaust the shared Tomcat thread pool and take
-     * down unrelated routes with it. Built directly in {@link #init} (only when a test hasn't
-     * already injected a mock) rather than as a second competing {@code RestTemplate} bean,
-     * which would collide with {@code TestConfig}'s {@code @Primary} test-wide HTTP mock.
+     * Qualified onto the dedicated short-timeout client rather than the application-wide
+     * RestTemplate, whose 20-minute timeouts are sized for large WFS/WMS downloads.
      */
-    protected RestTemplate httpClient;
+    protected final RestTemplate httpClient;
 
-    /**
-     * Self-reference through the CGLIB caching proxy. {@code @Cacheable} is a proxy-based
-     * concern: a plain {@code this.getProducts()}/{@code this.getManifest()} call from within
-     * this same class bypasses the proxy entirely and silently never caches. Calls to those
-     * methods from elsewhere in this class must go through {@code self}, not {@code this}.
-     * {@code @Lazy} avoids a circular-dependency failure at construction time.
-     */
-    @Autowired
-    @Lazy
-    protected DasTilerService self;
+    private final HttpEntity<?> httpEntity;
 
-    private HttpEntity<?> httpEntity;
-
-    @PostConstruct
-    public void init() {
-        if (httpClient == null) {
-            SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
-            factory.setConnectTimeout(5000);
-            factory.setReadTimeout(30000); // generous for a cold Zarr/S3 read; tune against measured latency later
-            httpClient = new RestTemplate(factory);
-        }
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.set("X-API-KEY", dasConfig.secret());
-        if (dasConfig.internal() != null) {
-            headers.set("x-internal-das-header-secret", dasConfig.internal());
-        }
-        httpEntity = new HttpEntity<>(headers);
+    public DasTilerService(
+            DasProperties dasProperties,
+            @Qualifier(Config.DAS_TILER_REST_TEMPLATE) RestTemplate httpClient) {
+        this.dasProperties = dasProperties;
+        this.httpClient = httpClient;
+        httpEntity = new HttpEntity<>(DasUtils.authHeaders(dasProperties));
     }
 
     /**
      * Wraps a DAS binary response (visual tile / legend image) with the upstream headers this
-     * service forwards verbatim. A plain class rather than a record: EhCache's tiered-store
-     * copier reflects on fields via {@code Unsafe.objectFieldOffset}, which throws
-     * "can't get field offset on a record class" for record types — so this must stay a normal
-     * Serializable class to be cacheable in {@link CacheConfig#CACHE_TILER_TILE}.
+     * service forwards verbatim.
      */
-    public static final class DasTileResult implements Serializable {
-        private final byte[] body;
-        private final String contentType;
-        private final String cacheControl;
-
-        public DasTileResult(byte[] body, String contentType, String cacheControl) {
-            this.body = body;
-            this.contentType = contentType;
-            this.cacheControl = cacheControl;
-        }
-
-        public byte[] body() {
-            return body;
-        }
-
-        public String contentType() {
-            return contentType;
-        }
-
-        public String cacheControl() {
-            return cacheControl;
-        }
+    public record DasTileResult(byte[] body, String contentType, String cacheControl) {
     }
 
     /**
-     * Fetches one visual tile from DAS. If {@code cv} is supplied it is checked against the
-     * cached manifest's {@code cache_version} first — a mismatch means the caller's URL is
-     * stale under the immutable {@code Cache-Control} contract, so this throws 410 rather than
-     * serving (possibly wrong) bytes.
+     * Fetches one visual tile from DAS. Nothing in this service is cached — it is a pure
+     * pass-through, by choice, for this stage.
      * <p>
-     * This check deliberately lives on a plain (non-cached) method that delegates to the
-     * {@code @Cacheable} {@link #fetchVisualTile}: {@code @Cacheable} short-circuits before the
-     * method body runs on a cache hit, so a check placed inside the cached method itself would
-     * only ever run once per key — a stale {@code cv} on an already-cached tile would silently
-     * keep returning 200 with old bytes instead of 410. Splitting the two means every request,
-     * hit or miss, re-validates {@code cv} against the (separately, short-TTL-cached) manifest.
+     * An earlier revision cached tile bytes in EhCache (heap + disk, 24 h). It was dropped
+     * because this is the wrong layer to cache at: DAS already returns a one-year
+     * {@code immutable} {@code Cache-Control} that this service forwards verbatim, so browsers
+     * and (once it fronts ogcapi) CloudFront are what should absorb repeat reads. An origin-side
+     * copy on top of that mainly added a staleness window nothing could invalidate — there is no
+     * renderer-version cache-buster, so a DAS re-render stayed pinned until the entry aged out
+     * or the pod restarted.
+     * <p>
+     * Load consequence, worth re-checking before this route is public: DAS runs with
+     * {@code cache_backend: "none"}, so it memoises nothing between requests and every call here
+     * is a full S3 Zarr read plus render on its side. Its {@code Deduper} only coalesces
+     * genuinely concurrent identical renders. Until CloudFront fronts this route, all repeat
+     * load lands on DAS.
      */
     public DasTileResult getVisualTile(String productId, String date, int z, int x, int y, String ext,
-                                        String colormap, String rescale, String cv) {
-        if (cv != null) {
-            JsonNode manifest = self.getManifest();
-            String currentCv = manifest != null ? manifest.path("cache_version").asText(null) : null;
-            if (currentCv != null && !cv.equals(currentCv)) {
-                throw DasUpstreamException.withDetail(HttpStatus.GONE, "cache_version '" + cv + "' is stale");
-            }
-        }
-        return self.fetchVisualTile(productId, date, z, x, y, ext, colormap, rescale, cv);
-    }
-
-    /**
-     * The actual DAS call + cache for {@link #getVisualTile}, split out so the cv-staleness
-     * check above always runs regardless of cache hit/miss. {@code cv} is included both in the
-     * cache key (so a version bump can't collide with old cached bytes) and, per the plan's
-     * contract, forwarded to DAS itself (DAS currently ignores it — this is future-proofing plus
-     * keeping any intermediary cache on the ogcapi-to-DAS path keyed by version too).
-     */
-    @Cacheable(CacheConfig.CACHE_TILER_TILE)
-    public DasTileResult fetchVisualTile(String productId, String date, int z, int x, int y, String ext,
-                                          String colormap, String rescale, String cv) {
+                                       String colormap, String rescale) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasConfig.host() + VISUAL_TILES_BASE + "/{product}/{date}/{z}/{x}/{y}.{ext}");
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/{product}/{date}/{z}/{x}/{y}.{ext}");
         Map<String, Object> params = new HashMap<>();
         params.put("product", productId);
         params.put("date", date);
@@ -174,17 +104,12 @@ public class DasTilerService {
             builder.queryParam("rescale", "{rescale}");
             params.put("rescale", rescale);
         }
-        if (cv != null) {
-            builder.queryParam("cv", "{cv}");
-            params.put("cv", cv);
-        }
 
         return exchangeForImage(builder, params, "image/" + ext);
     }
 
-    @Cacheable(CacheConfig.CACHE_TILER_PRODUCTS)
     public List<JsonNode> getProducts() {
-        String url = dasConfig.host() + VISUAL_TILES_BASE + "/products";
+        String url = dasProperties.host() + VISUAL_TILES_BASE + "/products";
         try {
             JsonNode body = httpClient.exchange(url, HttpMethod.GET, httpEntity, JsonNode.class).getBody();
             List<JsonNode> result = new ArrayList<>();
@@ -199,9 +124,8 @@ public class DasTilerService {
         }
     }
 
-    @Cacheable(CacheConfig.CACHE_TILER_MANIFEST)
     public JsonNode getManifest() {
-        String url = dasConfig.host() + VISUAL_TILES_BASE + "/manifest";
+        String url = dasProperties.host() + VISUAL_TILES_BASE + "/manifest";
         try {
             return httpClient.exchange(url, HttpMethod.GET, httpEntity, JsonNode.class).getBody();
         } catch (HttpStatusCodeException e) {
@@ -212,7 +136,7 @@ public class DasTilerService {
     }
 
     public JsonNode getColormaps() {
-        String url = dasConfig.host() + VISUAL_TILES_BASE + "/colormaps";
+        String url = dasProperties.host() + VISUAL_TILES_BASE + "/colormaps";
         try {
             return httpClient.exchange(url, HttpMethod.GET, httpEntity, JsonNode.class).getBody();
         } catch (HttpStatusCodeException e) {
@@ -223,9 +147,9 @@ public class DasTilerService {
     }
 
     public DasTileResult getLegend(String name, String rescale, Integer width, Integer height,
-                                    String orientation, String cv) {
+                                    String orientation) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasConfig.host() + VISUAL_TILES_BASE + "/colormaps/{name}/legend");
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/colormaps/{name}/legend");
         Map<String, Object> params = new HashMap<>();
         params.put("name", name);
 
@@ -250,13 +174,17 @@ public class DasTilerService {
     }
 
     /**
-     * Products (from the cached {@code /products} listing) whose {@code metadata_uuid} matches
-     * this collection. Never parses the product id — matching is purely on the field DAS added
-     * for exactly this purpose.
+     * Products from the DAS {@code /products} listing whose {@code metadata_uuid} matches this
+     * collection. Never parses the product id — matching is purely on the field DAS added for
+     * exactly this purpose.
+     * <p>
+     * Note this issues a fresh {@code /products} request per call, and
+     * {@link #isProductInCollection} sits on the tile route's hot path — so each visual-tile
+     * request currently costs two sequential DAS round trips (membership check, then the tile).
      */
     public List<JsonNode> productsForCollection(String collectionId) {
         List<JsonNode> result = new ArrayList<>();
-        for (JsonNode product : self.getProducts()) {
+        for (JsonNode product : getProducts()) {
             if (collectionId.equals(product.path("metadata_uuid").asText(null))) {
                 result.add(product);
             }

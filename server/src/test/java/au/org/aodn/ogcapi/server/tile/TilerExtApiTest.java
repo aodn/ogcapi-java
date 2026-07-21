@@ -52,7 +52,7 @@ public class TilerExtApiTest extends BaseTestClass {
         return node;
     }
 
-    private ObjectNode manifestWith(String productId, String cacheVersion) {
+    private ObjectNode manifestWith(String productId) {
         ObjectNode manifest = mapper.createObjectNode();
         ObjectNode products = mapper.createObjectNode();
         ObjectNode availability = mapper.createObjectNode();
@@ -63,7 +63,6 @@ public class TilerExtApiTest extends BaseTestClass {
         availability.set("full_date_range", range);
         products.set(productId, availability);
         manifest.set("products", products);
-        manifest.put("cache_version", cacheVersion);
         return manifest;
     }
 
@@ -72,7 +71,7 @@ public class TilerExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(singleVariableProduct("p1", "uuid-a", "GSLA"))
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("p1", "cv1"));
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("p1"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiler/collections/uuid-a/products", JsonNode.class
@@ -81,16 +80,30 @@ public class TilerExtApiTest extends BaseTestClass {
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
         JsonNode body = response.getBody();
         Assertions.assertNotNull(body);
-        Assertions.assertEquals("cv1", body.get("cache_version").asText());
         Assertions.assertEquals(1, body.get("products").size());
 
         JsonNode entry = body.get("products").get(0);
         Assertions.assertEquals("p1", entry.get("id").asText());
-        Assertions.assertEquals("visual", entry.get("type").asText());
         Assertions.assertEquals(1, entry.get("available_dates").size());
         Assertions.assertTrue(entry.get("tile_url_template").asText().contains("product=p1"));
-        Assertions.assertTrue(entry.get("tile_url_template").asText().contains("cv=cv1"));
         Assertions.assertFalse(entry.has("source_path"), "source_path must never leak through the ext listing");
+    }
+
+    @Test
+    public void verifyScalarProductAdvertisesVisualTileTypeOnly() {
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(singleVariableProduct("p1", "uuid-a", "GSLA"))
+        );
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("p1"));
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiler/collections/uuid-a/products", JsonNode.class
+        );
+
+        JsonNode tileTypes = response.getBody().get("products").get(0).get("tile_types");
+        Assertions.assertTrue(tileTypes.isArray(), "tile_types must be a capability array, not a scalar");
+        Assertions.assertEquals(1, tileTypes.size());
+        Assertions.assertEquals("visual", tileTypes.get(0).asText());
     }
 
     @Test
@@ -107,7 +120,7 @@ public class TilerExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyMultiVariableProductTypedAsData() {
+    public void verifyMultiVariableProductAdvertisesNoServableTileType() {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(multiVariableProduct("p2", "uuid-a", List.of("UCUR", "VCUR")))
         );
@@ -118,7 +131,12 @@ public class TilerExtApiTest extends BaseTestClass {
         );
 
         JsonNode entry = response.getBody().get("products").get(0);
-        Assertions.assertEquals("data", entry.get("type").asText());
+        // DAS rejects multi-variable products for visual tiles and ogcapi has no data-tile
+        // route yet, so the honest answer is "nothing servable" — NOT "data", which would
+        // advertise an endpoint that 404s. "data" gets appended here once that route exists.
+        JsonNode tileTypes = entry.get("tile_types");
+        Assertions.assertTrue(tileTypes.isArray());
+        Assertions.assertEquals(0, tileTypes.size());
     }
 
     @Test
@@ -137,7 +155,7 @@ public class TilerExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyColormapLegendReturnsImage() {
-        when(dasTilerService.getLegend("viridis", null, null, null, null, null))
+        when(dasTilerService.getLegend("viridis", null, null, null, null))
                 .thenReturn(new DasTilerService.DasTileResult(
                         "legend-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 

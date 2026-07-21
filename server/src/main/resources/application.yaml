@@ -470,6 +470,9 @@ springdoc:
 data-access-service:
   host: http://localhost:5000
   secret: 123
+  tiler:
+    connect-timeout: ${DAS_TILER_CONNECT_TIMEOUT:5s}
+    read-timeout: ${DAS_TILER_READ_TIMEOUT:30s}
 
 management:
   info:
