@@ -9,7 +9,6 @@ import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
-import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -38,8 +37,8 @@ public class RestApi implements ProcessesApi {
     // cause exception thrown sometimes. So i re-declared the produces value here
     @RequestMapping(
             value = "/processes/{processID}/execution",
-            produces = { MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_HTML_VALUE },
-            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            produces = {MediaType.APPLICATION_JSON_VALUE, MediaType.TEXT_HTML_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
             method = RequestMethod.POST
     )
     public ResponseEntity<InlineResponse200> execute(
@@ -118,8 +117,8 @@ public class RestApi implements ProcessesApi {
      */
     @RequestMapping(
             value = "/processes/{processID}/execution",
-            produces = { MediaType.TEXT_EVENT_STREAM_VALUE },
-            consumes = { MediaType.APPLICATION_JSON_VALUE },
+            produces = {MediaType.TEXT_EVENT_STREAM_VALUE},
+            consumes = {MediaType.APPLICATION_JSON_VALUE},
             method = RequestMethod.POST
     )
     public SseEmitter executeSse(
@@ -131,40 +130,51 @@ public class RestApi implements ProcessesApi {
         try {
             String uuid = DatasetDownloadEnums.Parameter.UUID.getStringInput(body);
             String layerName = DatasetDownloadEnums.Parameter.LAYER_NAME.getStringInput(body);
+            String key = DatasetDownloadEnums.Parameter.KEY.getStringInput(body);
             String startDate = DatasetDownloadEnums.Parameter.START_DATE.getStringInput(body);
             String endDate = DatasetDownloadEnums.Parameter.END_DATE.getStringInput(body);
             String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
             Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
             List<String> fields = DatasetDownloadEnums.Parameter.FIELDS.getListInput(body);
 
-            if(uuid == null || layerName == null) {
-                throw new IllegalArgumentException("UUID and LayerName cannot null");
-            }
-
             ProcessIdEnum id = ProcessIdEnum.fromString(processId);
+
             SseEmitter emitter;
 
             switch (id) {
-                case DOWNLOAD_WFS_SSE:
+                case DOWNLOAD_WFS_SSE: {
+                    emitter = restServices.downloadWfsDataWithSse(
+                            uuid,
+                            startDate,
+                            endDate,
+                            multiPolygon,
+                            fields,
+                            layerName,
+                            outputFormat
+                    );
+                    break;
+                }
                 case DOWNLOAD_WFS_ESTIMATE: {
-                    if(FeatureRequest.GeoServerOutputFormat.fromString(outputFormat) == FeatureRequest.GeoServerOutputFormat.UNKNOWN) {
-                        emitter = new SseEmitter(0L);
-                        emitter.completeWithError(new BadRequestException(
-                                String.format("Missing output format [%s]", processId)
-                        ));
-                    }
-                    else {
-                        emitter = restServices.downloadWfsDataWithSse(
-                                uuid,
-                                startDate,
-                                endDate,
-                                multiPolygon,
-                                fields,
-                                layerName,
-                                outputFormat,
-                                id == ProcessIdEnum.DOWNLOAD_WFS_ESTIMATE
-                        );
-                    }
+                    emitter = restServices.estimateWfsDownloadWithSse(
+                            uuid,
+                            startDate,
+                            endDate,
+                            multiPolygon,
+                            fields,
+                            layerName,
+                            outputFormat
+                    );
+                    break;
+                }
+                case DOWNLOAD_CO_ESTIMATE: {
+                    emitter = restServices.estimateCloudOptimisedDownloadWithSse(
+                            uuid,
+                            key,
+                            startDate,
+                            endDate,
+                            multiPolygon,
+                            outputFormat
+                    );
                     break;
                 }
                 default: {

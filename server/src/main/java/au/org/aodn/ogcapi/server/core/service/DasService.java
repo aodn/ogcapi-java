@@ -65,7 +65,7 @@ public class DasService {
                 .encode()
                 .toUriString();
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
+        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET, httpEntity, byte[].class).getBody();
     }
 
     public byte[] getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
@@ -86,6 +86,33 @@ public class DasService {
 
     public byte[] getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
         return getFeatureCollection("/api/v1/das/data/feature-collection/mooring/{mooring}", startDateTime, endDateTime, Map.of("mooring", mooring));
+    }
+
+    /**
+     * Call the data-access-service cloud-optimised size estimate endpoint.
+     * The {@code parameters} map is the same batch-style subset request the
+     * download job submits (see {@code SubsetParametersUtils}), so DAS interprets
+     * the estimate and the download identically. Returns the raw JSON response
+     * body so the SSE layer can forward it to the frontend unchanged.
+     */
+    public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
+
+        String url = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/{uuid}/estimate_size")
+                .encode()
+                .toUriString();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        headers.set("X-API-KEY", dasConfig.secret());
+        headers.set("x-internal-das-header-secret", dasConfig.internal());
+
+        HttpEntity<Map<String, String>> entity = new HttpEntity<>(parameters, headers);
+
+        Map<String, String> uriVars = new HashMap<>();
+        uriVars.put("uuid", uuid);
+
+        return httpClient.exchange(url, HttpMethod.POST, entity, String.class, uriVars).getBody();
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
