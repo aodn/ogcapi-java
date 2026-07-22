@@ -33,16 +33,13 @@ public class ExplainSimplifiedResponse {
     @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({
-            "rank", "id", "title", "matched", "final_score",
+            "rank", "id", "title", "final_score",
             "es_relevance", "internal_score", "quality_multiplier", "matched_terms"
     })
     public static class Hit {
         private Integer rank;
         private String id;
         private String title;
-
-        /** Always true for a returned hit, kept for symmetry with the /explain/{uuid} payload */
-        private Boolean matched;
 
         @JsonProperty("final_score")
         private Double finalScore;
@@ -67,9 +64,18 @@ public class ExplainSimplifiedResponse {
     @Data
     @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
+    @JsonPropertyOrder({"field", "term", "match_type", "score"})
     public static class MatchedTerm {
         private String field;
         private String term;
+
+        /**
+         * The lucene query form that produced the match, term, phrase or synonym.
+         * An exact and a fuzzy match both rewrite to a term query and cannot be told apart.
+         */
+        @JsonProperty("match_type")
+        private String matchType;
+
         private Double score;
     }
 }

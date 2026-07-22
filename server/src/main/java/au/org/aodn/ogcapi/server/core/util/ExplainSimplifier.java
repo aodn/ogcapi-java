@@ -12,9 +12,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -24,11 +22,16 @@ import java.util.regex.Pattern;
  */
 public class ExplainSimplifier {
     /**
-     * A leaf scoring node looks like
-     * "weight(title:network in 123) [PerFieldSimilarity], result of:"
+     * A leaf scoring node is "weight(<query> in <docId>) [<similarity>], result of:",
+     * the doc id is numeric which keeps the split unambiguous for a quoted phrase.
      */
-    protected static final Pattern TERM_PATTERN =
-            Pattern.compile("^weight\\(([^:()\\s]+):([^\\s()]+) in \\S+\\)");
+    protected static final Pattern WEIGHT_PATTERN = Pattern.compile("^weight\\((.*) in \\d+\\)");
+
+    protected static final String SYNONYM_PREFIX = "Synonym(";
+
+    protected static final String MATCH_TYPE_TERM = "term";
+    protected static final String MATCH_TYPE_PHRASE = "phrase";
+    protected static final String MATCH_TYPE_SYNONYM = "synonym";
 
     protected static final String RELEVANCE_DESCRIPTION_PREFIX = "_score:";
 
@@ -74,7 +77,6 @@ public class ExplainSimplifier {
                 .rank(rank)
                 .id(hit.id())
                 .title(stringField(hit.source(), StacBasicField.Title.searchField))
-                .matched(true)
                 .finalScore(finalScore)
                 .esRelevance(esRelevance)
                 .internalScore(doubleField(hit.source(), StacSummeries.Score.searchField))
@@ -104,11 +106,10 @@ public class ExplainSimplifier {
             return List.of();
         }
 
-        Map<String, ExplainSimplifiedResponse.MatchedTerm> collected = new LinkedHashMap<>();
+        List<ExplainSimplifiedResponse.MatchedTerm> collected = new ArrayList<>();
         collectTerms(explanation.details(), collected);
 
-        return collected.values()
-                .stream()
+        return collected.stream()
                 .sorted(Comparator.comparing(
                         ExplainSimplifiedResponse.MatchedTerm::getScore,
                         Comparator.reverseOrder()))
@@ -116,28 +117,21 @@ public class ExplainSimplifier {
     }
 
     protected static void collectTerms(List<ExplanationDetail> details,
-                                       Map<String, ExplainSimplifiedResponse.MatchedTerm> collected) {
+                                       List<ExplainSimplifiedResponse.MatchedTerm> collected) {
         if (details == null) {
             return;
         }
 
         for (ExplanationDetail detail : details) {
-            Matcher matcher = TERM_PATTERN.matcher(
+            Matcher matcher = WEIGHT_PATTERN.matcher(
                     detail.description() == null ? "" : detail.description());
 
             if (matcher.find()) {
-                String field = matcher.group(1);
-                String term = matcher.group(2);
-                String key = field + ":" + term;
+                ExplainSimplifiedResponse.MatchedTerm term = toMatchedTerm(matcher.group(1), detail.value());
 
-                // the same term can appear more than once, e.g. under a boosted clause, keep the best
-                ExplainSimplifiedResponse.MatchedTerm existing = collected.get(key);
-                if (existing == null || existing.getScore() < detail.value()) {
-                    collected.put(key, ExplainSimplifiedResponse.MatchedTerm.builder()
-                            .field(field)
-                            .term(term)
-                            .score((double) detail.value())
-                            .build());
+                if (term != null) {
+                    // the same field and term can score in more than one should clause, keep every one
+                    collected.add(term);
                 }
                 // the children only break the term score down into idf/tf, nothing more to collect
                 continue;
@@ -145,6 +139,48 @@ public class ExplainSimplifier {
 
             collectTerms(detail.details(), collected);
         }
+    }
+
+    /**
+     * Interpret the query text of a leaf scoring node, it is one of
+     *   title:network                                     a term match, exact or fuzzy
+     *   title:"ocean temperature"                         a phrase match
+     *   Synonym(title.synonyms:soop title.synonyms:ships) an acronym expansion
+     * The label is the lucene query form, not the CQL clause. A fuzzy match rewrites to a
+     * term query before scoring, so CQLFields.title and CQLFields.fuzzy_title are identical
+     * here. A synonym group carries one score for the whole group so it stays one entry.
+     */
+    protected static ExplainSimplifiedResponse.MatchedTerm toMatchedTerm(String query, float score) {
+        String matchType = MATCH_TYPE_TERM;
+        String body = query;
+
+        if (body.startsWith(SYNONYM_PREFIX) && body.endsWith(")")) {
+            matchType = MATCH_TYPE_SYNONYM;
+            body = body.substring(SYNONYM_PREFIX.length(), body.length() - 1);
+        }
+        else if (body.contains("\"")) {
+            matchType = MATCH_TYPE_PHRASE;
+        }
+
+        int separator = body.indexOf(':');
+        if (separator <= 0 || separator == body.length() - 1) {
+            // not a field:term form, e.g. a range or a function query, nothing to report
+            return null;
+        }
+
+        String field = body.substring(0, separator);
+        // a synonym group repeats "field:" before every alternative, keep the terms only
+        String term = body.substring(separator + 1)
+                .replace(field + ":", "")
+                .replace("\"", "")
+                .trim();
+
+        return ExplainSimplifiedResponse.MatchedTerm.builder()
+                .field(field)
+                .term(term)
+                .matchType(matchType)
+                .score((double) score)
+                .build();
     }
 
     protected static String stringField(ObjectNode source, String path) {
