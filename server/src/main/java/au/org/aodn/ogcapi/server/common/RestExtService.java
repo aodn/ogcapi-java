@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.common;
 
-import au.org.aodn.ogcapi.server.core.exception.ResourceNotFoundException;
+import au.org.aodn.ogcapi.server.core.exception.DocumentNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.IndexNotFoundException;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.ElasticsearchException;
@@ -42,7 +42,7 @@ public class RestExtService {
         try {
             long totalHits = getDocumentsCount(vocabsIndexName);
             if (totalHits == 0) {
-                throw new ResourceNotFoundException("No documents found in " + vocabsIndexName);
+                throw new DocumentNotFoundException("No documents found in " + vocabsIndexName);
             } else {
                 SearchResponse<JsonNode> response = esClient.search(s -> s
                         .index(vocabsIndexName)

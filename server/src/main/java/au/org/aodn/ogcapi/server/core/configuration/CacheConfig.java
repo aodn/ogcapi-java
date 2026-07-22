@@ -30,6 +30,7 @@ import java.time.Duration;
 public class CacheConfig {
 
     public static final String CACHE_WMS_MAP_TILE = "cache-wms-map_tile";
+    public static final String CACHE_TILER_PRODUCTS = "cache-tiler-products";
     public static final String GET_CAPABILITIES_WMS_LAYERS = "get-capabilities-wms-layers";
     public static final String GET_CAPABILITIES_WFS_FEATURE_TYPES = "get-capabilities-wfs-feature-types";
 
@@ -66,6 +67,15 @@ public class CacheConfig {
                                                 .disk(10, MemoryUnit.GB, true)
                                 )
                                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                // DAS's tiler product list, read once per visual-tile request to check the product
+                // belongs to the collection in the path. heap(1) because the cached method takes no
+                // arguments, so there is only ever one key.
+                .withCache(CACHE_TILER_PRODUCTS,
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(1)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofMinutes(30)))
                 )
                 .withCache(ALL_NO_LAND_GEOMETRY,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(

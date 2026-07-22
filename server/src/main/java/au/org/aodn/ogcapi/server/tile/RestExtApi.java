@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.tile;
 
+import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -72,16 +73,16 @@ public class RestExtApi {
                                     }"""))),
             @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "502", description = "DAS unreachable, errored, or rejected this service's API key.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class)))})
+                            schema = @Schema(implementation = ErrorResponse.class)))})
     @GetMapping("/collections/{collectionId}/products")
     public ResponseEntity<JsonNode> getCollectionProducts(
             @Parameter(in = ParameterIn.PATH, required = true,
@@ -150,13 +151,13 @@ public class RestExtApi {
                                     }"""))),
             @ApiResponse(responseCode = "502", description = "DAS unreachable, errored, or rejected this service's API key.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class)))})
+                            schema = @Schema(implementation = ErrorResponse.class)))})
     @GetMapping("/colormaps")
     public ResponseEntity<JsonNode> getColormaps() {
         return ResponseEntity.ok(dasTilerService.getColormaps());
@@ -174,23 +175,23 @@ public class RestExtApi {
             @ApiResponse(responseCode = "400", description = "`rescale` is malformed, or was supplied for a " +
                     "categorical colormap.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "No colormap exists with that name.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "`width`/`height` outside 10-2048, or " +
                     "`orientation` neither `horizontal` nor `vertical`.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "502", description = "DAS unreachable, errored, or rejected this service's API key.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class)))})
+                            schema = @Schema(implementation = ErrorResponse.class)))})
     @GetMapping("/colormaps/{name}/legend")
     public ResponseEntity<byte[]> getColormapLegend(
             @Parameter(in = ParameterIn.PATH, required = true,

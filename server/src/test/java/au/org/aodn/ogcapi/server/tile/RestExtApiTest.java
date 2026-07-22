@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.BaseTestClass;
+import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
+import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -165,5 +167,29 @@ public class RestExtApiTest extends BaseTestClass {
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assertions.assertArrayEquals("legend-bytes".getBytes(), response.getBody());
+    }
+
+    /**
+     * These routes surface upstream failures through GlobalExceptionHandler, so the body is the
+     * service-wide ErrorResponse envelope — which is what the @ApiResponse schemas on RestExtApi
+     * now declare. Pinned here so the documented schema and the real one can't drift apart again.
+     */
+    @Test
+    public void verifyUpstreamErrorUsesErrorResponseEnvelope() {
+        when(dasTilerService.getLegend("nosuch", null, null, null, null))
+                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "no such colormap"));
+
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/colormaps/nosuch/legend", ErrorResponse.class
+        );
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        Assertions.assertNotNull(response.getBody(), "Body not null");
+        Assertions.assertEquals("no such colormap", response.getBody().getMessage(),
+                "Message carries the upstream reason");
+        Assertions.assertNotNull(response.getBody().getTimestamp(), "Timestamp populated by the handler");
+        Assertions.assertTrue(
+                response.getBody().getDetails().contains("/tiles/colormaps/nosuch/legend"),
+                "Details identify the failing request, got: " + response.getBody().getDetails());
     }
 }
