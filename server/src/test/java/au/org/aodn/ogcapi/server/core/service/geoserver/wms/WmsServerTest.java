@@ -82,34 +82,20 @@ public class WmsServerTest {
 
         List<String> urls = wmsServer.createMapDescribeUrl("http://geoserver-123.aodn.org.au/geoserver/wms", "id", featureRequest);
 
-        assertEquals(2, urls.size());
+        assertEquals(1, urls.size());
 
-        // First url will be cache one
-        String expectedUrl = "https://tilecache.aodn.org.au/geowebcache/service/wms?LAYERS=imos:argo_profile_map&SERVICE=WMS&VERSION=1.1.1&REQUEST=DescribeLayer";
+        // Only the geoserver url is expected, tilecache.aodn.org.au is decommissioned
+        String expectedUrl = "http://geoserver-123.aodn.org.au/geoserver/wms?LAYERS=imos:argo_profile_map&SERVICE=WMS&VERSION=1.1.1&REQUEST=DescribeLayer";
         UriComponents expected = UriComponentsBuilder.fromUriString(expectedUrl).build();
-        UriComponents cached = UriComponentsBuilder.fromUriString(urls.get(0)).build();
 
-        assertEquals(expected.getScheme(), cached.getScheme());
-        assertEquals(expected.getPath(), cached.getPath());
-        assertEquals(expected.getHost(), cached.getHost());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+        assertEquals(expected.getScheme(), result.getScheme());
+        assertEquals(expected.getPath(), result.getPath());
+        assertEquals(expected.getHost(), result.getHost());
 
         expected.getQueryParams()
                 .forEach((key, value) ->
-                        assertEquals(expected.getQueryParams().get(key), cached.getQueryParams().get(key), key)
-                );
-
-        // The second url will be the original without cache
-        expectedUrl = "http://geoserver-123.aodn.org.au/geoserver/wms?LAYERS=imos:argo_profile_map&SERVICE=WMS&VERSION=1.1.1&REQUEST=DescribeLayer";
-        UriComponents expected2 = UriComponentsBuilder.fromUriString(expectedUrl).build();
-
-        UriComponents nonCache = UriComponentsBuilder.fromUriString(urls.get(1)).build();
-        assertEquals(expected2.getScheme(), nonCache.getScheme());
-        assertEquals(expected2.getPath(), nonCache.getPath());
-        assertEquals(expected2.getHost(), nonCache.getHost());
-
-        expected2.getQueryParams()
-                .forEach((key, value) ->
-                        assertEquals(expected2.getQueryParams().get(key), nonCache.getQueryParams().get(key), key)
+                        assertEquals(expected.getQueryParams().get(key), result.getQueryParams().get(key), key)
                 );
     }
 
@@ -171,34 +157,20 @@ public class WmsServerTest {
 
         List<String> urls = wmsServer.createMapFeatureQueryUrl("http://geoserver-123.aodn.org.au/geoserver/wms", "id", featureRequest);
 
-        assertEquals(2, urls.size());
+        assertEquals(1, urls.size());
 
-        // First url will be cache one
-        String expectedUrl = "https://tilecache.aodn.org.au/geowebcache/service/wms?LAYERS=imos:argo_profile_map&TRANSPARENT=TRUE&VERSION=1.1.1&FORMAT=text/html&EXCEPTIONS=application/vnd.ogc.se_xml&TILED=true&SERVICE=WMS&REQUEST=GetFeatureInfo&STYLES=&QUERYABLE=true&SRS=EPSG:3857&INFO_FORMAT=text/html&FEATURE_COUNT=100&BUFFER=10&WIDTH=637&HEIGHT=550&I=474&J=252&X=474&Y=252&QUERY_LAYERS=imos:argo_profile_map&BBOX=-111.86719179153421,-69.03714171275249,111.8671917915342,69.03714171275138";
+        // Only the geoserver url is expected, tilecache.aodn.org.au is decommissioned
+        String expectedUrl = "http://geoserver-123.aodn.org.au/geoserver/wms?LAYERS=imos:argo_profile_map&TRANSPARENT=TRUE&VERSION=1.1.1&FORMAT=text/html&EXCEPTIONS=application/vnd.ogc.se_xml&TILED=true&SERVICE=WMS&REQUEST=GetFeatureInfo&STYLES=&QUERYABLE=true&SRS=EPSG:3857&INFO_FORMAT=text/html&FEATURE_COUNT=100&BUFFER=10&WIDTH=637&HEIGHT=550&I=474&J=252&X=474&Y=252&QUERY_LAYERS=imos:argo_profile_map&BBOX=-111.86719179153421,-69.03714171275249,111.8671917915342,69.03714171275138";
         UriComponents expected = UriComponentsBuilder.fromUriString(expectedUrl).build();
-        UriComponents cached = UriComponentsBuilder.fromUriString(urls.get(0)).build();
 
-        assertEquals(expected.getScheme(), cached.getScheme());
-        assertEquals(expected.getPath(), cached.getPath());
-        assertEquals(expected.getHost(), cached.getHost());
+        UriComponents result = UriComponentsBuilder.fromUriString(urls.get(0)).build();
+        assertEquals(expected.getScheme(), result.getScheme());
+        assertEquals(expected.getPath(), result.getPath());
+        assertEquals(expected.getHost(), result.getHost());
 
         expected.getQueryParams()
                 .forEach((key, value) ->
-                        assertEquals(expected.getQueryParams().get(key), cached.getQueryParams().get(key), key)
-                );
-
-        // The second url will be the original without cache
-        expectedUrl = "http://geoserver-123.aodn.org.au/geoserver/wms?LAYERS=imos:argo_profile_map&TRANSPARENT=TRUE&VERSION=1.1.1&FORMAT=text/html&EXCEPTIONS=application/vnd.ogc.se_xml&TILED=true&SERVICE=WMS&REQUEST=GetFeatureInfo&STYLES=&QUERYABLE=true&SRS=EPSG:3857&INFO_FORMAT=text/html&FEATURE_COUNT=100&BUFFER=10&WIDTH=637&HEIGHT=550&I=474&J=252&X=474&Y=252&QUERY_LAYERS=imos:argo_profile_map&BBOX=-111.86719179153421,-69.03714171275249,111.8671917915342,69.03714171275138";
-        UriComponents expected2 = UriComponentsBuilder.fromUriString(expectedUrl).build();
-
-        UriComponents nonCache = UriComponentsBuilder.fromUriString(urls.get(1)).build();
-        assertEquals(expected2.getScheme(), nonCache.getScheme());
-        assertEquals(expected2.getPath(), nonCache.getPath());
-        assertEquals(expected2.getHost(), nonCache.getHost());
-
-        expected2.getQueryParams()
-                .forEach((key, value) ->
-                        assertEquals(expected2.getQueryParams().get(key), nonCache.getQueryParams().get(key), key)
+                        assertEquals(expected.getQueryParams().get(key), result.getQueryParams().get(key), key)
                 );
     }
 
