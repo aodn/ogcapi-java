@@ -74,7 +74,9 @@ public class RestServices {
 
             ses.sendEmail(request);
 
-        } catch (SesException e) {
+        } catch (Exception e) {
+            // Best effort: this runs after the batch job was accepted, so a failure to notify
+            // must not surface as a failed download request for a job that is already running.
             log.error("Error sending email: {}", e.getMessage());
         }
     }
@@ -136,7 +138,14 @@ public class RestServices {
                 .build();
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);
-        return submitJobResponse.jobId();
+        String jobId = submitJobResponse.jobId();
+
+        // Callers treat a returned job id as proof the job was accepted (the user gets a
+        // "processing started" email off the back of it), so never hand back a blank one.
+        if (jobId == null || jobId.isBlank()) {
+            throw new IllegalStateException("AWS Batch did not return a job id for job '" + jobName + "'");
+        }
+        return jobId;
     }
 
     private String generateStartedEmailContent(
