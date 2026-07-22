@@ -20,13 +20,13 @@ import java.util.List;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests for the /api/v1/ogc/ext/tiler routes (product/date listing joined from DAS
+ * Tests for the /api/v1/ogc/ext/tiles routes (product/date listing joined from DAS
  * products+manifest, colormaps passthrough, legend proxy). dasTilerService is mocked so these
  * don't need a running DAS.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-public class TilerExtApiTest extends BaseTestClass {
+public class RestExtApiTest extends BaseTestClass {
 
     @MockitoBean
     protected DasTilerService dasTilerService;
@@ -74,7 +74,7 @@ public class TilerExtApiTest extends BaseTestClass {
         when(dasTilerService.getManifest()).thenReturn(manifestWith("p1"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiler/collections/uuid-a/products", JsonNode.class
+                getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
         );
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -97,7 +97,7 @@ public class TilerExtApiTest extends BaseTestClass {
         when(dasTilerService.getManifest()).thenReturn(manifestWith("p1"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiler/collections/uuid-a/products", JsonNode.class
+                getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
         );
 
         JsonNode tileTypes = response.getBody().get("products").get(0).get("tile_types");
@@ -112,7 +112,7 @@ public class TilerExtApiTest extends BaseTestClass {
         when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiler/collections/uuid-none/products", JsonNode.class
+                getExternalBasePath() + "/tiles/collections/uuid-none/products", JsonNode.class
         );
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -127,7 +127,7 @@ public class TilerExtApiTest extends BaseTestClass {
         when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiler/collections/uuid-a/products", JsonNode.class
+                getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
         );
 
         JsonNode entry = response.getBody().get("products").get(0);
@@ -146,7 +146,7 @@ public class TilerExtApiTest extends BaseTestClass {
         when(dasTilerService.getColormaps()).thenReturn(body);
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiler/colormaps", JsonNode.class
+                getExternalBasePath() + "/tiles/colormaps", JsonNode.class
         );
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -160,7 +160,7 @@ public class TilerExtApiTest extends BaseTestClass {
                         "legend-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiler/colormaps/viridis/legend", byte[].class
+                getExternalBasePath() + "/tiles/colormaps/viridis/legend", byte[].class
         );
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());

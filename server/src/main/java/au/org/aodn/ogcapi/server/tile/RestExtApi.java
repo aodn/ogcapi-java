@@ -16,17 +16,10 @@ import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
-/**
- * Non-OGC "ext" routes that expose DAS tiler metadata (product/date listing, colormaps, legend
- * images) to the frontend, so it doesn't have to hand-assemble DAS URLs or know about DAS at
- * all. Mirrors the existing {@code /api/v1/ogc/ext} namespace precedent in
- * {@code au.org.aodn.ogcapi.server.common.RestExtApi}.
- */
 @Slf4j
-@RestController("TilerExtApi")
-@RequestMapping(value = "/api/v1/ogc/ext/tiler")
-@CrossOrigin(origins = "*")
-public class TilerExtApi {
+@RestController("TileRestExtApi")
+@RequestMapping(value = "/api/v1/ogc/ext/tiles")
+public class RestExtApi {
 
     @Autowired
     protected DasTilerService dasTilerService;
@@ -34,11 +27,6 @@ public class TilerExtApi {
     @Autowired
     protected ObjectMapper mapper;
 
-    /**
-     * Lists DAS tiler products belonging to {@code collectionId} (matched via the DAS product
-     * registry's {@code metadata_uuid} field) along with their available dates and ready-to-use
-     * ogcapi tile/legend URL templates, so the frontend never sees DAS's raw {@code source_path}.
-     */
     @GetMapping("/collections/{collectionId}/products")
     public ResponseEntity<JsonNode> getCollectionProducts(@PathVariable String collectionId) {
         List<JsonNode> products = dasTilerService.productsForCollection(collectionId);
@@ -54,16 +42,9 @@ public class TilerExtApi {
             ObjectNode entry = mapper.createObjectNode();
             entry.put("id", id);
             entry.set("variable", variable);
-            // Capability list, not a classification: it states which tile kinds THIS service
-            // can currently serve for the product. Deliberately not derived from what DAS can
-            // render — DAS can also produce data tiles for scalar products, but ogcapi exposes
-            // no data-tile route yet, so advertising "data" here would promise a 404. When that
-            // route lands, "data" is appended to the existing array rather than replacing a
-            // scalar field, so the contract grows without breaking clients.
+
             ArrayNode tileTypes = mapper.createArrayNode();
             if (!isMultiVariable) {
-                // Multi-variable products (e.g. ucur+vcur) are rejected by DAS for visual
-                // tiles, so today they are listed with no servable tile type at all.
                 tileTypes.add("visual");
             }
             entry.set("tile_types", tileTypes);
@@ -78,9 +59,8 @@ public class TilerExtApi {
             entry.put("tile_url_template",
                     "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{x}/{y}"
                             + "?product=" + encodedId + "&datetime={datetime}&f=png");
-            // No per-product default colormap exists yet (see plan's Deferred style-catalog
-            // section) — the frontend fills {colormap} in itself, e.g. from GET /colormaps.
-            entry.put("legend_url", "/api/v1/ogc/ext/tiler/colormaps/{colormap}/legend");
+
+            entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend");
 
             result.add(entry);
         }

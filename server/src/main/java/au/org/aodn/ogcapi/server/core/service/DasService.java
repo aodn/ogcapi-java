@@ -96,15 +96,15 @@ public class DasService {
      */
     public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
 
-        String url = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/{uuid}/estimate_size")
+        String url = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/{uuid}/estimate_size")
                 .encode()
                 .toUriString();
 
         HttpHeaders headers = new HttpHeaders();
         headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("X-API-KEY", dasConfig.secret());
-        headers.set("x-internal-das-header-secret", dasConfig.internal());
+        headers.set("X-API-KEY", dasProperties.secret());
+        headers.set("x-internal-das-header-secret", dasProperties.internal());
 
         HttpEntity<Map<String, String>> entity = new HttpEntity<>(parameters, headers);
 
