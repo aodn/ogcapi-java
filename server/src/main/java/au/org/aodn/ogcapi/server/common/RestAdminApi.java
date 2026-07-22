@@ -23,6 +23,8 @@ import java.util.*;
 @RestController("CommonRestAdminApi")
 @RequestMapping(value="/api/v1/ogc/admin")
 public class RestAdminApi {
+    protected static final String SIMPLE_FORMAT = "simple";
+
     @Autowired
     protected RestAdminService restAdminService;
 
@@ -45,7 +47,9 @@ public class RestAdminApi {
             @Parameter(in = ParameterIn.QUERY, description = "Coordinate system")
             @RequestParam(value = "crs", required = false, defaultValue = "https://epsg.io/4326") String crs,
             @Parameter(in = ParameterIn.QUERY, description = "Filter language")
-            @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang
+            @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang,
+            @Parameter(in = ParameterIn.QUERY, description = "Response format, simple for the flattened score breakdown, anything else returns the full elastic search explanation")
+            @RequestParam(value = "format", required = false, defaultValue = "simple") String format
     ) throws Exception {
         if (!restAdminService.isElasticsearchExplainEnabled()) {
             //return 404 NotFound error if elasticsearch-explain-enabled is set as false
@@ -58,7 +62,8 @@ public class RestAdminApi {
                 filter,
                 properties,
                 sortBy,
-                convertedCrs));
+                convertedCrs,
+                SIMPLE_FORMAT.equalsIgnoreCase(format)));
     }
     /**
      * Explain an uuid matches a search query or not

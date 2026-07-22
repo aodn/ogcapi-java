@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.server.core.util.ExplainSimplifier;
 import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
@@ -385,15 +386,30 @@ public abstract class ElasticSearchBase {
         }
     }
 
-    protected JsonNode explainCollectionBy(Supplier<SearchRequest.Builder> requestSupplier) throws IOException {
-        SearchRequest request = requestSupplier.get()
+    protected JsonNode explainCollectionBy(Supplier<SearchRequest.Builder> requestSupplier,
+                                           boolean simplified) throws IOException {
+        SearchRequest.Builder builder = requestSupplier.get()
                 .explain(true)
-                .trackTotalHits(t -> t.enabled(true))
-                .source(s -> s.fetch(false))
-                .build();
+                .trackTotalHits(t -> t.enabled(true));
+
+        if (simplified) {
+            // the simplified view reports the title and the stored quality score of each hit
+            builder.source(s -> s.filter(f -> f.includes(
+                    StacBasicField.Title.searchField,
+                    StacSummeries.Score.searchField)));
+        }
+        else {
+            builder.source(s -> s.fetch(false));
+        }
+
+        SearchRequest request = builder.build();
 
         log.debug("Final elastic search explain payload {}", request);
         SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);
+
+        if (simplified) {
+            return mapper.valueToTree(ExplainSimplifier.from(response));
+        }
 
         ObjectNode result = mapper.createObjectNode();
         result.set("request", toJsonNode(request));
