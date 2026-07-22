@@ -388,21 +388,15 @@ public abstract class ElasticSearchBase {
 
     protected JsonNode explainCollectionBy(Supplier<SearchRequest.Builder> requestSupplier,
                                            boolean simplified) throws IOException {
-        SearchRequest.Builder builder = requestSupplier.get()
+        SearchRequest request = requestSupplier.get()
                 .explain(true)
-                .trackTotalHits(t -> t.enabled(true));
-
-        if (simplified) {
-            // the simplified view reports the title and the stored quality score of each hit
-            builder.source(s -> s.filter(f -> f.includes(
-                    StacBasicField.Title.searchField,
-                    StacSummeries.Score.searchField)));
-        }
-        else {
-            builder.source(s -> s.fetch(false));
-        }
-
-        SearchRequest request = builder.build();
+                .trackTotalHits(t -> t.enabled(true))
+                .source(s -> simplified
+                        ? s.filter(f -> f.includes(
+                                StacBasicField.Title.searchField,
+                                StacSummeries.Score.searchField))
+                        : s.fetch(false))
+                .build();
 
         log.debug("Final elastic search explain payload {}", request);
         SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);

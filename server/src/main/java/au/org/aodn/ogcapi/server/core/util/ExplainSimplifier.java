@@ -8,6 +8,7 @@ import co.elastic.clients.elasticsearch.core.explain.Explanation;
 import co.elastic.clients.elasticsearch.core.explain.ExplanationDetail;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.MissingNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
@@ -27,9 +28,16 @@ public class ExplainSimplifier {
      */
     protected static final Pattern WEIGHT_PATTERN = Pattern.compile("^weight\\((.*) in \\d+\\)");
 
+    protected static final String WEIGHT_PREFIX = "weight(";
+
     protected static final String SYNONYM_PREFIX = "Synonym(";
 
     protected static final String RELEVANCE_DESCRIPTION_PREFIX = "_score:";
+
+    protected static final Comparator<ExplainSimplifiedResponse.MatchedTerm> BY_SCORE_DESC =
+            Comparator.comparing(
+                    ExplainSimplifiedResponse.MatchedTerm::getScore,
+                    Comparator.reverseOrder());
 
     private ExplainSimplifier() {
     }
@@ -105,11 +113,8 @@ public class ExplainSimplifier {
         List<ExplainSimplifiedResponse.MatchedTerm> collected = new ArrayList<>();
         collectTerms(explanation.details(), collected);
 
-        return collected.stream()
-                .sorted(Comparator.comparing(
-                        ExplainSimplifiedResponse.MatchedTerm::getScore,
-                        Comparator.reverseOrder()))
-                .toList();
+        collected.sort(BY_SCORE_DESC);
+        return collected;
     }
 
     protected static void collectTerms(List<ExplanationDetail> details,
@@ -119,8 +124,15 @@ public class ExplainSimplifier {
         }
 
         for (ExplanationDetail detail : details) {
-            Matcher matcher = WEIGHT_PATTERN.matcher(
-                    detail.description() == null ? "" : detail.description());
+            String description = detail.description();
+
+            // most nodes are idf/tf breakdowns, skip the regex for them
+            if (description == null || !description.startsWith(WEIGHT_PREFIX)) {
+                collectTerms(detail.details(), collected);
+                continue;
+            }
+
+            Matcher matcher = WEIGHT_PATTERN.matcher(description);
 
             if (matcher.find()) {
                 ExplainSimplifiedResponse.MatchedTerm term = toMatchedTerm(matcher.group(1), detail.value());
@@ -173,26 +185,21 @@ public class ExplainSimplifier {
 
     protected static String stringField(ObjectNode source, String path) {
         JsonNode node = valueAt(source, path);
-        return node != null && node.isTextual() ? node.asText() : null;
+        return node.isTextual() ? node.asText() : null;
     }
 
     protected static Double doubleField(ObjectNode source, String path) {
         JsonNode node = valueAt(source, path);
-        return node != null && node.isNumber() ? node.asDouble() : null;
+        return node.isNumber() ? node.asDouble() : null;
     }
 
     /**
-     * Resolve a dotted path such as "summaries.score" against the returned _source
+     * Resolve a dotted field name such as "summaries.score" against the returned _source,
+     * a missing node is returned when the field was not fetched
      */
     protected static JsonNode valueAt(ObjectNode source, String path) {
-        if (source == null) {
-            return null;
-        }
-
-        JsonNode current = source;
-        for (String segment : path.split("\\.")) {
-            current = current.path(segment);
-        }
-        return current.isMissingNode() ? null : current;
+        return source == null
+                ? MissingNode.getInstance()
+                : source.at("/" + path.replace('.', '/'));
     }
 }

@@ -63,13 +63,7 @@ public class RestAdminApiTest extends BaseTestClass {
                 .build()
                 .encode()
                 .toUri();
-        URI explainUri = UriComponentsBuilder
-                .fromUriString(getAdminBasePath() + "/explain")
-                .queryParam("q", "dataset")
-                .queryParam("filter", "page_size=3")
-                .build()
-                .encode()
-                .toUri();
+        URI explainUri = explainUri("q", "dataset", "filter", "page_size=3");
 
         ResponseEntity<JsonNode> normalResponse = testRestTemplate.getForEntity(normalUri, JsonNode.class);
         ResponseEntity<JsonNode> explainResponse = testRestTemplate.getForEntity(explainUri, JsonNode.class);
@@ -79,12 +73,8 @@ public class RestAdminApiTest extends BaseTestClass {
 
         JsonNode normalBody = Objects.requireNonNull(normalResponse.getBody());
         JsonNode explainBody = Objects.requireNonNull(explainResponse.getBody());
-        List<String> normalIds = StreamSupport.stream(normalBody.path("collections").spliterator(), false)
-                .map(collection -> collection.path("id").asText())
-                .toList();
-        List<String> explainIds = StreamSupport.stream(explainBody.path("hits").spliterator(), false)
-                .map(hit -> hit.path("id").asText())
-                .toList();
+        List<String> normalIds = fieldValues(normalBody.path("collections"), "id");
+        List<String> explainIds = fieldValues(explainBody.path("hits"), "id");
 
         assertEquals(3, explainBody.path("request").path("size").asInt());
         assertTrue(explainBody.path("request").path("query").has("script_score"));
@@ -102,12 +92,7 @@ public class RestAdminApiTest extends BaseTestClass {
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
                 "7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
-        URI explainUri = UriComponentsBuilder
-                .fromUriString(getAdminBasePath() + "/explain")
-                .queryParam("filter", "parameter_vocabs='temperature'")
-                .build()
-                .encode()
-                .toUri();
+        URI explainUri = explainUri("filter", "parameter_vocabs='temperature'");
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(explainUri, JsonNode.class);
 
@@ -129,21 +114,8 @@ public class RestAdminApiTest extends BaseTestClass {
                 "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
-        URI fullUri = UriComponentsBuilder
-                .fromUriString(getAdminBasePath() + "/explain")
-                .queryParam("q", "dataset")
-                .queryParam("filter", "page_size=3")
-                .build()
-                .encode()
-                .toUri();
-        URI simpleUri = UriComponentsBuilder
-                .fromUriString(getAdminBasePath() + "/explain")
-                .queryParam("q", "dataset")
-                .queryParam("filter", "page_size=3")
-                .queryParam("format", "simple")
-                .build()
-                .encode()
-                .toUri();
+        URI fullUri = explainUri("q", "dataset", "filter", "page_size=3");
+        URI simpleUri = explainUri("q", "dataset", "filter", "page_size=3", "format", "simple");
 
         ResponseEntity<JsonNode> fullResponse = testRestTemplate.getForEntity(fullUri, JsonNode.class);
         ResponseEntity<JsonNode> simpleResponse = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
@@ -162,12 +134,8 @@ public class RestAdminApiTest extends BaseTestClass {
         assertEquals(fullBody.path("total").path("value").asLong(), simpleBody.path("total").path("value").asLong());
 
         // both formats run the same query, so the hits and their order must agree
-        List<String> fullIds = StreamSupport.stream(fullBody.path("hits").spliterator(), false)
-                .map(hit -> hit.path("id").asText())
-                .toList();
-        List<String> simpleIds = StreamSupport.stream(simpleBody.path("hits").spliterator(), false)
-                .map(hit -> hit.path("id").asText())
-                .toList();
+        List<String> fullIds = fieldValues(fullBody.path("hits"), "id");
+        List<String> simpleIds = fieldValues(simpleBody.path("hits"), "id");
         assertEquals(fullIds, simpleIds);
 
         JsonNode top = simpleBody.path("hits").path(0);
@@ -198,13 +166,7 @@ public class RestAdminApiTest extends BaseTestClass {
         // multi word clauses into one scoring leaf per term and per field
         insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
-        URI simpleUri = UriComponentsBuilder
-                .fromUriString(getAdminBasePath() + "/explain")
-                .queryParam("q", "ocean acidification")
-                .queryParam("format", "simple")
-                .build()
-                .encode()
-                .toUri();
+        URI simpleUri = explainUri("q", "ocean acidification", "format", "simple");
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
 
@@ -229,16 +191,32 @@ public class RestAdminApiTest extends BaseTestClass {
     }
 
     @Test
+    public void explainSimplifiedFormatReportsQuotedPhraseMatches() throws IOException {
+        insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
+
+        // a quoted query routes title and description through MatchPhraseQuery, which elastic
+        // search renders as a single weight(title:"ocean acidification" in N) leaf
+        URI simpleUri = explainUri("q", "\"ocean acidification\"", "format", "simple");
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        JsonNode terms = Objects.requireNonNull(response.getBody())
+                .path("hits").path(0).path("matched_terms");
+
+        // the phrase is reported as one term with its quotes stripped, a term only
+        // extraction would drop this leaf entirely
+        assertTrue(StreamSupport.stream(terms.spliterator(), false)
+                        .anyMatch(term -> "title".equals(term.path("field").asText())
+                                && "ocean acidification".equals(term.path("term").asText())),
+                "a quoted phrase must be reported as a single matched term");
+    }
+
+    @Test
     public void explainEndpointFallsBackToFullForUnknownFormat() throws IOException {
         insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
-        URI explainUri = UriComponentsBuilder
-                .fromUriString(getAdminBasePath() + "/explain")
-                .queryParam("q", "temperature")
-                .queryParam("format", "unknown")
-                .build()
-                .encode()
-                .toUri();
+        URI explainUri = explainUri("q", "temperature", "format", "unknown");
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(explainUri, JsonNode.class);
 
@@ -268,6 +246,27 @@ public class RestAdminApiTest extends BaseTestClass {
 
     private String getAdminBasePath() {
         return getBasePath() + "/admin";
+    }
+
+    /**
+     * Build an /explain uri, the query parameters are given as alternating name and value
+     */
+    private URI explainUri(String... queryParams) {
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(getAdminBasePath() + "/explain");
+
+        for (int i = 0; i < queryParams.length; i += 2) {
+            builder.queryParam(queryParams[i], queryParams[i + 1]);
+        }
+        return builder.build().encode().toUri();
+    }
+
+    /**
+     * Collect one field out of every element of a json array, e.g. the id of every hit
+     */
+    private List<String> fieldValues(JsonNode array, String field) {
+        return StreamSupport.stream(array.spliterator(), false)
+                .map(element -> element.path(field).asText())
+                .toList();
     }
 
     private void insertRecordsWithExplicitIds(String... filenames) throws IOException {
