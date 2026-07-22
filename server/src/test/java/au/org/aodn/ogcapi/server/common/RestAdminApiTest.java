@@ -142,10 +142,9 @@ public class RestAdminApiTest extends BaseTestClass {
         assertEquals(1, top.path("rank").asInt());
         assertFalse(top.path("title").asText().isBlank());
         assertTrue(top.path("internal_score").isNumber());
-        assertEquals(
-                top.path("final_score").asDouble(),
-                top.path("es_relevance").asDouble() * top.path("quality_multiplier").asDouble(),
-                0.0001);
+
+        assertTrue(top.path("es_relevance").asDouble() >= top.path("final_score").asDouble(),
+                "the quality multiplier is at most 1, so relevance cannot be below the final score");
 
         JsonNode matchedTerms = top.path("matched_terms");
         assertTrue(matchedTerms.isArray());
@@ -157,6 +156,14 @@ public class RestAdminApiTest extends BaseTestClass {
             assertFalse(matchedTerm.path("term").asText().isBlank());
             assertTrue(matchedTerm.path("score").asDouble() <= previous, "matched_terms must be sorted by score");
             previous = matchedTerm.path("score").asDouble();
+        }
+
+        // clauses that score without being a term match, e.g. the match_all or a bbox filter
+        JsonNode filters = top.path("filters");
+        assertTrue(filters.isArray());
+        for (JsonNode filter : filters) {
+            assertFalse(filter.path("description").asText().isBlank());
+            assertTrue(filter.path("score").isNumber());
         }
     }
 

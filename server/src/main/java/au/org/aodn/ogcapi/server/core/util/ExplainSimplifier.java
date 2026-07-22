@@ -25,6 +25,7 @@ public class ExplainSimplifier {
     /**
      * A leaf scoring node is "weight(<query> in <docId>) [<similarity>], result of:",
      * the doc id is numeric which keeps the split unambiguous for a quoted phrase.
+     * E.g.  "description": "weight(title:national in 354066) [PerFieldSimilarity], result of:",
      */
     protected static final Pattern WEIGHT_PATTERN = Pattern.compile("^weight\\((.*) in \\d+\\)");
 
@@ -70,12 +71,36 @@ public class ExplainSimplifier {
 
         // hit.score() keeps the precision elastic search reported, the explanation values are floats
         Double finalScore = hit.score();
-        Double esRelevance = explanation != null ? (double) relevanceOf(explanation) : null;
+
+        // everything making up es_relevance sits under the "_score: " node, the rest of the tree
+        // is the script multiplier and the required clause match, which contributes nothing
+        ExplanationDetail scoreNode = explanation != null
+                ? scriptScoreNodeOf(explanation.details())
+                : null;
+
+        Double esRelevance = null;
+        List<ExplanationDetail> scored = null;
+
+        if (scoreNode != null) {
+            esRelevance = (double) scoreNode.value();
+            scored = scoreNode.details();
+        }
+        else if (explanation != null) {
+            // no script_score wrapper, so no multiplier was applied and the root is the relevance
+            esRelevance = (double) explanation.value();
+            scored = explanation.details();
+        }
 
         Double qualityMultiplier = null;
         if (finalScore != null && esRelevance != null && esRelevance != 0.0) {
             qualityMultiplier = finalScore / esRelevance;
         }
+
+        List<ExplainSimplifiedResponse.MatchedTerm> terms = new ArrayList<>();
+        List<ExplainSimplifiedResponse.MatchedFilter> filters = new ArrayList<>();
+
+        collectScoreParts(scored, terms, filters);
+        terms.sort(BY_SCORE_DESC);
 
         return ExplainSimplifiedResponse.Hit.builder()
                 .rank(rank)
@@ -85,40 +110,43 @@ public class ExplainSimplifier {
                 .esRelevance(esRelevance)
                 .internalScore(doubleField(hit.source(), StacSummeries.Score.searchField))
                 .qualityMultiplier(qualityMultiplier)
-                .matchedTerms(matchedTermsOf(explanation))
+                .matchedTerms(terms)
+                .filters(filters)
                 .build();
     }
 
     /**
-     * For a keyword search the root is the script_score function and the untouched relevance sits
-     * in its "_score: " child. Without the script_score wrapper the root value is the relevance.
+     * Locate the "_score: " node, the untouched relevance elastic search produced before the
+     * painless script applied the quality multiplier. It is not a direct child of the root,
+     * the root is a "sum of:" holding the script score function alongside the required clause
+     * match, so the tree has to be searched.
      */
-    protected static float relevanceOf(Explanation explanation) {
-        if (explanation.details() != null) {
-            for (ExplanationDetail detail : explanation.details()) {
-                if (detail.description() != null
-                        && detail.description().startsWith(RELEVANCE_DESCRIPTION_PREFIX)) {
-                    return detail.value();
-                }
+    protected static ExplanationDetail scriptScoreNodeOf(List<ExplanationDetail> details) {
+        if (details == null) {
+            return null;
+        }
+
+        for (ExplanationDetail detail : details) {
+            if (detail.description() != null
+                    && detail.description().startsWith(RELEVANCE_DESCRIPTION_PREFIX)) {
+                return detail;
+            }
+
+            ExplanationDetail nested = scriptScoreNodeOf(detail.details());
+            if (nested != null) {
+                return nested;
             }
         }
-        return explanation.value();
+        return null;
     }
 
-    protected static List<ExplainSimplifiedResponse.MatchedTerm> matchedTermsOf(Explanation explanation) {
-        if (explanation == null) {
-            return List.of();
-        }
-
-        List<ExplainSimplifiedResponse.MatchedTerm> collected = new ArrayList<>();
-        collectTerms(explanation.details(), collected);
-
-        collected.sort(BY_SCORE_DESC);
-        return collected;
-    }
-
-    protected static void collectTerms(List<ExplanationDetail> details,
-                                       List<ExplainSimplifiedResponse.MatchedTerm> collected) {
+    /**
+     * Walk the scoring subtree once, splitting it into the term matches and the clauses that
+     * contribute without being a term match, e.g. a bbox ConstantScore or the match_all "*:*".
+     */
+    protected static void collectScoreParts(List<ExplanationDetail> details,
+                                            List<ExplainSimplifiedResponse.MatchedTerm> terms,
+                                            List<ExplainSimplifiedResponse.MatchedFilter> filters) {
         if (details == null) {
             return;
         }
@@ -127,25 +155,33 @@ public class ExplainSimplifier {
             String description = detail.description();
 
             // most nodes are idf/tf breakdowns, skip the regex for them
-            if (description == null || !description.startsWith(WEIGHT_PREFIX)) {
-                collectTerms(detail.details(), collected);
-                continue;
-            }
+            if (description != null && description.startsWith(WEIGHT_PREFIX)) {
+                Matcher matcher = WEIGHT_PATTERN.matcher(description);
 
-            Matcher matcher = WEIGHT_PATTERN.matcher(description);
+                if (matcher.find()) {
+                    ExplainSimplifiedResponse.MatchedTerm term =
+                            toMatchedTerm(matcher.group(1), detail.value());
 
-            if (matcher.find()) {
-                ExplainSimplifiedResponse.MatchedTerm term = toMatchedTerm(matcher.group(1), detail.value());
-
-                if (term != null) {
-                    // the same field and term can score in more than one should clause, keep every one
-                    collected.add(term);
+                    if (term != null) {
+                        // the same field and term can score in more than one should clause, keep every one
+                        terms.add(term);
+                    }
+                    // the children only break the term score down into idf/tf, nothing more to collect
+                    continue;
                 }
-                // the children only break the term score down into idf/tf, nothing more to collect
+            }
+
+            if (detail.details() == null || detail.details().isEmpty()) {
+                if (description != null && detail.value() != 0.0f) {
+                    filters.add(ExplainSimplifiedResponse.MatchedFilter.builder()
+                            .description(description)
+                            .score((double) detail.value())
+                            .build());
+                }
                 continue;
             }
 
-            collectTerms(detail.details(), collected);
+            collectScoreParts(detail.details(), terms, filters);
         }
     }
 

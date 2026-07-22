@@ -34,7 +34,7 @@ public class ExplainSimplifiedResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({
             "rank", "id", "title", "final_score",
-            "es_relevance", "internal_score", "quality_multiplier", "matched_terms"
+            "es_relevance", "internal_score", "quality_multiplier", "matched_terms", "filters"
     })
     public static class Hit {
         private Integer rank;
@@ -59,6 +59,12 @@ public class ExplainSimplifiedResponse {
         /** The per matched field and term and score which contributed to the esRelevance */
         @JsonProperty("matched_terms")
         private List<MatchedTerm> matchedTerms;
+
+        /**
+         * Clauses that contribute to es_relevance without being a term match, e.g. a bbox
+         * filter or the match_all, so the whole of es_relevance can be accounted for
+         */
+        private List<MatchedFilter> filters;
     }
 
     @Data
@@ -67,6 +73,15 @@ public class ExplainSimplifiedResponse {
     public static class MatchedTerm {
         private String field;
         private String term;
+        private Double score;
+    }
+
+    @Data
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class MatchedFilter {
+        /** The compiled lucene query, reported as elastic search rendered it */
+        private String description;
         private Double score;
     }
 }
