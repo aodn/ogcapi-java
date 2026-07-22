@@ -120,6 +120,97 @@ public class RestAdminApiTest extends BaseTestClass {
     }
 
     @Test
+    public void explainEndpointReturnsSimplifiedFormat() throws IOException {
+        insertRecordsWithExplicitIds(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        URI fullUri = UriComponentsBuilder
+                .fromUriString(getAdminBasePath() + "/explain")
+                .queryParam("q", "dataset")
+                .queryParam("filter", "page_size=3")
+                .build()
+                .encode()
+                .toUri();
+        URI simpleUri = UriComponentsBuilder
+                .fromUriString(getAdminBasePath() + "/explain")
+                .queryParam("q", "dataset")
+                .queryParam("filter", "page_size=3")
+                .queryParam("format", "simple")
+                .build()
+                .encode()
+                .toUri();
+
+        ResponseEntity<JsonNode> fullResponse = testRestTemplate.getForEntity(fullUri, JsonNode.class);
+        ResponseEntity<JsonNode> simpleResponse = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
+
+        assertTrue(simpleResponse.getStatusCode().is2xxSuccessful());
+        JsonNode fullBody = Objects.requireNonNull(fullResponse.getBody());
+        JsonNode simpleBody = Objects.requireNonNull(simpleResponse.getBody());
+
+        // the simplified payload drops the elastic search request and the explanation tree
+        assertFalse(simpleBody.has("request"));
+        assertTrue(StreamSupport.stream(simpleBody.path("hits").spliterator(), false)
+                .noneMatch(hit -> hit.has("explanation")));
+
+        assertEquals("eq", simpleBody.path("total").path("relation").asText());
+        assertEquals(fullBody.path("total").path("value").asLong(), simpleBody.path("total").path("value").asLong());
+
+        // both formats run the same query, so the hits and their order must agree
+        List<String> fullIds = StreamSupport.stream(fullBody.path("hits").spliterator(), false)
+                .map(hit -> hit.path("id").asText())
+                .toList();
+        List<String> simpleIds = StreamSupport.stream(simpleBody.path("hits").spliterator(), false)
+                .map(hit -> hit.path("id").asText())
+                .toList();
+        assertEquals(fullIds, simpleIds);
+
+        JsonNode top = simpleBody.path("hits").path(0);
+        assertEquals(1, top.path("rank").asInt());
+        assertFalse(top.path("title").asText().isBlank());
+        assertTrue(top.path("matched").asBoolean());
+        assertTrue(top.path("internal_score").isNumber());
+        assertEquals(
+                top.path("final_score").asDouble(),
+                top.path("es_relevance").asDouble() * top.path("quality_multiplier").asDouble(),
+                0.0001);
+
+        JsonNode matchedTerms = top.path("matched_terms");
+        assertTrue(matchedTerms.isArray());
+        assertFalse(matchedTerms.isEmpty());
+
+        double previous = Double.MAX_VALUE;
+        for (JsonNode matchedTerm : matchedTerms) {
+            assertFalse(matchedTerm.path("field").asText().isBlank());
+            assertFalse(matchedTerm.path("term").asText().isBlank());
+            assertTrue(matchedTerm.path("score").asDouble() <= previous, "matched_terms must be sorted by score");
+            previous = matchedTerm.path("score").asDouble();
+        }
+    }
+
+    @Test
+    public void explainEndpointFallsBackToFullForUnknownFormat() throws IOException {
+        insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
+
+        URI explainUri = UriComponentsBuilder
+                .fromUriString(getAdminBasePath() + "/explain")
+                .queryParam("q", "temperature")
+                .queryParam("format", "unknown")
+                .build()
+                .encode()
+                .toUri();
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(explainUri, JsonNode.class);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        assertTrue(Objects.requireNonNull(response.getBody()).has("request"));
+    }
+
+    @Test
     public void explainUuidEndpointUsesDocumentId() throws IOException {
         String uuid = "7709f541-fc0c-4318-b5b9-9053aa474e0e";
         insertRecordsWithExplicitIds(uuid + ".json");

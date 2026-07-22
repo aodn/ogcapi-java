@@ -49,7 +49,7 @@ public class RestAdminApi {
             @Parameter(in = ParameterIn.QUERY, description = "Filter language")
             @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang,
             @Parameter(in = ParameterIn.QUERY, description = "Response format, simple for the flattened score breakdown, anything else returns the full elastic search explanation")
-            @RequestParam(value = "format", required = false, defaultValue = "simple") String format
+            @RequestParam(value = "format", required = false) String format
     ) throws Exception {
         if (!restAdminService.isElasticsearchExplainEnabled()) {
             //return 404 NotFound error if elasticsearch-explain-enabled is set as false
