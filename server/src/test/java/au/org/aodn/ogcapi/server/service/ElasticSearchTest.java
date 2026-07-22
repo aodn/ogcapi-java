@@ -209,7 +209,8 @@ public class ElasticSearchTest {
                 null,
                 List.of("title"),
                 "-score,-rank",
-                CQLCrsType.EPSG4326);
+                CQLCrsType.EPSG4326,
+                false);
 
         assertEquals("captured", result.path("status").asText());
         assertEquals(100, capturingSearch.explainRequest.size());
@@ -230,7 +231,8 @@ public class ElasticSearchTest {
                 null,
                 List.of("title"),
                 "-score,-rank",
-                CQLCrsType.EPSG4326);
+                CQLCrsType.EPSG4326,
+                false);
 
         SearchRequest request = capturingSearch.explainRequest;
         assertEquals(100, request.size());
@@ -261,7 +263,8 @@ public class ElasticSearchTest {
                 cql,
                 List.of("title"),
                 "-score,-rank",
-                CQLCrsType.EPSG4326);
+                CQLCrsType.EPSG4326,
+                false);
         SearchRequest explainRequest = capturingSearch.explainRequest;
 
         assertEquals(normalRequest.toString(), explainRequest.toString());
@@ -328,7 +331,7 @@ public class ElasticSearchTest {
         }
 
         @Override
-        protected JsonNode explainCollectionBy(Supplier<SearchRequest.Builder> requestSupplier) {
+        protected JsonNode explainCollectionBy(Supplier<SearchRequest.Builder> requestSupplier, boolean simplified) {
             this.explainRequest = requestSupplier.get().build();
             ObjectNode result = mapper.createObjectNode();
             result.put("status", "captured");

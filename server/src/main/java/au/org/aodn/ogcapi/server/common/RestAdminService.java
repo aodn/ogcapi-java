@@ -32,9 +32,10 @@ public class RestAdminService {
             String filter,
             List<String> properties,
             String sortBy,
-            CQLCrsType crs) throws Exception {
-        log.info("Explaining search query");
-        return searchService.explainByParameters(q, filter, properties, sortBy, crs);
+            CQLCrsType crs,
+            boolean isSimplified) throws Exception {
+        log.debug("Calling explain with isSimplified={}", isSimplified);
+        return searchService.explainByParameters(q, filter, properties, sortBy, crs, isSimplified);
     }
 
     public JsonNode explainByUuid(
