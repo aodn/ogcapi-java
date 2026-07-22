@@ -6,9 +6,6 @@ import au.org.aodn.ogcapi.server.core.service.DasTilerService;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -204,22 +201,19 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyVisualMapTileForwardsZXYAndReturnsImageWithCors() {
+    public void verifyVisualMapTileForwardsZXYAndReturnsImage() {
         when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
         when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
-        HttpHeaders requestHeaders = new HttpHeaders();
-        requestHeaders.set(HttpHeaders.ORIGIN, "http://localhost:5173");
-        ResponseEntity<byte[]> response = testRestTemplate.exchange(
+        ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
                 getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01",
-                HttpMethod.GET, new HttpEntity<>(requestHeaders), byte[].class
+                byte[].class
         );
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assertions.assertArrayEquals("tile-bytes".getBytes(), response.getBody());
         Assertions.assertEquals(MediaType.IMAGE_PNG, response.getHeaders().getContentType());
-        Assertions.assertEquals("*", response.getHeaders().getFirst(HttpHeaders.ACCESS_CONTROL_ALLOW_ORIGIN));
     }
 
     @Test

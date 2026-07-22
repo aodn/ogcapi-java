@@ -8,6 +8,13 @@ import au.org.aodn.ogcapi.server.core.service.DasTilerService;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -72,8 +79,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
     /**
      * Serves a DAS "visual tile" (colourised raster PNG/WebP for a gridded Zarr ocean product)
-     * through the OGC API - Tiles collection map-tile route, attaching the DAS API key
-     * server-side so the DAS origin itself never needs to be browser-facing.
+     * through the OGC API - Tiles collection map-tile route
      * <p>
      * Deliberately non-strict OGC: {@code tileMatrix}=z, {@code tileRow}=x, {@code tileCol}=y
      * (slippy {z}/{x}/{y}), matching the convention already shipped by the vector-tile route
@@ -81,28 +87,104 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
      * below) and the frontend's {@code VectorTileLayers.tsx} template — not strict OGC
      * row=y/col=x semantics. A generic OGC client would disagree; Mapbox does not care.
      */
-    @CrossOrigin(origins = "*")
+    @Operation(
+            summary = "Retrieve a DAS visual map tile of a collection",
+            description = "Proxies a colourised raster tile (PNG/WebP) rendered by the AODN " +
+                    "data-access-service from a gridded Zarr ocean product.\n\n" +
+                    "**Not strict OGC:** the path is slippy-map `{z}/{x}/{y}`, so `tileRow` is **x** and " +
+                    "`tileCol` is **y** — the reverse of OGC's row/column order. This matches the vector-tile " +
+                    "route and the frontend's Mapbox templates.\n\n" +
+                    "Valid `product` and `datetime` values come from " +
+                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products`.",
+            tags = {"Map Tiles"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The rendered map tile. Tiles outside the " +
+                    "product's extent are fully transparent images, not an error.",
+                    content = {
+                            @Content(mediaType = "image/png", schema = @Schema(type = "string", format = "binary")),
+                            @Content(mediaType = "image/webp", schema = @Schema(type = "string", format = "binary"))}),
+            @ApiResponse(responseCode = "400", description = "`product` or `datetime` missing, `datetime` not " +
+                    "`YYYY-MM-DD`, `f` neither `png` nor `webp`, or z/x/y out of range.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+            @ApiResponse(responseCode = "404", description = "`tileMatrixSetId` is not `WebMercatorQuad`, " +
+                    "`product` is not in the collection, or there is no data for that date.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+            @ApiResponse(responseCode = "422", description = "The product cannot be rendered as a visual " +
+                    "tile — e.g. a multi-variable product such as `…:ucur+vcur`.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+            @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+            @ApiResponse(responseCode = "502", description = "DAS unreachable, errored, or rejected this service's API key.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+            @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+            @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class)))})
     @GetMapping(value = "/collections/{collectionId}/map/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}")
     public ResponseEntity<?> getCollectionVisualMapTile(
+            @Parameter(in = ParameterIn.PATH, required = true,
+                    description = "The metadata record UUID.",
+                    example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
             @PathVariable String collectionId,
+
+            @Parameter(in = ParameterIn.PATH, required = true,
+                    description = "Only `WebMercatorQuad` is supported; any other value returns 404.",
+                    schema = @Schema(allowableValues = {"WebMercatorQuad"}, defaultValue = "WebMercatorQuad"))
             @PathVariable String tileMatrixSetId,
+
+            @Parameter(in = ParameterIn.PATH, required = true, description = "Zoom level **z**.",
+                    schema = @Schema(type = "integer", minimum = "0", maximum = "24"), example = "2")
             @PathVariable Integer tileMatrix,
+
+            @Parameter(in = ParameterIn.PATH, required = true,
+                    description = "Tile **x**, not the OGC row. Range 0 to 2^z - 1.",
+                    schema = @Schema(type = "integer", minimum = "0"), example = "3")
             @PathVariable Integer tileRow,
+
+            @Parameter(in = ParameterIn.PATH, required = true,
+                    description = "Tile **y**, not the OGC column. Range 0 to 2^z - 1.",
+                    schema = @Schema(type = "integer", minimum = "0"), example = "2")
             @PathVariable Integer tileCol,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "DAS product id, `{dataset}:{variable}`. Must belong to the collection.",
+                    example = "model_sea_level_anomaly_gridded_realtime:gsla")
             @RequestParam(required = false) String product,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Date to render, strict `YYYY-MM-DD` — not an RFC 3339 date-time. Must be " +
+                            "one of the product's `available_dates`.",
+                    example = "2024-01-01")
             @RequestParam(required = false) String datetime,
+
+            @Parameter(in = ParameterIn.QUERY,
+                    description = "Colormap name. Omit to use the product's default.",
+                    example = "viridis")
             @RequestParam(required = false) String colormap,
+
+            @Parameter(in = ParameterIn.QUERY,
+                    description = "Colour range as `min,max`. Supply it for time-series maps — without it " +
+                            "each date is scaled to its own min/max, so colours are not comparable across " +
+                            "dates. Rejected for categorical products.",
+                    example = "-1,1")
             @RequestParam(required = false) String rescale,
+
+            @Parameter(in = ParameterIn.QUERY, description = "Output image format.",
+                    schema = @Schema(allowableValues = {"png", "webp"}, defaultValue = "png"))
             @RequestParam(required = false, defaultValue = "png") String f) {
 
-        if (!"WebMercatorQuad".equals(tileMatrixSetId)) {
+        if (!TileMatrixSets.WEBMERCATORQUAD.toString().equals(tileMatrixSetId)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(Map.of("detail", "Unsupported tileMatrixSetId, only WebMercatorQuad is supported"));
         }
-        // Bounds-check z/x/y before any upstream I/O: this route is public and unauthenticated,
-        // and DAS computes (1 << z) - 1 with no floor/ceiling of its own — negative z throws an
-        // uncaught error there, very large positive z builds an arbitrary-precision integer. Both
-        // are cheap for a client to trigger, so reject them here rather than passing them through.
+        // Bounds-check z/x/y before any upstream I/O
         if (tileMatrix == null || tileMatrix < 0 || tileMatrix > MAX_ZOOM) {
             return ResponseEntity.badRequest()
                     .body(Map.of("detail", "tileMatrix (z) must be between 0 and " + MAX_ZOOM));
