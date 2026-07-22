@@ -1,35 +1,30 @@
-package au.org.aodn.ogcapi.server.core.service;
+package au.org.aodn.ogcapi.server.core.service.das;
 
+import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
-import au.org.aodn.ogcapi.server.core.util.DasUtils;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import jakarta.annotation.PostConstruct;
-
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service("DataAccessService")
 public class DasService {
 
-    @Autowired
-    protected DasProperties dasProperties;
+    protected final DasProperties dasProperties;
 
-    @Autowired
-    protected RestTemplate httpClient;
+    protected final RestTemplate httpClient;
 
-    private HttpEntity<?> httpEntity;
-
-    @PostConstruct
-    public void init() {
-        HttpHeaders headers = DasUtils.authHeaders(dasProperties);
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        httpEntity = new HttpEntity<>(headers);
+    public DasService(
+            DasProperties dasProperties,
+            @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient) {
+        this.dasProperties = dasProperties;
+        this.httpClient = httpClient;
     }
 
     /**
@@ -52,7 +47,7 @@ public class DasService {
         }
 
         String url = builder.encode().toUriString();
-        return httpClient.exchange(url, HttpMethod.GET, httpEntity, byte[].class, params).getBody();
+        return httpClient.getForObject(url, byte[].class, params);
     }
 
     public byte[] getWaveBuoysBetweenDates(String start, String end) {
@@ -64,7 +59,7 @@ public class DasService {
                 .encode()
                 .toUriString();
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET, httpEntity, byte[].class).getBody();
+        return httpClient.getForObject(waveBuoysUrlTemplate, byte[].class);
     }
 
     public byte[] getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
@@ -80,7 +75,7 @@ public class DasService {
                 .encode()
                 .toUriString();
 
-        return httpClient.exchange(mooringsUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
+        return httpClient.getForObject(mooringsUrlTemplate, byte[].class);
     }
 
     public byte[] getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
@@ -100,25 +95,19 @@ public class DasService {
                 .encode()
                 .toUriString();
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("X-API-KEY", dasProperties.secret());
-        headers.set("x-internal-das-header-secret", dasProperties.internal());
-
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(parameters, headers);
-
         Map<String, String> uriVars = new HashMap<>();
         uriVars.put("uuid", uuid);
 
-        return httpClient.exchange(url, HttpMethod.POST, entity, String.class, uriVars).getBody();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        return httpClient.postForObject(url, new HttpEntity<>(parameters, headers), String.class, uriVars);
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
-        ResponseEntity<DatasetMetadata> response = httpClient.exchange(
+        ResponseEntity<DatasetMetadata> response = httpClient.getForEntity(
                 dasProperties.host() + "/api/v1/das/metadata/" + datasetId,
-                HttpMethod.GET,
-                httpEntity,
                 DatasetMetadata.class
         );
         // We need to do this so that the response is closed

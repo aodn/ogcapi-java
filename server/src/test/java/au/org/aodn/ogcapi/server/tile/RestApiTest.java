@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.tile;
 import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
-import au.org.aodn.ogcapi.server.core.service.DasTilerService;
+import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import org.junit.jupiter.api.*;
 import org.springframework.boot.test.context.SpringBootTest;

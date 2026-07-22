@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.BaseTestClass;
-import au.org.aodn.ogcapi.server.core.service.DasTilerService;
+import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;

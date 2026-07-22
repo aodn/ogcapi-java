@@ -10,10 +10,7 @@ public record DasProperties(
         String host,
         String secret,
         String internal,
-        @DefaultValue Tiler tiler
+        @DefaultValue("5s") Duration connectTimeout,
+        @DefaultValue("30s") Duration readTimeout
 ) {
-    public record Tiler(
-            @DefaultValue("5s") Duration connectTimeout,
-            @DefaultValue("30s") Duration readTimeout
-    ) {}
 }

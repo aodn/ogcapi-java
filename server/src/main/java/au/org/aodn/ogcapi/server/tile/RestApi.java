@@ -7,7 +7,7 @@ import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
 import au.org.aodn.ogcapi.server.core.exception.InvalidParameterException;
 import au.org.aodn.ogcapi.server.core.exception.ResourceNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
-import au.org.aodn.ogcapi.server.core.service.DasTilerService;
+import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -34,7 +34,7 @@ import java.util.List;
 @RequestMapping(value = "/api/v1/ogc")
 public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSetsApi, TilesApi {
 
-    // OGC's WebMercatorQuad well-known TileMatrixSet defines levels 0-24.
+    // OGC's WebMercatorQuad TileMatrixSet defines levels 0-24.
     private static final int MAX_ZOOM = 24;
 
     @Autowired
@@ -67,12 +67,6 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
         return null;
     }
 
-    /**
-     * Generated stub for the OGC collection-map-tile route — disabled via {@code @Hidden} (see
-     * {@code CustomMvcRegistrations}, which skips request-mapping registration for any method
-     * carrying that annotation) so {@link #getCollectionVisualMapTile} below can serve the same
-     * path with a hand-written signature instead.
-     */
     @Hidden
     @Override
     public ResponseEntity<String> collectionMapGetTile(String tileMatrix, Integer tileRow, Integer tileCol, String collectionId, TileMatrixSets tileMatrixSetId, String datetime, List<String> collections, List<String> subset, String crs, String subsetCrs, String bgcolor, Boolean transparent, String f) {

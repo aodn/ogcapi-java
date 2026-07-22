@@ -9,9 +9,9 @@ import jakarta.annotation.PostConstruct;
 import org.openapitools.jackson.nullable.JsonNullableModule;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(DasProperties.class)
 public class Config {
 
-    public static final String DAS_TILER_REST_TEMPLATE = "dasTilerRestTemplate";
+    public static final String DAS_REST_TEMPLATE = "dasRestTemplate";
 
     @Autowired
     ObjectMapper mapper;
@@ -53,13 +53,22 @@ public class Config {
         return new RestTemplate(factory);
     }
 
-    @Bean(name = DAS_TILER_REST_TEMPLATE, defaultCandidate = false)
-    public RestTemplate createDasTilerRestTemplate(RestTemplateBuilder builder, DasProperties dasProperties) {
-        return builder
-                .requestFactory(SimpleClientHttpRequestFactory.class)
-                .connectTimeout(dasProperties.tiler().connectTimeout())
-                .readTimeout(dasProperties.tiler().readTimeout())
-                .build();
+    @Bean(name = DAS_REST_TEMPLATE, defaultCandidate = false)
+    public RestTemplate createDasRestTemplate(DasProperties dasProperties) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(dasProperties.connectTimeout());
+        factory.setReadTimeout(dasProperties.readTimeout());
+
+        RestTemplate restTemplate = new RestTemplate(factory);
+        restTemplate.getInterceptors().add((request, body, execution) -> {
+            HttpHeaders headers = request.getHeaders();
+            headers.set("X-API-KEY", dasProperties.secret());
+            if (dasProperties.internal() != null) {
+                headers.set("x-internal-das-header-secret", dasProperties.internal());
+            }
+            return execution.execute(request, body);
+        });
+        return restTemplate;
     }
 
     @Bean

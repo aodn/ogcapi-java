@@ -1,16 +1,13 @@
-package au.org.aodn.ogcapi.server.core.service;
+package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
-import au.org.aodn.ogcapi.server.core.util.DasUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,8 +28,8 @@ import java.util.Set;
 /**
  * Calls DAS's tiler endpoints (visual-tile images, product/manifest listing, colormaps/legend)
  * server-to-server, attaching the DAS API key. Sibling of {@link DasService} rather than an
- * extension of it: DasService's shared {@code HttpEntity} is JSON-Accept-oriented, whereas most
- * of what this service fetches is binary image bytes.
+ * extension of it: same client, but this half of the DAS surface returns binary image bytes and
+ * maps upstream failures onto tile-shaped responses.
  * <p>
  * Product ids contain {@code :}/{@code +} (e.g. {@code model_sea_level_anomaly_gridded_realtime:gsla}),
  * so URL building always goes through {@link UriComponentsBuilder} path-variable expansion
@@ -47,24 +44,19 @@ public class DasTilerService {
     protected final DasProperties dasProperties;
 
     /**
-     * Qualified onto the dedicated short-timeout client rather than the application-wide
-     * RestTemplate, whose 20-minute timeouts are sized for large WFS/WMS downloads.
+     * The shared DAS client — short timeouts, and it attaches the DAS API key to every request
      */
     protected final RestTemplate httpClient;
 
-    private final HttpEntity<?> httpEntity;
-
-    /** Used only to read the {@code detail} field back out of a DAS error body. */
     private final ObjectMapper mapper;
 
     public DasTilerService(
             DasProperties dasProperties,
-            @Qualifier(Config.DAS_TILER_REST_TEMPLATE) RestTemplate httpClient,
+            @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
             ObjectMapper mapper) {
         this.dasProperties = dasProperties;
         this.httpClient = httpClient;
         this.mapper = mapper;
-        httpEntity = new HttpEntity<>(DasUtils.authHeaders(dasProperties));
     }
 
     /**
@@ -106,7 +98,7 @@ public class DasTilerService {
     public List<JsonNode> getProducts() {
         String url = dasProperties.host() + VISUAL_TILES_BASE + "/products";
         try {
-            JsonNode body = httpClient.exchange(url, HttpMethod.GET, httpEntity, JsonNode.class).getBody();
+            JsonNode body = httpClient.getForObject(url, JsonNode.class);
             List<JsonNode> result = new ArrayList<>();
             if (body != null && body.isArray()) {
                 body.forEach(result::add);
@@ -122,7 +114,7 @@ public class DasTilerService {
     public JsonNode getManifest() {
         String url = dasProperties.host() + VISUAL_TILES_BASE + "/manifest";
         try {
-            return httpClient.exchange(url, HttpMethod.GET, httpEntity, JsonNode.class).getBody();
+            return httpClient.getForObject(url, JsonNode.class);
         } catch (HttpStatusCodeException e) {
             throw mapUpstreamError(e);
         } catch (ResourceAccessException e) {
@@ -133,7 +125,7 @@ public class DasTilerService {
     public JsonNode getColormaps() {
         String url = dasProperties.host() + VISUAL_TILES_BASE + "/colormaps";
         try {
-            return httpClient.exchange(url, HttpMethod.GET, httpEntity, JsonNode.class).getBody();
+            return httpClient.getForObject(url, JsonNode.class);
         } catch (HttpStatusCodeException e) {
             throw mapUpstreamError(e);
         } catch (ResourceAccessException e) {
@@ -190,7 +182,7 @@ public class DasTilerService {
     private DasTileResult exchangeForImage(UriComponentsBuilder builder, Map<String, Object> params, String fallbackContentType) {
         String url = builder.encode().toUriString();
         try {
-            ResponseEntity<byte[]> response = httpClient.exchange(url, HttpMethod.GET, httpEntity, byte[].class, params);
+            ResponseEntity<byte[]> response = httpClient.getForEntity(url, byte[].class, params);
             HttpHeaders headers = response.getHeaders();
             MediaType contentType = headers.getContentType();
             return new DasTileResult(

@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.service;
+package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
@@ -7,9 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -33,7 +31,8 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for DasTilerService: URL building for product ids containing ':'/'+', null-param
- * omission, X-API-KEY header, upstream status mapping, and collection-membership filtering.
+ * omission, upstream status mapping, and collection-membership filtering. The API key itself is
+ * attached by the RestTemplate bean, so it is covered by ConfigTest rather than here.
  * No Spring context / no Docker — mirrors DasServiceTest's style.
  */
 public class DasTilerServiceTest {
@@ -50,7 +49,7 @@ public class DasTilerServiceTest {
 
         DasProperties config = new DasProperties(
                 HOST, "test-secret", "internal-secret",
-                new DasProperties.Tiler(Duration.ofSeconds(5), Duration.ofSeconds(30))
+                Duration.ofSeconds(5), Duration.ofSeconds(30)
         );
 
         service = new DasTilerService(config, httpClient, new ObjectMapper());
@@ -67,13 +66,13 @@ public class DasTilerServiceTest {
     private CapturedRequest captureImageRequest() {
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map<String, Object>> mapCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(httpClient).exchange(urlCaptor.capture(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), mapCaptor.capture());
+        verify(httpClient).getForEntity(urlCaptor.capture(), eq(byte[].class), mapCaptor.capture());
         return new CapturedRequest(urlCaptor.getValue(), mapCaptor.getValue());
     }
 
     @Test
     public void testGetVisualTileSendsProductAsPathVariable() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
         service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
@@ -85,7 +84,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testGetVisualTileOmitsNullColormapAndRescale() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
         service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
@@ -97,7 +96,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testGetVisualTileIncludesColormapAndRescaleWhenProvided() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
         service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", "viridis", "-1,1");
@@ -111,7 +110,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testGetVisualTileForwardsContentTypeAndCacheControl() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
         DasTilerService.DasTileResult result = service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
@@ -122,23 +121,8 @@ public class DasTilerServiceTest {
     }
 
     @Test
-    public void testInitSetsApiKeyHeader() {
-        // init() builds the shared HttpEntity; verify it carries the configured secret by
-        // triggering any call and inspecting the entity Mockito captured.
-        ArgumentCaptor<HttpEntity<?>> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), entityCaptor.capture(), eq(byte[].class), anyMap()))
-                .thenReturn(new ResponseEntity<>("x".getBytes(), imageHeaders(), HttpStatus.OK));
-
-        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
-
-        HttpHeaders sentHeaders = entityCaptor.getValue().getHeaders();
-        assertEquals("test-secret", sentHeaders.getFirst("X-API-KEY"));
-        assertEquals("internal-secret", sentHeaders.getFirst("x-internal-das-header-secret"));
-    }
-
-    @Test
     public void testUpstreamBadRequestMirroredAsIs() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(HttpClientErrorException.create(
                         HttpStatus.BAD_REQUEST, "Bad Request", HttpHeaders.EMPTY,
                         "{\"detail\":\"bad date\"}".getBytes(), null));
@@ -152,7 +136,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testUpstreamNotFoundMirroredAsIs() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(HttpClientErrorException.create(
                         HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, new byte[0], null));
 
@@ -166,7 +150,7 @@ public class DasTilerServiceTest {
     @Test
     public void testUpstreamDetailIsTakenButRawBodyIsNot() {
         // Only the `detail` field may cross the boundary — anything else DAS includes must not.
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(HttpClientErrorException.create(
                         HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY,
                         "{\"detail\":\"no data for that date\",\"source_path\":\"s3://internal/secret.zarr\"}".getBytes(),
@@ -181,7 +165,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testUpstreamServiceUnavailableMirroredAsIs() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(HttpServerErrorException.create(
                         HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable", HttpHeaders.EMPTY, new byte[0], null));
 
@@ -193,7 +177,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testUpstreamUnauthorizedMappedTo502() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(HttpClientErrorException.create(
                         HttpStatus.UNAUTHORIZED, "Unauthorized", HttpHeaders.EMPTY, new byte[0], null));
 
@@ -208,7 +192,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testUpstreamOtherServerErrorMappedTo502() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(HttpServerErrorException.create(
                         HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders.EMPTY, new byte[0], null));
 
@@ -220,7 +204,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testTimeoutMappedTo504() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(new ResourceAccessException("timeout", new SocketTimeoutException("read timed out")));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
@@ -231,7 +215,7 @@ public class DasTilerServiceTest {
 
     @Test
     public void testOtherNetworkFailureMappedTo502() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenThrow(new ResourceAccessException("connection refused", new java.net.ConnectException()));
 
         DasUpstreamException ex = assertThrows(DasUpstreamException.class,
@@ -247,8 +231,8 @@ public class DasTilerServiceTest {
                 .add(mapper.createObjectNode().put("id", "p1").put("metadata_uuid", "uuid-a"))
                 .add(mapper.createObjectNode().put("id", "p2").put("metadata_uuid", "uuid-b"))
                 .add(mapper.createObjectNode().put("id", "p3"));
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(JsonNode.class)))
-                .thenReturn(ResponseEntity.ok(products));
+        when(httpClient.getForObject(anyString(), eq(JsonNode.class)))
+                .thenReturn(products);
 
         assertEquals(1, service.productsForCollection("uuid-a").size());
         assertEquals("p1", service.productsForCollection("uuid-a").get(0).get("id").asText());
@@ -260,8 +244,8 @@ public class DasTilerServiceTest {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode products = mapper.createArrayNode()
                 .add(mapper.createObjectNode().put("id", "p1").put("metadata_uuid", "uuid-a"));
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(JsonNode.class)))
-                .thenReturn(ResponseEntity.ok(products));
+        when(httpClient.getForObject(anyString(), eq(JsonNode.class)))
+                .thenReturn(products);
 
         assertTrue(service.isProductInCollection("uuid-a", "p1"));
         assertFalse(service.isProductInCollection("uuid-a", "p2"));

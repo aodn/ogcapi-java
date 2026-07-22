@@ -1,4 +1,5 @@
 .env
+.env.dev
 **/target/**/*
 .idea
 *.iml
