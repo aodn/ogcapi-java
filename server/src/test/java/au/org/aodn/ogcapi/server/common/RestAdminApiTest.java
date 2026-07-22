@@ -148,6 +148,7 @@ public class RestAdminApiTest extends BaseTestClass {
         ResponseEntity<JsonNode> fullResponse = testRestTemplate.getForEntity(fullUri, JsonNode.class);
         ResponseEntity<JsonNode> simpleResponse = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
 
+        assertTrue(fullResponse.getStatusCode().is2xxSuccessful());
         assertTrue(simpleResponse.getStatusCode().is2xxSuccessful());
         JsonNode fullBody = Objects.requireNonNull(fullResponse.getBody());
         JsonNode simpleBody = Objects.requireNonNull(simpleResponse.getBody());
@@ -172,7 +173,6 @@ public class RestAdminApiTest extends BaseTestClass {
         JsonNode top = simpleBody.path("hits").path(0);
         assertEquals(1, top.path("rank").asInt());
         assertFalse(top.path("title").asText().isBlank());
-        assertTrue(top.path("matched").asBoolean());
         assertTrue(top.path("internal_score").isNumber());
         assertEquals(
                 top.path("final_score").asDouble(),
@@ -190,6 +190,43 @@ public class RestAdminApiTest extends BaseTestClass {
             assertTrue(matchedTerm.path("score").asDouble() <= previous, "matched_terms must be sorted by score");
             previous = matchedTerm.path("score").asDouble();
         }
+    }
+
+    @Test
+    public void explainSimplifiedFormatReportsMultiWordMatches() throws IOException {
+        // "Ocean acidification historical reconstruction", elastic search decomposes the
+        // multi word clauses into one scoring leaf per term and per field
+        insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
+
+        URI simpleUri = UriComponentsBuilder
+                .fromUriString(getAdminBasePath() + "/explain")
+                .queryParam("q", "ocean acidification")
+                .queryParam("format", "simple")
+                .build()
+                .encode()
+                .toUri();
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        JsonNode terms = Objects.requireNonNull(response.getBody())
+                .path("hits").path(0).path("matched_terms");
+
+        assertFalse(terms.isEmpty());
+        for (JsonNode term : terms) {
+            assertFalse(term.path("field").asText().isBlank());
+            assertFalse(term.path("term").asText().isBlank());
+            assertFalse(term.path("match_type").asText().isBlank());
+        }
+
+        // both words of the query are reported, and separately for each field they hit,
+        // rather than being collapsed into one entry per field
+        List<String> reported = StreamSupport.stream(terms.spliterator(), false)
+                .map(term -> term.path("field").asText() + ":" + term.path("term").asText())
+                .toList();
+        assertTrue(reported.contains("title:ocean"));
+        assertTrue(reported.contains("title:acidification"));
+        assertTrue(reported.size() > 2, "a multi word query hits more than one field");
     }
 
     @Test

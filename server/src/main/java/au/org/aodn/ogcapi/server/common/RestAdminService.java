@@ -34,6 +34,7 @@ public class RestAdminService {
             String sortBy,
             CQLCrsType crs,
             boolean isSimplified) throws Exception {
+        log.debug("Calling explain with isSimplified={}", isSimplified);
         return searchService.explainByParameters(q, filter, properties, sortBy, crs, isSimplified);
     }
 
