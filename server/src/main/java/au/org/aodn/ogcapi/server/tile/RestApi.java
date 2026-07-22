@@ -4,6 +4,9 @@ import au.org.aodn.ogcapi.server.core.mapper.BinaryResponseToBytes;
 import au.org.aodn.ogcapi.server.core.mapper.StacToTileSetWmWGS84Q;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
+import au.org.aodn.ogcapi.server.core.exception.InvalidParameterException;
+import au.org.aodn.ogcapi.server.core.exception.ResourceNotFoundException;
+import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.DasTilerService;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
@@ -23,7 +26,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * Implements the rest api of tile
@@ -106,29 +108,31 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             @ApiResponse(responseCode = "400", description = "`product` or `datetime` missing, `datetime` not " +
                     "`YYYY-MM-DD`, `f` neither `png` nor `webp`, or z/x/y out of range.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "`tileMatrixSetId` is not `WebMercatorQuad`, " +
                     "`product` is not in the collection, or there is no data for that date.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "The product cannot be rendered as a visual " +
                     "tile — e.g. a multi-variable product such as `…:ucur+vcur`.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
-            @ApiResponse(responseCode = "502", description = "DAS unreachable, errored, or rejected this service's API key.",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "The tile service is unavailable. The cause is " +
+                    "deliberately not described — it is always a fault on this side, never something the caller " +
+                    "can act on — and is logged server-side instead.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class))),
+                            schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = au.org.aodn.ogcapi.tile.model.Exception.class)))})
+                            schema = @Schema(implementation = ErrorResponse.class)))})
     @GetMapping(value = "/collections/{collectionId}/map/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}")
-    public ResponseEntity<?> getCollectionVisualMapTile(
+    public ResponseEntity<byte[]> getCollectionVisualMapTile(
             @Parameter(in = ParameterIn.PATH, required = true,
                     description = "The metadata record UUID.",
                     example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
@@ -181,33 +185,30 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             @RequestParam(required = false, defaultValue = "png") String f) {
 
         if (!TileMatrixSets.WEBMERCATORQUAD.toString().equals(tileMatrixSetId)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("detail", "Unsupported tileMatrixSetId, only WebMercatorQuad is supported"));
+            throw new ResourceNotFoundException("Unsupported tileMatrixSetId, only WebMercatorQuad is supported");
         }
-        // Bounds-check z/x/y before any upstream I/O
+
         if (tileMatrix == null || tileMatrix < 0 || tileMatrix > MAX_ZOOM) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("detail", "tileMatrix (z) must be between 0 and " + MAX_ZOOM));
+            throw new InvalidParameterException("tileMatrix (z) must be between 0 and " + MAX_ZOOM);
         }
         int maxIndex = (1 << tileMatrix) - 1;
         if (tileRow == null || tileRow < 0 || tileRow > maxIndex
                 || tileCol == null || tileCol < 0 || tileCol > maxIndex) {
-            return ResponseEntity.badRequest()
-                    .body(Map.of("detail", "tileRow/tileCol out of range for tileMatrix=" + tileMatrix
-                            + "; valid range is 0-" + maxIndex));
+            throw new InvalidParameterException("tileRow/tileCol out of range for tileMatrix=" + tileMatrix
+                    + "; valid range is 0-" + maxIndex);
         }
         if (product == null || product.isBlank()) {
-            return ResponseEntity.badRequest().body(Map.of("detail", "product is required"));
+            throw new InvalidParameterException("product is required");
         }
         if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
-            return ResponseEntity.badRequest().body(Map.of("detail", "datetime is required and must be YYYY-MM-DD"));
+            throw new InvalidParameterException("datetime is required and must be YYYY-MM-DD");
         }
         if (!"png".equals(f) && !"webp".equals(f)) {
-            return ResponseEntity.badRequest().body(Map.of("detail", "f must be 'png' or 'webp'"));
+            throw new InvalidParameterException("f must be 'png' or 'webp'");
         }
         if (!dasTilerService.isProductInCollection(collectionId, product)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("detail", "product '" + product + "' not found in collection '" + collectionId + "'"));
+            throw new ResourceNotFoundException(
+                    "product '" + product + "' not found in collection '" + collectionId + "'");
         }
 
         DasTilerService.DasTileResult tile = dasTilerService.getVisualTile(

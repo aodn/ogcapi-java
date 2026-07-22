@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
 import au.org.aodn.ogcapi.server.core.util.DasUtils;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpEntity;
@@ -19,11 +20,13 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Calls DAS's tiler endpoints (visual-tile images, product/manifest listing, colormaps/legend)
@@ -51,11 +54,16 @@ public class DasTilerService {
 
     private final HttpEntity<?> httpEntity;
 
+    /** Used only to read the {@code detail} field back out of a DAS error body. */
+    private final ObjectMapper mapper;
+
     public DasTilerService(
             DasProperties dasProperties,
-            @Qualifier(Config.DAS_TILER_REST_TEMPLATE) RestTemplate httpClient) {
+            @Qualifier(Config.DAS_TILER_REST_TEMPLATE) RestTemplate httpClient,
+            ObjectMapper mapper) {
         this.dasProperties = dasProperties;
         this.httpClient = httpClient;
+        this.mapper = mapper;
         httpEntity = new HttpEntity<>(DasUtils.authHeaders(dasProperties));
     }
 
@@ -67,33 +75,20 @@ public class DasTilerService {
     }
 
     /**
-     * Fetches one visual tile from DAS. Nothing in this service is cached — it is a pure
-     * pass-through, by choice, for this stage.
-     * <p>
-     * An earlier revision cached tile bytes in EhCache (heap + disk, 24 h). It was dropped
-     * because this is the wrong layer to cache at: DAS already returns a one-year
-     * {@code immutable} {@code Cache-Control} that this service forwards verbatim, so browsers
-     * and (once it fronts ogcapi) CloudFront are what should absorb repeat reads. An origin-side
-     * copy on top of that mainly added a staleness window nothing could invalidate — there is no
-     * renderer-version cache-buster, so a DAS re-render stayed pinned until the entry aged out
-     * or the pod restarted.
-     * <p>
-     * Load consequence, worth re-checking before this route is public: DAS runs with
-     * {@code cache_backend: "none"}, so it memoises nothing between requests and every call here
-     * is a full S3 Zarr read plus render on its side. Its {@code Deduper} only coalesces
-     * genuinely concurrent identical renders. Until CloudFront fronts this route, all repeat
-     * load lands on DAS.
+     * Fetches one slippy-map tile. {@code zoom}/{@code tileX}/{@code tileY} are XYZ tile
+     * coordinates (not OGC row/column): x runs west→east, y runs north→south, and both are
+     * bounded by 2^zoom - 1.
      */
-    public DasTileResult getVisualTile(String productId, String date, int z, int x, int y, String ext,
-                                       String colormap, String rescale) {
+    public DasTileResult getVisualTile(String productId, String date, int zoom, int tileX, int tileY,
+                                       String ext, String colormap, String rescale) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/{product}/{date}/{z}/{x}/{y}.{ext}");
         Map<String, Object> params = new HashMap<>();
         params.put("product", productId);
         params.put("date", date);
-        params.put("z", z);
-        params.put("x", x);
-        params.put("y", y);
+        params.put("z", zoom);
+        params.put("x", tileX);
+        params.put("y", tileY);
         params.put("ext", ext);
 
         if (colormap != null) {
@@ -173,15 +168,6 @@ public class DasTilerService {
         return exchangeForImage(builder, params, "image/png");
     }
 
-    /**
-     * Products from the DAS {@code /products} listing whose {@code metadata_uuid} matches this
-     * collection. Never parses the product id — matching is purely on the field DAS added for
-     * exactly this purpose.
-     * <p>
-     * Note this issues a fresh {@code /products} request per call, and
-     * {@link #isProductInCollection} sits on the tile route's hot path — so each visual-tile
-     * request currently costs two sequential DAS round trips (membership check, then the tile).
-     */
     public List<JsonNode> productsForCollection(String collectionId) {
         List<JsonNode> result = new ArrayList<>();
         for (JsonNode product : getProducts()) {
@@ -219,33 +205,46 @@ public class DasTilerService {
         }
     }
 
+    private static final Set<HttpStatus> MIRRORED_STATUSES = Set.of(
+            HttpStatus.BAD_REQUEST,
+            HttpStatus.NOT_FOUND,
+            HttpStatus.UNPROCESSABLE_ENTITY,
+            HttpStatus.TOO_MANY_REQUESTS,
+            HttpStatus.SERVICE_UNAVAILABLE);
+
+    private static final String UPSTREAM_FAILURE_MESSAGE = "Tile service is temporarily unavailable";
+
     private DasUpstreamException mapUpstreamError(HttpStatusCodeException e) {
         HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
 
+        if (status != null && MIRRORED_STATUSES.contains(status)) {
+            return new DasUpstreamException(status, upstreamDetail(e, status));
+        }
         if (status == HttpStatus.UNAUTHORIZED || status == HttpStatus.FORBIDDEN) {
-            // Misconfigured X-API-KEY on our side, never the caller's fault.
             log.error("DAS rejected request as unauthorized — check data-access-service.secret configuration", e);
-            return DasUpstreamException.withDetail(HttpStatus.BAD_GATEWAY, "Upstream authentication error");
+        } else {
+            log.error("Unexpected status {} from DAS", status, e);
         }
-        if (status == HttpStatus.BAD_REQUEST || status == HttpStatus.NOT_FOUND
-                || status == HttpStatus.UNPROCESSABLE_ENTITY || status == HttpStatus.TOO_MANY_REQUESTS
-                || status == HttpStatus.SERVICE_UNAVAILABLE) {
-            MediaType contentType = e.getResponseHeaders() != null ? e.getResponseHeaders().getContentType() : null;
-            return new DasUpstreamException(
-                    status,
-                    e.getResponseBodyAsByteArray(),
-                    contentType != null ? contentType : MediaType.APPLICATION_JSON
-            );
+        return new DasUpstreamException(HttpStatus.BAD_GATEWAY, UPSTREAM_FAILURE_MESSAGE);
+    }
+
+    private String upstreamDetail(HttpStatusCodeException e, HttpStatus status) {
+        try {
+            JsonNode body = mapper.readTree(e.getResponseBodyAsByteArray());
+            String detail = body.path("detail").asText(null);
+            if (detail != null && !detail.isBlank()) {
+                return detail;
+            }
+        } catch (IOException ignored) {
         }
-        log.error("Unexpected status {} from DAS", status, e);
-        return DasUpstreamException.withDetail(HttpStatus.BAD_GATEWAY, "Upstream error");
+        return status.getReasonPhrase();
     }
 
     private DasUpstreamException mapNetworkError(ResourceAccessException e) {
         if (e.getCause() instanceof SocketTimeoutException) {
-            return DasUpstreamException.withDetail(HttpStatus.GATEWAY_TIMEOUT, "DAS request timed out");
+            return new DasUpstreamException(HttpStatus.GATEWAY_TIMEOUT, "Tile service did not respond in time");
         }
         log.error("Network failure calling DAS", e);
-        return DasUpstreamException.withDetail(HttpStatus.BAD_GATEWAY, "Upstream network failure");
+        return new DasUpstreamException(HttpStatus.BAD_GATEWAY, UPSTREAM_FAILURE_MESSAGE);
     }
 }

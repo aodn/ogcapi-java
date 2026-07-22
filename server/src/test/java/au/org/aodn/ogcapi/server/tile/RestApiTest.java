@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
+import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.DasTilerService;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import org.junit.jupiter.api.*;
@@ -122,6 +123,26 @@ public class RestApiTest extends BaseTestClass {
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
     }
 
+    /**
+     * Rejections go through ApiRequestException -> GlobalExceptionHandler, so they must render the
+     * same ErrorResponse envelope every other handled error in this service uses, not an ad-hoc body.
+     */
+    @Test
+    public void verifyVisualMapTileRejectionUsesErrorResponseEnvelope() {
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?datetime=2024-01-01",
+                ErrorResponse.class
+        );
+
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertNotNull(response.getBody(), "Body not null");
+        Assertions.assertEquals("product is required", response.getBody().getMessage(), "Message carries the reason");
+        Assertions.assertNotNull(response.getBody().getTimestamp(), "Timestamp populated by the handler");
+        Assertions.assertTrue(
+                response.getBody().getDetails().contains("/collections/some-uuid/map/tiles"),
+                "Details identify the failing request, got: " + response.getBody().getDetails());
+    }
+
     @Test
     public void verifyVisualMapTileMissingDatetimeReturns400() {
         ResponseEntity<String> response = testRestTemplate.getForEntity(
@@ -235,7 +256,7 @@ public class RestApiTest extends BaseTestClass {
     public void verifyVisualMapTileUpstreamErrorMirrored() {
         when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
         when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
-                .thenThrow(DasUpstreamException.withDetail(HttpStatus.NOT_FOUND, "no such date"));
+                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "no such date"));
 
         ResponseEntity<String> response = testRestTemplate.getForEntity(
                 getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01",

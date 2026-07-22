@@ -53,7 +53,7 @@ public class DasTilerServiceTest {
                 new DasProperties.Tiler(Duration.ofSeconds(5), Duration.ofSeconds(30))
         );
 
-        service = new DasTilerService(config, httpClient);
+        service = new DasTilerService(config, httpClient, new ObjectMapper());
     }
 
     private HttpHeaders imageHeaders() {
@@ -147,7 +147,7 @@ public class DasTilerServiceTest {
                 () -> service.getVisualTile(PRODUCT_ID, "bad-date", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.BAD_REQUEST, ex.getStatus());
-        assertEquals("{\"detail\":\"bad date\"}", new String(ex.getBody()));
+        assertEquals("bad date", ex.getMessage(), "DAS's own explanation is actionable, so it is forwarded");
     }
 
     @Test
@@ -160,6 +160,23 @@ public class DasTilerServiceTest {
                 () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        assertEquals("Not Found", ex.getMessage(), "empty upstream body falls back to the status reason phrase");
+    }
+
+    @Test
+    public void testUpstreamDetailIsTakenButRawBodyIsNot() {
+        // Only the `detail` field may cross the boundary — anything else DAS includes must not.
+        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
+                .thenThrow(HttpClientErrorException.create(
+                        HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY,
+                        "{\"detail\":\"no data for that date\",\"source_path\":\"s3://internal/secret.zarr\"}".getBytes(),
+                        null));
+
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class,
+                () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
+
+        assertEquals("no data for that date", ex.getMessage());
+        assertFalse(ex.getMessage().contains("s3://"), "upstream internals must not reach the client");
     }
 
     @Test
@@ -184,6 +201,9 @@ public class DasTilerServiceTest {
                 () -> service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null));
 
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus(), "misconfigured secret is our fault, not the client's — must not leak as 401");
+        String message = ex.getMessage().toLowerCase();
+        assertFalse(message.contains("auth") || message.contains("unauthorized") || message.contains("key"),
+                "must not tell an unauthenticated caller that our credentials were rejected, got: " + ex.getMessage());
     }
 
     @Test
