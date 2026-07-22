@@ -523,9 +523,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     @Override
-    public JsonNode explainByParameters(List<String> targets, String filter, List<String> properties, String sortBy, CQLCrsType coor) throws Exception {
+    public JsonNode explainByParameters(List<String> targets, String filter, List<String> properties, String sortBy, CQLCrsType coor, boolean isSimplified) throws Exception {
         return explainCollectionBy(
-                buildParameterSearchRequestSupplier(targets, filter, properties, sortBy, coor));
+                buildParameterSearchRequestSupplier(targets, filter, properties, sortBy, coor),
+                isSimplified);
     }
 
     @Override
