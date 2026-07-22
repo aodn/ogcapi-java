@@ -29,10 +29,6 @@ public class ExplainSimplifier {
 
     protected static final String SYNONYM_PREFIX = "Synonym(";
 
-    protected static final String MATCH_TYPE_TERM = "term";
-    protected static final String MATCH_TYPE_PHRASE = "phrase";
-    protected static final String MATCH_TYPE_SYNONYM = "synonym";
-
     protected static final String RELEVANCE_DESCRIPTION_PREFIX = "_score:";
 
     private ExplainSimplifier() {
@@ -146,20 +142,13 @@ public class ExplainSimplifier {
      *   title:network                                     a term match, exact or fuzzy
      *   title:"ocean temperature"                         a phrase match
      *   Synonym(title.synonyms:soop title.synonyms:ships) an acronym expansion
-     * The label is the lucene query form, not the CQL clause. A fuzzy match rewrites to a
-     * term query before scoring, so CQLFields.title and CQLFields.fuzzy_title are identical
-     * here. A synonym group carries one score for the whole group so it stays one entry.
+     * A synonym group carries one score for the whole group so it stays one entry.
      */
     protected static ExplainSimplifiedResponse.MatchedTerm toMatchedTerm(String query, float score) {
-        String matchType = MATCH_TYPE_TERM;
         String body = query;
 
         if (body.startsWith(SYNONYM_PREFIX) && body.endsWith(")")) {
-            matchType = MATCH_TYPE_SYNONYM;
             body = body.substring(SYNONYM_PREFIX.length(), body.length() - 1);
-        }
-        else if (body.contains("\"")) {
-            matchType = MATCH_TYPE_PHRASE;
         }
 
         int separator = body.indexOf(':');
@@ -178,7 +167,6 @@ public class ExplainSimplifier {
         return ExplainSimplifiedResponse.MatchedTerm.builder()
                 .field(field)
                 .term(term)
-                .matchType(matchType)
                 .score((double) score)
                 .build();
     }

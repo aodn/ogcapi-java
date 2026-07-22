@@ -216,7 +216,6 @@ public class RestAdminApiTest extends BaseTestClass {
         for (JsonNode term : terms) {
             assertFalse(term.path("field").asText().isBlank());
             assertFalse(term.path("term").asText().isBlank());
-            assertFalse(term.path("match_type").asText().isBlank());
         }
 
         // both words of the query are reported, and separately for each field they hit,
