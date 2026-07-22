@@ -194,29 +194,7 @@ public class WmsServer {
                     param.put("LAYERS", request.getLayerName());
                     param.put("BBOX", request.getBbox().stream().map(BigDecimal::toString).collect(Collectors.joining(",")));
 
-                    // Very specific to IMOS, if we see geoserver-123.aodn.org.au/geoserver/wms, then
-                    // we should try cache server -> https://tilecache.aodn.org.au/geowebcache/service/wms, if not work fall back
                     List<String> urls = new ArrayList<>();
-                    if (components.getHost() != null
-                            && components.getHost().equalsIgnoreCase("geoserver-123.aodn.org.au")
-                            && components.getPath().equalsIgnoreCase("/geoserver/wms")) {
-
-                        UriComponentsBuilder builder = UriComponentsBuilder
-                                .fromUriString("https://tilecache.aodn.org.au/geowebcache/service/wms");
-
-                        param.forEach((key, value) -> {
-                            if (value != null) {
-                                builder.queryParam(key, value);
-                            }
-                        });
-                        // Cannot set cql in param as it contains value like "/" which is not allow in UriComponent checks
-                        // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
-                        // build() call, we append the cql after the construction.
-                        String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
-                        log.debug("Cache url to wms geoserver {}", target);
-                        urls.add(target);
-                    }
-                    // This is the normal route
                     UriComponentsBuilder builder = UriComponentsBuilder
                             .newInstance()
                             .scheme("https")
@@ -267,26 +245,7 @@ public class WmsServer {
                     // Now we add the missing argument from the request
                     param.put("LAYERS", request.getLayerName());
 
-                    // Very specific to IMOS, if we see geoserver-123.aodn.org.au/geoserver/wms, then
-                    // we should try cache server -> https://tilecache.aodn.org.au/geowebcache/service/wms, if not work fall back
                     List<String> urls = new ArrayList<>();
-                    if (components.getHost() != null
-                            && components.getHost().equalsIgnoreCase("geoserver-123.aodn.org.au")
-                            && components.getPath().equalsIgnoreCase("/geoserver/wms")) {
-
-                        UriComponentsBuilder builder = UriComponentsBuilder
-                                .fromUriString("https://tilecache.aodn.org.au/geowebcache/service/wms");
-
-                        param.forEach((key, value) -> {
-                            if (value != null) {
-                                builder.queryParam(key, value);
-                            }
-                        });
-                        String target = builder.build().toUriString();
-                        log.debug("Cache url wms geoserver for describe layer {}", target);
-                        urls.add(target);
-                    }
-                    // This is the normal route
                     UriComponentsBuilder builder = UriComponentsBuilder
                             .newInstance()
                             .scheme(components.getScheme())
@@ -389,26 +348,7 @@ public class WmsServer {
                     param.put("J", request.getY().toString());  // Same as Y but some later protocol use J
                     param.put("BBOX", request.getBbox().stream().map(BigDecimal::toString).collect(Collectors.joining(",")));
 
-                    // Very specific to IMOS, if we see geoserver-123.aodn.org.au/geoserver/wms, then
-                    // we should try cache server -> https://tilecache.aodn.org.au/geowebcache/service/wms, if not work fall back
                     List<String> urls = new ArrayList<>();
-                    if (components.getHost() != null
-                            && components.getHost().equalsIgnoreCase("geoserver-123.aodn.org.au")
-                            && components.getPath().equalsIgnoreCase("/geoserver/wms")) {
-
-                        UriComponentsBuilder builder = UriComponentsBuilder
-                                .fromUriString("https://tilecache.aodn.org.au/geowebcache/service/wms");
-
-                        param.forEach((key, value) -> {
-                            if (value != null) {
-                                builder.queryParam(key, value);
-                            }
-                        });
-                        String target = builder.build().toUriString();
-                        log.debug("Cache url to wfs geoserver {}", target);
-                        urls.add(target);
-                    }
-                    // This is the normal route
                     UriComponentsBuilder builder = UriComponentsBuilder
                             .newInstance()
                             .scheme(components.getScheme())
