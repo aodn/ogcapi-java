@@ -57,7 +57,7 @@ public class RestExtApi {
                                           "tile_types": ["visual"],
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
-                                          "tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{x}/{y}?product=model_sea_level_anomaly_gridded_realtime%3Agsla&datetime={datetime}&f=png",
+                                          "tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
                                           "legend_url": "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend"
                                         },
                                         {
@@ -66,7 +66,7 @@ public class RestExtApi {
                                           "tile_types": [],
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
-                                          "tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{x}/{y}?product=model_sea_level_anomaly_gridded_realtime%3Aucur%2Bvcur&datetime={datetime}&f=png",
+                                          "tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=ucur%2Bvcur&datetime={datetime}&f=png",
                                           "legend_url": "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend"
                                         }
                                       ]
@@ -115,10 +115,17 @@ public class RestExtApi {
             entry.set("full_date_range", availability != null && !availability.isMissingNode()
                     ? availability.path("full_date_range") : mapper.createObjectNode());
 
-            String encodedId = URLEncoder.encode(id, StandardCharsets.UTF_8);
+            // The tile route takes dataset and variable separately (it checks dataset membership
+            // against the collection's assets), so split the product id on its first ':'.
+            int sep = id.indexOf(':');
+            String datasetPart = sep >= 0 ? id.substring(0, sep) : id;
+            String variablePart = sep >= 0 ? id.substring(sep + 1) : "";
+            String encodedDataset = URLEncoder.encode(datasetPart, StandardCharsets.UTF_8);
+            String encodedVariable = URLEncoder.encode(variablePart, StandardCharsets.UTF_8);
             entry.put("tile_url_template",
                     "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{x}/{y}"
-                            + "?product=" + encodedId + "&datetime={datetime}&f=png");
+                            + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
+                            + "&datetime={datetime}&f=png");
 
             entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend");
 

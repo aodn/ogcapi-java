@@ -71,9 +71,9 @@ public class RestExtApiTest extends BaseTestClass {
     @Test
     public void verifyCollectionProductsListsMatchingProducts() {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
-                List.of(singleVariableProduct("p1", "uuid-a", "GSLA"))
+                List.of(singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA"))
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("p1"));
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
@@ -85,9 +85,13 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertEquals(1, body.get("products").size());
 
         JsonNode entry = body.get("products").get(0);
-        Assertions.assertEquals("p1", entry.get("id").asText());
+        Assertions.assertEquals("model_sla:gsla", entry.get("id").asText());
         Assertions.assertEquals(1, entry.get("available_dates").size());
-        Assertions.assertTrue(entry.get("tile_url_template").asText().contains("product=p1"));
+        // The tile route takes dataset + variable separately, so the product id is split into both.
+        String template = entry.get("tile_url_template").asText();
+        Assertions.assertTrue(template.contains("dataset=model_sla"), "got: " + template);
+        Assertions.assertTrue(template.contains("variable=gsla"), "got: " + template);
+        Assertions.assertFalse(template.contains("product="), "product must be split into dataset+variable, got: " + template);
         Assertions.assertFalse(entry.has("source_path"), "source_path must never leak through the ext listing");
     }
 

@@ -1,16 +1,14 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
-import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
+import au.org.aodn.ogcapi.server.core.service.Search;
+import au.org.aodn.stac.model.StacCollectionModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -27,6 +25,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -46,6 +45,7 @@ public class DasTilerService {
     private static final String VISUAL_TILES_BASE = "/api/v1/das/tiler/visual_tiles";
 
     protected final DasProperties dasProperties;
+    protected final Search search;
 
     /**
      * The shared DAS client — short timeouts, and it attaches the DAS API key to every request
@@ -54,26 +54,14 @@ public class DasTilerService {
 
     private final ObjectMapper mapper;
 
-    /**
-     * Self-reference through the caching proxy. {@code @Cacheable} is a proxy-based concern: a
-     * plain {@code this.getProducts()} call from inside this class bypasses the proxy entirely
-     * and silently never caches. Internal callers of a cached method must go through
-     * {@code self}, not {@code this}.
-     */
-    private DasTilerService self = this;
-
     public DasTilerService(
-            DasProperties dasProperties,
+            DasProperties dasProperties, Search search,
             @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
             ObjectMapper mapper) {
         this.dasProperties = dasProperties;
+        this.search = search;
         this.httpClient = httpClient;
         this.mapper = mapper;
-    }
-
-    @Autowired
-    public void setSelf(@Lazy DasTilerService self) {
-        this.self = self;
     }
 
     /**
@@ -112,12 +100,6 @@ public class DasTilerService {
         return exchangeForImage(builder, params, "image/" + ext);
     }
 
-    /**
-     * Cached: {@link #isProductInCollection} runs on the visual-tile hot path, so without this
-     * every tile request costs a second DAS round-trip on top of the tile fetch itself. The list
-     * is small and slow-changing; see {@link CacheConfig#CACHE_TILER_PRODUCTS} for the TTL.
-     */
-    @Cacheable(CacheConfig.CACHE_TILER_PRODUCTS)
     public List<JsonNode> getProducts() {
         String url = dasProperties.host() + VISUAL_TILES_BASE + "/products";
         try {
@@ -126,8 +108,7 @@ public class DasTilerService {
             if (body != null && body.isArray()) {
                 body.forEach(result::add);
             }
-            // The cached value is shared across request threads, so hand out an immutable view
-            return List.copyOf(result);
+            return result;
         } catch (HttpStatusCodeException e) {
             throw mapUpstreamError(e);
         } catch (ResourceAccessException e) {
@@ -186,7 +167,7 @@ public class DasTilerService {
 
     public List<JsonNode> productsForCollection(String collectionId) {
         List<JsonNode> result = new ArrayList<>();
-        for (JsonNode product : self.getProducts()) {
+        for (JsonNode product : getProducts()) {
             if (collectionId.equals(product.path("metadata_uuid").asText(null))) {
                 result.add(product);
             }
@@ -194,13 +175,17 @@ public class DasTilerService {
         return result;
     }
 
-    public boolean isProductInCollection(String collectionId, String productId) {
-        for (JsonNode product : productsForCollection(collectionId)) {
-            if (productId.equals(product.path("id").asText(null))) {
-                return true;
-            }
+    public boolean isDatasetInCollection(String collectionId, String dataset) {
+        var result = search.searchCollections(collectionId);
+        if (result == null || result.getCollections() == null) {
+            return false;
         }
-        return false;
+        return result.getCollections().stream()
+                .map(StacCollectionModel::getAssets)
+                .filter(Objects::nonNull)
+                .flatMap(assets -> assets.keySet().stream())
+                .map(key -> key.contains(".") ? key.substring(0, key.indexOf('.')) : key)
+                .anyMatch(dataset::equals);
     }
 
     private DasTileResult exchangeForImage(UriComponentsBuilder builder, Map<String, Object> params, String fallbackContentType) {

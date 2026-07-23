@@ -115,9 +115,18 @@ public class RestApiTest extends BaseTestClass {
      * stub must not shadow the hand-written mapping), param validation, and status mirroring.
      */
     @Test
-    public void verifyVisualMapTileMissingProductReturns400() {
+    public void verifyVisualMapTileMissingDatasetReturns400() {
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?variable=gsla&datetime=2024-01-01",
+                String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    public void verifyVisualMapTileMissingVariableReturns400() {
+        ResponseEntity<String> response = testRestTemplate.getForEntity(
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?dataset=model_sla&datetime=2024-01-01",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -130,13 +139,13 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileRejectionUsesErrorResponseEnvelope() {
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?variable=gsla&datetime=2024-01-01",
                 ErrorResponse.class
         );
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Assertions.assertNotNull(response.getBody(), "Body not null");
-        Assertions.assertEquals("product is required", response.getBody().getMessage(), "Message carries the reason");
+        Assertions.assertEquals("dataset is required", response.getBody().getMessage(), "Message carries the reason");
         Assertions.assertNotNull(response.getBody().getTimestamp(), "Timestamp populated by the handler");
         Assertions.assertTrue(
                 response.getBody().getDetails().contains("/collections/some-uuid/map/tiles"),
@@ -146,7 +155,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileMissingDatetimeReturns400() {
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?product=p1",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?dataset=model_sla&variable=gsla",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -155,7 +164,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileBadDatetimeReturns400() {
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?product=p1&datetime=2024-01-1",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?dataset=model_sla&variable=gsla&datetime=2024-01-1",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -164,7 +173,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileWrongTileMatrixSetReturns404() {
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WorldCRS84Quad/2/1/1?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WorldCRS84Quad/2/1/1?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -173,7 +182,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileNegativeZoomReturns400() {
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/-1/0/0?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/-1/0/0?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -182,7 +191,7 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileZoomAboveMaxReturns400() {
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/25/0/0?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/25/0/0?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -192,7 +201,7 @@ public class RestApiTest extends BaseTestClass {
     public void verifyVisualMapTileRowColOutOfRangeForZoomReturns400() {
         // At z=2 valid row/col range is 0-3; 4 is one past the edge.
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/4/0?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/4/0?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
@@ -200,22 +209,22 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyVisualMapTileMaxZoomBoundaryIsAccepted() {
-        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(24), eq(0), eq(0), eq("png"), isNull(), isNull()))
+        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(24), eq(0), eq(0), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", null));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/24/0/0?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/24/0/0?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 byte[].class
         );
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
-    public void verifyVisualMapTileProductNotInCollectionReturns404() {
-        // isProductInCollection defaults to false on the mock (unstubbed boolean).
+    public void verifyVisualMapTileDatasetNotInCollectionReturns404() {
+        // isDatasetInCollection defaults to false on the mock (unstubbed boolean).
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 String.class
         );
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
@@ -223,12 +232,12 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyVisualMapTileForwardsZXYAndReturnsImage() {
-        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
+        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 byte[].class
         );
 
@@ -238,13 +247,14 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyVisualMapTileFormatWebpMapsToWebpExt() {
-        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("webp"), isNull(), isNull()))
+    public void verifyVisualMapTileRebuildsProductAndMapsWebpExt() {
+        // dataset + variable are recombined into the DAS product id `model_sla:gsla`.
+        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("webp"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("webp-bytes".getBytes(), "image/webp", null));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01&f=webp",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?dataset=model_sla&variable=gsla&datetime=2024-01-01&f=webp",
                 byte[].class
         );
 
@@ -254,12 +264,12 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyVisualMapTileUpstreamErrorMirrored() {
-        when(dasTilerService.isProductInCollection("some-uuid", "p1")).thenReturn(true);
-        when(dasTilerService.getVisualTile(eq("p1"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
+        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
+        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "no such date"));
 
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?product=p1&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/3?dataset=model_sla&variable=gsla&datetime=2024-01-01",
                 String.class
         );
 

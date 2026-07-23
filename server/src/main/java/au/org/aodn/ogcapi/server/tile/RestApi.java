@@ -90,8 +90,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
                     "**Not strict OGC:** the path is slippy-map `{z}/{x}/{y}`, so `tileRow` is **x** and " +
                     "`tileCol` is **y** — the reverse of OGC's row/column order. This matches the vector-tile " +
                     "route and the frontend's Mapbox templates.\n\n" +
-                    "Valid `product` and `datetime` values come from " +
-                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products`.",
+                    "Valid `dataset`, `variable` and `datetime` values come from " +
+                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products` — use each product's " +
+                    "ready-made `tile_url_template`.",
             tags = {"Map Tiles"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The rendered map tile. Tiles outside the " +
@@ -99,16 +100,16 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
                     content = {
                             @Content(mediaType = "image/png", schema = @Schema(type = "string", format = "binary")),
                             @Content(mediaType = "image/webp", schema = @Schema(type = "string", format = "binary"))}),
-            @ApiResponse(responseCode = "400", description = "`product` or `datetime` missing, `datetime` not " +
-                    "`YYYY-MM-DD`, `f` neither `png` nor `webp`, or z/x/y out of range.",
+            @ApiResponse(responseCode = "400", description = "`dataset`, `variable` or `datetime` missing, " +
+                    "`datetime` not `YYYY-MM-DD`, `f` neither `png` nor `webp`, or z/x/y out of range.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "`tileMatrixSetId` is not `WebMercatorQuad`, " +
-                    "`product` is not in the collection, or there is no data for that date.",
+                    "`dataset` is not in the collection, or there is no data for that date.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "The product cannot be rendered as a visual " +
-                    "tile — e.g. a multi-variable product such as `…:ucur+vcur`.",
+                    "tile — e.g. a multi-variable product (variable such as `ucur+vcur`).",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
@@ -152,9 +153,16 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             @PathVariable Integer tileCol,
 
             @Parameter(in = ParameterIn.QUERY, required = true,
-                    description = "DAS product id, `{dataset}:{variable}`. Must belong to the collection.",
-                    example = "model_sea_level_anomaly_gridded_realtime:gsla")
-            @RequestParam(required = false) String product,
+                    description = "Dataset name — the `{dataset}` half of a DAS product id. Must be one of the " +
+                            "collection's data assets.",
+                    example = "model_sea_level_anomaly_gridded_realtime")
+            @RequestParam(required = false) String dataset,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Variable name — the `{variable}` half of a DAS product id. Combined with " +
+                            "`dataset` as `{dataset}:{variable}` to identify the product to render.",
+                    example = "gsla")
+            @RequestParam(required = false) String variable,
 
             @Parameter(in = ParameterIn.QUERY, required = true,
                     description = "Date to render, strict `YYYY-MM-DD` — not an RFC 3339 date-time. Must be " +
@@ -191,8 +199,11 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             throw new InvalidParameterException("tileRow/tileCol out of range for tileMatrix=" + tileMatrix
                     + "; valid range is 0-" + maxIndex);
         }
-        if (product == null || product.isBlank()) {
-            throw new InvalidParameterException("product is required");
+        if (dataset == null || dataset.isBlank()) {
+            throw new InvalidParameterException("dataset is required");
+        }
+        if (variable == null || variable.isBlank()) {
+            throw new InvalidParameterException("variable is required");
         }
         if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new InvalidParameterException("datetime is required and must be YYYY-MM-DD");
@@ -200,11 +211,13 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
         if (!"png".equals(f) && !"webp".equals(f)) {
             throw new InvalidParameterException("f must be 'png' or 'webp'");
         }
-        if (!dasTilerService.isProductInCollection(collectionId, product)) {
+        if (!dasTilerService.isDatasetInCollection(collectionId, dataset)) {
             throw new ResourceNotFoundException(
-                    "product '" + product + "' not found in collection '" + collectionId + "'");
+                    "dataset '" + dataset + "' not found in collection '" + collectionId + "'");
         }
 
+        // DAS identifies a renderable product by the combined {dataset}:{variable} id.
+        String product = dataset + ":" + variable;
         DasTilerService.DasTileResult tile = dasTilerService.getVisualTile(
                 product, datetime, tileMatrix, tileRow, tileCol, f, colormap, rescale);
 
