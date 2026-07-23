@@ -2,6 +2,8 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
+import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -11,6 +13,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import jakarta.annotation.PostConstruct;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service("DataAccessService")
@@ -21,6 +24,9 @@ public class DasService {
 
     @Autowired
     protected RestTemplate httpClient;
+
+    @Autowired
+    protected ObjectMapper objectMapper;
 
     private HttpEntity<?> httpEntity;
 
@@ -92,8 +98,15 @@ public class DasService {
      * Call the data-access-service cloud-optimised size estimate endpoint.
      * The {@code parameters} map is the same batch-style subset request the
      * download job submits (see {@code SubsetParametersUtils}), so DAS interprets
-     * the estimate and the download identically. Returns the raw JSON response
-     * body so the SSE layer can forward it to the frontend unchanged.
+     * the estimate and the download identically. Returns the estimate JSON so the
+     * SSE layer can forward it to the frontend unchanged.
+     * <p>
+     * DAS streams this endpoint over SSE: it heartbeats while computing and then
+     * sends the estimate in a terminal event, so the body is read to completion and
+     * unwrapped by {@link SseResponseParser}. Because the stream returns 200 as soon
+     * as it opens, a failed estimate arrives as an {@code error} event rather than an
+     * error status — the parser turns those back into an exception. Only failures
+     * raised before the stream starts (auth, API not ready) are still HTTP errors.
      */
     public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
 
@@ -102,7 +115,7 @@ public class DasService {
                 .toUriString();
 
         HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
+        headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
         headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
         headers.set("X-API-KEY", dasConfig.secret());
         headers.set("x-internal-das-header-secret", dasConfig.internal());
@@ -112,7 +125,8 @@ public class DasService {
         Map<String, String> uriVars = new HashMap<>();
         uriVars.put("uuid", uuid);
 
-        return httpClient.exchange(url, HttpMethod.POST, entity, String.class, uriVars).getBody();
+        String body = httpClient.exchange(url, HttpMethod.POST, entity, String.class, uriVars).getBody();
+        return SseResponseParser.extractResultData(objectMapper, body);
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
