@@ -377,7 +377,9 @@ public class WfsServer implements Server {
                         }
                     }
                 } catch (Exception e) {
-                    log.debug("Ignore error for {}, will try another url", uri);
+                    // WARN so New Relic can identify a problematic WFS server even when a
+                    // later url succeeds and the download recovers.
+                    log.warn("WFS field value query failed for {}, will try another url. Cause: {}", uri, e.toString());
                 }
             }
         }
@@ -419,7 +421,9 @@ public class WfsServer implements Server {
                         }
                     }
                 } catch (URISyntaxException | JsonProcessingException | RestClientException e) {
-                    log.debug("Ignore error for {}, will try another url", uri);
+                    // WARN so New Relic can identify a problematic WFS server even when a
+                    // later url succeeds and the download recovers.
+                    log.warn("WFS DescribeFeatureType failed for {}, will try another url. Cause: {}", uri, e.toString());
                 }
             }
         } else {

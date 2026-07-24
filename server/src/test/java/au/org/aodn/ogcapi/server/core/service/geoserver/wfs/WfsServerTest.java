@@ -1,6 +1,10 @@
 package au.org.aodn.ogcapi.server.core.service.geoserver.wfs;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
+import au.org.aodn.ogcapi.server.core.util.TestLogAppender;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.springframework.web.client.ResourceAccessException;
 import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
@@ -309,6 +313,55 @@ public class WfsServerTest {
         );
 
         assertTrue(exception.getMessage().contains("Connection timeout"));
+    }
+
+    /**
+     * An unreachable WFS server during DescribeFeatureType must leave a WARN log
+     * entry naming the failing url, so New Relic can identify the problematic
+     * server even though the failure surfaces as "no downloadable fields".
+     */
+    @Test
+    public void testGetDownloadableFieldsUnreachableServerIsLoggedWithUrl() {
+        WfsServer.WfsFeatureRequest request = WfsServer.WfsFeatureRequest.builder().layerName("test:layer").build();
+
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(List.of(
+                StacCollectionModel.builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .href("http://external-geoserver.example.org/geoserver/ows")
+                                        .title(request.getLayerName())
+                                        .aiGroup(WFS_LINK_MARKER)
+                                        .build())
+                        )
+                        .build()
+        ));
+
+        String id = "id6";
+
+        when(mockSearch.searchCollections(eq(id)))
+                .thenReturn(stac);
+
+        when(restTemplate.exchange(any(String.class), eq(HttpMethod.GET), eq(entity), eq(String.class)))
+                .thenThrow(new ResourceAccessException("I/O error on GET request: Connection refused"));
+
+        WfsServer server = new WfsServer(mockSearch, restTemplate, new RestTemplateUtils(restTemplate), entity, wfsDefaultParam);
+
+        TestLogAppender logAppender = TestLogAppender.attachTo(WfsServer.class);
+        try {
+            assertThrows(
+                    GeoserverFieldsNotFoundException.class,
+                    () -> server.getDownloadableFields(id, request)
+            );
+
+            List<LogEvent> warns = logAppender.eventsAtLevel(Level.WARN);
+            assertEquals(1, warns.size(), "Failing server should be logged at WARN");
+            String message = warns.get(0).getMessage().getFormattedMessage();
+            assertTrue(message.contains("external-geoserver.example.org"), "Log should name the failing server");
+            assertTrue(message.contains("Connection refused"), "Log should include the failure cause");
+        } finally {
+            logAppender.detachFrom(WfsServer.class);
+        }
     }
 
     @Test

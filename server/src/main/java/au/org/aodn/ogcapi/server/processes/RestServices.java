@@ -283,7 +283,7 @@ public class RestServices {
                         "timestamp", System.currentTimeMillis()
                 ));
             } catch (Exception e) {
-                log.warn("Unexpected error during size estimation for UUID {}: {}", uuid, e.getMessage());
+                log.error("WFS size estimation failed for UUID {} layer {}", uuid, layerName, e);
                 session.send(SseEventName.ESTIMATE_FAILED, Map.of(
                         "message", "Size estimation failed: " + e.getMessage(),
                         "timestamp", System.currentTimeMillis()
@@ -344,7 +344,7 @@ public class RestServices {
     }
 
     /**
-     * Shared input validation for the two WFS SSE flows.
+     * Shared input validation for the two SSE flows.
      */
     private void validateWfsSseInputs(String uuid, String layerName, String outputFormat) {
         if (uuid == null || layerName == null || layerName.trim().isEmpty()) {
