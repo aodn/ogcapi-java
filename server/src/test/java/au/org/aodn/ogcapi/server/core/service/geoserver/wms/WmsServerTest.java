@@ -18,7 +18,6 @@ import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration;
-import org.springframework.boot.autoconfigure.web.client.RestTemplateAutoConfiguration;
 import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpEntity;
@@ -46,7 +45,6 @@ import static org.mockito.Mockito.when;
         classes = {
                 TestConfig.class,
                 Config.class,
-                RestTemplateAutoConfiguration.class,
                 GeoServerConfigTest.class,
                 GeoServerConfig.class,
                 WmsDefaultParam.class,
