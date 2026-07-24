@@ -1,14 +1,22 @@
 package au.org.aodn.ogcapi.server.service.wfs;
 
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.util.TestLogAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsServer;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.core.LogEvent;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpResponse;
+import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
@@ -21,8 +29,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 public class DownloadWfsDataServiceTest {
@@ -32,6 +39,22 @@ public class DownloadWfsDataServiceTest {
 
     @Mock
     protected HttpEntity<?> entity;
+
+    protected TestLogAppender logAppender;
+
+    @BeforeEach
+    void attachLogAppender() {
+        logAppender = TestLogAppender.attachTo(DownloadWfsDataService.class);
+    }
+
+    @AfterEach
+    void detachLogAppender() {
+        logAppender.detachFrom(DownloadWfsDataService.class);
+    }
+
+    private List<LogEvent> errorLogs() {
+        return logAppender.eventsAtLevel(Level.ERROR);
+    }
 
     /**
      * Test a text file from source is break down into chunk correct and reconstruct correctly
@@ -211,5 +234,81 @@ public class DownloadWfsDataServiceTest {
         }
 
         assertArrayEquals(originalBytes, reconstructed.toByteArray());
+    }
+
+    /**
+     * A 4xx/5xx from the WFS server must produce an ERROR level log entry that
+     * contains the server URL, so New Relic can identify the problematic server.
+     */
+    @Test
+    void verifyUpstreamHttpErrorIsLoggedAtErrorLevelWithServerUrl() {
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        DownloadWfsDataService service = new DownloadWfsDataService(
+                wfsServer, restTemplateMock, entity, 10, new ObjectMapper());
+
+        String wfsRequestUrl = "http://external-geoserver/wfs?request=GetFeature";
+        doThrow(new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR))
+                .when(restTemplateMock).execute(anyString(), eq(HttpMethod.GET), any(), any());
+
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+        assertThrows(HttpServerErrorException.class, () -> service.streamWfsDataWithSse(
+                wfsRequestUrl, "uuid-123", "layer:test",
+                FeatureRequest.GeoServerOutputFormat.CSV.getValue(),
+                emitter, new AtomicBoolean()));
+
+        List<LogEvent> errors = errorLogs();
+        assertEquals(1, errors.size());
+        assertTrue(errors.get(0).getMessage().getFormattedMessage().contains(wfsRequestUrl));
+        assertTrue(errors.get(0).getMessage().getFormattedMessage().contains("uuid-123"));
+    }
+
+    /**
+     * An unreachable WFS server (connection refused / DNS / timeout before any
+     * response) must also produce an ERROR level log entry with the server URL.
+     */
+    @Test
+    void verifyUnreachableServerIsLoggedAtErrorLevelWithServerUrl() {
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        DownloadWfsDataService service = new DownloadWfsDataService(
+                wfsServer, restTemplateMock, entity, 10, new ObjectMapper());
+
+        String wfsRequestUrl = "http://external-geoserver/wfs?request=GetFeature";
+        doThrow(new ResourceAccessException("I/O error on GET request: Connection refused"))
+                .when(restTemplateMock).execute(anyString(), eq(HttpMethod.GET), any(), any());
+
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+        assertThrows(ResourceAccessException.class, () -> service.streamWfsDataWithSse(
+                wfsRequestUrl, "uuid-123", "layer:test",
+                FeatureRequest.GeoServerOutputFormat.CSV.getValue(),
+                emitter, new AtomicBoolean(false)));
+
+        List<LogEvent> errors = errorLogs();
+        assertEquals(1, errors.size());
+        assertTrue(errors.get(0).getMessage().getFormattedMessage().contains(wfsRequestUrl));
+    }
+
+    /**
+     * A client dropping the SSE connection mid-stream (after the WFS server has
+     * responded) is not a server failure and must not create an ERROR level entry.
+     */
+    @Test
+    void verifyClientDisconnectAfterServerRespondedIsNotLoggedAsError() {
+        RestTemplate restTemplateMock = mock(RestTemplate.class);
+        DownloadWfsDataService service = new DownloadWfsDataService(
+                wfsServer, restTemplateMock, entity, 10, new ObjectMapper());
+
+        doThrow(new ResourceAccessException("I/O error on GET request: Broken pipe"))
+                .when(restTemplateMock).execute(anyString(), eq(HttpMethod.GET), any(), any());
+
+        SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+
+        assertThrows(ResourceAccessException.class, () -> service.streamWfsDataWithSse(
+                "http://mock/wfs?...", "uuid-123", "layer:test",
+                FeatureRequest.GeoServerOutputFormat.CSV.getValue(),
+                emitter, new AtomicBoolean(true)));
+
+        assertTrue(errorLogs().isEmpty());
     }
 }
