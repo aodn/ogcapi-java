@@ -2,7 +2,7 @@ package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
-import au.org.aodn.ogcapi.server.core.service.DasService;
+import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;

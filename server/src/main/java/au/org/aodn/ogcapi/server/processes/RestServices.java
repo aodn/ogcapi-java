@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.service.DasService;
+import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.sse.SseStreamHandler;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;

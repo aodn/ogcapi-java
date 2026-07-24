@@ -1,18 +1,16 @@
-package au.org.aodn.ogcapi.server.core.service;
+package au.org.aodn.ogcapi.server.core.service.das;
 
-import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
+import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.Duration;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -28,7 +26,8 @@ import static org.mockito.Mockito.when;
  * Unit tests for DasService URL building. Verifies that null date params are omitted (so they are
  * never passed to URI template expansion) and that buoy/mooring identifiers are sent as path
  * variables for single, correct encoding. Also covers the cloud-optimised size-estimate call
- * (request body shape, auth headers, and error propagation).
+ * (request body shape and error propagation). The API key is attached by the RestTemplate bean,
+ * so it is covered by ConfigTest rather than here.
  */
 public class DasServiceTest {
 
@@ -41,24 +40,24 @@ public class DasServiceTest {
     public void setUp() {
         httpClient = mock(RestTemplate.class);
 
-        DASConfig config = new DASConfig(HOST, "test-secret", "");
+        DasProperties config = new DasProperties(
+                HOST, "test-secret", "",
+                Duration.ofSeconds(5), Duration.ofSeconds(30)
+        );
 
-        dasService = new DasService();
-        dasService.dasConfig = config;
-        dasService.httpClient = httpClient;
-        dasService.init();
+        dasService = new DasService(config, httpClient);
 
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), anyMap()))
-                .thenReturn(ResponseEntity.ok("ok".getBytes()));
-        when(httpClient.exchange(anyString(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class)))
-                .thenReturn(ResponseEntity.ok("ok".getBytes()));
+        when(httpClient.getForObject(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn("ok".getBytes());
+        when(httpClient.getForObject(anyString(), eq(byte[].class)))
+                .thenReturn("ok".getBytes());
     }
 
     @SuppressWarnings("unchecked")
     private CapturedRequest captureMapRequest() {
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map<String, String>> mapCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(httpClient).exchange(urlCaptor.capture(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class), mapCaptor.capture());
+        verify(httpClient).getForObject(urlCaptor.capture(), eq(byte[].class), mapCaptor.capture());
         return new CapturedRequest(urlCaptor.getValue(), mapCaptor.getValue());
     }
 
@@ -119,32 +118,13 @@ public class DasServiceTest {
         dasService.getWaveBuoysLatestAvailableDate();
 
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(httpClient).exchange(urlCaptor.capture(), eq(HttpMethod.GET), any(HttpEntity.class), eq(byte[].class));
+        verify(httpClient).getForObject(urlCaptor.capture(), eq(byte[].class));
         assertEquals(HOST + "/api/v1/das/data/feature-collection/wave-buoy/latest", urlCaptor.getValue());
     }
 
-    @SuppressWarnings("unchecked")
-    private HttpEntity<Map<String, String>> callEstimateAndCaptureEntity(String uuid, Map<String, String> parameters) {
-
-        when(httpClient.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class), anyMap()))
-                .thenReturn(ResponseEntity.ok("{\"estimated_output_bytes\":123}"));
-
-        String result = dasService.estimateCloudOptimisedDownloadSize(uuid, parameters);
-        assertEquals("{\"estimated_output_bytes\":123}", result, "Raw das JSON should be returned unchanged");
-
-        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<Map<String, String>> uriVarsCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(httpClient).exchange(urlCaptor.capture(), eq(HttpMethod.POST), entityCaptor.capture(), eq(String.class), uriVarsCaptor.capture());
-
-        assertEquals(HOST + "/api/v1/das/data/{uuid}/estimate_size", urlCaptor.getValue());
-        assertEquals(uuid, uriVarsCaptor.getValue().get("uuid"));
-
-        return (HttpEntity<Map<String, String>>) entityCaptor.getValue();
-    }
-
     @Test
-    public void testEstimatePostsBatchStyleParametersWithApiKey() {
+    @SuppressWarnings("unchecked")
+    public void testEstimatePostsBatchStyleParametersUnchanged() {
         // The estimate forwards the same batch-style subset parameter map to DAS unchanged.
         Map<String, String> parameters = Map.of(
                 "uuid", "test-uuid",
@@ -154,18 +134,26 @@ public class DasServiceTest {
                 "multi_polygon", "non-specified",
                 "output_format", "netcdf");
 
-        HttpEntity<Map<String, String>> entity = callEstimateAndCaptureEntity("test-uuid", parameters);
+        when(httpClient.postForObject(anyString(), any(), eq(String.class), anyMap()))
+                .thenReturn("{\"estimated_output_bytes\":123}");
 
-        HttpHeaders headers = entity.getHeaders();
-        assertEquals("test-secret", headers.getFirst("X-API-KEY"));
-        assertEquals(MediaType.APPLICATION_JSON_VALUE, headers.getFirst(HttpHeaders.CONTENT_TYPE));
+        String result = dasService.estimateCloudOptimisedDownloadSize("test-uuid", parameters);
+        assertEquals("{\"estimated_output_bytes\":123}", result, "Raw das JSON should be returned unchanged");
 
-        assertEquals(parameters, entity.getBody(), "The batch-style parameter map must be forwarded to DAS unchanged");
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<HttpEntity<Map<String, String>>> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+        ArgumentCaptor<Map<String, String>> uriVarsCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(httpClient).postForObject(urlCaptor.capture(), entityCaptor.capture(), eq(String.class), uriVarsCaptor.capture());
+
+        assertEquals(HOST + "/api/v1/das/data/{uuid}/estimate_size", urlCaptor.getValue());
+        assertEquals("test-uuid", uriVarsCaptor.getValue().get("uuid"));
+        assertEquals(parameters, entityCaptor.getValue().getBody(),
+                "The batch-style parameter map must be forwarded to DAS unchanged");
     }
 
     @Test
     public void testEstimateNon2xxPropagates() {
-        when(httpClient.exchange(anyString(), eq(HttpMethod.POST), any(HttpEntity.class), eq(String.class), anyMap()))
+        when(httpClient.postForObject(anyString(), any(), eq(String.class), anyMap()))
                 .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, null, null));
 
         assertThrows(HttpClientErrorException.class, () ->

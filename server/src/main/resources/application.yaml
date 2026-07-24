@@ -470,6 +470,8 @@ springdoc:
 data-access-service:
   host: http://localhost:5000
   secret: 123
+  connect-timeout: 5s
+  read-timeout: 30s
 
 management:
   info:
