@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
 import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
@@ -17,6 +18,7 @@ public class WfsErrorHandler {
     private static final Set<SseEmitter> handledEmitters = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private enum ErrorType {
+        WFS_SERVER_ERROR,
         NETWORK_ERROR,
         VALIDATION_ERROR,
         UNAUTHORIZED_SERVER_ERROR,
@@ -43,6 +45,19 @@ public class WfsErrorHandler {
             }
 
             switch (errorType) {
+                case WFS_SERVER_ERROR -> {
+                    // ERROR level so New Relic can alert on failed downloads and identify
+                    // the problematic upstream server (the URL is in the exception message).
+                    log.error("WFS server error during download for UUID {}", uuid, e);
+                    emitter.send(SseEmitter.event()
+                            .name(SseEventName.ERROR.getValue())
+                            .data(Map.of(
+                                    "message", "WFS server error",
+                                    "timestamp", System.currentTimeMillis()
+                            )));
+                    emitter.completeWithError(e);
+                }
+
                 case NETWORK_ERROR -> {
                     log.warn("Client disconnected for UUID: {}", uuid);
                     emitter.completeWithError(e);
@@ -82,7 +97,7 @@ public class WfsErrorHandler {
                 }
 
                 case UNKNOWN_ERROR -> {
-                    log.warn("Unknown error for UUID {}", uuid, e);
+                    log.error("Unknown error during WFS download for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
                             .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
@@ -103,6 +118,13 @@ public class WfsErrorHandler {
     }
 
     private static ErrorType categorizeError(Exception e) {
+        // Upstream WFS server rejected the request (4xx/5xx). Must be checked before
+        // the network heuristics below so a failing server is never mistaken for a
+        // client disconnect.
+        if (e instanceof HttpStatusCodeException) {
+            return ErrorType.WFS_SERVER_ERROR;
+        }
+
         if (e instanceof IOException || e instanceof IllegalStateException || e.getMessage() != null && (
                 e.getMessage().contains("Broken pipe") ||
                         e.getMessage().contains("Connection reset") ||

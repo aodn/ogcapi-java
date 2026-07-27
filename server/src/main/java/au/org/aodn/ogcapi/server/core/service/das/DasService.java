@@ -1,16 +1,15 @@
-package au.org.aodn.ogcapi.server.core.service;
+package au.org.aodn.ogcapi.server.core.service.das;
 
-import au.org.aodn.ogcapi.server.core.configuration.DASConfig;
+import au.org.aodn.ogcapi.server.core.configuration.Config;
+import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
 import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
-
-import jakarta.annotation.PostConstruct;
 
 import java.util.HashMap;
 import java.util.List;
@@ -19,24 +18,19 @@ import java.util.Map;
 @Service("DataAccessService")
 public class DasService {
 
-    @Autowired
-    protected DASConfig dasConfig;
+    protected final DasProperties dasProperties;
 
-    @Autowired
-    protected RestTemplate httpClient;
+    protected final RestTemplate httpClient;
 
-    @Autowired
-    protected ObjectMapper objectMapper;
+    protected final ObjectMapper objectMapper;
 
-    private HttpEntity<?> httpEntity;
-
-    @PostConstruct
-    public void init() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("X-API-KEY", dasConfig.secret());
-        headers.set("x-internal-das-header-secret", dasConfig.internal());
-        httpEntity = new HttpEntity<>(headers);
+    public DasService(
+            DasProperties dasProperties,
+            @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
+            ObjectMapper objectMapper) {
+        this.dasProperties = dasProperties;
+        this.httpClient = httpClient;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -46,7 +40,7 @@ public class DasService {
      * {@code pathVariables}.
      */
     private byte[] getFeatureCollection(String path, String start, String end, Map<String, String> pathVariables) {
-        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasConfig.host() + path);
+        UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasProperties.host() + path);
         Map<String, String> params = new HashMap<>(pathVariables);
 
         if (start != null) {
@@ -59,7 +53,7 @@ public class DasService {
         }
 
         String url = builder.encode().toUriString();
-        return httpClient.exchange(url, HttpMethod.GET, httpEntity, byte[].class, params).getBody();
+        return httpClient.getForObject(url, byte[].class, params);
     }
 
     public byte[] getWaveBuoysBetweenDates(String start, String end) {
@@ -67,11 +61,11 @@ public class DasService {
     }
 
     public byte[] getWaveBuoysLatestAvailableDate() {
-        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/feature-collection/wave-buoy/latest")
+        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/wave-buoy/latest")
                 .encode()
                 .toUriString();
 
-        return httpClient.exchange(waveBuoysUrlTemplate, HttpMethod.GET, httpEntity, byte[].class).getBody();
+        return httpClient.getForObject(waveBuoysUrlTemplate, byte[].class);
     }
 
     public byte[] getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
@@ -83,11 +77,11 @@ public class DasService {
     }
 
     public byte[] getMooringsLatestAvailableDate() {
-        String mooringsUrlTemplate = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/feature-collection/mooring/latest")
+        String mooringsUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/mooring/latest")
                 .encode()
                 .toUriString();
 
-        return httpClient.exchange(mooringsUrlTemplate, HttpMethod.GET,httpEntity,byte[].class).getBody();
+        return httpClient.getForObject(mooringsUrlTemplate, byte[].class);
     }
 
     public byte[] getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
@@ -110,30 +104,24 @@ public class DasService {
      */
     public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
 
-        String url = UriComponentsBuilder.fromUriString(dasConfig.host() + "/api/v1/das/data/{uuid}/estimate_size")
+        String url = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/{uuid}/estimate_size")
                 .encode()
                 .toUriString();
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
-        headers.set(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
-        headers.set("X-API-KEY", dasConfig.secret());
-        headers.set("x-internal-das-header-secret", dasConfig.internal());
-
-        HttpEntity<Map<String, String>> entity = new HttpEntity<>(parameters, headers);
 
         Map<String, String> uriVars = new HashMap<>();
         uriVars.put("uuid", uuid);
 
-        String body = httpClient.exchange(url, HttpMethod.POST, entity, String.class, uriVars).getBody();
+        HttpHeaders headers = new HttpHeaders();
+        headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        String body = httpClient.postForObject(url, new HttpEntity<>(parameters, headers), String.class, uriVars);
         return SseResponseParser.extractResultData(objectMapper, body);
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
-        ResponseEntity<DatasetMetadata> response = httpClient.exchange(
-                dasConfig.host() + "/api/v1/das/metadata/" + datasetId,
-                HttpMethod.GET,
-                httpEntity,
+        ResponseEntity<DatasetMetadata> response = httpClient.getForEntity(
+                dasProperties.host() + "/api/v1/das/metadata/" + datasetId,
                 DatasetMetadata.class
         );
         // We need to do this so that the response is closed

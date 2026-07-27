@@ -11,6 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.*;
+import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.ResourceAccessException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -104,7 +107,13 @@ public class DownloadWfsDataService {
                 uuid, null, null, null, null, layerName, "application/json", 1L, false
         );
 
-        ResponseEntity<String> response = restTemplate.exchange(countUrl, HttpMethod.GET, pretendUserEntity, String.class);
+        ResponseEntity<String> response;
+        try {
+            response = restTemplate.exchange(countUrl, HttpMethod.GET, pretendUserEntity, String.class);
+        } catch (RestClientException e) {
+            log.error("WFS record count request failed for {}/{} against server url {}", uuid, layerName, countUrl, e);
+            throw e;
+        }
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             try {
                 JsonNode root = objectMapper.readTree(response.getBody());
@@ -137,7 +146,13 @@ public class DownloadWfsDataService {
                 uuid, null, null, null, null, layerName, outputFormat, sampleSize, false
         );
 
-        ResponseEntity<byte[]> bytes = restTemplate.exchange(sampleUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
+        ResponseEntity<byte[]> bytes;
+        try {
+            bytes = restTemplate.exchange(sampleUrl, HttpMethod.GET, pretendUserEntity, byte[].class);
+        } catch (RestClientException e) {
+            log.error("WFS sample download failed for {}/{} against server url {}", uuid, layerName, sampleUrl, e);
+            throw e;
+        }
         if (bytes.getStatusCode().is2xxSuccessful() && bytes.getBody() != null) {
             return BigInteger.valueOf(bytes.getBody().length).divide(BigInteger.valueOf(sampleSize));
         }
@@ -164,7 +179,13 @@ public class DownloadWfsDataService {
                 uuid, startDate, endDate, multiPolygon, fields, layerName, "application/json", 1L, false
         );
 
-        ResponseEntity<String> countResponse = restTemplate.exchange(countUrl, HttpMethod.GET, pretendUserEntity, String.class);
+        ResponseEntity<String> countResponse;
+        try {
+            countResponse = restTemplate.exchange(countUrl, HttpMethod.GET, pretendUserEntity, String.class);
+        } catch (RestClientException e) {
+            log.error("WFS estimate count request failed for {}/{} against server url {}", uuid, layerName, countUrl, e);
+            throw e;
+        }
 
         if (countResponse.getStatusCode().is2xxSuccessful() && countResponse.getBody() != null) {
             try {
@@ -195,6 +216,31 @@ public class DownloadWfsDataService {
      * Call the WFS server and stream the downloaded data to the client over SSE
      */
     public void streamWfsDataWithSse(
+            String wfsRequestUrl,
+            String uuid,
+            String layerName,
+            String outputFormat,
+            SseEmitter emitter,
+            AtomicBoolean wfsServerResponded) {
+        try {
+            doStreamWfsDataWithSse(wfsRequestUrl, uuid, layerName, outputFormat, emitter, wfsServerResponded);
+        } catch (HttpStatusCodeException e) {
+            log.error("WFS download failed for UUID {} layer {}: server url {} returned status {}",
+                    uuid, layerName, wfsRequestUrl, e.getStatusCode(), e);
+            throw e;
+        } catch (ResourceAccessException e) {
+            // A ResourceAccessException raised before the WFS server responded means the
+            // server itself is unreachable; after it responded, the wrapped IOException
+            // almost always comes from emitter.send() to a disconnected client.
+            if (!wfsServerResponded.get()) {
+                log.error("WFS download failed for UUID {} layer {}: cannot reach server url {}",
+                        uuid, layerName, wfsRequestUrl, e);
+            }
+            throw e;
+        }
+    }
+
+    private void doStreamWfsDataWithSse(
             String wfsRequestUrl,
             String uuid,
             String layerName,
