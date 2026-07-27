@@ -3,6 +3,8 @@ package au.org.aodn.ogcapi.server.core.service.das;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
+import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -20,11 +22,15 @@ public class DasService {
 
     protected final RestTemplate httpClient;
 
+    protected final ObjectMapper objectMapper;
+
     public DasService(
             DasProperties dasProperties,
-            @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient) {
+            @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
+            ObjectMapper objectMapper) {
         this.dasProperties = dasProperties;
         this.httpClient = httpClient;
+        this.objectMapper = objectMapper;
     }
 
     /**
@@ -86,8 +92,15 @@ public class DasService {
      * Call the data-access-service cloud-optimised size estimate endpoint.
      * The {@code parameters} map is the same batch-style subset request the
      * download job submits (see {@code SubsetParametersUtils}), so DAS interprets
-     * the estimate and the download identically. Returns the raw JSON response
-     * body so the SSE layer can forward it to the frontend unchanged.
+     * the estimate and the download identically. Returns the estimate JSON so the
+     * SSE layer can forward it to the frontend unchanged.
+     * <p>
+     * DAS streams this endpoint over SSE: it heartbeats while computing and then
+     * sends the estimate in a terminal event, so the body is read to completion and
+     * unwrapped by {@link SseResponseParser}. Because the stream returns 200 as soon
+     * as it opens, a failed estimate arrives as an {@code error} event rather than an
+     * error status — the parser turns those back into an exception. Only failures
+     * raised before the stream starts (auth, API not ready) are still HTTP errors.
      */
     public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
 
@@ -99,10 +112,11 @@ public class DasService {
         uriVars.put("uuid", uuid);
 
         HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+        headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        return httpClient.postForObject(url, new HttpEntity<>(parameters, headers), String.class, uriVars);
+        String body = httpClient.postForObject(url, new HttpEntity<>(parameters, headers), String.class, uriVars);
+        return SseResponseParser.extractResultData(objectMapper, body);
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {

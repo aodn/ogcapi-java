@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
@@ -38,22 +39,29 @@ public class DasServiceHeadersTest {
     public void setUp() {
         template = new Config().createDasRestTemplate(PROPS);
         server = MockRestServiceServer.bindTo(template).build();
-        dasService = new DasService(PROPS, template);
+        dasService = new DasService(PROPS, template, new ObjectMapper());
     }
 
     @Test
     public void testEstimateIsSentAsJsonNotXml() {
         // Jackson's XML converter also claims Map bodies and is consulted before the JSON one, so
         // without an explicit Content-Type this request goes out as application/xml and DAS breaks.
+        // The estimate is a streamed endpoint, so we accept text/event-stream and DAS replies with
+        // the payload wrapped in a terminal result frame.
+        String sseBody = """
+                event: result
+                data: {"status":"completed","data":{"estimated_output_bytes":123}}
+
+                """;
         server.expect(requestTo("http://localhost:5000/api/v1/das/data/test-uuid/estimate_size"))
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
                 .andExpect(header("Content-Type", MediaType.APPLICATION_JSON_VALUE))
-                .andExpect(header("Accept", MediaType.APPLICATION_JSON_VALUE))
+                .andExpect(header("Accept", MediaType.TEXT_EVENT_STREAM_VALUE))
                 .andExpect(content().json("{\"uuid\":\"test-uuid\",\"output_format\":\"netcdf\"}"))
                 // the per-call headers above must not displace the ones the client attaches
                 .andExpect(header("X-API-KEY", "test-secret"))
                 .andExpect(header("x-internal-das-header-secret", "internal-secret"))
-                .andRespond(withSuccess("{\"estimated_output_bytes\":123}", MediaType.APPLICATION_JSON));
+                .andRespond(withSuccess(sseBody, MediaType.TEXT_EVENT_STREAM));
 
         dasService.estimateCloudOptimisedDownloadSize(
                 "test-uuid", Map.of("uuid", "test-uuid", "output_format", "netcdf"));
@@ -85,7 +93,7 @@ public class DasServiceHeadersTest {
                 .andExpect(headerDoesNotExist("x-internal-das-header-secret"))
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
-        new DasService(noInternal, noInternalTemplate).getWaveBuoysLatestAvailableDate();
+        new DasService(noInternal, noInternalTemplate, new ObjectMapper()).getWaveBuoysLatestAvailableDate();
 
         noInternalServer.verify();
     }
