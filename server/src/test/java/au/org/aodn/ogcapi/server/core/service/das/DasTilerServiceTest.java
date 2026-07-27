@@ -8,6 +8,7 @@ import au.org.aodn.stac.model.AssetModel;
 import au.org.aodn.stac.model.StacCollectionModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -76,6 +77,14 @@ public class DasTilerServiceTest {
         return new CapturedRequest(urlCaptor.getValue(), mapCaptor.getValue());
     }
 
+    @SuppressWarnings("unchecked")
+    private CapturedRequest captureJsonRequest() {
+        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
+        ArgumentCaptor<Map<String, Object>> mapCaptor = ArgumentCaptor.forClass(Map.class);
+        verify(httpClient).getForEntity(urlCaptor.capture(), eq(JsonNode.class), mapCaptor.capture());
+        return new CapturedRequest(urlCaptor.getValue(), mapCaptor.getValue());
+    }
+
     @Test
     public void testGetVisualTileSendsProductAsPathVariable() {
         when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
@@ -124,6 +133,127 @@ public class DasTilerServiceTest {
         assertArrayEquals("tile-bytes".getBytes(), result.body());
         assertEquals("image/png", result.contentType());
         assertEquals("public, max-age=31536000, immutable", result.cacheControl());
+    }
+
+    // --- Data tiles: value-encoded PNGs, product-local LOD, no query params ---
+
+    @Test
+    public void testGetDataTileSendsProductAndPngPathWithoutQuery() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("data-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        service.getDataTile(PRODUCT_ID, "2024-01-01", 1, 0, 0);
+
+        CapturedRequest captured = captureImageRequest();
+        assertTrue(captured.url.contains("/data_tiles/{product}/{date}/{z}/{x}/{y}.png"),
+                "data tile must expand product/date/lod/x/y as path variables and end in .png, got: " + captured.url);
+        assertFalse(captured.url.contains("?"), "data tiles take no query params, got: " + captured.url);
+        assertEquals(PRODUCT_ID, captured.params.get("product"), "product id with ':' must be a raw path variable");
+        assertEquals(1, captured.params.get("z"));
+        assertEquals(0, captured.params.get("x"));
+        assertEquals(0, captured.params.get("y"));
+    }
+
+    @Test
+    public void testGetDataTilePassesMultiVariableProductIdRawInPath() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("data-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        String vectorProduct = "model_currents:ucur+vcur";
+        service.getDataTile(vectorProduct, "2024-01-01", 1, 0, 0);
+
+        CapturedRequest captured = captureImageRequest();
+        // The '+' must ride into the path as a raw variable — RestTemplate encodes it to %2B on the
+        // wire. If it were baked into the URL template it would decode back to a space at DAS.
+        assertEquals(vectorProduct, captured.params.get("product"),
+                "product id with '+' must be passed raw as a path variable, not pre-encoded");
+    }
+
+    @Test
+    public void testGetDataTileForwardsContentTypeAndCacheControl() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("data-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        DasTilerService.DasTileResult result = service.getDataTile(PRODUCT_ID, "2024-01-01", 1, 0, 0);
+
+        assertArrayEquals("data-bytes".getBytes(), result.body());
+        assertEquals("image/png", result.contentType());
+        assertEquals("public, max-age=31536000, immutable", result.cacheControl());
+    }
+
+    @Test
+    public void testGetDataTileNotFoundMirrored() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenThrow(HttpClientErrorException.create(
+                        HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY,
+                        "{\"detail\":\"LOD 9 not in grid\"}".getBytes(), null));
+
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class,
+                () -> service.getDataTile(PRODUCT_ID, "2024-01-01", 9, 0, 0));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        assertEquals("LOD 9 not in grid", ex.getMessage());
+    }
+
+    // --- Data manifest: JSON body, but (unlike the plain getters) forwards Cache-Control ---
+
+    @Test
+    public void testGetDataManifestBuildsUrlAndForwardsCacheControl() {
+        ObjectNode manifestBody = new ObjectMapper().createObjectNode();
+        manifestBody.putArray("bounds").add(0).add(0).add(1).add(1);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable");
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenReturn(new ResponseEntity<>(manifestBody, headers, HttpStatus.OK));
+
+        DasTilerService.DasJsonResult result = service.getDataManifest(PRODUCT_ID, "2024-01-01");
+
+        CapturedRequest captured = captureJsonRequest();
+        assertTrue(captured.url.contains("/data_tiles/{product}/{date}/manifest.json"),
+                "manifest must expand product/date as path variables and end in manifest.json, got: " + captured.url);
+        assertEquals(PRODUCT_ID, captured.params.get("product"));
+        assertEquals("2024-01-01", captured.params.get("date"));
+        assertEquals(manifestBody, result.body());
+        assertEquals("public, max-age=31536000, immutable", result.cacheControl(),
+                "the immutable Cache-Control must be forwarded, unlike the plain JSON getters");
+    }
+
+    @Test
+    public void testGetDataManifestNotFoundMirroredWithDetail() {
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenThrow(HttpClientErrorException.create(
+                        HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY,
+                        "{\"detail\":\"no data for that date\"}".getBytes(), null));
+
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class,
+                () -> service.getDataManifest(PRODUCT_ID, "2024-01-01"));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        assertEquals("no data for that date", ex.getMessage());
+    }
+
+    @Test
+    public void testGetDataManifestTimeoutMappedTo504() {
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenThrow(new ResourceAccessException("timeout", new SocketTimeoutException("read timed out")));
+
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class,
+                () -> service.getDataManifest(PRODUCT_ID, "2024-01-01"));
+
+        assertEquals(HttpStatus.GATEWAY_TIMEOUT, ex.getStatus());
+    }
+
+    @Test
+    public void testGetDataManifestServerErrorMappedTo502() {
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenThrow(HttpServerErrorException.create(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders.EMPTY, new byte[0], null));
+
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class,
+                () -> service.getDataManifest(PRODUCT_ID, "2024-01-01"));
+
+        assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus());
     }
 
     @Test

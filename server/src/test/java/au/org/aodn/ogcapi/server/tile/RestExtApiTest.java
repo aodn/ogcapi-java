@@ -13,12 +13,17 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
@@ -88,7 +93,7 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertEquals("model_sla:gsla", entry.get("id").asText());
         Assertions.assertEquals(1, entry.get("available_dates").size());
         // The tile route takes dataset + variable separately, so the product id is split into both.
-        String template = entry.get("tile_url_template").asText();
+        String template = entry.get("visual_tile_url_template").asText();
         Assertions.assertTrue(template.contains("dataset=model_sla"), "got: " + template);
         Assertions.assertTrue(template.contains("variable=gsla"), "got: " + template);
         Assertions.assertFalse(template.contains("product="), "product must be split into dataset+variable, got: " + template);
@@ -96,20 +101,35 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyScalarProductAdvertisesVisualTileTypeOnly() {
+    public void verifyScalarProductAdvertisesVisualAndDataTileTypes() {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
-                List.of(singleVariableProduct("p1", "uuid-a", "GSLA"))
+                List.of(singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA"))
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("p1"));
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
         );
 
-        JsonNode tileTypes = response.getBody().get("products").get(0).get("tile_types");
+        JsonNode entry = response.getBody().get("products").get(0);
+        JsonNode tileTypes = entry.get("tile_types");
         Assertions.assertTrue(tileTypes.isArray(), "tile_types must be a capability array, not a scalar");
-        Assertions.assertEquals(1, tileTypes.size());
-        Assertions.assertEquals("visual", tileTypes.get(0).asText());
+        Assertions.assertEquals(2, tileTypes.size());
+        Assertions.assertEquals("visual", tileTypes.get(0).asText(), "visual is listed first");
+        Assertions.assertEquals("data", tileTypes.get(1).asText());
+
+        // Every advertised capability carries its own template(s).
+        Assertions.assertTrue(entry.has("visual_tile_url_template"), "visual capability -> visual template");
+        Assertions.assertTrue(entry.has("legend_url"), "visual capability -> legend");
+        Assertions.assertTrue(entry.has("data_tile_url_template"), "data capability -> data tile template");
+        Assertions.assertTrue(entry.has("data_manifest_url_template"), "data capability -> data manifest template");
+
+        String dataTemplate = entry.get("data_tile_url_template").asText();
+        Assertions.assertTrue(dataTemplate.contains("/data_tiles/{lod}/{x}/{y}"), "got: " + dataTemplate);
+        Assertions.assertTrue(dataTemplate.contains("dataset=model_sla"), "got: " + dataTemplate);
+        Assertions.assertTrue(dataTemplate.contains("variable=gsla"), "got: " + dataTemplate);
+        String manifestTemplate = entry.get("data_manifest_url_template").asText();
+        Assertions.assertTrue(manifestTemplate.contains("/data_tiles/manifest"), "got: " + manifestTemplate);
     }
 
     @Test
@@ -126,9 +146,9 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyMultiVariableProductAdvertisesNoServableTileType() {
+    public void verifyMultiVariableProductAdvertisesDataTileTypeOnly() {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
-                List.of(multiVariableProduct("p2", "uuid-a", List.of("UCUR", "VCUR")))
+                List.of(multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR")))
         );
         when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
 
@@ -137,12 +157,149 @@ public class RestExtApiTest extends BaseTestClass {
         );
 
         JsonNode entry = response.getBody().get("products").get(0);
-        // DAS rejects multi-variable products for visual tiles and ogcapi has no data-tile
-        // route yet, so the honest answer is "nothing servable" — NOT "data", which would
-        // advertise an endpoint that 404s. "data" gets appended here once that route exists.
+        // A two-variable product cannot be colourised as a visual tile (DAS rejects it), but it CAN
+        // be served as a data tile — so the honest capability list is exactly ["data"].
         JsonNode tileTypes = entry.get("tile_types");
         Assertions.assertTrue(tileTypes.isArray());
-        Assertions.assertEquals(0, tileTypes.size());
+        Assertions.assertEquals(1, tileTypes.size());
+        Assertions.assertEquals("data", tileTypes.get(0).asText());
+
+        // Visual-only fields must NOT be emitted for a product that can't serve visual tiles.
+        Assertions.assertFalse(entry.has("visual_tile_url_template"), "no visual template without the visual capability");
+        Assertions.assertFalse(entry.has("legend_url"), "no legend without the visual capability");
+
+        Assertions.assertTrue(entry.has("data_tile_url_template"));
+        Assertions.assertTrue(entry.has("data_manifest_url_template"));
+
+        // The '+' in the variable half must be percent-encoded, or a query string decodes it to a space.
+        String dataTemplate = entry.get("data_tile_url_template").asText();
+        Assertions.assertTrue(dataTemplate.contains("variable=ucur%2Bvcur"), "'+' must be %2B, got: " + dataTemplate);
+        Assertions.assertFalse(dataTemplate.contains("variable=ucur+vcur"), "raw '+' would decode to a space, got: " + dataTemplate);
+        String manifestTemplate = entry.get("data_manifest_url_template").asText();
+        Assertions.assertTrue(manifestTemplate.contains("variable=ucur%2Bvcur"), "'+' must be %2B, got: " + manifestTemplate);
+    }
+
+    // --- Data-tile route: value-encoded PNG passthrough, floor-only validation, membership guard ---
+
+    @Test
+    public void verifyDataTileReturnsImageWithCacheControl() {
+        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
+        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 1, 0, 0)).thenReturn(
+                new DasTilerService.DasTileResult(
+                        "data-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
+
+        ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", byte[].class);
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertArrayEquals("data-bytes".getBytes(), response.getBody());
+        Assertions.assertEquals(MediaType.IMAGE_PNG, response.getHeaders().getContentType());
+        Assertions.assertEquals("public, max-age=31536000, immutable", response.getHeaders().getCacheControl());
+    }
+
+    @Test
+    public void verifyDataTileRejectsLodBelowOne() {
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/0/0/0"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasTilerService, never()).getDataTile(anyString(), anyString(), anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
+    public void verifyDataTileRejectsNegativeXorY() {
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/-1/0"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/-1"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+    }
+
+    @Test
+    public void verifyDataTileRejectsMissingOrMalformedParams() {
+        // missing dataset
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
+                        + "?variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+        // missing variable
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
+                        + "?dataset=model_sla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+        // datetime not YYYY-MM-DD
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-1-1", ErrorResponse.class).getStatusCode());
+    }
+
+    @Test
+    public void verifyDataTileNotFoundWhenDatasetNotInCollection() {
+        when(dasTilerService.isDatasetInCollection("uuid-a", "wrong")).thenReturn(false);
+
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
+                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        // Membership fails locally, so DAS is never called for the tile.
+        verify(dasTilerService, never()).getDataTile(anyString(), anyString(), anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
+    public void verifyDataTileMirrorsUpstreamNotFound() {
+        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
+        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 9, 0, 0))
+                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "LOD 9 not in grid"));
+
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/9/0/0"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        Assertions.assertEquals("LOD 9 not in grid", response.getBody().getMessage());
+    }
+
+    // --- Data-manifest route: JSON passthrough with forwarded Cache-Control ---
+
+    @Test
+    public void verifyDataManifestReturnsJsonWithCacheControl() {
+        ObjectNode manifestBody = mapper.createObjectNode();
+        manifestBody.putArray("bounds").add(0).add(0).add(1).add(1);
+        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
+        when(dasTilerService.getDataManifest("model_sla:gsla", "2024-01-01"))
+                .thenReturn(new DasTilerService.DasJsonResult(manifestBody, "public, max-age=31536000, immutable"));
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", JsonNode.class);
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().has("bounds"));
+        Assertions.assertEquals("public, max-age=31536000, immutable", response.getHeaders().getCacheControl());
+    }
+
+    @Test
+    public void verifyDataManifestRejectsMissingOrMalformedParams() {
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
+                        + "?variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
+                        + "?dataset=model_sla&variable=gsla&datetime=not-a-date", ErrorResponse.class).getStatusCode());
+    }
+
+    @Test
+    public void verifyDataManifestNotFoundWhenDatasetNotInCollection() {
+        when(dasTilerService.isDatasetInCollection("uuid-a", "wrong")).thenReturn(false);
+
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
+                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(dasTilerService, never()).getDataManifest(anyString(), anyString());
     }
 
     @Test
