@@ -199,8 +199,9 @@ public class RestExtApi {
             @ApiResponse(responseCode = "200", description = "The value-encoded data tile (opaque PNG payload).",
                     content = @Content(mediaType = "image/png",
                             schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `datetime` not " +
-                    "`YYYY-MM-DD`, `lod` below 1, or negative `x`/`y`.",
+            @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
+                    "containing a space (an unencoded `+`), `datetime` not `YYYY-MM-DD`, `lod` below 1, or " +
+                    "negative `x`/`y`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "`dataset` is not in the collection, or DAS has no " +
@@ -309,8 +310,8 @@ public class RestExtApi {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The data-tile decode manifest.",
                     content = @Content(mediaType = "application/json")),
-            @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, or `datetime` " +
-                    "not `YYYY-MM-DD`.",
+            @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
+                    "containing a space (an unencoded `+`), or `datetime` not `YYYY-MM-DD`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "`dataset` is not in the collection, or DAS has " +
@@ -381,6 +382,13 @@ public class RestExtApi {
         }
         if (variable == null || variable.isBlank()) {
             throw new InvalidParameterException("variable is required");
+        }
+        // A space can only reach here from an unencoded '+' in the query string ('ucur+vcur'
+        // decodes to 'ucur vcur')
+        if (variable.contains(" ")) {
+            throw new InvalidParameterException(
+                    "variable must not contain spaces; percent-encode the '+' of a two-variable " +
+                            "product as %2B (e.g. variable=ucur%2Bvcur)");
         }
         if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new InvalidParameterException("datetime is required and must be YYYY-MM-DD");

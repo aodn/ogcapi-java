@@ -241,6 +241,22 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
+    public void verifyDataTileRejectsUnencodedPlusInVariable() {
+        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
+
+        // A raw '+' decodes to a space, so the product id would be 'model_sla:ucur vcur' — caught
+        // here rather than forwarded to DAS as an unresolvable id.
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
+                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01", ErrorResponse.class);
+
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().getMessage().contains("%2B"),
+                "the message must name the fix, got: " + response.getBody().getMessage());
+        verify(dasTilerService, never()).getDataTile(anyString(), anyString(), anyInt(), anyInt(), anyInt());
+    }
+
+    @Test
     public void verifyDataTileNotFoundWhenDatasetNotInCollection() {
         when(dasTilerService.isDatasetInCollection("uuid-a", "wrong")).thenReturn(false);
 
@@ -320,6 +336,10 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
                         + "?dataset=model_sla&variable=gsla&datetime=not-a-date", ErrorResponse.class).getStatusCode());
+        // an unencoded '+' in variable decodes to a space
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
+                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
     }
 
     @Test
