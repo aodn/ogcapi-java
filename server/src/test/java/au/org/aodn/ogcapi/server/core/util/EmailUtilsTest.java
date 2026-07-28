@@ -467,4 +467,61 @@ public class EmailUtilsTest {
         assertTrue(result.contains("Bounding Box"));
         assertFalse(result.contains("Polygon Selection"));
     }
+
+    /**
+     * Test that a triangle (3 vertices) shows the polygon section, not a bbox
+     */
+    @Test
+    void testTriangleShowsPolygonSection() {
+        Map<String, Object> triangle = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(145.0, -40.0),
+                                        List.of(146.0, -41.0),
+                                        List.of(144.5, -41.5),
+                                        List.of(145.0, -40.0)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", triangle, new ObjectMapper()
+        );
+
+        assertTrue(result.contains("Polygon Selection"));
+        assertTrue(result.contains("Point 3: (-41.50000, 144.50000)"));
+        assertFalse(result.contains("Bounding Box"));
+    }
+
+    /**
+     * Test that a non-rectangular quadrilateral (4 vertices) shows the polygon section, not a bbox
+     */
+    @Test
+    void testNonRectangularQuadShowsPolygonSection() {
+        Map<String, Object> quad = Map.of(
+                "type", "MultiPolygon",
+                "coordinates", List.of(
+                        List.of(
+                                List.of(
+                                        List.of(145.0, -40.0),
+                                        List.of(146.2, -40.3),
+                                        List.of(146.0, -41.5),
+                                        List.of(144.8, -41.0),
+                                        List.of(145.0, -40.0)
+                                )
+                        )
+                )
+        );
+
+        String result = EmailUtils.generateSubsettingSection(
+                "non-specified", "non-specified", quad, new ObjectMapper()
+        );
+
+        assertTrue(result.contains("Polygon Selection"));
+        assertTrue(result.contains("Point 4: (-41.00000, 144.80000)"));
+        assertFalse(result.contains("Bounding Box"));
+    }
 }
