@@ -29,9 +29,14 @@ public enum CQLFields implements CQLFieldsInterface {
         dataset_group(
                         StacSummeries.DatasetGroup.searchField,
                         StacSummeries.DatasetGroup.displayField,
-                        (literal) -> TermsQuery.of(t -> t.field(StacSummeries.DatasetGroup.searchField)
-                                        .terms(tf -> tf.value(List.of(FieldValue.of(literal.toLowerCase().trim())))))
-                                        ._toQuery(),
+                        (literal) -> TermsQuery.of(t -> t
+                                .field(StacSummeries.DatasetGroup.searchField)
+                                .terms(tf -> tf.value(List.of(
+                                        FieldValue.of(literal.toLowerCase().trim()))))
+                                // this boost should be higher than the title boost, cause in some cases, the title contains
+                                // organisation name but the record is not from that organisation (example: aims, csiro)
+                                .boost(100.0F))
+                                ._toQuery(),
                         null),
         update_frequency(
                         StacSummeries.UpdateFrequency.searchField,
