@@ -12,6 +12,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -259,6 +262,29 @@ public class RestExtApiTest extends BaseTestClass {
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Assertions.assertEquals("LOD 9 not in grid", response.getBody().getMessage());
+    }
+
+    @Test
+    public void verifyDataTileMirrorsUpstreamServiceUnavailable() {
+        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
+        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 1, 0, 0))
+                .thenThrow(new DasUpstreamException(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable"));
+
+        for (MediaType accept : List.of(MediaType.IMAGE_PNG, MediaType.ALL, MediaType.APPLICATION_JSON)) {
+            HttpHeaders headers = new HttpHeaders();
+            headers.setAccept(List.of(accept));
+
+            ResponseEntity<ErrorResponse> response = testRestTemplate.exchange(
+                    getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
+                            + "?dataset=model_sla&variable=gsla&datetime=2024-01-01",
+                    HttpMethod.GET, new HttpEntity<>(headers), ErrorResponse.class);
+
+            Assertions.assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode(),
+                    "upstream 503 must not degrade to 500 under Accept: " + accept);
+            Assertions.assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()),
+                    "error body must stay JSON under Accept: " + accept);
+            Assertions.assertEquals("Service Unavailable", response.getBody().getMessage());
+        }
     }
 
     // --- Data-manifest route: JSON passthrough with forwarded Cache-Control ---
