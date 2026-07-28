@@ -38,6 +38,7 @@ public class CacheConfig {
 
     public static final String ALL_NO_LAND_GEOMETRY = "all-noland-geometry";
     public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
+    public static final String USED_VOCAB_TERMS = "used-vocab-terms";
     public static final String ELASTIC_SEARCH_UUID_ONLY = "elastic-search-uuid-only";
     public static final String STRING_TO_GEOMETRY = "string-to-geometry";
     public static final String STRING_TO_PREPARE_GEOMETRY = "string-to-prepared-geometry";
@@ -78,6 +79,13 @@ public class CacheConfig {
                                 Object.class, Object.class,
                                 ResourcePoolsBuilder.heap(10)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                // One entry, rebuilt hourly so a reindex is picked up without a restart
+                .withCache(USED_VOCAB_TERMS,
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, Object.class,
+                                ResourcePoolsBuilder.heap(1)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(1)))
                 )
                 .withCache(DOWNLOADABLE_FIELDS,
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(

@@ -27,8 +27,6 @@ elasticsearch:
   # Off by default - semantic_text needs the licensed `inference` feature.
   semantic:
     enabled: false
-    # field in vocab index for semantic text
-    concept_field: concept_semantic
     # number of semantic search suggestion come back
     size: 3
     # number of characters after user input to execute semantic query

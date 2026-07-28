@@ -42,6 +42,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     protected Map<CQLElasticSetting, String> defaultElasticSetting;
 
+    // the semantic_text field on the vocabs index
+    protected static final String SEMANTIC_CONCEPT_FIELD = "concept_semantic";
+
     @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
     protected String searchAsYouTypeFieldsPath;
 
@@ -54,9 +57,24 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
 
+    @Value("${elasticsearch.vocabs_index.name}")
+    protected String vocabsIndexName;
+
+    @Value("${elasticsearch.semantic.enabled:false}")
+    protected Boolean semanticEnabled;
+
+    @Value("${elasticsearch.semantic.size:3}")
+    protected Integer semanticSize;
+
+    @Value("${elasticsearch.semantic.min_input_length:3}")
+    protected Integer semanticMinInputLength;
+
+    protected final VocabTermUsageService vocabTermUsageService;
+
     public ElasticSearch(ElasticsearchClient client,
                          CacheNoLandGeometry cacheNoLandGeometry,
                          ObjectMapper mapper,
+                         VocabTermUsageService vocabTermUsageService,
                          String indexName,
                          Integer pageSize,
                          Integer searchAsYouTypeSize) {
@@ -67,6 +85,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         this.setPageSize(pageSize);
         this.setSearchAsYouTypeSize(searchAsYouTypeSize);
         this.setCacheNoLandGeometry(cacheNoLandGeometry);
+        this.vocabTermUsageService = vocabTermUsageService;
         this.defaultElasticSetting = CQLToElasticFilterFactory.getDefaultSetting();
     }
     /**
@@ -117,27 +136,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .query(bQ -> bQ.bool(b -> b.should(suggestFieldsQueries)))
         ));
 
-        /*
-            this is where the discovery parameter vocabs filter is applied
-            use term query for exact match of the parameter vocabs
-            (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
-            see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
-            this query uses AND operator for the parameter vocabs (e.g "wave" AND "temperature")
-        */
-        List<Query> filters;
-        if (cql != null) {
-            CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
-            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
-            if (filter instanceof QueryHandler elasticFilter) {
-                filters = List.of(elasticFilter.getQuery());
-            } else {
-                // If no filter, then use the match_all{} to get all record
-                filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
-            }
-        } else {
-            // If no filter, then use the match_all{} to get all record
-            filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
-        }
+        List<Query> filters = buildSuggestionFilters(cql, coor);
 
         // create request
         SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
@@ -153,6 +152,85 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
         // return
         return response.hits().hits();
+    }
+
+    /*
+        this is where the discovery parameter vocabs filter is applied
+        use term query for exact match of the parameter vocabs
+        (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
+        see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
+        this query uses AND operator for the parameter vocabs (e.g "wave" AND "temperature")
+    */
+    protected List<Query> buildSuggestionFilters(String cql, CQLCrsType coor) throws CQLException {
+        if (cql != null) {
+            CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
+            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+            if (filter instanceof QueryHandler elasticFilter) {
+                return List.of(elasticFilter.getQuery());
+            }
+        }
+        // If no filter, then use the match_all{} to get all record
+        return List.of(MatchAllQuery.of(q -> q)._toQuery());
+    }
+
+    /**
+     * Only conduct semantic search if the length is long enough,
+     * the min_length is defined in application.yaml min_input_length: 3
+     * */
+    protected boolean isSemanticInputLongEnough(String input) {
+        return input != null && input.trim().length() >= semanticMinInputLength;
+    }
+
+    /**
+     * Rank vocab <i>terms</i> by meaning. The vocabs index carries a `concept_semantic` semantic_text
+     * field built from each concept's label, alternative labels, definition and narrower terms
+     * (es-indexer VocabModel.toConceptText), so Elasticsearch scores the concepts themselves rather
+     * than the records that happen to mention them - which is how "underwater device" reaches
+     * "Glider" through its definition, something no lexical query can do.
+     * <p>
+     * Deliberately over-fetches: the usage gate applied by the caller drops terms no record carries,
+     * and without headroom a page full of unused terms would leave nothing to suggest.
+     *
+     * @param input - The input text typed by the end user
+     */
+    protected List<Hit<JsonNode>> getSemanticTermHits(String input) throws IOException {
+        SearchRequest searchRequest = SearchRequest.of(s -> s
+                .index(vocabsIndexName)
+                .size(Math.max(semanticSize * 4, 10))
+                .query(q -> q.semantic(sm -> sm
+                        .field(SEMANTIC_CONCEPT_FIELD)
+                        .query(input))));
+
+        log.info("getSemanticTermHits | Elastic search payload {}", searchRequest);
+        SearchResponse<JsonNode> response = esClient.search(searchRequest, JsonNode.class);
+        log.info("getSemanticTermHits | Elastic search response {}", response);
+
+        return response.hits().hits();
+    }
+
+    /**
+     * A vocabs doc holds exactly one of the three concept types (see es-indexer VocabDto), so the
+     * first one present is the one to label. `display_label` is the human-facing form and matches
+     * what a record's summaries.*_vocabs contain; `label` covers concepts that lack one.
+     */
+    protected String extractLabel(JsonNode source) {
+        if (source == null) {
+            return null;
+        }
+        for (String type : List.of("parameter_vocab", "platform_vocab", "organisation_vocab")) {
+            JsonNode vocab = source.get(type);
+            if (vocab != null) {
+                JsonNode displayLabel = vocab.get("display_label");
+                if (displayLabel != null && !displayLabel.asText().isBlank()) {
+                    return displayLabel.asText();
+                }
+                JsonNode label = vocab.get("label");
+                if (label != null && !label.asText().isBlank()) {
+                    return label.asText();
+                }
+            }
+        }
+        return null;
     }
 
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
@@ -191,6 +269,29 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
         searchSuggestions.put("suggested_phrases", abstractPhrases);
+
+        // Semantic suggestions - vocab terms ranked by meaning, then narrowed to terms in actual use.
+        if (Boolean.TRUE.equals(semanticEnabled) && isSemanticInputLongEnough(input)) {
+            try {
+                Set<String> used = vocabTermUsageService.getUsedVocabTerms();
+
+                Set<String> semanticSuggestions = this.getSemanticTermHits(input)
+                        .stream()
+                        .map(hit -> extractLabel(hit.source()))
+                        .filter(Objects::nonNull)
+                        .filter(term -> used.contains(term.toLowerCase()))
+                        .distinct()
+                        .limit(semanticSize)
+                        // LinkedHashSet so the relevance order from Elastic survives into the response
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+                searchSuggestions.put("suggested_semantic", semanticSuggestions);
+            } catch (Exception e) {
+                // Covers the case where the index was built without the semantic fields - the
+                // dropdown degrades to lexical suggestions rather than the request failing.
+                log.warn("Semantic suggestions unavailable, returning lexical suggestions only", e);
+            }
+        }
 
         return new ResponseEntity<>(searchSuggestions, HttpStatus.OK);
     }
