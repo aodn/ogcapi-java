@@ -92,7 +92,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
                     "route and the frontend's Mapbox templates.\n\n" +
                     "Valid `dataset`, `variable` and `datetime` values come from " +
                     "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products` — use each product's " +
-                    "ready-made `tile_url_template`.",
+                    "ready-made `visual_tile_url_template`.",
             tags = {"Map Tiles"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The rendered map tile. Tiles outside the " +
