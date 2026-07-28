@@ -22,6 +22,17 @@ elasticsearch:
     search_suggestions:
       path: search_suggestions
       fields: abstract_phrases, parameter_vocabs_sayt, platform_vocabs_sayt, organisation_vocabs_sayt
+  # Semantic suggestions: the vocabs index is searched by meaning (ELSER via semantic_text),
+  # then filtered down to terms some record actually carries.
+  # Off by default - semantic_text needs the licensed `inference` feature.
+  semantic:
+    enabled: false
+    # field in vocab index for semantic text
+    concept_field: concept_semantic
+    # number of semantic search suggestion come back
+    size: 3
+    # number of characters after user input to execute semantic query
+    min_input_length: 3
 
 aws:
   region: ap-southeast-2

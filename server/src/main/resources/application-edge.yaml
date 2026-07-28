@@ -13,3 +13,7 @@ management:
 ogcapi:
   debug:
     elasticsearch-explain-enabled: true
+
+elasticsearch:
+  semantic:
+    enabled: true
