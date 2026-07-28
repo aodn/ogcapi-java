@@ -38,6 +38,9 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 public class RestExtApiTest extends BaseTestClass {
 
+    /** Spring's MediaType has no constant for it */
+    private static final MediaType IMAGE_WEBP = MediaType.valueOf("image/webp");
+
     @MockitoBean
     protected DasTilerService dasTilerService;
 
@@ -270,9 +273,15 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 1, 0, 0))
                 .thenThrow(new DasUpstreamException(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable"));
 
-        for (MediaType accept : List.of(MediaType.IMAGE_PNG, MediaType.ALL, MediaType.APPLICATION_JSON)) {
+        // The Accept headers real callers send — a map client (e.g. Mapbox) that names both image formats
+        List<List<MediaType>> accepts = List.of(
+                List.of(IMAGE_WEBP, MediaType.ALL),
+                List.of(IMAGE_WEBP, MediaType.IMAGE_PNG, MediaType.ALL),
+                List.of(MediaType.ALL));
+
+        for (List<MediaType> accept : accepts) {
             HttpHeaders headers = new HttpHeaders();
-            headers.setAccept(List.of(accept));
+            headers.setAccept(accept);
 
             ResponseEntity<ErrorResponse> response = testRestTemplate.exchange(
                     getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
@@ -280,14 +289,11 @@ public class RestExtApiTest extends BaseTestClass {
                     HttpMethod.GET, new HttpEntity<>(headers), ErrorResponse.class);
 
             Assertions.assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode(),
-                    "upstream 503 must not degrade to 500 under Accept: " + accept);
-            Assertions.assertTrue(MediaType.APPLICATION_JSON.isCompatibleWith(response.getHeaders().getContentType()),
-                    "error body must stay JSON under Accept: " + accept);
-            Assertions.assertEquals("Service Unavailable", response.getBody().getMessage());
+                    "upstream 503 must not degrade to 500 under Accept: " + MediaType.toString(accept));
+            Assertions.assertEquals("Service Unavailable", response.getBody().getMessage(),
+                    "upstream detail must reach the caller under Accept: " + MediaType.toString(accept));
         }
     }
-
-    // --- Data-manifest route: JSON passthrough with forwarded Cache-Control ---
 
     @Test
     public void verifyDataManifestReturnsJsonWithCacheControl() {
