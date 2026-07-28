@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.configuration;
+package au.org.aodn.ogcapi.server.core.service.das;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;

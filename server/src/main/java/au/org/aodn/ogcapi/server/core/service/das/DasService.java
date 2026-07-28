@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
-import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
 import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
-import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
