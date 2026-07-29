@@ -3,7 +3,6 @@ package au.org.aodn.ogcapi.server.core.configuration;
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.ogcapi.server.core.service.VocabTermUsageService;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.json.jackson.JacksonJsonpMapper;
 import co.elastic.clients.transport.rest_client.RestClientTransport;
@@ -63,12 +62,10 @@ public class ElasticSearchConfig {
     public Search createElasticSearch(ElasticsearchClient client,
                                       CacheNoLandGeometry cacheNoLandGeometry,
                                       ObjectMapper mapper,
-                                      VocabTermUsageService vocabTermUsageService,
                                       @Value("${elasticsearch.index.name}") String indexName,
                                       @Value("${elasticsearch.index.pageSize:2200}") Integer pageSize,
                                       @Value("${elasticsearch.search_as_you_type.size:10}") Integer searchAsYouTypeSize) {
 
-        return new ElasticSearch(client, cacheNoLandGeometry, mapper, vocabTermUsageService,
-                indexName, pageSize, searchAsYouTypeSize);
+        return new ElasticSearch(client, cacheNoLandGeometry, mapper, indexName, pageSize, searchAsYouTypeSize);
     }
 }

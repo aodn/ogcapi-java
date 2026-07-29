@@ -69,12 +69,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.semantic.min_input_length:3}")
     protected Integer semanticMinInputLength;
 
-    protected final VocabTermUsageService vocabTermUsageService;
-
     public ElasticSearch(ElasticsearchClient client,
                          CacheNoLandGeometry cacheNoLandGeometry,
                          ObjectMapper mapper,
-                         VocabTermUsageService vocabTermUsageService,
                          String indexName,
                          Integer pageSize,
                          Integer searchAsYouTypeSize) {
@@ -85,7 +82,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         this.setPageSize(pageSize);
         this.setSearchAsYouTypeSize(searchAsYouTypeSize);
         this.setCacheNoLandGeometry(cacheNoLandGeometry);
-        this.vocabTermUsageService = vocabTermUsageService;
         this.defaultElasticSetting = CQLToElasticFilterFactory.getDefaultSetting();
     }
     /**
@@ -187,16 +183,13 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
      * (es-indexer VocabModel.toConceptText), so Elasticsearch scores the concepts themselves rather
      * than the records that happen to mention them - which is how "underwater device" reaches
      * "Glider" through its definition, something no lexical query can do.
-     * <p>
-     * Deliberately over-fetches: the usage gate applied by the caller drops terms no record carries,
-     * and without headroom a page full of unused terms would leave nothing to suggest.
      *
      * @param input - The input text typed by the end user
      */
     protected List<Hit<JsonNode>> getSemanticTermHits(String input) throws IOException {
         SearchRequest searchRequest = SearchRequest.of(s -> s
                 .index(vocabsIndexName)
-                .size(Math.max(semanticSize * 4, 10))
+                .size(semanticSize)
                 .query(q -> q.semantic(sm -> sm
                         .field(SEMANTIC_CONCEPT_FIELD)
                         .query(input))));
@@ -270,18 +263,13 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .collect(Collectors.toSet());
         searchSuggestions.put("suggested_phrases", abstractPhrases);
 
-        // Semantic suggestions - vocab terms ranked by meaning, then narrowed to terms in actual use.
+        // Semantic suggestions - vocab terms ranked by meaning rather than by spelling.
         if (Boolean.TRUE.equals(semanticEnabled) && isSemanticInputLongEnough(input)) {
             try {
-                Set<String> used = vocabTermUsageService.getUsedVocabTerms();
-
                 Set<String> semanticSuggestions = this.getSemanticTermHits(input)
                         .stream()
                         .map(hit -> extractLabel(hit.source()))
                         .filter(Objects::nonNull)
-                        .filter(term -> used.contains(term.toLowerCase()))
-                        .distinct()
-                        .limit(semanticSize)
                         // LinkedHashSet so the relevance order from Elastic survives into the response
                         .collect(Collectors.toCollection(LinkedHashSet::new));
 

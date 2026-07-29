@@ -46,7 +46,6 @@ public class ElasticSearchTest {
                 mockClient,
                 null, // CacheNoLandGeometry
                 new ObjectMapper(),
-                null, // VocabTermUsageService - the semantic path is not exercised here
                 "test-index",
                 100,
                 10
