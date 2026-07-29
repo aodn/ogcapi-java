@@ -311,6 +311,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
                 // credit_contains uses match query by default, exact match is not applied here
                 should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
+                // match the acronym for AODN partner organisations
+                should.add(CQLFields.getDatasetGroupTextSearchQuery(term, isExact));
             }
         }
 
@@ -418,7 +420,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     // credit_contains uses match query by default, exact match is not applied here
                     should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
                     // match the acronym for AODN partner organisations
-                    should.add(CQLFields.dataset_group.getPropertyEqualToQuery(term));
+                    should.add(CQLFields.getDatasetGroupTextSearchQuery(term, isExact));
                 }
             }
 
