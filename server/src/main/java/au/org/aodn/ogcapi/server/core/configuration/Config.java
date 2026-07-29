@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.das.DasProperties;
+import au.org.aodn.ogcapi.server.core.service.dda.DdaProperties;
 import au.org.aodn.ogcapi.server.core.service.geonetwork.GNProperties;
 import au.org.aodn.ogcapi.server.core.service.indexer.IndexerProperties;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
@@ -22,6 +23,7 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @EnableScheduling
 @EnableConfigurationProperties({
+        DdaProperties.class,
         IndexerProperties.class,
         GNProperties.class,
         DasProperties.class

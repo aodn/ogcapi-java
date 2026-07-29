@@ -17,16 +17,22 @@ public interface ApplicationInfo {
      * @return - Map of value
      */
     default Map<String, Map<?,?>> queryInfo(RestTemplate restTemplate, String host, String path) {
-        String das = String.format("%s/%s", host, path);
-        ResponseEntity<Map<String, Map<?,?>>> response = restTemplate.exchange(
-                das,
-                HttpMethod.GET,
-                null,
-                new ParameterizedTypeReference<>() {}
-        );
+        try {
+            String das = String.format("%s/%s", host, path);
+            ResponseEntity<Map<String, Map<?, ?>>> response = restTemplate.exchange(
+                    das,
+                    HttpMethod.GET,
+                    null,
+                    new ParameterizedTypeReference<>() {
+                    }
+            );
 
-        if(response.getStatusCode().is2xxSuccessful()) {
-            return response.getBody();
+            if (response.getStatusCode().is2xxSuccessful()) {
+                return response.getBody();
+            }
+        } catch(Exception e) {
+            // Do not throw exception that impacts start, UI will use health endpoint to decide level of
+            // service, for example if geonetwork is not work, we can still provide service
         }
         return Collections.emptyMap();
     }

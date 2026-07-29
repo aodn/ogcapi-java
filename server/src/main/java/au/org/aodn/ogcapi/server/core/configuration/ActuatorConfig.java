@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.ErrorCode;
 import au.org.aodn.ogcapi.server.core.service.das.DasService;
+import au.org.aodn.ogcapi.server.core.service.dda.DdaService;
 import au.org.aodn.ogcapi.server.core.service.geonetwork.Geonetwork;
 import au.org.aodn.ogcapi.server.core.service.indexer.EsIndexer;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -21,14 +22,11 @@ public class ActuatorConfig {
 
     private static final String VERSION_TAG = "depServiceVersion";
 
-
-
     // Define the InfoContributor bean to fill in the missing info in /manage/info endpoint
     @Bean
     public InfoContributor externalApiInfoContributor(
             DasService das,
-            @Value("${data-discovery-ai.host}") final String ddaHost,
-            @Value("${data-discovery-ai.info-path}") final String ddaInfoPath,
+            DdaService dda,
             EsIndexer esIndexer,
             Geonetwork geonetwork
     ) {
@@ -37,6 +35,8 @@ public class ActuatorConfig {
                 Map<String, Map<?,?>> versions = new HashMap<>();
                 versions.put(das.getName(),
                         Map.of("version", das.getVersion(), "description", das.getDescription()));
+                versions.put(dda.getName(),
+                        Map.of("version", dda.getVersion(), "description", dda.getDescription()));
                 versions.put(esIndexer.getName(),
                         Map.of("version", esIndexer.getVersion(), "description", esIndexer.getDescription()));
                 versions.put(geonetwork.getName(),
