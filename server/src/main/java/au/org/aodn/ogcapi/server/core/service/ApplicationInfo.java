@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -9,6 +10,10 @@ import java.util.Collections;
 import java.util.Map;
 
 public interface ApplicationInfo {
+    @Slf4j
+    class LogHolder {
+        // Lombok injects the logger here inside the static inner class
+    }
     /**
      * Query this is repeat code to query the info path
      * @param restTemplate - The template of the service
@@ -20,6 +25,8 @@ public interface ApplicationInfo {
         if(path != null) {
             try {
                 String das = String.format("%s/%s", host, path);
+
+                LogHolder.log.info("Query service info for {}, {}", host, path);
                 ResponseEntity<Map<String, Map<?, ?>>> response = restTemplate.exchange(
                         das,
                         HttpMethod.GET,
