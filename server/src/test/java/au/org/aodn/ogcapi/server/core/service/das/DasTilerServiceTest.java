@@ -54,7 +54,7 @@ public class DasTilerServiceTest {
         search = mock(Search.class);
 
         DasProperties config = new DasProperties(
-                HOST, "test-secret", "internal-secret",
+                HOST, "test-secret", "internal-secret", null,
                 Duration.ofSeconds(5), Duration.ofSeconds(30)
         );
 

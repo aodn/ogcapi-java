@@ -42,7 +42,7 @@ public class DasServiceTest {
         httpClient = mock(RestTemplate.class);
 
         DasProperties config = new DasProperties(
-                HOST, "test-secret", "",
+                HOST, "test-secret", "", null,
                 Duration.ofSeconds(5), Duration.ofSeconds(30)
         );
 

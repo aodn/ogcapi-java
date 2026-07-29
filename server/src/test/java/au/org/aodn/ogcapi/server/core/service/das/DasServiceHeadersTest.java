@@ -27,7 +27,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 public class DasServiceHeadersTest {
 
     private static final DasProperties PROPS = new DasProperties(
-            "http://localhost:5000", "test-secret", "internal-secret",
+            "http://localhost:5000", "test-secret", "internal-secret", null,
             Duration.ofSeconds(5), Duration.ofSeconds(30));
 
     private RestTemplate template;
@@ -83,7 +83,7 @@ public class DasServiceHeadersTest {
     @Test
     public void testInternalSecretIsOmittedWhenNotConfigured() {
         DasProperties noInternal = new DasProperties(
-                "http://localhost:5000", "test-secret", null,
+                "http://localhost:5000", "test-secret", null, null,
                 Duration.ofSeconds(5), Duration.ofSeconds(30));
         RestTemplate noInternalTemplate = new Config().createDasRestTemplate(noInternal);
         MockRestServiceServer noInternalServer = MockRestServiceServer.bindTo(noInternalTemplate).build();
