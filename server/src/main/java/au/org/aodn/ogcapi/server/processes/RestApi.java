@@ -65,10 +65,13 @@ public class RestApi implements ProcessesApi {
                 String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
                 Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
 
-                // move the notify user email from data-access-service to here to make the first email faster
-                restServices.notifyUser(recipient, uuid, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation);
-
                 var response = restServices.downloadData(uuid, key, startDate, endDate, multiPolygon, recipient, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+
+                // The notify user email lives here rather than in data-access-service to make the first
+                // email faster
+                // It must only be sent once AWS Batch has accepted the job and returned
+                // a job id, otherwise we promise the user a file that will never be produced.
+                restServices.notifyUser(recipient, uuid, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation);
 
                 var value = new InlineValue(response.getBody());
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));

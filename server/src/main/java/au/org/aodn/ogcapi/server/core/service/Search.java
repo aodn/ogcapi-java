@@ -33,7 +33,8 @@ public interface Search {
             String filter,
             List<String> properties,
             String sortBy,
-            CQLCrsType coor
+            CQLCrsType coor,
+            boolean simplified
     ) throws Exception;
 
     JsonNode explainByUuid(

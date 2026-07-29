@@ -11,6 +11,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -22,6 +23,9 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,6 +65,11 @@ public class RestApiTest {
         assert results != null;
         InlineValue message = (InlineValue) results.get("message");
         assertEquals("Job submitted with ID: test-job-id", message.message());
+
+        // The "processing started" email must go out only after AWS Batch returned a job id
+        InOrder inOrder = inOrder(restServices);
+        inOrder.verify(restServices).downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        inOrder.verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -75,6 +84,9 @@ public class RestApiTest {
         assert results != null;
         InlineValue error = (InlineValue) results.get(InlineResponseKeyEnum.MESSAGE.getValue());
         assertEquals("Error while getting dataset", error.message());
+
+        // No job was submitted, so the user must not be told their data is being processed
+        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

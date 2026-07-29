@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
-import au.org.aodn.ogcapi.server.core.service.DasService;
+import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.sse.SseStreamHandler;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
@@ -74,7 +74,9 @@ public class RestServices {
 
             ses.sendEmail(request);
 
-        } catch (SesException e) {
+        } catch (Exception e) {
+            // Best effort: this runs after the batch job was accepted, so a failure to notify
+            // must not surface as a failed download request for a job that is already running.
             log.error("Error sending email: {}", e.getMessage());
         }
     }
@@ -136,7 +138,14 @@ public class RestServices {
                 .build();
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);
-        return submitJobResponse.jobId();
+        String jobId = submitJobResponse.jobId();
+
+        // Callers treat a returned job id as proof the job was accepted (the user gets a
+        // "processing started" email off the back of it), so never hand back a blank one.
+        if (jobId == null || jobId.isBlank()) {
+            throw new IllegalStateException("AWS Batch did not return a job id for job '" + jobName + "'");
+        }
+        return jobId;
     }
 
     private String generateStartedEmailContent(
@@ -274,7 +283,7 @@ public class RestServices {
                         "timestamp", System.currentTimeMillis()
                 ));
             } catch (Exception e) {
-                log.warn("Unexpected error during size estimation for UUID {}: {}", uuid, e.getMessage());
+                log.error("WFS size estimation failed for UUID {} layer {}", uuid, layerName, e);
                 session.send(SseEventName.ESTIMATE_FAILED, Map.of(
                         "message", "Size estimation failed: " + e.getMessage(),
                         "timestamp", System.currentTimeMillis()
@@ -335,7 +344,7 @@ public class RestServices {
     }
 
     /**
-     * Shared input validation for the two WFS SSE flows.
+     * Shared input validation for the two SSE flows.
      */
     private void validateWfsSseInputs(String uuid, String layerName, String outputFormat) {
         if (uuid == null || layerName == null || layerName.trim().isEmpty()) {

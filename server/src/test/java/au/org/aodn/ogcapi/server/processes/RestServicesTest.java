@@ -16,6 +16,7 @@ import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -115,5 +116,17 @@ public class RestServicesTest {
         String suggestedKey = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue();
         assertEquals("unavailable", captured.parameters().get(suggestedKey));
         assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
+    }
+
+    @Test
+    public void submitJobWithoutJobIdThrows() {
+        // AWS Batch answered but gave us no job id, so the job was never really queued.
+        // This must fail loudly: the caller sends the "processing started" email off the
+        // back of a successful downloadData().
+        when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(SubmitJobResponse.builder().build());
+
+        assertThrows(IllegalStateException.class, () -> restServices.downloadData(
+                "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "non-specified", "test@example.com",
+                "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "", "geotiff"));
     }
 }
