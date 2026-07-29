@@ -1,6 +1,8 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.service.das.DasProperties;
+import au.org.aodn.ogcapi.server.core.service.geonetwork.GNProperties;
+import au.org.aodn.ogcapi.server.core.service.indexer.IndexerProperties;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
@@ -19,7 +21,11 @@ import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableScheduling
-@EnableConfigurationProperties(DasProperties.class)
+@EnableConfigurationProperties({
+        IndexerProperties.class,
+        GNProperties.class,
+        DasProperties.class
+})
 public class Config {
 
     public static final String DAS_REST_TEMPLATE = "dasRestTemplate";

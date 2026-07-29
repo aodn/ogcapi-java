@@ -8,6 +8,7 @@ import java.time.Duration;
 @ConfigurationProperties(prefix = "data-access-service")
 public record DasProperties(
         String host,
+        @DefaultValue("api/v1/das/manage/info") String infoPath,
         String secret,
         String internal,
         @DefaultValue("5s") Duration connectTimeout,
