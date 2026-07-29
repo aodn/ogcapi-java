@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
-import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
@@ -55,7 +54,7 @@ public class DasTilerServiceTest {
         search = mock(Search.class);
 
         DasProperties config = new DasProperties(
-                HOST, "test-secret", "internal-secret",
+                HOST, null,"test-secret", "internal-secret",
                 Duration.ofSeconds(5), Duration.ofSeconds(30)
         );
 

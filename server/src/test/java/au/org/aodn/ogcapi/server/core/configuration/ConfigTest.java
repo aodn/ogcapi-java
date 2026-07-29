@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
+import au.org.aodn.ogcapi.server.core.service.das.DasProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -25,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ConfigTest {
 
     private static final DasProperties DAS_PROPERTIES = new DasProperties(
-            "http://localhost:5000", "test-secret", "internal-secret",
+            "http://localhost:5000", null,"test-secret", "internal-secret",
             Duration.ofSeconds(5), Duration.ofSeconds(30));
 
     private final Config config = new Config();
@@ -67,7 +68,7 @@ public class ConfigTest {
     @Test
     public void testInternalSecretOmittedWhenNotConfigured() throws IOException {
         DasProperties noInternal = new DasProperties(
-                "http://localhost:5000", "test-secret", null,
+                "http://localhost:5000", null,"test-secret", null,
                 Duration.ofSeconds(5), Duration.ofSeconds(30));
 
         HttpHeaders headers = headersAfterInterceptors(config.createDasRestTemplate(noInternal));

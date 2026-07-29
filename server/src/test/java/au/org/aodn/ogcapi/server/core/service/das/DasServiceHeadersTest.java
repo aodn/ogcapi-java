@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
-import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,16 +27,15 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 public class DasServiceHeadersTest {
 
     private static final DasProperties PROPS = new DasProperties(
-            "http://localhost:5000", "test-secret", "internal-secret",
+            "http://localhost:5000", null,"test-secret", "internal-secret",
             Duration.ofSeconds(5), Duration.ofSeconds(30));
 
-    private RestTemplate template;
     private MockRestServiceServer server;
     private DasService dasService;
 
     @BeforeEach
     public void setUp() {
-        template = new Config().createDasRestTemplate(PROPS);
+        RestTemplate template = new Config().createDasRestTemplate(PROPS);
         server = MockRestServiceServer.bindTo(template).build();
         dasService = new DasService(PROPS, template, new ObjectMapper());
     }
@@ -84,7 +82,7 @@ public class DasServiceHeadersTest {
     @Test
     public void testInternalSecretIsOmittedWhenNotConfigured() {
         DasProperties noInternal = new DasProperties(
-                "http://localhost:5000", "test-secret", null,
+                "http://localhost:5000", null,"test-secret", null,
                 Duration.ofSeconds(5), Duration.ofSeconds(30));
         RestTemplate noInternalTemplate = new Config().createDasRestTemplate(noInternal);
         MockRestServiceServer noInternalServer = MockRestServiceServer.bindTo(noInternalTemplate).build();
