@@ -20,7 +20,7 @@ import java.util.Map;
 @Configuration
 public class ActuatorConfig {
 
-    private static final String VERSION_TAG = "depServiceVersion";
+    private static final String DEP_SERVICE = "depService";
 
     // Define the InfoContributor bean to fill in the missing info in /manage/info endpoint
     @Bean
@@ -42,9 +42,9 @@ public class ActuatorConfig {
                 versions.put(geonetwork.getName(),
                         Map.of("version", geonetwork.getVersion(), "description", geonetwork.getDescription()));
 
-                builder.withDetail(VERSION_TAG, versions);
+                builder.withDetail(DEP_SERVICE, versions);
             } catch (Exception e) {
-                builder.withDetail(VERSION_TAG, Map.of(
+                builder.withDetail(DEP_SERVICE, Map.of(
                         "status", "ERROR Query",
                         "error", e.getMessage()
                 ));
