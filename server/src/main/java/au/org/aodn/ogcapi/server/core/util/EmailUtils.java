@@ -12,8 +12,10 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Utility for email-related operations
@@ -107,7 +109,7 @@ public class EmailUtils {
     }
 
     /**
-     * Generate HTML for bounding box selections only (rectangles with 4 or fewer unique vertices).
+     * Generate HTML for bounding box selections only (axis-aligned rectangles).
      * Freeform polygons are handled separately by {@link #generatePolygonHtml}.
      *
      * @param multipolygon - the multipolygon object
@@ -133,7 +135,7 @@ public class EmailUtils {
                 List<List<BigDecimal>> uniqueVertices = removeClosingPoint(ring);
 
                 // Skip freeform polygons, those are handled by generatePolygonHtml
-                if (uniqueVertices.size() > 4) {
+                if (!isAxisAlignedRectangle(uniqueVertices)) {
                     continue;
                 }
 
@@ -183,7 +185,7 @@ public class EmailUtils {
     }
 
     /**
-     * Generate HTML for freeform polygon selections (more than 4 unique vertices).
+     * Generate HTML for freeform polygon selections (any shape that is not an axis-aligned rectangle).
      * Bounding boxes are handled separately by {@link #generateBboxHtml}.
      *
      * @param multipolygon - the multipolygon object
@@ -209,7 +211,7 @@ public class EmailUtils {
                 List<List<BigDecimal>> uniqueVertices = removeClosingPoint(ring);
 
                 // Skip bounding boxes, those are handled by generateBboxHtml
-                if (uniqueVertices.size() <= 4) {
+                if (isAxisAlignedRectangle(uniqueVertices)) {
                     continue;
                 }
 
@@ -236,6 +238,35 @@ public class EmailUtils {
      */
     protected static String formatCoordinate(double value) {
         return BigDecimal.valueOf(value).setScale(5, RoundingMode.HALF_UP).toPlainString();
+    }
+
+    /**
+     * True when the ring is exactly the axis-aligned rectangle of its own bounding box.
+     * Vertices may carry an elevation (a 3rd value); only lon/lat are compared.
+     *
+     * @param uniqueVertices - the ring's vertices with the closing point already removed
+     * @return true if the vertices form an axis-aligned rectangle
+     */
+    protected static boolean isAxisAlignedRectangle(List<List<BigDecimal>> uniqueVertices) {
+        Set<List<BigDecimal>> uniqueCorners = new HashSet<>();
+        Set<BigDecimal> uniqueLons = new HashSet<>();
+        Set<BigDecimal> uniqueLats = new HashSet<>();
+
+        for (List<BigDecimal> point : uniqueVertices) {
+            if (point.size() < 2) {
+                return false;
+            }
+            // stripTrailingZeros so 145.0 and 145.00 compare as the same value
+            BigDecimal lon = point.get(0).stripTrailingZeros();
+            BigDecimal lat = point.get(1).stripTrailingZeros();
+            uniqueCorners.add(List.of(lon, lat));
+            uniqueLons.add(lon);
+            uniqueLats.add(lat);
+        }
+
+        // 4 distinct corners drawn from only 2 longitudes x 2 latitudes can only
+        // be the min/max corner combinations of a rectangle.
+        return uniqueCorners.size() == 4 && uniqueLons.size() == 2 && uniqueLats.size() == 2;
     }
 
     /**
