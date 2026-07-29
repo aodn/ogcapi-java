@@ -402,7 +402,8 @@ public abstract class ElasticSearchBase {
         SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);
 
         if (simplified) {
-            return mapper.valueToTree(ExplainSimplifier.from(response));
+            // keep the request which carries the exact values of every terms clause
+            return mapper.valueToTree(ExplainSimplifier.from(response, toJsonNode(request)));
         }
 
         ObjectNode result = mapper.createObjectNode();

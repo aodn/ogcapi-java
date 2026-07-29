@@ -351,10 +351,8 @@ public enum CQLFields implements CQLFieldsInterface {
 
         /**
          * Builds a dataset-group query specifically for free-text search.
-         * Unquoted input includes both the complete normalized input and its
-         * individual words. For example, "csiro temperature" produces
-         * ["csiro temperature", "csiro", "temperature"].
-         *
+         * Unquoted input includes both the complete normalized input and its individual words.
+         * For example, "csiro temperature" => ["csiro temperature", "csiro", "temperature"].
          * Double-quoted free-text input is treated as one exact value.
          * Dataset-group CQL filters continue to use getPropertyEqualToQuery().
          */
