@@ -33,14 +33,26 @@ public class ActuatorConfig {
         return builder -> {
             try {
                 Map<String, Map<?,?>> versions = new HashMap<>();
-                versions.put(das.getName(),
-                        Map.of("version", das.getVersion(), "description", das.getDescription()));
-                versions.put(dda.getName(),
-                        Map.of("version", dda.getVersion(), "description", dda.getDescription()));
-                versions.put(esIndexer.getName(),
-                        Map.of("version", esIndexer.getVersion(), "description", esIndexer.getDescription()));
-                versions.put(geonetwork.getName(),
-                        Map.of("version", geonetwork.getVersion(), "description", geonetwork.getDescription()));
+
+                if(das.getName() != null) {
+                    versions.put(das.getName(),
+                            Map.of("version", das.getVersion(), "description", das.getDescription()));
+                }
+
+                if(dda.getName() != null) {
+                    versions.put(dda.getName(),
+                            Map.of("version", dda.getVersion(), "description", dda.getDescription()));
+                }
+
+                if(esIndexer.getName() != null) {
+                    versions.put(esIndexer.getName(),
+                            Map.of("version", esIndexer.getVersion(), "description", esIndexer.getDescription()));
+                }
+
+                if(geonetwork.getName() != null) {
+                    versions.put(geonetwork.getName(),
+                            Map.of("version", geonetwork.getVersion(), "description", geonetwork.getDescription()));
+                }
 
                 builder.withDetail(DEP_SERVICE, versions);
             } catch (Exception e) {
