@@ -14,16 +14,19 @@ public class DdaService implements ApplicationInfo {
 
     @Override
     public String getName() {
-        return this.appInfo.getOrDefault("application", Collections.emptyMap()).get("name").toString();
+        Object name = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("name", null);
+        return name != null ? name.toString() : null;
     }
 
     @Override
     public String getVersion() {
-        return this.appInfo.getOrDefault("application", Collections.emptyMap()).get("version").toString();
+        Object version = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("version", null);
+        return version != null ? version.toString() : null;
     }
 
     @Override
     public String getDescription() {
-        return this.appInfo.getOrDefault("application", Collections.emptyMap()).get("description").toString();
+        Object description = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("description", null);
+        return description != null ? description.toString() : null;
     }
 }
