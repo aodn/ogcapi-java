@@ -243,7 +243,7 @@ public class EmailUtilsTest {
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Subsetting for this collection"));
         assertTrue(result.contains("Bounding Box"));
-        assertTrue(result.contains("Time Range"));
+        assertTrue(result.contains("Date Range"));
     }
 
     /**
@@ -257,20 +257,20 @@ public class EmailUtilsTest {
 
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Subsetting for this collection"));
-        assertTrue(result.contains("Time Range"));
+        assertTrue(result.contains("Date Range"));
         assertFalse(result.contains("Bounding Box"));
     }
 
     /**
-     * Test that dates are shown in the Australian format (dd/MM/yyyy), matching the frontend
+     * Test that dates are shown as dd MMM yyyy, e.g. 05 Jan 2024
      */
     @Test
-    void testDatesUseAustralianFormat() {
+    void testDatesUseDayMonthYearFormat() {
         String result = EmailUtils.generateSubsettingSection(
                 "2024-01-05", "2024-12-31", null, new ObjectMapper()
         );
 
-        assertTrue(result.contains("05/01/2024 - 31/12/2024"), "Expected dd/MM/yyyy Australian date format");
+        assertTrue(result.contains("05 Jan 2024 - 31 Dec 2024"), "Expected dd MMM yyyy date format");
     }
 
     /**
@@ -288,7 +288,7 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Test that a default lower bound with a real upper bound still shows the time range
+     * Test that a default lower bound with a real upper bound still shows the date range
      */
     @Test
     void testDefaultLowerBoundWithRealEndShowsSection() {
@@ -297,8 +297,8 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Time Range"));
-        assertTrue(result.contains("01/01/1970 - 31/12/2024"));
+        assertTrue(result.contains("Date Range"));
+        assertTrue(result.contains("01 Jan 1970 - 31 Dec 2024"));
     }
 
     /**
@@ -328,7 +328,7 @@ public class EmailUtilsTest {
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Subsetting for this collection"));
         assertTrue(result.contains("Bounding Box"));
-        assertFalse(result.contains("Time Range"));
+        assertFalse(result.contains("Date Range"));
     }
 
     /**

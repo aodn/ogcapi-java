@@ -39,7 +39,7 @@ public class EmailUtils {
     }
 
     /**
-     * Generate the complete subsetting section HTML (header + bbox + time range)
+     * Generate the complete subsetting section HTML (header + bbox + date range)
      * Returns empty string if no subsetting is applied
      */
     public static String generateSubsettingSection(
@@ -49,7 +49,7 @@ public class EmailUtils {
             ObjectMapper objectMapper
     ) {
         try {
-            // Format dates in the Australian display format (dd/MM/yyyy), matching the frontend
+            // Format dates for display as dd MMM yyyy, e.g. 05 Jan 2024
             String displayStartDate = DatetimeUtils.toDisplayDate(startDate);
             String displayEndDate = DatetimeUtils.toDisplayDate(endDate);
 
@@ -90,12 +90,12 @@ public class EmailUtils {
                 html.append(buildBboxWrapper(polygonHtml));
             }
 
-            // Add spacing before time range if spatial sections exist
+            // Add spacing before date range if spatial sections exist
             if ((hasBboxes || hasPolygons) && hasDateSubsetting) {
                 html.append(buildSpacerSection());
             }
 
-            // Add time range section
+            // Add date range section
             if (hasDateSubsetting) {
                 html.append(buildTimeRangeWrapper(displayStartDate, displayEndDate));
             }
@@ -474,7 +474,7 @@ public class EmailUtils {
     }
 
     /**
-     * Build spacer section between bbox and time range
+     * Build spacer section between bbox and date range
      */
     private static String buildSpacerSection() {
         return "<div style=\"margin:0px auto;max-width:568px;\">" +
@@ -541,7 +541,7 @@ public class EmailUtils {
                 "<tr>" +
                 "<td align=\"left\" width=\"100%\">" +
                 "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 14px; font-weight: 500; line-height: 157%; text-align: left; color: #090c02\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">Time Range</p>" +
+                "<p style=\"Margin:0;mso-line-height-alt:22px;font-size:14px;line-height:157%;\">Date Range</p>" +
                 "</div>" +
                 "</td>" +
                 "</tr>" +
@@ -630,14 +630,18 @@ public class EmailUtils {
                 "<td align=\"center\" class=\"tr-0\" style=\"background:transparent;font-size:0;padding:0;word-break:break-word;\">" +
                 "<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" border=\"0\" style=\"color:#000000;line-height:normal;table-layout:fixed;width:100%;border:none;\">" +
                 "<tr>" +
-                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"32\">" +
+                // The polygon artwork carries more padding than the other icons,
+                // so it renders at 36px to look the same weight as them
+                "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"36\">" +
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
                 "<tr>" +
-                "<td align=\"left\" width=\"100%\"> <img alt width=\"32\" style=\"display:block;width:32px;height:32px;\" src=\"{{POLYGON_IMG}}\"></td>" +
+                "<td align=\"left\" width=\"100%\"> <img alt width=\"36\" style=\"display:block;width:36px;height:36px;\" src=\"{{POLYGON_IMG}}\"></td>" +
                 "</tr>" +
                 "</table>" +
                 "</td>" +
-                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"16\"></td>" +
+                // 12px keeps icon + gap at 48px, so the label lines up with the
+                // other sections despite the wider icon
+                "<td style=\"vertical-align:middle;color:transparent;font-size:0;\" width=\"12\"></td>" +
                 "<td align=\"left\" class=\"u\" style=\"padding:0;height:auto;word-wrap:break-word;vertical-align:middle;\" width=\"auto\">" +
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
                 "<tr>" +

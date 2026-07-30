@@ -1,14 +1,16 @@
 package au.org.aodn.ogcapi.server.core.util;
 
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.regex.Pattern;
 
 public class DatetimeUtils {
     private static final Pattern MM_YYYY_PATTERN = Pattern.compile("^(\\d{2})-(\\d{4})$");
     private static final Pattern YYYY_MM_DD_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final DateTimeFormatter ISO_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    // Australian display format (dd/MM/yyyy), matching the frontend DISPLAY_FORMAT
-    private static final DateTimeFormatter AU_DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    // Email display format (dd MMM yyyy), e.g. 05 Jan 2024; English so the month is stable across locales
+    private static final DateTimeFormatter DISPLAY_DATE_FORMAT =
+            DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH);
     public static final String NON_SPECIFIED_DATE = "non-specified";
     // Frontend default lower bound (dateDefault.min); its default upper bound is "now"
     public static final String DEFAULT_MIN_DATE = "1970-01-01";
@@ -44,7 +46,7 @@ public class DatetimeUtils {
     }
 
     /**
-     * Format an ISO date (yyyy-MM-dd) for display in the Australian format (dd/MM/yyyy).
+     * Format an ISO date (yyyy-MM-dd) for display as dd MMM yyyy, e.g. 05 Jan 2024.
      * Returns "" for null/empty/non-specified, and falls back to the raw input if it cannot be parsed.
      */
     public static String toDisplayDate(String isoDate) {
@@ -52,7 +54,7 @@ public class DatetimeUtils {
             return "";
         }
         try {
-            return java.time.LocalDate.parse(isoDate.trim(), ISO_DATE_FORMAT).format(AU_DISPLAY_DATE_FORMAT);
+            return java.time.LocalDate.parse(isoDate.trim(), ISO_DATE_FORMAT).format(DISPLAY_DATE_FORMAT);
         } catch (java.time.format.DateTimeParseException e) {
             return isoDate;
         }
