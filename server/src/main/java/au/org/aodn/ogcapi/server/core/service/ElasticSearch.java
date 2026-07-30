@@ -69,6 +69,12 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     @Value("${elasticsearch.semantic.min_input_length:3}")
     protected Integer semanticMinInputLength;
 
+    @Value("${elasticsearch.semantic.fragments:3}")
+    protected Integer semanticFragments;
+
+    @Value("${elasticsearch.semantic.max_suggestions:5}")
+    protected Integer semanticMaxSuggestions;
+
     public ElasticSearch(ElasticsearchClient client,
                          CacheNoLandGeometry cacheNoLandGeometry,
                          ObjectMapper mapper,
@@ -178,12 +184,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
-     * Rank vocab <i>terms</i> by meaning. The vocabs index carries a `concept_semantic` semantic_text
-     * field built from each concept's label, alternative labels, definition and narrower terms
-     * (es-indexer VocabModel.toConceptText), so Elasticsearch scores the concepts themselves rather
-     * than the records that happen to mention them - which is how "underwater device" reaches
-     * "Glider" through its definition, something no lexical query can do.
-     *
+     * Rank vocab terms by meaning similarity with query. Comparing with documents in vocabs index with the semantic_text
+     * field "concept_semantic", which is a list of combined text for per concepts (level-2 label) as "level-2 label's title.
+     * level-2 label's description. leaf labels' title".
+     * Using highlight option to get the real matched level-2 label.
      * @param input - The input text typed by the end user
      */
     protected List<Hit<JsonNode>> getSemanticTermHits(String input) throws IOException {
@@ -192,7 +196,12 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .size(semanticSize)
                 .query(q -> q.semantic(sm -> sm
                         .field(SEMANTIC_CONCEPT_FIELD)
-                        .query(input))));
+                        .query(input)))
+                .highlight(h -> h
+                        .fields(SEMANTIC_CONCEPT_FIELD, f -> f
+                                .numberOfFragments(semanticFragments)
+                                .preTags("")
+                                .postTags(""))));
 
         log.info("getSemanticTermHits | Elastic search payload {}", searchRequest);
         SearchResponse<JsonNode> response = esClient.search(searchRequest, JsonNode.class);
@@ -224,6 +233,43 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             }
         }
         return null;
+    }
+
+    /**
+     * concept_semantic holds one entry per narrower (level-2) concept, each starting with that
+     * concept's label (es-indexer VocabDto.getConceptSemantic). The semantic highlighter returns the
+     * matching entries ranked by score, so a fragment's leading segment names the concept that
+     * actually matched - not the broad level-1 category the document is keyed on.
+     */
+    protected List<String> extractSemanticLabels(Hit<JsonNode> hit) {
+        List<String> fragments = hit.highlight() == null
+                ? null
+                : hit.highlight().get(SEMANTIC_CONCEPT_FIELD);
+
+        if (fragments == null || fragments.isEmpty()) {
+            // No highlight - e.g. an index still carrying the old single-valued concept_semantic.
+            String label = extractLabel(hit.source());
+            return label == null ? List.of() : List.of(label);
+        }
+        return fragments.stream()
+                .map(this::toConceptLabel)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /**
+     * Leading segment of a concept_semantic entry, which is the concept's label. Split on ". "
+     * rather than "." so labels that carry an internal period (e.g. "No.3 buoy") survive.
+     */
+    protected String toConceptLabel(String fragment) {
+        if (fragment == null) {
+            return null;
+        }
+        // -1 means the fragment is a single segment and is the label; 0 means it opens with the
+        // separator, leaving no label at all - the two must not collapse into the same branch.
+        int end = fragment.indexOf(". ");
+        String label = (end >= 0 ? fragment.substring(0, end) : fragment).trim();
+        return label.isBlank() ? null : label;
     }
 
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
@@ -268,8 +314,11 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             try {
                 Set<String> semanticSuggestions = this.getSemanticTermHits(input)
                         .stream()
-                        .map(hit -> extractLabel(hit.source()))
-                        .filter(Objects::nonNull)
+                        // Hit-major order: docs by score, then concepts within a doc by chunk score.
+                        .flatMap(hit -> extractSemanticLabels(hit).stream())
+                        // distinct before limit so duplicates do not consume suggestion slots
+                        .distinct()
+                        .limit(semanticMaxSuggestions)
                         // LinkedHashSet so the relevance order from Elastic survives into the response
                         .collect(Collectors.toCollection(LinkedHashSet::new));
 

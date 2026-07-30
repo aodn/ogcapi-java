@@ -292,7 +292,7 @@ public class ElasticSearchTest {
         private SearchRequest explainRequest;
 
         private CapturingElasticSearch(ElasticsearchClient client) {
-            super(client, null, new ObjectMapper(), null, "test-index", 100, 10);
+            super(client, null, new ObjectMapper(), "test-index", 100, 10);
             this.searchAfterSplitRegex = "\\|\\|";
         }
 
