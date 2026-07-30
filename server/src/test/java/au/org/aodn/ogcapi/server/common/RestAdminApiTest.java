@@ -198,6 +198,30 @@ public class RestAdminApiTest extends BaseTestClass {
     }
 
     @Test
+    public void explainSimplifiedFormatSeparatesTheDatasetGroupTerms() throws IOException {
+        // the record sits in the "imos" dataset group, the free text search adds a terms clause
+        // holding the whole input plus each of its words
+        insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
+
+        URI simpleUri = explainUri("q", "imos temperature", "format", "simple");
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        List<String> descriptions = fieldValues(
+                Objects.requireNonNull(response.getBody()).path("hits").path(0).path("filters"),
+                "description");
+
+        // elastic search joins the values with a space, which reads as one run of words
+        assertTrue(descriptions.stream()
+                .noneMatch(d -> d.contains("summaries.dataset_group:(imos imos temperature temperature")));
+        // the boost is left out of the assertion, its value is still being tuned
+        assertTrue(descriptions.stream()
+                        .anyMatch(d -> d.startsWith("summaries.dataset_group:(imos,imos temperature,temperature)^")),
+                "the dataset group values must be separated, got " + descriptions);
+    }
+
+    @Test
     public void explainSimplifiedFormatReportsQuotedPhraseMatches() throws IOException {
         insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 

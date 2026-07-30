@@ -1,17 +1,68 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.ErrorCode;
+import au.org.aodn.ogcapi.server.core.service.das.DasService;
+import au.org.aodn.ogcapi.server.core.service.dda.DdaService;
+import au.org.aodn.ogcapi.server.core.service.geonetwork.Geonetwork;
+import au.org.aodn.ogcapi.server.core.service.indexer.EsIndexer;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.HealthStatus;
 import co.elastic.clients.elasticsearch.indices.ExistsRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.boot.actuate.health.HealthIndicator;
+import org.springframework.boot.actuate.info.InfoContributor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import java.util.HashMap;
+import java.util.Map;
 
 @Configuration
 public class ActuatorConfig {
+
+    private static final String DEP_SERVICE = "depService";
+
+    // Define the InfoContributor bean to fill in the missing info in /manage/info endpoint
+    @Bean
+    public InfoContributor externalApiInfoContributor(
+            DasService das,
+            DdaService dda,
+            EsIndexer esIndexer,
+            Geonetwork geonetwork
+    ) {
+        return builder -> {
+            try {
+                Map<String, Map<?,?>> versions = new HashMap<>();
+
+                if(das.getName() != null) {
+                    versions.put(das.getName(),
+                            Map.of("version", das.getVersion(), "description", das.getDescription()));
+                }
+
+                if(dda.getName() != null) {
+                    versions.put(dda.getName(),
+                            Map.of("version", dda.getVersion(), "description", dda.getDescription()));
+                }
+
+                if(esIndexer.getName() != null) {
+                    versions.put(esIndexer.getName(),
+                            Map.of("version", esIndexer.getVersion(), "description", esIndexer.getDescription()));
+                }
+
+                if(geonetwork.getName() != null) {
+                    versions.put(geonetwork.getName(),
+                            Map.of("version", geonetwork.getVersion(), "description", geonetwork.getDescription()));
+                }
+
+                builder.withDetail(DEP_SERVICE, versions);
+            } catch (Exception e) {
+                builder.withDetail(DEP_SERVICE, Map.of(
+                        "status", "ERROR Query",
+                        "error", e.getMessage()
+                ));
+            }
+        };
+    }
 
     @Bean
     public HealthIndicator ogcApiHealth(

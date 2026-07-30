@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
-import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,7 +42,7 @@ public class DasServiceTest {
         httpClient = mock(RestTemplate.class);
 
         DasProperties config = new DasProperties(
-                HOST, "test-secret", "",
+                HOST, null,"test-secret", "",
                 Duration.ofSeconds(5), Duration.ofSeconds(30)
         );
 
@@ -149,7 +148,7 @@ public class DasServiceTest {
         assertEquals("{\"estimated_output_bytes\":123}", result, "The estimate dict should be unwrapped from the stream");
 
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+        ArgumentCaptor<?> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
         ArgumentCaptor<Map<String, String>> uriVarsCaptor = ArgumentCaptor.forClass(Map.class);
         verify(httpClient).postForObject(urlCaptor.capture(), entityCaptor.capture(), eq(String.class), uriVarsCaptor.capture());
 

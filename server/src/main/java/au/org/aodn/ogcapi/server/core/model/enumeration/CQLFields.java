@@ -10,6 +10,9 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.stream.Stream;
 
 /**
  * We do not want to expose the internal field to outsider, the CQL field in the
@@ -27,12 +30,11 @@ public enum CQLFields implements CQLFieldsInterface {
                         null,
                         null),
         dataset_group(
-                        StacSummeries.DatasetGroup.searchField,
-                        StacSummeries.DatasetGroup.displayField,
-                        (literal) -> TermsQuery.of(t -> t.field(StacSummeries.DatasetGroup.searchField)
-                                        .terms(tf -> tf.value(List.of(FieldValue.of(literal.toLowerCase().trim())))))
-                                        ._toQuery(),
-                        null),
+                StacSummeries.DatasetGroup.searchField,
+                StacSummeries.DatasetGroup.displayField,
+                literal -> datasetGroupTermsQuery(List.of(
+                        normalizeDatasetGroupTerm(literal))),
+                null),
         update_frequency(
                         StacSummeries.UpdateFrequency.searchField,
                         StacSummeries.UpdateFrequency.displayField,
@@ -327,6 +329,47 @@ public enum CQLFields implements CQLFieldsInterface {
                                                 .source("return doc.containsKey('" + vocabField + ".keyword') && "
                                                                 + "!doc['" + vocabField + ".keyword'].empty ? 1 : 0;"))
                                 .order(order));
+        }
+
+        private static String normalizeDatasetGroupTerm(String value) {
+                return value.toLowerCase(Locale.ROOT).trim();
+        }
+
+        private static Query datasetGroupTermsQuery(List<String> values) {
+                List<FieldValue> terms = values.stream()
+                        .filter(value -> !value.isBlank())
+                        .distinct()
+                        .map(FieldValue::of)
+                        .toList();
+
+                return TermsQuery.of(query -> query
+                                .field(StacSummeries.DatasetGroup.searchField)
+                                .terms(field -> field.value(terms))
+                                .boost(100.0F))
+                        ._toQuery();
+        }
+
+        /**
+         * Builds a dataset-group query specifically for free-text search.
+         * Unquoted input includes both the complete normalized input and its individual words.
+         * For example, "csiro temperature" => ["csiro temperature", "csiro", "temperature"].
+         * Double-quoted free-text input is treated as one exact value.
+         * Dataset-group CQL filters continue to use getPropertyEqualToQuery().
+         */
+        public static Query getDatasetGroupTextSearchQuery(
+                String literal,
+                boolean isExact) {
+
+                String normalized = normalizeDatasetGroupTerm(literal);
+
+                List<String> candidates = isExact
+                        ? List.of(normalized)
+                        : Stream.concat(
+                                Stream.of(normalized),
+                                Arrays.stream(normalized.split("\\s+")))
+                        .toList();
+
+                return datasetGroupTermsQuery(candidates);
         }
 
         @Override

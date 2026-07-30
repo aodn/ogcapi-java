@@ -1,8 +1,8 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
-import au.org.aodn.ogcapi.server.core.configuration.DasProperties;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
+import au.org.aodn.ogcapi.server.core.service.ApplicationInfo;
 import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,18 +11,18 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service("DataAccessService")
-public class DasService {
+public class DasService implements ApplicationInfo {
 
     protected final DasProperties dasProperties;
-
     protected final RestTemplate httpClient;
-
     protected final ObjectMapper objectMapper;
+    protected final Map<String, Map<?,?>> appInfo;
 
     public DasService(
             DasProperties dasProperties,
@@ -31,6 +31,7 @@ public class DasService {
         this.dasProperties = dasProperties;
         this.httpClient = httpClient;
         this.objectMapper = objectMapper;
+        this.appInfo = queryInfo(httpClient, dasProperties.host(), dasProperties.infoPath());
     }
 
     /**
@@ -129,5 +130,23 @@ public class DasService {
                 .status(response.getStatusCode())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(response.getBody());
+    }
+
+    @Override
+    public String getName() {
+        Object name = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("name", null);
+        return name != null ? name.toString() : null;
+    }
+
+    @Override
+    public String getVersion() {
+        Object version = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("version", null);
+        return version != null ? version.toString() : null;
+    }
+
+    @Override
+    public String getDescription() {
+        Object description = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("description", null);
+        return description != null ? description.toString() : null;
     }
 }
