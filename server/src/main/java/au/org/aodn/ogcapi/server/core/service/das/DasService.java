@@ -40,7 +40,7 @@ public class DasService implements ApplicationInfo {
      * expansion (which would throw). Any path variables in {@code path} are supplied via
      * {@code pathVariables}.
      */
-    private byte[] getFeatureCollection(String path, String start, String end, Map<String, String> pathVariables) {
+    private ResponseEntity<byte[]> getFeatureCollection(String path, String start, String end, Map<String, String> pathVariables) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasProperties.host() + path);
         Map<String, String> params = new HashMap<>(pathVariables);
 
@@ -54,38 +54,38 @@ public class DasService implements ApplicationInfo {
         }
 
         String url = builder.encode().toUriString();
-        return httpClient.getForObject(url, byte[].class, params);
+        return httpClient.getForEntity(url, byte[].class, params);
     }
 
-    public byte[] getWaveBuoysBetweenDates(String start, String end) {
+    public ResponseEntity<byte[]> getWaveBuoysBetweenDates(String start, String end) {
         return getFeatureCollection("/api/v1/das/data/feature-collection/wave-buoy", start, end, Map.of());
     }
 
-    public byte[] getWaveBuoysLatestAvailableDate() {
+    public ResponseEntity<byte[]> getWaveBuoysLatestAvailableDate() {
         String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/wave-buoy/latest")
                 .encode()
                 .toUriString();
 
-        return httpClient.getForObject(waveBuoysUrlTemplate, byte[].class);
+        return httpClient.getForEntity(waveBuoysUrlTemplate, byte[].class);
     }
 
-    public byte[] getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
+    public ResponseEntity<byte[]> getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
         return getFeatureCollection("/api/v1/das/data/feature-collection/wave-buoy/{buoy}", startDateTime, endDateTime, Map.of("buoy", buoy));
     }
 
-    public byte[] getMooringsBetweenDates(String start, String end) {
+    public ResponseEntity<byte[]> getMooringsBetweenDates(String start, String end) {
         return getFeatureCollection("/api/v1/das/data/feature-collection/mooring", start, end, Map.of());
     }
 
-    public byte[] getMooringsLatestAvailableDate() {
+    public ResponseEntity<byte[]> getMooringsLatestAvailableDate() {
         String mooringsUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/mooring/latest")
                 .encode()
                 .toUriString();
 
-        return httpClient.getForObject(mooringsUrlTemplate, byte[].class);
+        return httpClient.getForEntity(mooringsUrlTemplate, byte[].class);
     }
 
-    public byte[] getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
+    public ResponseEntity<byte[]> getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
         return getFeatureCollection("/api/v1/das/data/feature-collection/mooring/{mooring}", startDateTime, endDateTime, Map.of("mooring", mooring));
     }
 

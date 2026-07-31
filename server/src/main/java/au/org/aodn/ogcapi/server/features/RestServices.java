@@ -285,6 +285,17 @@ public class RestServices extends OGCApiService {
     }
 
     /**
+     * Wraps a DAS response for return to the client, preserving the upstream status,
+     * headers (e.g. cache/rate-limit headers), and body rather than just the body.
+     */
+    private ResponseEntity<?> forwardDasResponse(ResponseEntity<byte[]> dasResponse) {
+        return ResponseEntity
+                .status(dasResponse.getStatusCode())
+                .headers(dasResponse.getHeaders())
+                .body(dasResponse.getBody());
+    }
+
+    /**
      * Returns wave buoy sites recorded within the given UTC date range.
      *
      * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
@@ -296,10 +307,7 @@ public class RestServices extends OGCApiService {
         }
 
         try {
-            return ResponseEntity
-                    .ok()
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoysBetweenDates(startDateTime, endDateTime));
+            return forwardDasResponse(dasService.getWaveBuoysBetweenDates(startDateTime, endDateTime));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoys data: {}", e.getMessage());
@@ -325,10 +333,7 @@ public class RestServices extends OGCApiService {
         }
 
         try {
-            return ResponseEntity
-                    .ok()
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoyDetailsBetweenDates(startDateTime, endDateTime, buoy));
+            return forwardDasResponse(dasService.getWaveBuoyDetailsBetweenDates(startDateTime, endDateTime, buoy));
 
         } catch (Exception e) {
             log.error("Error fetching wave buoy historical data: {}", e.getMessage());
@@ -342,10 +347,7 @@ public class RestServices extends OGCApiService {
      */
     public ResponseEntity<?> getWaveBuoysLatestAvailableDate() {
         try {
-            return ResponseEntity
-                    .ok()
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getWaveBuoysLatestAvailableDate());
+            return forwardDasResponse(dasService.getWaveBuoysLatestAvailableDate());
 
         } catch (Exception e) {
             log.error("Error fetching wave buoys latest date: {}", e.getMessage());
@@ -365,10 +367,7 @@ public class RestServices extends OGCApiService {
         }
 
         try {
-            return ResponseEntity
-                    .ok()
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getMooringsBetweenDates(startDateTime, endDateTime));
+            return forwardDasResponse(dasService.getMooringsBetweenDates(startDateTime, endDateTime));
 
         } catch (Exception e) {
             log.error("Error fetching moorings data: {}", e.getMessage());
@@ -392,10 +391,7 @@ public class RestServices extends OGCApiService {
         }
 
         try {
-            return ResponseEntity
-                    .ok()
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getMooringDetailsBetweenDates(startDateTime, endDateTime, mooring));
+            return forwardDasResponse(dasService.getMooringDetailsBetweenDates(startDateTime, endDateTime, mooring));
 
         } catch (Exception e) {
             log.error("Error fetching mooring historical data: {}", e.getMessage());
@@ -408,10 +404,7 @@ public class RestServices extends OGCApiService {
      */
     public ResponseEntity<?> getMooringsLatestAvailableDate() {
         try {
-            return ResponseEntity
-                    .ok()
-                    .header("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                    .body(dasService.getMooringsLatestAvailableDate());
+            return forwardDasResponse(dasService.getMooringsLatestAvailableDate());
 
         } catch (Exception e) {
             log.error("Error fetching moorings latest date: {}", e.getMessage());
