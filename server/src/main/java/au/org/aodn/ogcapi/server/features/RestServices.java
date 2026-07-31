@@ -33,6 +33,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -296,6 +297,18 @@ public class RestServices extends OGCApiService {
     }
 
     /**
+     * RestTemplate throws on any non-2xx DAS response rather than returning it, so the
+     * error status/headers/body have to be pulled off the exception to forward them to
+     * the client instead of collapsing every DAS error into a 500.
+     */
+    private ResponseEntity<?> forwardDasError(HttpStatusCodeException e) {
+        return ResponseEntity
+                .status(e.getStatusCode())
+                .headers(e.getResponseHeaders())
+                .body(e.getResponseBodyAsByteArray());
+    }
+
+    /**
      * Returns wave buoy sites recorded within the given UTC date range.
      *
      * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
@@ -309,6 +322,9 @@ public class RestServices extends OGCApiService {
         try {
             return forwardDasResponse(dasService.getWaveBuoysBetweenDates(startDateTime, endDateTime));
 
+        } catch (HttpStatusCodeException e) {
+            log.error("DAS returned an error fetching wave buoys data: {}", e.getStatusCode());
+            return forwardDasError(e);
         } catch (Exception e) {
             log.error("Error fetching wave buoys data: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -335,6 +351,9 @@ public class RestServices extends OGCApiService {
         try {
             return forwardDasResponse(dasService.getWaveBuoyDetailsBetweenDates(startDateTime, endDateTime, buoy));
 
+        } catch (HttpStatusCodeException e) {
+            log.error("DAS returned an error fetching wave buoy historical data: {}", e.getStatusCode());
+            return forwardDasError(e);
         } catch (Exception e) {
             log.error("Error fetching wave buoy historical data: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -349,6 +368,9 @@ public class RestServices extends OGCApiService {
         try {
             return forwardDasResponse(dasService.getWaveBuoysLatestAvailableDate());
 
+        } catch (HttpStatusCodeException e) {
+            log.error("DAS returned an error fetching wave buoys latest date: {}", e.getStatusCode());
+            return forwardDasError(e);
         } catch (Exception e) {
             log.error("Error fetching wave buoys latest date: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -369,6 +391,9 @@ public class RestServices extends OGCApiService {
         try {
             return forwardDasResponse(dasService.getMooringsBetweenDates(startDateTime, endDateTime));
 
+        } catch (HttpStatusCodeException e) {
+            log.error("DAS returned an error fetching moorings data: {}", e.getStatusCode());
+            return forwardDasError(e);
         } catch (Exception e) {
             log.error("Error fetching moorings data: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -393,6 +418,9 @@ public class RestServices extends OGCApiService {
         try {
             return forwardDasResponse(dasService.getMooringDetailsBetweenDates(startDateTime, endDateTime, mooring));
 
+        } catch (HttpStatusCodeException e) {
+            log.error("DAS returned an error fetching mooring historical data: {}", e.getStatusCode());
+            return forwardDasError(e);
         } catch (Exception e) {
             log.error("Error fetching mooring historical data: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();
@@ -406,6 +434,9 @@ public class RestServices extends OGCApiService {
         try {
             return forwardDasResponse(dasService.getMooringsLatestAvailableDate());
 
+        } catch (HttpStatusCodeException e) {
+            log.error("DAS returned an error fetching moorings latest date: {}", e.getStatusCode());
+            return forwardDasError(e);
         } catch (Exception e) {
             log.error("Error fetching moorings latest date: {}", e.getMessage());
             return ResponseEntity.internalServerError().build();

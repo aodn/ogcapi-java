@@ -16,8 +16,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Map;
@@ -130,6 +132,23 @@ public class RestServicesTest {
         ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    public void testGetWaveBuoysBetweenDatesDasErrorIsForwardedNotMaskedAs500() {
+        // DAS itself returning e.g. a 404/502 must reach the client as that status with its
+        // body, not get collapsed into a generic 500 by the catch-all error handler.
+        byte[] errorBody = "{\"message\":\"upstream unavailable\"}".getBytes();
+        HttpHeaders dasErrorHeaders = new HttpHeaders();
+        dasErrorHeaders.set("Content-Type", "application/json");
+        HttpClientErrorException dasError = HttpClientErrorException.create(
+                HttpStatus.BAD_GATEWAY, "Bad Gateway", dasErrorHeaders, errorBody, null);
+        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenThrow(dasError);
+
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
+
+        assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
+        assertArrayEquals(errorBody, (byte[]) response.getBody());
     }
 
     // ----- wave_buoys_latest_available_date -----
