@@ -33,9 +33,9 @@ elasticsearch:
     # number of characters after user input to execute semantic query
     min_input_length: 3
     # highlight fragments per doc - one per matching level-2 concept
-    fragments: 3
+    fragments: 2
     # cap on the flattened suggestion list
-    max_suggestions: 5
+    max_suggestions: 3
 
 aws:
   region: ap-southeast-2

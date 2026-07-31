@@ -14,6 +14,7 @@ import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -44,6 +45,13 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     // the semantic_text field on the vocabs index
     protected static final String SEMANTIC_CONCEPT_FIELD = "concept_semantic";
+
+    // marks a vocabs doc as an organisation one - see getSemanticTermHits for why they are skipped
+    protected static final String ORGANISATION_VOCAB_FIELD = "organisation_vocab";
+
+    // a vocabs doc holds exactly one of these (es-indexer VocabDto)
+    protected static final List<String> VOCAB_TYPES =
+            List.of("parameter_vocab", "platform_vocab", ORGANISATION_VOCAB_FIELD);
 
     @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
     protected String searchAsYouTypeFieldsPath;
@@ -194,12 +202,18 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         SearchRequest searchRequest = SearchRequest.of(s -> s
                 .index(vocabsIndexName)
                 .size(semanticSize)
-                .query(q -> q.semantic(sm -> sm
-                        .field(SEMANTIC_CONCEPT_FIELD)
-                        .query(input)))
+                .query(q -> q.bool(b -> b
+                        .must(m -> m.semantic(sm -> sm
+                                .field(SEMANTIC_CONCEPT_FIELD)
+                                .query(input)))
+                        .mustNot(mn -> mn.exists(e -> e.field(ORGANISATION_VOCAB_FIELD)))))
                 .highlight(h -> h
                         .fields(SEMANTIC_CONCEPT_FIELD, f -> f
                                 .numberOfFragments(semanticFragments)
+                                // The highlighter picks the top fragments by score but hands them
+                                // back in field order unless asked otherwise, so without this the
+                                // first fragment is merely the earliest concept, not the best match.
+                                .order(HighlighterOrder.Score)
                                 .preTags("")
                                 .postTags(""))));
 
@@ -219,7 +233,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         if (source == null) {
             return null;
         }
-        for (String type : List.of("parameter_vocab", "platform_vocab", "organisation_vocab")) {
+        for (String type : VOCAB_TYPES) {
             JsonNode vocab = source.get(type);
             if (vocab != null) {
                 JsonNode displayLabel = vocab.get("display_label");
@@ -258,6 +272,80 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
+     * Definitions of every concept in a vocabs doc, keyed by the name a suggestion can carry, so the
+     * portal can explain a semantic suggestion on hover.
+     * <p>
+     * Read from the doc rather than parsed out of the highlight fragment. A fragment reads
+     * "label. definition. leaf labels", but definitions contain ". " of their own ("(e.g. Autosub
+     * Glider)"), so splitting one apart is guesswork - the doc has the fields verbatim.
+     */
+    protected Map<String, String> extractConceptDefinitions(JsonNode source) {
+        if (source == null) {
+            return Map.of();
+        }
+        Map<String, String> definitions = new HashMap<>();
+        for (String type : VOCAB_TYPES) {
+            JsonNode vocab = source.get(type);
+            if (vocab == null) {
+                continue;
+            }
+            // The level-1 category, for the no-highlight path where extractLabel names the doc itself.
+            putDefinition(definitions, vocab);
+
+            JsonNode narrower = vocab.get("narrower");
+            if (narrower != null && narrower.isArray()) {
+                narrower.forEach(concept -> putDefinition(definitions, concept));
+            }
+        }
+        return definitions;
+    }
+
+    /**
+     * Index one concept's definition under both of its names: a highlight fragment opens with
+     * `label`, while {@link #extractLabel} emits `display_label`, and either can end up being the
+     * suggested string.
+     */
+    protected void putDefinition(Map<String, String> definitions, JsonNode concept) {
+        JsonNode definition = concept.get("definition");
+        if (definition == null || definition.asText().isBlank()) {
+            return;
+        }
+        for (String key : List.of("label", "display_label")) {
+            JsonNode name = concept.get(key);
+            if (name != null && !name.asText().isBlank()) {
+                definitions.putIfAbsent(name.asText(), definition.asText());
+            }
+        }
+    }
+
+    /**
+     * Flatten the per-document concept labels round-robin: every document's best concept, then every
+     * document's second best, and so on.
+     * <p>
+     * Concatenating the documents instead would let the third-best concept of the top document
+     * outrank the best concept of the second, and would let the first two documents consume every
+     * suggestion slot - the document-level version of that is the v1 bug this feature was rebuilt to
+     * fix. A true global sort is not available: highlight fragments carry no score in the response,
+     * so rank within a document is the only proxy there is.
+     *
+     * @param labelsPerDoc - concept labels per hit, hits in _score order, labels in fragment order
+     */
+    protected List<String> interleave(List<List<String>> labelsPerDoc) {
+        int deepest = labelsPerDoc.stream().mapToInt(List::size).max().orElse(0);
+
+        List<String> flattened = new ArrayList<>();
+        for (int rank = 0; rank < deepest; rank++) {
+            for (List<String> labels : labelsPerDoc) {
+                // A document that ran out of concepts simply stops contributing at this rank.
+                if (rank < labels.size()) {
+                    flattened.add(labels.get(rank));
+                }
+            }
+        }
+        return flattened;
+    }
+
+    /**
      * Leading segment of a concept_semantic entry, which is the concept's label. Split on ". "
      * rather than "." so labels that carry an internal period (e.g. "No.3 buoy") survive.
      */
@@ -273,7 +361,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        Map<String, Set<String>> searchSuggestions = new HashMap<>();
+        // Object rather than Set<String>: every key is a set of suggestions except
+        // semantic_definitions, which is a label -> definition map.
+        Map<String, Object> searchSuggestions = new HashMap<>();
         List<Hit<SearchSuggestionsModel>> suggestion = this.getSuggestionsByField(input, cql, coor);
         // extract parameter vocab suggestions
         Set<String> parameterVocabSuggestions = suggestion
@@ -312,10 +402,15 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         // Semantic suggestions - vocab terms ranked by meaning rather than by spelling.
         if (Boolean.TRUE.equals(semanticEnabled) && isSemanticInputLongEnough(input)) {
             try {
-                Set<String> semanticSuggestions = this.getSemanticTermHits(input)
+                List<Hit<JsonNode>> semanticHits = this.getSemanticTermHits(input);
+
+                List<List<String>> labelsPerDoc = semanticHits
                         .stream()
-                        // Hit-major order: docs by score, then concepts within a doc by chunk score.
-                        .flatMap(hit -> extractSemanticLabels(hit).stream())
+                        .map(this::extractSemanticLabels)
+                        .toList();
+
+                Set<String> semanticSuggestions = interleave(labelsPerDoc)
+                        .stream()
                         // distinct before limit so duplicates do not consume suggestion slots
                         .distinct()
                         .limit(semanticMaxSuggestions)
@@ -323,6 +418,16 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         .collect(Collectors.toCollection(LinkedHashSet::new));
 
                 searchSuggestions.put("suggested_semantic", semanticSuggestions);
+
+                // Definitions of the terms actually suggested, so the portal can explain one on
+                // hover. Only those - the docs carry definitions for concepts that never made the
+                // cut, and shipping them would dwarf the suggestions themselves.
+                Map<String, String> definitions = new HashMap<>();
+                semanticHits.forEach(hit ->
+                        extractConceptDefinitions(hit.source()).forEach(definitions::putIfAbsent));
+                definitions.keySet().retainAll(semanticSuggestions);
+
+                searchSuggestions.put("semantic_definitions", definitions);
             } catch (Exception e) {
                 // Covers the case where the index was built without the semantic fields - the
                 // dropdown degrades to lexical suggestions rather than the request failing.
