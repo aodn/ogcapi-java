@@ -46,10 +46,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     // the semantic_text field on the vocabs index
     protected static final String SEMANTIC_CONCEPT_FIELD = "concept_semantic";
 
-    // marks a vocabs doc as an organisation one - see getSemanticTermHits for why they are skipped
+    // organisation vocabs are skipped from sementic query
     protected static final String ORGANISATION_VOCAB_FIELD = "organisation_vocab";
 
-    // a vocabs doc holds exactly one of these (es-indexer VocabDto)
+    // a vocabs doc holds exactly one of these
     protected static final List<String> VOCAB_TYPES =
             List.of("parameter_vocab", "platform_vocab", ORGANISATION_VOCAB_FIELD);
 
@@ -184,17 +184,15 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
-     * Only conduct semantic search if the input is long enough,
-     * the min_length is defined in application.yaml min_input_length: 3
+     * Only conduct semantic search if the input is long enough
      * */
     protected boolean isSemanticInputLongEnough(String input) {
         return input != null && input.trim().length() >= semanticMinInputLength;
     }
 
     /**
-     * Rank vocab terms by meaning similarity with query. Comparing with documents in vocabs index with the semantic_text
-     * field "concept_semantic", which is a list of combined text for per concepts (level-2 label) as "level-2 label's title.
-     * level-2 label's description. leaf labels' title".
+     * Rank vocab terms by meaning similarity with query. Comparing with documents in vocabs index with the semantic_text field "concept_semantic",
+     * which is a list of combined text for per concepts (level-2 label) as "level-2 label's title. level-2 label's description. leaf labels' title".
      * Using highlight option to get the real matched level-2 label.
      * @param input - The input text typed by the end user
      */
@@ -210,9 +208,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .highlight(h -> h
                         .fields(SEMANTIC_CONCEPT_FIELD, f -> f
                                 .numberOfFragments(semanticFragments)
-                                // The highlighter picks the top fragments by score but hands them
-                                // back in field order unless asked otherwise, so without this the
-                                // first fragment is merely the earliest concept, not the best match.
+                                // The highlighter picks the top fragments by score but hands them back in field order unless asked otherwise,
+                                // so add highligherorder to makesure the fragment is ordered by score.
                                 .order(HighlighterOrder.Score)
                                 .preTags("")
                                 .postTags(""))));
@@ -225,9 +222,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
-     * A vocabs doc holds exactly one of the three concept types (see es-indexer VocabDto), so the
-     * first one present is the one to label. `display_label` is the human-facing form and matches
-     * what a record's summaries.*_vocabs contain; `label` covers concepts that lack one.
+     * A vocabs doc holds exactly one of the three concept types (see es-indexer VocabDto), so the first one present is the one to label.
+     * `display_label` is the human-facing form and matches what a record's summaries.*_vocabs contain; If it's empty return `label`.
      */
     protected String extractLabel(JsonNode source) {
         if (source == null) {
@@ -250,9 +246,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
-     * concept_semantic holds one entry per narrower (level-2) concept, each starting with that
-     * concept's label (es-indexer VocabDto.getConceptSemantic). The semantic highlighter returns the
-     * matching entries ranked by score, so a fragment's leading segment names the concept that actually matched.
+     * concept_semantic holds one entry per narrower (level-2) concept, each starting with that concept's label (es-indexer VocabDto.getConceptSemantic).
+     * The semantic highlighter returns the matching entries ranked by score, so a fragment's leading segment names the concept that actually matched.
      */
     protected List<String> extractSemanticLabels(Hit<JsonNode> hit) {
         List<String> fragments = hit.highlight() == null
@@ -271,14 +266,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
-     * Flatten the per-document concept labels round-robin: every document's best concept, then every
-     * document's second best, and so on.
-     * <p>
-     * Concatenating the documents instead would let the third-best concept of the top document
-     * outrank the best concept of the second, and would let the first two documents consume every
-     * suggestion slot - the document-level version of that is the v1 bug this feature was rebuilt to
-     * fix. A true global sort is not available: highlight fragments carry no score in the response,
-     * so rank within a document is the only proxy there is.
+     * Flatten the per-document concept labels round-robin: every document's best concept, then every document's second best, and so on.
+     * Determined by semantic.size (number of documents should return) and semantic.fragments (number of best concpets should return for each documents)
      *
      * @param labelsPerDoc - concept labels per hit, hits in _score order, labels in fragment order
      */
