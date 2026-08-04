@@ -8,6 +8,15 @@ ogcapi:
   debug:
     elasticsearch-explain-enabled: true
 
+data-discovery-ai:
+  host: https://data-discovery-ai.edge.aodn.org.au
+
+es-indexer:
+  host: https://es-indexer.edge.aodn.org.au
+
+geonetwork4:
+  host: https://geonetwork.edge.aodn.org.au
+
 elasticsearch:
   semantic:
     enabled: false
