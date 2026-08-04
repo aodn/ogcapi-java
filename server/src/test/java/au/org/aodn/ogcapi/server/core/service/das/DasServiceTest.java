@@ -8,6 +8,7 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -48,17 +49,17 @@ public class DasServiceTest {
 
         dasService = new DasService(config, httpClient, new ObjectMapper());
 
-        when(httpClient.getForObject(anyString(), eq(byte[].class), anyMap()))
-                .thenReturn("ok".getBytes());
-        when(httpClient.getForObject(anyString(), eq(byte[].class)))
-                .thenReturn("ok".getBytes());
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(ResponseEntity.ok("ok".getBytes()));
+        when(httpClient.getForEntity(anyString(), eq(byte[].class)))
+                .thenReturn(ResponseEntity.ok("ok".getBytes()));
     }
 
     @SuppressWarnings("unchecked")
     private CapturedRequest captureMapRequest() {
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         ArgumentCaptor<Map<String, String>> mapCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(httpClient).getForObject(urlCaptor.capture(), eq(byte[].class), mapCaptor.capture());
+        verify(httpClient).getForEntity(urlCaptor.capture(), eq(byte[].class), mapCaptor.capture());
         return new CapturedRequest(urlCaptor.getValue(), mapCaptor.getValue());
     }
 
@@ -119,7 +120,7 @@ public class DasServiceTest {
         dasService.getWaveBuoysLatestAvailableDate();
 
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(httpClient).getForObject(urlCaptor.capture(), eq(byte[].class));
+        verify(httpClient).getForEntity(urlCaptor.capture(), eq(byte[].class));
         assertEquals(HOST + "/api/v1/das/data/feature-collection/wave-buoy/latest", urlCaptor.getValue());
     }
 

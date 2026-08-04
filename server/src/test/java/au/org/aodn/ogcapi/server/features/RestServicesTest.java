@@ -16,8 +16,10 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Map;
@@ -65,20 +67,32 @@ public class RestServicesTest {
 
     @Test
     public void testGetWaveBuoysBetweenDatesSuccess() {
-        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenReturn(mockResponse);
+        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenReturn(ResponseEntity.ok(body));
 
         ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(body, response.getBody());
+    }
+
+    @Test
+    public void testGetWaveBuoysBetweenDatesForwardsDasHeaders() {
+        // Headers set by DAS (e.g. caching/rate-limit headers) must reach the client, not just the body.
+        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
+        ResponseEntity<byte[]> dasResponse = ResponseEntity.ok().header("X-Custom-Header", "das-value").body(body);
+        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenReturn(dasResponse);
+
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
+
+        assertEquals("das-value", response.getHeaders().getFirst("X-Custom-Header"));
     }
 
     @Test
     public void testGetWaveBuoysBetweenDatesNullDatesPassThrough() {
         // Both dates null is allowed; the service is still called (with nulls) and the result returned
-        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getWaveBuoysBetweenDates(null, null)).thenReturn(mockResponse);
+        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getWaveBuoysBetweenDates(null, null)).thenReturn(ResponseEntity.ok(body));
 
         ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(null, null);
 
@@ -120,17 +134,34 @@ public class RestServicesTest {
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
+    @Test
+    public void testGetWaveBuoysBetweenDatesDasErrorIsForwardedNotMaskedAs500() {
+        // DAS itself returning e.g. a 404/502 must reach the client as that status with its
+        // body, not get collapsed into a generic 500 by the catch-all error handler.
+        byte[] errorBody = "{\"message\":\"upstream unavailable\"}".getBytes();
+        HttpHeaders dasErrorHeaders = new HttpHeaders();
+        dasErrorHeaders.set("Content-Type", "application/json");
+        HttpClientErrorException dasError = HttpClientErrorException.create(
+                HttpStatus.BAD_GATEWAY, "Bad Gateway", dasErrorHeaders, errorBody, null);
+        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenThrow(dasError);
+
+        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
+
+        assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
+        assertArrayEquals(errorBody, (byte[]) response.getBody());
+    }
+
     // ----- wave_buoys_latest_available_date -----
 
     @Test
     public void testGetWaveBuoysLatestAvailableDateSuccess() {
-        byte[] mockResponse = "{\"latest_date\":\"2024-01-01\"}".getBytes();
-        when(dasService.getWaveBuoysLatestAvailableDate()).thenReturn(mockResponse);
+        byte[] body = "{\"latest_date\":\"2024-01-01\"}".getBytes();
+        when(dasService.getWaveBuoysLatestAvailableDate()).thenReturn(ResponseEntity.ok(body));
 
         ResponseEntity<?> response = restServices.getWaveBuoysLatestAvailableDate();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(body, response.getBody());
     }
 
     @Test
@@ -146,13 +177,13 @@ public class RestServicesTest {
 
     @Test
     public void testGetWaveBuoyDetailsBetweenDatesSuccess() {
-        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1")).thenReturn(mockResponse);
+        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1")).thenReturn(ResponseEntity.ok(body));
 
         ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(body, response.getBody());
     }
 
     @Test
@@ -185,13 +216,13 @@ public class RestServicesTest {
 
     @Test
     public void testGetMooringsBetweenDatesSuccess() {
-        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getMooringsBetweenDates(VALID_START, VALID_END)).thenReturn(mockResponse);
+        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getMooringsBetweenDates(VALID_START, VALID_END)).thenReturn(ResponseEntity.ok(body));
 
         ResponseEntity<?> response = restServices.getMooringsBetweenDates(VALID_START, VALID_END);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(body, response.getBody());
     }
 
     @Test
@@ -216,13 +247,13 @@ public class RestServicesTest {
 
     @Test
     public void testGetMooringsLatestAvailableDateSuccess() {
-        byte[] mockResponse = "{\"latest_date\":\"2024-01-01\"}".getBytes();
-        when(dasService.getMooringsLatestAvailableDate()).thenReturn(mockResponse);
+        byte[] body = "{\"latest_date\":\"2024-01-01\"}".getBytes();
+        when(dasService.getMooringsLatestAvailableDate()).thenReturn(ResponseEntity.ok(body));
 
         ResponseEntity<?> response = restServices.getMooringsLatestAvailableDate();
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(body, response.getBody());
     }
 
     @Test
@@ -238,13 +269,13 @@ public class RestServicesTest {
 
     @Test
     public void testGetMooringDetailsBetweenDatesSuccess() {
-        byte[] mockResponse = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1")).thenReturn(mockResponse);
+        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
+        when(dasService.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1")).thenReturn(ResponseEntity.ok(body));
 
         ResponseEntity<?> response = restServices.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(mockResponse, response.getBody());
+        assertEquals(body, response.getBody());
     }
 
     @Test
