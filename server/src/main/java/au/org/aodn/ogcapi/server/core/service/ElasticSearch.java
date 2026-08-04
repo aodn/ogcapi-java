@@ -184,7 +184,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
-     * Only conduct semantic search if the length is long enough,
+     * Only conduct semantic search if the input is long enough,
      * the min_length is defined in application.yaml min_input_length: 3
      * */
     protected boolean isSemanticInputLongEnough(String input) {
@@ -252,8 +252,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     /**
      * concept_semantic holds one entry per narrower (level-2) concept, each starting with that
      * concept's label (es-indexer VocabDto.getConceptSemantic). The semantic highlighter returns the
-     * matching entries ranked by score, so a fragment's leading segment names the concept that
-     * actually matched - not the broad level-1 category the document is keyed on.
+     * matching entries ranked by score, so a fragment's leading segment names the concept that actually matched.
      */
     protected List<String> extractSemanticLabels(Hit<JsonNode> hit) {
         List<String> fragments = hit.highlight() == null
@@ -269,53 +268,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .map(this::toConceptLabel)
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    /**
-     * Definitions of every concept in a vocabs doc, keyed by the name a suggestion can carry, so the
-     * portal can explain a semantic suggestion on hover.
-     * <p>
-     * Read from the doc rather than parsed out of the highlight fragment. A fragment reads
-     * "label. definition. leaf labels", but definitions contain ". " of their own ("(e.g. Autosub
-     * Glider)"), so splitting one apart is guesswork - the doc has the fields verbatim.
-     */
-    protected Map<String, String> extractConceptDefinitions(JsonNode source) {
-        if (source == null) {
-            return Map.of();
-        }
-        Map<String, String> definitions = new HashMap<>();
-        for (String type : VOCAB_TYPES) {
-            JsonNode vocab = source.get(type);
-            if (vocab == null) {
-                continue;
-            }
-            // The level-1 category, for the no-highlight path where extractLabel names the doc itself.
-            putDefinition(definitions, vocab);
-
-            JsonNode narrower = vocab.get("narrower");
-            if (narrower != null && narrower.isArray()) {
-                narrower.forEach(concept -> putDefinition(definitions, concept));
-            }
-        }
-        return definitions;
-    }
-
-    /**
-     * Index one concept's definition under both of its names: a highlight fragment opens with
-     * `label`, while {@link #extractLabel} emits `display_label`, and either can end up being the
-     * suggested string.
-     */
-    protected void putDefinition(Map<String, String> definitions, JsonNode concept) {
-        JsonNode definition = concept.get("definition");
-        if (definition == null || definition.asText().isBlank()) {
-            return;
-        }
-        for (String key : List.of("label", "display_label")) {
-            JsonNode name = concept.get(key);
-            if (name != null && !name.asText().isBlank()) {
-                definitions.putIfAbsent(name.asText(), definition.asText());
-            }
-        }
     }
 
     /**
@@ -361,8 +313,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        // Object rather than Set<String>: every key is a set of suggestions except
-        // semantic_definitions, which is a label -> definition map.
         Map<String, Object> searchSuggestions = new HashMap<>();
         List<Hit<SearchSuggestionsModel>> suggestion = this.getSuggestionsByField(input, cql, coor);
         // extract parameter vocab suggestions
@@ -418,16 +368,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                         .collect(Collectors.toCollection(LinkedHashSet::new));
 
                 searchSuggestions.put("suggested_semantic", semanticSuggestions);
-
-                // Definitions of the terms actually suggested, so the portal can explain one on
-                // hover. Only those - the docs carry definitions for concepts that never made the
-                // cut, and shipping them would dwarf the suggestions themselves.
-                Map<String, String> definitions = new HashMap<>();
-                semanticHits.forEach(hit ->
-                        extractConceptDefinitions(hit.source()).forEach(definitions::putIfAbsent));
-                definitions.keySet().retainAll(semanticSuggestions);
-
-                searchSuggestions.put("semantic_definitions", definitions);
             } catch (Exception e) {
                 // Covers the case where the index was built without the semantic fields - the
                 // dropdown degrades to lexical suggestions rather than the request failing.

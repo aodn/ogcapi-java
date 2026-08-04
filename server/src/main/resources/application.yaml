@@ -34,7 +34,7 @@ elasticsearch:
     min_input_length: 3
     # highlight fragments per doc - one per matching level-2 concept
     fragments: 2
-    # cap on the flattened suggestion list
+    # the max number of semantic suggestion returned from the flattened size * fragments
     max_suggestions: 3
 
 aws:
