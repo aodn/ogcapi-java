@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -62,6 +63,13 @@ public class RestExtApiTest extends BaseTestClass {
         ArrayNode arr = mapper.createArrayNode();
         variables.forEach(arr::add);
         node.set("variable", arr);
+        return node;
+    }
+
+    /** A product from a DAS new enough to report capability explicitly. */
+    private JsonNode scalarProductWithVisual(String id, String metadataUuid, String variable, boolean visual) {
+        ObjectNode node = (ObjectNode) singleVariableProduct(id, metadataUuid, variable);
+        node.put("visual", visual);
         return node;
     }
 
@@ -183,6 +191,109 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertFalse(dataTemplate.contains("variable=ucur+vcur"), "raw '+' would decode to a space, got: " + dataTemplate);
         String manifestTemplate = entry.get("data_manifest_url_template").asText();
         Assertions.assertTrue(manifestTemplate.contains("variable=ucur%2Bvcur"), "'+' must be %2B, got: " + manifestTemplate);
+    }
+
+    // --- Capability: DAS's explicit `visual` field, with the arity rule as old-DAS fallback ---
+
+    @Test
+    public void verifyScalarWithVisualTrueAdvertisesVisualAndData() {
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(scalarProductWithVisual("model_sla:gsla", "uuid-a", "GSLA", true))
+        );
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertEquals(List.of("visual", "data"), tileTypesOf(entry));
+        Assertions.assertTrue(entry.has("visual_tile_url_template"));
+        Assertions.assertTrue(entry.has("legend_url"));
+    }
+
+    @Test
+    public void verifyScalarWithVisualFalseAdvertisesDataOnly() {
+        // The case arity cannot express: a single-variable product whose variable the renderer has
+        // no sensible colouring for. Before DAS reported capability this would have been advertised
+        // as visual-capable and rendered a meaningless image.
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(scalarProductWithVisual("model_sla:wdir", "uuid-a", "WDIR", false))
+        );
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:wdir"));
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertEquals(List.of("data"), tileTypesOf(entry));
+        Assertions.assertFalse(entry.has("visual_tile_url_template"),
+                "a product DAS says cannot serve visual tiles must not advertise a visual template");
+        Assertions.assertFalse(entry.has("legend_url"),
+                "no legend without the visual capability");
+        Assertions.assertTrue(entry.has("data_tile_url_template"));
+        Assertions.assertTrue(entry.has("data_manifest_url_template"));
+    }
+
+    @Test
+    public void verifyPairIsDataOnlyEvenWhenDasReportsVisualExplicitly() {
+        JsonNode product = multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR"));
+        ((ObjectNode) product).put("visual", false);
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(List.of(product));
+        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertEquals(List.of("data"), tileTypesOf(entry));
+        // The `+` must survive as %2B here too — this template is built for a pair either way.
+        Assertions.assertTrue(entry.get("data_tile_url_template").asText().contains("variable=ucur%2Bvcur"),
+                "got: " + entry.get("data_tile_url_template").asText());
+        Assertions.assertTrue(entry.get("data_manifest_url_template").asText().contains("variable=ucur%2Bvcur"),
+                "got: " + entry.get("data_manifest_url_template").asText());
+    }
+
+    @Test
+    public void verifyOldDasWithoutVisualFieldFallsBackToArity() {
+        // The rolling deployment this service is released into: OGC first, DAS second, so for a
+        // while every payload arrives without a `visual` field and must behave exactly as before.
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(
+                        singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA"),
+                        multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR"))
+                )
+        );
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+
+        JsonNode products = getProducts("uuid-a");
+
+        Assertions.assertEquals(List.of("visual", "data"), tileTypesOf(products.get(0)),
+                "a scalar from an old DAS keeps the legacy visual+data capability");
+        Assertions.assertEquals(List.of("data"), tileTypesOf(products.get(1)),
+                "a pair from an old DAS keeps the legacy data-only capability");
+    }
+
+    @Test
+    public void verifyDataCapabilityStillFollowsArityNotTheVisualField() {
+        // `visual` governs the visual capability only. Data tiles remain an arity question: the
+        // shader packs one or two channels regardless of colourability.
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(scalarProductWithVisual("model_sla:wdir", "uuid-a", "WDIR", false))
+        );
+        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertTrue(tileTypesOf(entry).contains("data"),
+                "visual: false must not remove the data capability");
+    }
+
+    private JsonNode getProducts(String collectionId) {
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/" + collectionId + "/products", JsonNode.class
+        );
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        return response.getBody().get("products");
+    }
+
+    private List<String> tileTypesOf(JsonNode entry) {
+        List<String> types = new ArrayList<>();
+        entry.get("tile_types").forEach(node -> types.add(node.asText()));
+        return types;
     }
 
     // --- Data-tile route: value-encoded PNG passthrough, floor-only validation, forwarded DAS errors ---
