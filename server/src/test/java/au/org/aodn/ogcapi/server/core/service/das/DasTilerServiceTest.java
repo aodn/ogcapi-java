@@ -1,10 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
-import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
-import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.stac.model.AssetModel;
-import au.org.aodn.stac.model.StacCollectionModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -45,20 +41,18 @@ public class DasTilerServiceTest {
     private static final String PRODUCT_ID = "model_sea_level_anomaly_gridded_realtime:gsla";
 
     private RestTemplate httpClient;
-    private Search search;
     private DasTilerService service;
 
     @BeforeEach
     public void setUp() {
         httpClient = mock(RestTemplate.class);
-        search = mock(Search.class);
 
         DasProperties config = new DasProperties(
                 HOST, null,"test-secret", "internal-secret",
                 Duration.ofSeconds(5), Duration.ofSeconds(30)
         );
 
-        service = new DasTilerService(config, search, httpClient, new ObjectMapper());
+        service = new DasTilerService(config, httpClient, new ObjectMapper());
     }
 
     private HttpHeaders imageHeaders() {
@@ -372,45 +366,6 @@ public class DasTilerServiceTest {
         assertEquals(1, service.productsForCollection("uuid-a").size());
         assertEquals("p1", service.productsForCollection("uuid-a").get(0).get("id").asText());
         assertTrue(service.productsForCollection("unknown-uuid").isEmpty());
-    }
-
-    @Test
-    public void testIsDatasetInCollectionChecksAssetKeys() {
-        // es-indexer keys assets by the cloud-optimised file name, which carries a format extension,
-        // while DAS product ids use the bare stem — so everything from the first dot on is dropped
-        // before matching. Membership is a stem lookup against the cached searchCollections result.
-        // The extension is not enumerated, so an unknown/future format works the same way.
-        StacCollectionModel model = StacCollectionModel.builder()
-                .uuid("uuid-a")
-                .assets(Map.of(
-                        "satellite_austemp_heatwave_8day.zarr",
-                        AssetModel.builder().role(AssetModel.Role.SUMMARY).build(),
-                        "mooring_temperature_logger_delayed.parquet",
-                        AssetModel.builder().role(AssetModel.Role.SUMMARY).build(),
-                        "some_future_format_dataset.nc4",
-                        AssetModel.builder().role(AssetModel.Role.SUMMARY).build()))
-                .build();
-        ElasticSearchBase.SearchResult<StacCollectionModel> found = new ElasticSearchBase.SearchResult<>();
-        found.setCollections(List.of(model));
-        when(search.searchCollections("uuid-a")).thenReturn(found);
-
-        assertTrue(service.isDatasetInCollection("uuid-a", "satellite_austemp_heatwave_8day"),
-                "the .zarr extension on the asset key must be ignored when matching the dataset");
-        assertTrue(service.isDatasetInCollection("uuid-a", "mooring_temperature_logger_delayed"),
-                "the .parquet extension on the asset key must be ignored when matching the dataset");
-        assertTrue(service.isDatasetInCollection("uuid-a", "some_future_format_dataset"),
-                "the extension is not hard-coded, so an unknown format is stripped the same way");
-        assertFalse(service.isDatasetInCollection("uuid-a", "some_other_dataset"),
-                "a dataset that is not an asset key is not in the collection");
-    }
-
-    @Test
-    public void testIsDatasetInCollectionFalseWhenCollectionMissing() {
-        ElasticSearchBase.SearchResult<StacCollectionModel> empty = new ElasticSearchBase.SearchResult<>();
-        empty.setCollections(List.of());
-        when(search.searchCollections("uuid-missing")).thenReturn(empty);
-
-        assertFalse(service.isDatasetInCollection("uuid-missing", "model_sea_level_anomaly_gridded_realtime"));
     }
 
     private record CapturedRequest(String url, Map<String, Object> params) {

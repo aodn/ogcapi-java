@@ -2,8 +2,6 @@ package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
-import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.stac.model.StacCollectionModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -45,7 +43,6 @@ public class DasTilerService {
     private static final String DATA_TILES_BASE = "/api/v1/das/tiler/data_tiles";
 
     protected final DasProperties dasProperties;
-    protected final Search search;
 
     /**
      * The shared DAS client — short timeouts, and it attaches the DAS API key to every request
@@ -55,11 +52,10 @@ public class DasTilerService {
     private final ObjectMapper mapper;
 
     public DasTilerService(
-            DasProperties dasProperties, Search search,
+            DasProperties dasProperties,
             @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
             ObjectMapper mapper) {
         this.dasProperties = dasProperties;
-        this.search = search;
         this.httpClient = httpClient;
         this.mapper = mapper;
     }
@@ -215,19 +211,6 @@ public class DasTilerService {
             }
         }
         return result;
-    }
-
-    public boolean isDatasetInCollection(String collectionId, String dataset) {
-        var result = search.searchCollections(collectionId);
-        if (result == null || result.getCollections() == null) {
-            return false;
-        }
-        return result.getCollections().stream()
-                .map(StacCollectionModel::getAssets)
-                .filter(Objects::nonNull)
-                .flatMap(assets -> assets.keySet().stream())
-                .map(key -> key.contains(".") ? key.substring(0, key.indexOf('.')) : key)
-                .anyMatch(dataset::equals);
     }
 
     private DasTileResult exchangeForImage(UriComponentsBuilder builder, Map<String, Object> params, String fallbackContentType) {

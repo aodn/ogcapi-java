@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.core.exception.InvalidParameterException;
-import au.org.aodn.ogcapi.server.core.exception.ResourceNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -204,8 +203,9 @@ public class RestExtApi {
                     "negative `x`/`y`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "`dataset` is not in the collection, or DAS has no " +
-                    "such product, LOD or chunk, or no data for that date.",
+            @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
+                    "(`{dataset}:{variable}`), an unavailable date, or an out-of-range LOD or chunk. " +
+                    "Forwarded from DAS, which owns the product catalogue.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "DAS could not process the request (e.g. a " +
@@ -278,10 +278,6 @@ public class RestExtApi {
             throw new InvalidParameterException("x and y (chunk column/row) must be >= 0");
         }
         validateProductParams(dataset, variable, datetime);
-        if (!dasTilerService.isDatasetInCollection(collectionId, dataset)) {
-            throw new ResourceNotFoundException(
-                    "dataset '" + dataset + "' not found in collection '" + collectionId + "'");
-        }
 
         // DAS identifies a product by the combined {dataset}:{variable} id.
         String product = dataset + ":" + variable;
@@ -314,8 +310,9 @@ public class RestExtApi {
                     "containing a space (an unencoded `+`), or `datetime` not `YYYY-MM-DD`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "`dataset` is not in the collection, or DAS has " +
-                    "no such product, or no data for that date.",
+            @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
+                    "(`{dataset}:{variable}`) or an unavailable date. Forwarded from DAS, which owns " +
+                    "the product catalogue.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "DAS could not process the request (e.g. a " +
@@ -361,10 +358,6 @@ public class RestExtApi {
             @RequestParam(required = false) String datetime) {
 
         validateProductParams(dataset, variable, datetime);
-        if (!dasTilerService.isDatasetInCollection(collectionId, dataset)) {
-            throw new ResourceNotFoundException(
-                    "dataset '" + dataset + "' not found in collection '" + collectionId + "'");
-        }
 
         String product = dataset + ":" + variable;
         DasTilerService.DasJsonResult manifest = dasTilerService.getDataManifest(product, datetime);
