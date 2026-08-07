@@ -69,7 +69,7 @@ public class RestApiTest {
         // The "processing started" email must go out only after AWS Batch returned a job id
         InOrder inOrder = inOrder(restServices);
         inOrder.verify(restServices).downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
-        inOrder.verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any());
+        inOrder.verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -86,7 +86,7 @@ public class RestApiTest {
         assertEquals("Error while getting dataset", error.message());
 
         // No job was submitted, so the user must not be told their data is being processed
-        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any());
+        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
