@@ -3,9 +3,7 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.api.CollectionsApi;
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.features.model.Exception;
-import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
-import au.org.aodn.ogcapi.server.core.service.OGCApiService;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
@@ -93,28 +91,6 @@ public class RestApi implements CollectionsApi {
             @ParameterObject @Valid FeatureRequest request) {
         FeatureId fid = FeatureId.valueOf(FeatureId.class, featureId);
         switch (fid) {
-            case summary -> {
-                String filter = null;
-
-                if (request.getDatetime() != null) {
-                    filter = OGCApiService.processDatetimeParameter(CQLFields.temporal.name(), request.getDatetime(), filter);
-                }
-
-                if (request.getBbox() != null) {
-                    filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), request.getBbox(), filter);
-                }
-
-                try {
-                    return featuresService.getFeature(
-                            collectionId,
-                            fid,
-                            request.getProperties(),
-                            filter != null ? "filter=" + filter : null
-                    );
-                } catch (Throwable e) {
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-                }
-            }
             case dataset_metadata -> {
                 return featuresService.getDatasetMetadata(collectionId);
             }
