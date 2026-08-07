@@ -137,7 +137,7 @@ public class RestServices extends OGCApiService {
      * This is used to get the WFS fields given a WFS layer
      *
      * @param collectionId - The uuid of dataset
-     * @param request      -Request to get field given a WFS layer name; if no layer name provided, it will return fields for all WFS links in the collection
+     * @param request      - Request to get a field given a WFS layer name; if no layer name provided, it will return fields for all WFS links in the collection
      * @return - The WFS fields
      */
     public ResponseEntity<?> getWfsFields(String collectionId, FeatureRequest request) {
@@ -151,7 +151,7 @@ public class RestServices extends OGCApiService {
     }
     /**
      * Get the list of values from the WFS, the FeatureRequest have predefined enum to control what can pass in for the
-     * properties name. You may need to update it if you want to expand the list.
+     * property name. You may need to update it if you want to expand the list.
      * @param collectionId - The uuid of the metadata
      * @param request - The request property you want to query
      * @return - The return value, which is sorted by desc
@@ -216,7 +216,7 @@ public class RestServices extends OGCApiService {
      * @return - The WMS fields, or UNAUTHORIZED if it is not in white list
      */
     public ResponseEntity<?> getWmsFields(String collectionId, FeatureRequest request) {
-        // Temp block and show only white list uuid, the other uuid need QA check before release.
+        // Temp block and show only whitelist uuid, the other uuid need QA check before release.
         if (request.getEnableGeoServerWhiteList() && wmsDefaultParam.getAllowId() != null && !wmsDefaultParam.getAllowId().contains(collectionId)) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         } else {
