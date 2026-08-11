@@ -21,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.anyInt;
@@ -62,6 +63,13 @@ public class RestExtApiTest extends BaseTestClass {
         ArrayNode arr = mapper.createArrayNode();
         variables.forEach(arr::add);
         node.set("variable", arr);
+        return node;
+    }
+
+    /** A product from a DAS new enough to report capability explicitly. */
+    private JsonNode scalarProductWithVisual(String id, String metadataUuid, String variable, boolean visual) {
+        ObjectNode node = (ObjectNode) singleVariableProduct(id, metadataUuid, variable);
+        node.put("visual", visual);
         return node;
     }
 
@@ -185,11 +193,113 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertTrue(manifestTemplate.contains("variable=ucur%2Bvcur"), "'+' must be %2B, got: " + manifestTemplate);
     }
 
-    // --- Data-tile route: value-encoded PNG passthrough, floor-only validation, membership guard ---
+    // --- Capability: DAS's explicit `visual` field, with the arity rule as old-DAS fallback ---
+
+    @Test
+    public void verifyScalarWithVisualTrueAdvertisesVisualAndData() {
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(scalarProductWithVisual("model_sla:gsla", "uuid-a", "GSLA", true))
+        );
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertEquals(List.of("visual", "data"), tileTypesOf(entry));
+        Assertions.assertTrue(entry.has("visual_tile_url_template"));
+        Assertions.assertTrue(entry.has("legend_url"));
+    }
+
+    @Test
+    public void verifyScalarWithVisualFalseAdvertisesDataOnly() {
+        // The case arity cannot express: a single-variable product whose variable the renderer has
+        // no sensible colouring for. Before DAS reported capability this would have been advertised
+        // as visual-capable and rendered a meaningless image.
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(scalarProductWithVisual("model_sla:wdir", "uuid-a", "WDIR", false))
+        );
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:wdir"));
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertEquals(List.of("data"), tileTypesOf(entry));
+        Assertions.assertFalse(entry.has("visual_tile_url_template"),
+                "a product DAS says cannot serve visual tiles must not advertise a visual template");
+        Assertions.assertFalse(entry.has("legend_url"),
+                "no legend without the visual capability");
+        Assertions.assertTrue(entry.has("data_tile_url_template"));
+        Assertions.assertTrue(entry.has("data_manifest_url_template"));
+    }
+
+    @Test
+    public void verifyPairIsDataOnlyEvenWhenDasReportsVisualExplicitly() {
+        JsonNode product = multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR"));
+        ((ObjectNode) product).put("visual", false);
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(List.of(product));
+        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertEquals(List.of("data"), tileTypesOf(entry));
+        // The `+` must survive as %2B here too — this template is built for a pair either way.
+        Assertions.assertTrue(entry.get("data_tile_url_template").asText().contains("variable=ucur%2Bvcur"),
+                "got: " + entry.get("data_tile_url_template").asText());
+        Assertions.assertTrue(entry.get("data_manifest_url_template").asText().contains("variable=ucur%2Bvcur"),
+                "got: " + entry.get("data_manifest_url_template").asText());
+    }
+
+    @Test
+    public void verifyOldDasWithoutVisualFieldFallsBackToArity() {
+        // The rolling deployment this service is released into: OGC first, DAS second, so for a
+        // while every payload arrives without a `visual` field and must behave exactly as before.
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(
+                        singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA"),
+                        multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR"))
+                )
+        );
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+
+        JsonNode products = getProducts("uuid-a");
+
+        Assertions.assertEquals(List.of("visual", "data"), tileTypesOf(products.get(0)),
+                "a scalar from an old DAS keeps the legacy visual+data capability");
+        Assertions.assertEquals(List.of("data"), tileTypesOf(products.get(1)),
+                "a pair from an old DAS keeps the legacy data-only capability");
+    }
+
+    @Test
+    public void verifyDataCapabilityStillFollowsArityNotTheVisualField() {
+        // `visual` governs the visual capability only. Data tiles remain an arity question: the
+        // shader packs one or two channels regardless of colourability.
+        when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
+                List.of(scalarProductWithVisual("model_sla:wdir", "uuid-a", "WDIR", false))
+        );
+        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+
+        JsonNode entry = getProducts("uuid-a").get(0);
+
+        Assertions.assertTrue(tileTypesOf(entry).contains("data"),
+                "visual: false must not remove the data capability");
+    }
+
+    private JsonNode getProducts(String collectionId) {
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/" + collectionId + "/products", JsonNode.class
+        );
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        return response.getBody().get("products");
+    }
+
+    private List<String> tileTypesOf(JsonNode entry) {
+        List<String> types = new ArrayList<>();
+        entry.get("tile_types").forEach(node -> types.add(node.asText()));
+        return types;
+    }
+
+    // --- Data-tile route: value-encoded PNG passthrough, floor-only validation, forwarded DAS errors ---
 
     @Test
     public void verifyDataTileReturnsImageWithCacheControl() {
-        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
         when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 1, 0, 0)).thenReturn(
                 new DasTilerService.DasTileResult(
                         "data-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
@@ -242,7 +352,6 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyDataTileRejectsUnencodedPlusInVariable() {
-        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
 
         // A raw '+' decodes to a space, so the product id would be 'model_sla:ucur vcur' — caught
         // here rather than forwarded to DAS as an unresolvable id.
@@ -257,21 +366,24 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyDataTileNotFoundWhenDatasetNotInCollection() {
-        when(dasTilerService.isDatasetInCollection("uuid-a", "wrong")).thenReturn(false);
+    public void verifyDataTileUnknownProductIsForwardedToDas() {
+        // DAS owns the product catalogue, so an unknown dataset is its answer to give.
+        // Previously this 404'd locally from an Elasticsearch membership check that could
+        // disagree with what DAS actually publishes.
+        when(dasTilerService.getDataTile("wrong:gsla", "2024-01-01", 1, 0, 0))
+                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "Unknown product: wrong:gsla"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
                         + "?dataset=wrong&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        // Membership fails locally, so DAS is never called for the tile.
-        verify(dasTilerService, never()).getDataTile(anyString(), anyString(), anyInt(), anyInt(), anyInt());
+        Assertions.assertEquals("Unknown product: wrong:gsla", response.getBody().getMessage());
+        verify(dasTilerService).getDataTile("wrong:gsla", "2024-01-01", 1, 0, 0);
     }
 
     @Test
     public void verifyDataTileMirrorsUpstreamNotFound() {
-        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
         when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 9, 0, 0))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "LOD 9 not in grid"));
 
@@ -285,7 +397,6 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyDataTileMirrorsUpstreamServiceUnavailable() {
-        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
         when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 1, 0, 0))
                 .thenThrow(new DasUpstreamException(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable"));
 
@@ -315,7 +426,6 @@ public class RestExtApiTest extends BaseTestClass {
     public void verifyDataManifestReturnsJsonWithCacheControl() {
         ObjectNode manifestBody = mapper.createObjectNode();
         manifestBody.putArray("bounds").add(0).add(0).add(1).add(1);
-        when(dasTilerService.isDatasetInCollection("uuid-a", "model_sla")).thenReturn(true);
         when(dasTilerService.getDataManifest("model_sla:gsla", "2024-01-01"))
                 .thenReturn(new DasTilerService.DasJsonResult(manifestBody, "public, max-age=31536000, immutable"));
 
@@ -343,15 +453,17 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyDataManifestNotFoundWhenDatasetNotInCollection() {
-        when(dasTilerService.isDatasetInCollection("uuid-a", "wrong")).thenReturn(false);
+    public void verifyDataManifestUnknownProductIsForwardedToDas() {
+        when(dasTilerService.getDataManifest("wrong:gsla", "2024-01-01"))
+                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "Unknown product: wrong:gsla"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
                         + "?dataset=wrong&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
-        verify(dasTilerService, never()).getDataManifest(anyString(), anyString());
+        Assertions.assertEquals("Unknown product: wrong:gsla", response.getBody().getMessage());
+        verify(dasTilerService).getDataManifest("wrong:gsla", "2024-01-01");
     }
 
     @Test

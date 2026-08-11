@@ -17,6 +17,7 @@ import java.io.IOException;
 
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -209,7 +210,6 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyVisualMapTileMaxZoomBoundaryIsAccepted() {
-        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
         when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(24), eq(0), eq(0), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", null));
 
@@ -221,18 +221,24 @@ public class RestApiTest extends BaseTestClass {
     }
 
     @Test
-    public void verifyVisualMapTileDatasetNotInCollectionReturns404() {
-        // isDatasetInCollection defaults to false on the mock (unstubbed boolean).
+    public void verifyVisualMapTileUnknownProductIsForwardedToDas() {
+        // DAS owns the product catalogue, so an unknown dataset is its answer to give.
+        // Previously this 404'd locally from an Elasticsearch membership check that could
+        // disagree with what DAS actually publishes.
+        when(dasTilerService.getVisualTile(eq("wrong:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(1), eq("png"), isNull(), isNull()))
+                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "Unknown product: wrong:gsla"));
+
         ResponseEntity<String> response = testRestTemplate.getForEntity(
-                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?dataset=model_sla&variable=gsla&datetime=2024-01-01",
+                getBasePath() + "/collections/some-uuid/map/tiles/WebMercatorQuad/2/1/1?dataset=wrong&variable=gsla&datetime=2024-01-01",
                 String.class
         );
+
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        verify(dasTilerService).getVisualTile(eq("wrong:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(1), eq("png"), isNull(), isNull());
     }
 
     @Test
     public void verifyVisualMapTileForwardsZXYAndReturnsImage() {
-        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
         when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
@@ -249,7 +255,6 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileRebuildsProductAndMapsWebpExt() {
         // dataset + variable are recombined into the DAS product id `model_sla:gsla`.
-        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
         when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("webp"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("webp-bytes".getBytes(), "image/webp", null));
 
@@ -264,7 +269,6 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyVisualMapTileUpstreamErrorMirrored() {
-        when(dasTilerService.isDatasetInCollection("some-uuid", "model_sla")).thenReturn(true);
         when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "no such date"));
 
