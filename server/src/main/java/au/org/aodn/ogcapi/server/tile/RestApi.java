@@ -105,7 +105,8 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "`tileMatrixSetId` is not `WebMercatorQuad`, " +
-                    "`dataset` is not in the collection, or there is no data for that date.",
+                    "or DAS reported an unknown product (`{dataset}:{variable}`) or an unavailable date. " +
+                    "The DAS cases are forwarded from DAS, which owns the product catalogue.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "The product cannot be rendered as a visual " +
@@ -210,10 +211,6 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
         }
         if (!"png".equals(f) && !"webp".equals(f)) {
             throw new InvalidParameterException("f must be 'png' or 'webp'");
-        }
-        if (!dasTilerService.isDatasetInCollection(collectionId, dataset)) {
-            throw new ResourceNotFoundException(
-                    "dataset '" + dataset + "' not found in collection '" + collectionId + "'");
         }
 
         // DAS identifies a renderable product by the combined {dataset}:{variable} id.
