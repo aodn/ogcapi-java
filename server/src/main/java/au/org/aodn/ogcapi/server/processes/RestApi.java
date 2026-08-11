@@ -71,7 +71,7 @@ public class RestApi implements ProcessesApi {
                 // email faster
                 // It must only be sent once AWS Batch has accepted the job and returned
                 // a job id, otherwise we promise the user a file that will never be produced.
-                restServices.notifyUser(recipient, uuid, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation);
+                restServices.notifyUser(recipient, uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
                 var value = new InlineValue(response.getBody());
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
