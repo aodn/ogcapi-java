@@ -188,6 +188,62 @@ public class DasTilerServiceTest {
         assertEquals("LOD 9 not in grid", ex.getMessage());
     }
 
+    // --- Point: decoded value(s) at a lat/lon, JSON body with query params ---
+
+    @Test
+    public void testGetPointSendsProductAndDateAsPathVariablesWithLatLonQuery() {
+        ObjectNode pointBody = new ObjectMapper().createObjectNode();
+        pointBody.put("lat", -44.27813720703125);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable");
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenReturn(new ResponseEntity<>(pointBody, headers, HttpStatus.OK));
+
+        service.getPoint(PRODUCT_ID, "2024-01-01", -44.27, 132.00);
+
+        CapturedRequest captured = captureJsonRequest();
+        assertTrue(captured.url.contains("/data_tiles/{product}/{date}/point"),
+                "point must expand product/date as path variables, got: " + captured.url);
+        assertTrue(captured.url.contains("lat={lat}") && captured.url.contains("lon={lon}"),
+                "lat/lon must be query params, got: " + captured.url);
+        assertEquals(PRODUCT_ID, captured.params.get("product"), "product id with ':' must be a raw path variable");
+        assertEquals("2024-01-01", captured.params.get("date"));
+        assertEquals(-44.27, captured.params.get("lat"));
+        assertEquals(132.00, captured.params.get("lon"));
+    }
+
+    @Test
+    public void testGetPointForwardsBodyAndCacheControl() {
+        ObjectNode pointBody = new ObjectMapper().createObjectNode();
+        pointBody.put("lat", -44.27813720703125);
+        pointBody.put("lon", 132.0092315673828);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable");
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenReturn(new ResponseEntity<>(pointBody, headers, HttpStatus.OK));
+
+        DasTilerService.DasJsonResult result = service.getPoint(PRODUCT_ID, "2024-01-01", -44.27, 132.00);
+
+        assertEquals(pointBody, result.body());
+        assertEquals("public, max-age=31536000, immutable", result.cacheControl());
+    }
+
+    @Test
+    public void testGetPointNotFoundMirrored() {
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenThrow(HttpClientErrorException.create(
+                        HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY,
+                        "{\"detail\":\"point outside coverage\"}".getBytes(), null));
+
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class,
+                () -> service.getPoint(PRODUCT_ID, "2024-01-01", -89.0, 0.0));
+
+        assertEquals(HttpStatus.NOT_FOUND, ex.getStatus());
+        assertEquals("point outside coverage", ex.getMessage());
+    }
+
     // --- Data manifest: JSON body, but (unlike the plain getters) forwards Cache-Control ---
 
     @Test
@@ -353,6 +409,39 @@ public class DasTilerServiceTest {
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus());
     }
 
+    // --- Product/date manifest (visual_tiles): JSON body, forwards whatever Cache-Control DAS sent ---
+
+    @Test
+    public void testGetManifestBuildsUrlAndForwardsCacheControl() {
+        ObjectNode manifestBody = new ObjectMapper().createObjectNode();
+        manifestBody.putObject("products");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CACHE_CONTROL, "public, max-age=60");
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenReturn(new ResponseEntity<>(manifestBody, headers, HttpStatus.OK));
+
+        DasTilerService.DasJsonResult result = service.getManifest();
+
+        CapturedRequest captured = captureJsonRequest();
+        assertTrue(captured.url.contains("/visual_tiles/manifest"), "got: " + captured.url);
+        assertEquals(manifestBody, result.body());
+        // Whatever freshness DAS decided must ride through as-is — this service must not invent
+        // its own Cache-Control for a response it doesn't own the freshness of.
+        assertEquals("public, max-age=60", result.cacheControl());
+    }
+
+    @Test
+    public void testGetManifestServerErrorMappedTo502() {
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenThrow(HttpServerErrorException.create(
+                        HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders.EMPTY, new byte[0], null));
+
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class, () -> service.getManifest());
+
+        assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus());
+    }
+
     @Test
     public void testProductsForCollectionFiltersByMetadataUuid() {
         ObjectMapper mapper = new ObjectMapper();
@@ -366,6 +455,36 @@ public class DasTilerServiceTest {
         assertEquals(1, service.productsForCollection("uuid-a").size());
         assertEquals("p1", service.productsForCollection("uuid-a").get(0).get("id").asText());
         assertTrue(service.productsForCollection("unknown-uuid").isEmpty());
+    }
+
+    @Test
+    public void testProductsForCollectionsFiltersByGivenIds() {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode products = mapper.createArrayNode()
+                .add(mapper.createObjectNode().put("id", "p1").put("metadata_uuid", "uuid-a"))
+                .add(mapper.createObjectNode().put("id", "p2").put("metadata_uuid", "uuid-b"))
+                .add(mapper.createObjectNode().put("id", "p3").put("metadata_uuid", "uuid-c"));
+        when(httpClient.getForObject(anyString(), eq(JsonNode.class)))
+                .thenReturn(products);
+
+        List<JsonNode> result = service.productsForCollections(List.of("uuid-a", "uuid-c"));
+
+        assertEquals(2, result.size());
+        assertEquals("p1", result.get(0).get("id").asText());
+        assertEquals("p3", result.get(1).get("id").asText());
+    }
+
+    @Test
+    public void testProductsForCollectionsWithNullOrEmptyIdsReturnsEverything() {
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode products = mapper.createArrayNode()
+                .add(mapper.createObjectNode().put("id", "p1").put("metadata_uuid", "uuid-a"))
+                .add(mapper.createObjectNode().put("id", "p2").put("metadata_uuid", "uuid-b"));
+        when(httpClient.getForObject(anyString(), eq(JsonNode.class)))
+                .thenReturn(products);
+
+        assertEquals(2, service.productsForCollections(null).size());
+        assertEquals(2, service.productsForCollections(List.of()).size());
     }
 
     private record CapturedRequest(String url, Map<String, Object> params) {
