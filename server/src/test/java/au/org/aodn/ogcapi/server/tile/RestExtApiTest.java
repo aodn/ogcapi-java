@@ -24,6 +24,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.mockito.ArgumentMatchers.anyDouble;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
@@ -73,7 +74,7 @@ public class RestExtApiTest extends BaseTestClass {
         return node;
     }
 
-    private ObjectNode manifestWith(String productId) {
+    private DasTilerService.DasJsonResult manifestWith(String productId) {
         ObjectNode manifest = mapper.createObjectNode();
         ObjectNode products = mapper.createObjectNode();
         ObjectNode availability = mapper.createObjectNode();
@@ -84,7 +85,11 @@ public class RestExtApiTest extends BaseTestClass {
         availability.set("full_date_range", range);
         products.set(productId, availability);
         manifest.set("products", products);
-        return manifest;
+        return new DasTilerService.DasJsonResult(manifest, "public, max-age=31536000, immutable");
+    }
+
+    private DasTilerService.DasJsonResult emptyManifest() {
+        return new DasTilerService.DasJsonResult(mapper.createObjectNode(), "public, max-age=31536000, immutable");
     }
 
     @Test
@@ -149,7 +154,7 @@ public class RestExtApiTest extends BaseTestClass {
     @Test
     public void verifyCollectionProductsEmptyWhenNoneMatch() {
         when(dasTilerService.productsForCollection("uuid-none")).thenReturn(List.of());
-        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-none/products", JsonNode.class
@@ -164,7 +169,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR")))
         );
-        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
@@ -235,7 +240,7 @@ public class RestExtApiTest extends BaseTestClass {
         JsonNode product = multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR"));
         ((ObjectNode) product).put("visual", false);
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(List.of(product));
-        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
 
         JsonNode entry = getProducts("uuid-a").get(0);
 
@@ -274,7 +279,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(scalarProductWithVisual("model_sla:wdir", "uuid-a", "WDIR", false))
         );
-        when(dasTilerService.getManifest()).thenReturn(mapper.createObjectNode());
+        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
 
         JsonNode entry = getProducts("uuid-a").get(0);
 
@@ -294,6 +299,77 @@ public class RestExtApiTest extends BaseTestClass {
         List<String> types = new ArrayList<>();
         entry.get("tile_types").forEach(node -> types.add(node.asText()));
         return types;
+    }
+
+    // --- Batched products route: multiple collectionIds, or every collection when omitted ---
+
+    @Test
+    public void verifyProductsForCollectionsWithNoIdsListsEveryCollection() {
+        JsonNode productA = singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA");
+        JsonNode productB = singleVariableProduct("satellite_austemp_heatwave_14day:mcs_category", "uuid-b", "MCS_category");
+        when(dasTilerService.getProducts()).thenReturn(List.of(productA, productB));
+        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/products", JsonNode.class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        JsonNode products = response.getBody().get("products");
+        Assertions.assertEquals(2, products.size());
+        Assertions.assertEquals("uuid-a", products.get(0).get("collectionId").asText());
+        Assertions.assertEquals("uuid-b", products.get(1).get("collectionId").asText());
+        verify(dasTilerService, never()).productsForCollections(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    public void verifyProductsForCollectionsFiltersByGivenIds() {
+        JsonNode productA = singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA");
+        JsonNode productB = singleVariableProduct("model_currents:ucur", "uuid-b", "UCUR");
+        when(dasTilerService.productsForCollections(List.of("uuid-a", "uuid-b")))
+                .thenReturn(List.of(productA, productB));
+        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/products?collectionId=uuid-a&collectionId=uuid-b",
+                JsonNode.class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        JsonNode products = response.getBody().get("products");
+        Assertions.assertEquals(2, products.size());
+        verify(dasTilerService).productsForCollections(List.of("uuid-a", "uuid-b"));
+        verify(dasTilerService, never()).getProducts();
+    }
+
+    @Test
+    public void verifyProductsForCollectionsEntryHasOwnUrlTemplatesAndCollectionId() {
+        JsonNode product = singleVariableProduct("satellite_austemp_heatwave_14day:mcs_category", "uuid-b", "MCS_category");
+        when(dasTilerService.productsForCollections(List.of("uuid-b"))).thenReturn(List.of(product));
+        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/products?collectionId=uuid-b", JsonNode.class
+        );
+
+        JsonNode entry = response.getBody().get("products").get(0);
+        Assertions.assertEquals("uuid-b", entry.get("collectionId").asText());
+        String dataTemplate = entry.get("data_tile_url_template").asText();
+        Assertions.assertTrue(dataTemplate.contains("/collections/uuid-b/data_tiles/"),
+                "url template must be scoped to the product's own collection, got: " + dataTemplate);
+    }
+
+    @Test
+    public void verifyProductsForCollectionsEmptyWhenNoneMatch() {
+        when(dasTilerService.productsForCollections(List.of("uuid-none"))).thenReturn(List.of());
+        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/products?collectionId=uuid-none", JsonNode.class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertEquals(0, response.getBody().get("products").size());
     }
 
     // --- Data-tile route: value-encoded PNG passthrough, floor-only validation, forwarded DAS errors ---
@@ -420,6 +496,91 @@ public class RestExtApiTest extends BaseTestClass {
             Assertions.assertEquals("Service Unavailable", response.getBody().getMessage(),
                     "upstream detail must reach the caller under Accept: " + MediaType.toString(accept));
         }
+    }
+
+    // --- Point route: decoded value(s) at a lat/lon, JSON body with query params ---
+
+    @Test
+    public void verifyDataPointReturnsJsonWithCacheControl() {
+        ObjectNode pointBody = mapper.createObjectNode();
+        pointBody.put("lat", -44.27813720703125);
+        pointBody.put("lon", 132.0092315673828);
+        when(dasTilerService.getPoint("model_sla:gsla", "2024-01-01", -44.27, 132.00))
+                .thenReturn(new DasTilerService.DasJsonResult(pointBody, "public, max-age=31536000, immutable"));
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=-44.27&lon=132.00", JsonNode.class);
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().has("lat"));
+        Assertions.assertEquals("public, max-age=31536000, immutable", response.getHeaders().getCacheControl());
+    }
+
+    @Test
+    public void verifyDataPointRejectsMissingOrMalformedParams() {
+        // missing dataset
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?variable=gsla&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
+        // missing variable
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
+        // datetime not YYYY-MM-DD
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-1-1&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
+    }
+
+    @Test
+    public void verifyDataPointRejectsMissingOrOutOfRangeLatLon() {
+        // missing lat
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lon=132.00", ErrorResponse.class).getStatusCode());
+        // missing lon
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=-44.27", ErrorResponse.class).getStatusCode());
+        // lat out of range
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=91&lon=132.00", ErrorResponse.class).getStatusCode());
+        // lon out of range
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=-44.27&lon=181", ErrorResponse.class).getStatusCode());
+        verify(dasTilerService, never()).getPoint(anyString(), anyString(), anyDouble(), anyDouble());
+    }
+
+    @Test
+    public void verifyDataPointRejectsUnencodedPlusInVariable() {
+        // A raw '+' decodes to a space, so the product id would be 'model_sla:ucur vcur' — caught
+        // here rather than forwarded to DAS as an unresolvable id.
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class);
+
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        Assertions.assertTrue(response.getBody().getMessage().contains("%2B"),
+                "the message must name the fix, got: " + response.getBody().getMessage());
+        verify(dasTilerService, never()).getPoint(anyString(), anyString(), anyDouble(), anyDouble());
+    }
+
+    @Test
+    public void verifyDataPointUnknownProductIsForwardedToDas() {
+        // DAS owns the product catalogue, so an unknown dataset is its answer to give.
+        when(dasTilerService.getPoint("wrong:gsla", "2024-01-01", -44.27, 132.00))
+                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "Unknown product: wrong:gsla"));
+
+        ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class);
+
+        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        Assertions.assertEquals("Unknown product: wrong:gsla", response.getBody().getMessage());
+        verify(dasTilerService).getPoint("wrong:gsla", "2024-01-01", -44.27, 132.00);
     }
 
     @Test

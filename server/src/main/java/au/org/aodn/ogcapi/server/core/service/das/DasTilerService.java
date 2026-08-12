@@ -19,6 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -122,6 +123,24 @@ public class DasTilerService {
     }
 
     /**
+     * Fetches the decoded value(s) at a single lat/lon point for a product on a date. Unlike the
+     * tile route this returns the already-decoded value(s) as JSON, not value-encoded pixels.
+     */
+    public DasJsonResult getPoint(String productId, String date, double lat, double lon) {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/{date}/point")
+                .queryParam("lat", "{lat}")
+                .queryParam("lon", "{lon}");
+        Map<String, Object> params = new HashMap<>();
+        params.put("product", productId);
+        params.put("date", date);
+        params.put("lat", lat);
+        params.put("lon", lon);
+
+        return exchangeForJson(builder, params);
+    }
+
+    /**
      * Fetches the per-date data-tile manifest (decode ranges, bounds, LOD geometry) needed to
      * decode the data tiles. Unlike the plain JSON getters this expands the product id (which
      * contains {@code :}/{@code +}) as a path variable and forwards the immutable
@@ -153,15 +172,14 @@ public class DasTilerService {
         }
     }
 
-    public JsonNode getManifest() {
-        String url = dasProperties.host() + VISUAL_TILES_BASE + "/manifest";
-        try {
-            return httpClient.getForObject(url, JsonNode.class);
-        } catch (HttpStatusCodeException e) {
-            throw mapUpstreamError(e);
-        } catch (ResourceAccessException e) {
-            throw mapNetworkError(e);
-        }
+    /**
+     * Fetches the product/date manifest, forwarding its {@code Cache-Control} rather than this
+     * service inventing a freshness of its own.
+     */
+    public DasJsonResult getManifest() {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/manifest");
+        return exchangeForJson(builder, Map.of());
     }
 
     public JsonNode getColormaps() {
@@ -203,9 +221,19 @@ public class DasTilerService {
     }
 
     public List<JsonNode> productsForCollection(String collectionId) {
+        return productsForCollections(List.of(collectionId));
+    }
+
+    /**
+     * Filters products down to the given collection ids ({@code metadata_uuid}). A null or empty
+     * id collection is unfiltered — every product across every collection is returned.
+     */
+    public List<JsonNode> productsForCollections(Collection<String> collectionIds) {
+        boolean unfiltered = collectionIds == null || collectionIds.isEmpty();
         List<JsonNode> result = new ArrayList<>();
         for (JsonNode product : getProducts()) {
-            if (collectionId.equals(product.path("metadata_uuid").asText(null))) {
+            String uuid = product.path("metadata_uuid").asText(null);
+            if (unfiltered || (uuid != null && collectionIds.contains(uuid))) {
                 result.add(product);
             }
         }
