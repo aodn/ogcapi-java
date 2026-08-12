@@ -40,8 +40,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     protected Map<CQLElasticSetting, String> defaultElasticSetting;
 
-    // the semantic_text field on the vocabs index
+    // the semantic_text field for the vocabs index
     protected static final String SEMANTIC_CONCEPT_FIELD = "concept_semantic";
+
+    // the semantic_text field for the record index
+    protected static final String SEMANTIC_DESCRIPTION_FIELD = "description_semantic";
+
+    // Weight of the semantic search score contribute to the final ES relevance
+    protected static final float SEMANTIC_DESCRIPTION_BOOST = 1.0F;
 
     // organisation vocabs are skipped from sementic query
     protected static final String ORGANISATION_VOCAB_FIELD = "organisation_vocab";
@@ -426,6 +432,47 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return searchCollectionsByIds(null, Boolean.FALSE, sortBy);
     }
 
+    /**
+     * Wraps the existing keyword should-clauses so that the semantic query boosts ranking without
+     * changing which records match. The inner bool preserves the keyword recall set, while the
+     * semantic clause is optional and can only contribute to the score of those records.
+     *
+     * @param keywordClauses - The lexical clauses, as built for the "should" block
+     * @param keywords - The raw keywords as typed by the end user, quotes included
+     * @return - A single composite clause when semantic applies, otherwise keywordClauses as given
+     */
+    protected List<Query> applySemanticBoost(List<Query> keywordClauses, List<String> keywords) {
+        if (keywordClauses == null || keywordClauses.isEmpty()
+                || keywords == null || keywords.isEmpty()
+                || !Boolean.TRUE.equals(semanticEnabled)) {
+            return keywordClauses;
+        }
+
+        boolean allExact = keywords.stream()
+                .allMatch(t -> t.startsWith("\"") && t.endsWith("\"") && t.length() > 2);
+        if (allExact) {
+            return keywordClauses;
+        }
+
+        String semanticInput = keywords.stream()
+                .map(t -> t.startsWith("\"") && t.endsWith("\"") && t.length() > 2
+                        ? t.substring(1, t.length() - 1)
+                        : t)
+                .collect(Collectors.joining(" "));
+
+        Query keywordRecall = Query.of(q -> q.bool(b -> b
+                .should(keywordClauses)
+                .minimumShouldMatch("1")));
+
+        Query semanticBoostQuery = Query.of(q -> q.semantic(s -> s
+                .field(SEMANTIC_DESCRIPTION_FIELD)
+                .query(semanticInput)
+                .boost(SEMANTIC_DESCRIPTION_BOOST)));
+
+        return List.of(Query.of(q -> q.bool(b -> b
+                .must(keywordRecall)
+                .should(semanticBoostQuery))));
+    }
 
     /**
      * Build SearchRequest for searchByParameters and explainByParameters
@@ -484,6 +531,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 should.add(CQLFields.getDatasetGroupTextSearchQuery(term, isExact));
             }
         }
+        // Re-rank by meaning, without changing which records match
+        should = applySemanticBoost(should, keywords);
 
         List<Query> filters = new ArrayList<>();
         CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
@@ -592,6 +641,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     should.add(CQLFields.getDatasetGroupTextSearchQuery(term, isExact));
                 }
             }
+            // Re-rank by meaning, without changing which records match
+            should = applySemanticBoost(should, keywords);
 
             List<Query> filters = new ArrayList<>();
 

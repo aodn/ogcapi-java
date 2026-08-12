@@ -22,9 +22,8 @@ elasticsearch:
     search_suggestions:
       path: search_suggestions
       fields: abstract_phrases, parameter_vocabs_sayt, platform_vocabs_sayt, organisation_vocabs_sayt
-  # Semantic suggestions: the vocabs index is searched by meaning (ELSER via semantic_text).
-  # The suggested concepts are not filtered against records, so a suggestion may be a concept
-  # no record currently carries.
+  # Semantic features use ELSER via semantic_text. Suggestions search the vocabs index by meaning;
+  # free-text record searches use description_semantic only to re-rank keyword matches.
   # Off by default - semantic_text needs the licensed `inference` feature.
   semantic:
     enabled: false
