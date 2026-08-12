@@ -12,6 +12,7 @@ import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
 import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
 import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -39,6 +40,16 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     protected Map<CQLElasticSetting, String> defaultElasticSetting;
 
+    // the semantic_text field on the vocabs index
+    protected static final String SEMANTIC_CONCEPT_FIELD = "concept_semantic";
+
+    // organisation vocabs are skipped from sementic query
+    protected static final String ORGANISATION_VOCAB_FIELD = "organisation_vocab";
+
+    // a vocabs doc holds exactly one of these
+    protected static final List<String> VOCAB_TYPES =
+            List.of("parameter_vocab", "platform_vocab", ORGANISATION_VOCAB_FIELD);
+
     @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
     protected String searchAsYouTypeFieldsPath;
 
@@ -50,6 +61,24 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
+
+    @Value("${elasticsearch.vocabs_index.name}")
+    protected String vocabsIndexName;
+
+    @Value("${elasticsearch.semantic.enabled:false}")
+    protected Boolean semanticEnabled;
+
+    @Value("${elasticsearch.semantic.size:3}")
+    protected Integer semanticSize;
+
+    @Value("${elasticsearch.semantic.min_input_length:3}")
+    protected Integer semanticMinInputLength;
+
+    @Value("${elasticsearch.semantic.fragments:3}")
+    protected Integer semanticFragments;
+
+    @Value("${elasticsearch.semantic.max_suggestions:5}")
+    protected Integer semanticMaxSuggestions;
 
     public ElasticSearch(ElasticsearchClient client,
                          CacheNoLandGeometry cacheNoLandGeometry,
@@ -114,27 +143,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .query(bQ -> bQ.bool(b -> b.should(suggestFieldsQueries)))
         ));
 
-        /*
-            this is where the discovery parameter vocabs filter is applied
-            use term query for exact match of the parameter vocabs
-            (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
-            see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
-            this query uses AND operator for the parameter vocabs (e.g "wave" AND "temperature")
-        */
-        List<Query> filters;
-        if (cql != null) {
-            CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
-            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
-            if (filter instanceof QueryHandler elasticFilter) {
-                filters = List.of(elasticFilter.getQuery());
-            } else {
-                // If no filter, then use the match_all{} to get all record
-                filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
-            }
-        } else {
-            // If no filter, then use the match_all{} to get all record
-            filters = List.of(MatchAllQuery.of(q -> q)._toQuery());
-        }
+        List<Query> filters = buildSuggestionFilters(cql, coor);
 
         // create request
         SearchRequest searchRequest = this.buildSearchAsYouTypeRequest(
@@ -152,8 +161,145 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return response.hits().hits();
     }
 
+    /*
+        this is where the discovery parameter vocabs filter is applied
+        use term query for exact match of the parameter vocabs
+        (e.g you don't want "something", "something special" and "something secret" be returned when searching for "something")
+        see more: https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-terms-query.html#query-dsl-terms-query
+        this query uses AND operator for the parameter vocabs (e.g "wave" AND "temperature")
+    */
+    protected List<Query> buildSuggestionFilters(String cql, CQLCrsType coor) throws CQLException {
+        if (cql != null) {
+            CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
+            Filter filter = CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+            if (filter instanceof QueryHandler elasticFilter) {
+                return List.of(elasticFilter.getQuery());
+            }
+        }
+        // If no filter, then use the match_all{} to get all record
+        return List.of(MatchAllQuery.of(q -> q)._toQuery());
+    }
+
+    /**
+     * Only conduct semantic search if the input is long enough
+     * */
+    protected boolean isSemanticInputLongEnough(String input) {
+        return input != null && input.trim().length() >= semanticMinInputLength;
+    }
+
+    /**
+     * Rank vocab terms by meaning similarity with query. Comparing with documents in vocabs index with the semantic_text field "concept_semantic",
+     * which is a list of combined text for per concepts (level-2 label) as "level-2 label's title. level-2 label's description. leaf labels' title".
+     * Using highlight option to get the real matched level-2 label.
+     * @param input - The input text typed by the end user
+     */
+    protected List<Hit<JsonNode>> getSemanticTermHits(String input) throws IOException {
+        SearchRequest searchRequest = SearchRequest.of(s -> s
+                .index(vocabsIndexName)
+                .size(semanticSize)
+                .query(q -> q.bool(b -> b
+                        .must(m -> m.semantic(sm -> sm
+                                .field(SEMANTIC_CONCEPT_FIELD)
+                                .query(input)))
+                        .mustNot(mn -> mn.exists(e -> e.field(ORGANISATION_VOCAB_FIELD)))))
+                .highlight(h -> h
+                        .fields(SEMANTIC_CONCEPT_FIELD, f -> f
+                                .numberOfFragments(semanticFragments)
+                                // The highlighter picks the top fragments by score but hands them back in field order unless asked otherwise,
+                                // so add highligherorder to makesure the fragment is ordered by score.
+                                .order(HighlighterOrder.Score)
+                                .preTags("")
+                                .postTags(""))));
+
+        log.info("getSemanticTermHits | Elastic search payload {}", searchRequest);
+        SearchResponse<JsonNode> response = esClient.search(searchRequest, JsonNode.class);
+        log.info("getSemanticTermHits | Elastic search response {}", response);
+
+        return response.hits().hits();
+    }
+
+    /**
+     * A vocabs doc holds exactly one of the three concept types (see es-indexer VocabDto), so the first one present is the one to label.
+     * `display_label` is the human-facing form and matches what a record's summaries.*_vocabs contain; If it's empty return `label`.
+     */
+    protected String extractLabel(JsonNode source) {
+        if (source == null) {
+            return null;
+        }
+        for (String type : VOCAB_TYPES) {
+            JsonNode vocab = source.get(type);
+            if (vocab != null) {
+                JsonNode displayLabel = vocab.get("display_label");
+                if (displayLabel != null && !displayLabel.asText().isBlank()) {
+                    return displayLabel.asText();
+                }
+                JsonNode label = vocab.get("label");
+                if (label != null && !label.asText().isBlank()) {
+                    return label.asText();
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * concept_semantic holds one entry per narrower (level-2) concept, each starting with that concept's label (es-indexer VocabDto.getConceptSemantic).
+     * The semantic highlighter returns the matching entries ranked by score, so a fragment's leading segment names the concept that actually matched.
+     */
+    protected List<String> extractSemanticLabels(Hit<JsonNode> hit) {
+        List<String> fragments = hit.highlight() == null
+                ? null
+                : hit.highlight().get(SEMANTIC_CONCEPT_FIELD);
+
+        if (fragments == null || fragments.isEmpty()) {
+            // No highlight - e.g. an index still carrying the old single-valued concept_semantic.
+            String label = extractLabel(hit.source());
+            return label == null ? List.of() : List.of(label);
+        }
+        return fragments.stream()
+                .map(this::toConceptLabel)
+                .filter(Objects::nonNull)
+                .toList();
+    }
+
+    /**
+     * Flatten the per-document concept labels round-robin: every document's best concept, then every document's second best, and so on.
+     * Determined by semantic.size (number of documents should return) and semantic.fragments (number of best concpets should return for each documents)
+     *
+     * @param labelsPerDoc - concept labels per hit, hits in _score order, labels in fragment order
+     */
+    protected List<String> interleave(List<List<String>> labelsPerDoc) {
+        int deepest = labelsPerDoc.stream().mapToInt(List::size).max().orElse(0);
+
+        List<String> flattened = new ArrayList<>();
+        for (int rank = 0; rank < deepest; rank++) {
+            for (List<String> labels : labelsPerDoc) {
+                // A document that ran out of concepts simply stops contributing at this rank.
+                if (rank < labels.size()) {
+                    flattened.add(labels.get(rank));
+                }
+            }
+        }
+        return flattened;
+    }
+
+    /**
+     * Leading segment of a concept_semantic entry, which is the concept's label. Split on ". "
+     * rather than "." so labels that carry an internal period (e.g. "No.3 buoy") survive.
+     */
+    protected String toConceptLabel(String fragment) {
+        if (fragment == null) {
+            return null;
+        }
+        // -1 means the fragment is a single segment and is the label; 0 means it opens with the
+        // separator, leaving no label at all - the two must not collapse into the same branch.
+        int end = fragment.indexOf(". ");
+        String label = (end >= 0 ? fragment.substring(0, end) : fragment).trim();
+        return label.isBlank() ? null : label;
+    }
+
     public ResponseEntity<Map<String, ?>> getAutocompleteSuggestions(String input, String cql, CQLCrsType coor) throws IOException, CQLException {
-        Map<String, Set<String>> searchSuggestions = new HashMap<>();
+        Map<String, Object> searchSuggestions = new HashMap<>();
         List<Hit<SearchSuggestionsModel>> suggestion = this.getSuggestionsByField(input, cql, coor);
         // extract parameter vocab suggestions
         Set<String> parameterVocabSuggestions = suggestion
@@ -188,6 +334,32 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 .filter(phrase -> phrase.toLowerCase().contains(input.toLowerCase()))
                 .collect(Collectors.toSet());
         searchSuggestions.put("suggested_phrases", abstractPhrases);
+
+        // Semantic suggestions - vocab terms ranked by meaning rather than by spelling.
+        if (Boolean.TRUE.equals(semanticEnabled) && isSemanticInputLongEnough(input)) {
+            try {
+                List<Hit<JsonNode>> semanticHits = this.getSemanticTermHits(input);
+
+                List<List<String>> labelsPerDoc = semanticHits
+                        .stream()
+                        .map(this::extractSemanticLabels)
+                        .toList();
+
+                Set<String> semanticSuggestions = interleave(labelsPerDoc)
+                        .stream()
+                        // distinct before limit so duplicates do not consume suggestion slots
+                        .distinct()
+                        .limit(semanticMaxSuggestions)
+                        // LinkedHashSet so the relevance order from Elastic survives into the response
+                        .collect(Collectors.toCollection(LinkedHashSet::new));
+
+                searchSuggestions.put("suggested_semantic", semanticSuggestions);
+            } catch (Exception e) {
+                // Covers the case where the index was built without the semantic fields - the
+                // dropdown degrades to lexical suggestions rather than the request failing.
+                log.warn("Semantic suggestions unavailable, returning lexical suggestions only", e);
+            }
+        }
 
         return new ResponseEntity<>(searchSuggestions, HttpStatus.OK);
     }
