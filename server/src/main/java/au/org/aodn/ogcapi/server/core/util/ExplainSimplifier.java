@@ -48,6 +48,13 @@ public class ExplainSimplifier {
 
     protected static final String RELEVANCE_DESCRIPTION_PREFIX = "_score:";
 
+    /** The enclosing explanation node for a semantic_text nested-document score. */
+    protected static final String SEMANTIC_SCORE_PREFIX = "Score based on ";
+
+    /** Identifies the otherwise implementation-specific ELSER sparse-feature explanation tree. */
+    protected static final String SEMANTIC_EMBEDDING_MARKER =
+            "description_semantic.inference.chunks.embeddings field";
+
     protected static final Comparator<ExplainSimplifiedResponse.MatchedTerm> BY_SCORE_DESC =
             Comparator.comparing(
                     ExplainSimplifiedResponse.MatchedTerm::getScore,
@@ -137,6 +144,14 @@ public class ExplainSimplifier {
         List<ExplainSimplifiedResponse.MatchedTerm> terms = new ArrayList<>();
         List<ExplainSimplifiedResponse.MatchedFilter> filters = new ArrayList<>();
 
+        Double semanticScore = semanticScoreOf(scored);
+        Double nonSemanticScore = semanticScore != null && esRelevance != null
+                ? esRelevance - semanticScore
+                : null;
+        Double semanticContribute = semanticScore != null && esRelevance != null && esRelevance != 0.0
+                ? semanticScore / esRelevance
+                : null;
+
         collectScoreParts(scored, terms, filters);
         terms.sort(BY_SCORE_DESC);
 
@@ -146,6 +161,9 @@ public class ExplainSimplifier {
                 .title(stringField(hit.source(), StacBasicField.Title.searchField))
                 .finalScore(finalScore)
                 .esRelevance(esRelevance)
+                .semanticScore(semanticScore)
+                .nonSemanticScore(nonSemanticScore)
+                .semanticContribute(semanticContribute)
                 .internalScore(doubleField(hit.source(), StacSummeries.Score.searchField))
                 .qualityMultiplier(qualityMultiplier)
                 .matchedTerms(terms)
@@ -192,6 +210,13 @@ public class ExplainSimplifier {
         for (ExplanationDetail detail : details) {
             String description = detail.description();
 
+            // A semantic_text score contains one leaf per sparse model feature. Those tokens are
+            // implementation details rather than user-readable query matches, so report the
+            // enclosing score once via semantic_score and keep the whole subtree out of filters.
+            if (isSemanticScoreNode(detail) || isSemanticEmbeddingDetail(detail)) {
+                continue;
+            }
+
             // most nodes are idf/tf breakdowns, skip the regex for them
             if (description != null && description.startsWith(WEIGHT_PREFIX)) {
                 Matcher matcher = WEIGHT_PATTERN.matcher(description);
@@ -221,6 +246,56 @@ public class ExplainSimplifier {
 
             collectScoreParts(detail.details(), terms, filters);
         }
+    }
+
+    /**
+     * Add the values of semantic_text score roots. There is normally one root because the search
+     * builds one semantic query, but summing keeps the simplifier correct if that changes later.
+     * A null result distinguishes "no semantic clause" from a semantic clause that scored zero.
+     */
+    protected static Double semanticScoreOf(List<ExplanationDetail> details) {
+        if (details == null) {
+            return null;
+        }
+
+        Double total = null;
+
+        for (ExplanationDetail detail : details) {
+            if (isSemanticScoreNode(detail)) {
+                total = (total == null ? 0.0 : total) + detail.value();
+                continue;
+            }
+
+            Double nested = semanticScoreOf(detail.details());
+            if (nested != null) {
+                total = (total == null ? 0.0 : total) + nested;
+            }
+        }
+
+        return total;
+    }
+
+    protected static boolean isSemanticScoreNode(ExplanationDetail detail) {
+        return detail.description() != null
+                && detail.description().startsWith(SEMANTIC_SCORE_PREFIX)
+                && containsSemanticEmbeddingDetail(detail);
+    }
+
+    protected static boolean containsSemanticEmbeddingDetail(ExplanationDetail detail) {
+        if (isSemanticEmbeddingDetail(detail)) {
+            return true;
+        }
+
+        if (detail.details() == null) {
+            return false;
+        }
+
+        return detail.details().stream().anyMatch(ExplainSimplifier::containsSemanticEmbeddingDetail);
+    }
+
+    protected static boolean isSemanticEmbeddingDetail(ExplanationDetail detail) {
+        return detail.description() != null
+                && detail.description().contains(SEMANTIC_EMBEDDING_MARKER);
     }
 
     protected static Map<String, String> termsClausesOf(JsonNode request) {

@@ -34,7 +34,8 @@ public class ExplainSimplifiedResponse {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({
             "rank", "id", "title", "final_score",
-            "es_relevance", "internal_score", "quality_multiplier", "matched_terms", "filters"
+            "es_relevance", "semantic_score", "non_semantic_score", "semantic_contribute",
+            "internal_score", "quality_multiplier", "matched_terms", "filters"
     })
     public static class Hit {
         private Integer rank;
@@ -47,6 +48,18 @@ public class ExplainSimplifiedResponse {
         /** The _score elastic search produced before the quality multiplier was applied */
         @JsonProperty("es_relevance")
         private Double esRelevance;
+
+        /** Aggregate contribution from the semantic_text query, without ELSER token details */
+        @JsonProperty("semantic_score")
+        private Double semanticScore;
+
+        /** All relevance not contributed by semantic_text, including keyword and constant scores */
+        @JsonProperty("non_semantic_score")
+        private Double nonSemanticScore;
+
+        /** Fraction of es_relevance contributed by semantic_text */
+        @JsonProperty("semantic_contribute")
+        private Double semanticContribute;
 
         /** The stored summaries.score of the document */
         @JsonProperty("internal_score")
