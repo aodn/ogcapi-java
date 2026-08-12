@@ -16,3 +16,7 @@ es-indexer:
 
 geonetwork4:
   host: https://geonetwork.edge.aodn.org.au
+
+elasticsearch:
+  semantic:
+    enabled: false
