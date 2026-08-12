@@ -116,163 +116,69 @@ public class RestExtApi {
 
         ArrayNode result = mapper.createArrayNode();
         for (JsonNode product : products) {
-            result.add(buildProductEntry(product, collectionId, manifestProducts));
-        }
+            String id = product.path("id").asText();
+            JsonNode variable = product.path("variable");
+            int variableCount = variable.isArray() ? variable.size() : 1;
 
-        ObjectNode body = mapper.createObjectNode();
-        body.set("products", result);
-
-        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
-        if (manifest.cacheControl() != null) {
-            response.header(HttpHeaders.CACHE_CONTROL, manifest.cacheControl());
-        }
-        return response.body(body);
-    }
-
-    /**
-     * Builds one product entry of the shape shared by {@link #getCollectionProducts} and
-     * {@link #getProductsForCollections}: capability list, availability from the manifest, and
-     * ready-to-use URL templates scoped to {@code collectionId}.
-     */
-    private ObjectNode buildProductEntry(JsonNode product, String collectionId, JsonNode manifestProducts) {
-        String id = product.path("id").asText();
-        JsonNode variable = product.path("variable");
-        int variableCount = variable.isArray() ? variable.size() : 1;
-
-        ObjectNode entry = mapper.createObjectNode();
-        entry.put("id", id);
-        entry.set("variable", variable);
-
-        // tile_types is a capability list: what THIS service can serve today, not a property of
-        // the data. Visual capability now comes from DAS, which knows whether a variable is
-        // actually renderable — arity cannot tell a colourisable scalar from one the renderer
-        // has no sensible colouring for. The arity rule survives only as a fallback for a DAS
-        // old enough to have no `visual` field, which the OGC-first deployment order requires.
-        // Data tiles still follow arity: the shader packs one or two channels, and DAS config
-        // validation guarantees nothing longer reaches here.
-        boolean canVisual = product.has("visual")
-                ? product.path("visual").asBoolean()
-                : variableCount == 1;
-        boolean canData = variableCount == 1 || variableCount == 2;
-        ArrayNode tileTypes = mapper.createArrayNode();
-        if (canVisual) {
-            tileTypes.add("visual");
-        }
-        if (canData) {
-            tileTypes.add("data");
-        }
-        entry.set("tile_types", tileTypes);
-
-        JsonNode availability = manifestProducts != null ? manifestProducts.path(id) : null;
-        entry.set("available_dates", availability != null && !availability.isMissingNode()
-                ? availability.path("available_dates") : mapper.createArrayNode());
-        entry.set("full_date_range", availability != null && !availability.isMissingNode()
-                ? availability.path("full_date_range") : mapper.createObjectNode());
-
-        // The tile routes take dataset and variable separately, so split the product id on its
-        // first ':'. That split is the only place the id is treated as anything but opaque. The
-        // variable half of a two-variable product contains '+' (e.g. ucur+vcur), which URLEncoder
-        // renders as %2B — without that a query string would decode it back to a space.
-        int sep = id.indexOf(':');
-        String datasetPart = sep >= 0 ? id.substring(0, sep) : id;
-        String variablePart = sep >= 0 ? id.substring(sep + 1) : "";
-        String encodedDataset = URLEncoder.encode(datasetPart, StandardCharsets.UTF_8);
-        String encodedVariable = URLEncoder.encode(variablePart, StandardCharsets.UTF_8);
-
-        if (canVisual) {
-            entry.put("visual_tile_url_template",
-                    "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{x}/{y}"
-                            + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
-                            + "&datetime={datetime}&f=png");
-            entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend");
-        }
-
-        if (canData) {
-            entry.put("data_tile_url_template",
-                    "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/data_tiles/{lod}/{x}/{y}"
-                            + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
-                            + "&datetime={datetime}");
-            entry.put("data_manifest_url_template",
-                    "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/data_tiles/manifest"
-                            + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
-                            + "&datetime={datetime}");
-        }
-
-        return entry;
-    }
-
-    @Operation(
-            summary = "List the renderable tiler products of several collections, or all of them",
-            description = "Batched form of `GET /collections/{collectionId}/products`: pass one or more " +
-                    "`collectionId` query params to fetch several collections in a single round trip, or " +
-                    "omit it entirely to list every tiler product across every collection. Since the result " +
-                    "can span more than one collection, each entry additionally carries the `collectionId` " +
-                    "it belongs to — otherwise the entry shape is identical to the single-collection route."
-    )
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200",
-                    description = "The matching products; an empty array if none match.",
-                    content = @Content(mediaType = "application/json",
-                            examples = @ExampleObject(value = """
-                                    {
-                                      "products": [
-                                        {
-                                          "collectionId": "0c9eb39c-9cbe-4c6a-8a10-5867087e703a",
-                                          "id": "model_sea_level_anomaly_gridded_realtime:gsla",
-                                          "variable": "GSLA",
-                                          "tile_types": ["visual", "data"],
-                                          "available_dates": ["2024-01-01", "2024-01-02"],
-                                          "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
-                                          "visual_tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
-                                          "legend_url": "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend",
-                                          "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}",
-                                          "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}"
-                                        },
-                                        {
-                                          "collectionId": "1a2b3c4d-0000-1111-2222-333344445555",
-                                          "id": "satellite_austemp_heatwave_14day:mcs_category",
-                                          "variable": "MCS_category",
-                                          "tile_types": ["data"],
-                                          "available_dates": ["2026-02-14"],
-                                          "full_date_range": {"start": "2020-01-01", "end": "2026-02-14"},
-                                          "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/1a2b3c4d-0000-1111-2222-333344445555/data_tiles/{lod}/{x}/{y}?dataset=satellite_austemp_heatwave_14day&variable=mcs_category&datetime={datetime}",
-                                          "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/1a2b3c4d-0000-1111-2222-333344445555/data_tiles/manifest?dataset=satellite_austemp_heatwave_14day&variable=mcs_category&datetime={datetime}"
-                                        }
-                                      ]
-                                    }"""))),
-            @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "502", description = "DAS unreachable, errored, or rejected this service's API key.",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class)))})
-    @GetMapping("/collections/products")
-    public ResponseEntity<JsonNode> getProductsForCollections(
-            @Parameter(in = ParameterIn.QUERY,
-                    description = "Collection identifier(s) (metadata record UUID) to include. Repeat for " +
-                            "multiple collections (`collectionId=a&collectionId=b`) or omit entirely to list " +
-                            "every collection's products.",
-                    example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
-            @RequestParam(required = false) List<String> collectionId) {
-
-        List<JsonNode> products = (collectionId == null || collectionId.isEmpty())
-                ? dasTilerService.getProducts()
-                : dasTilerService.productsForCollections(collectionId);
-        DasTilerService.DasJsonResult manifest = dasTilerService.getManifest();
-        JsonNode manifestProducts = manifest.body() != null ? manifest.body().path("products") : null;
-
-        ArrayNode result = mapper.createArrayNode();
-        for (JsonNode product : products) {
-            String productCollectionId = product.path("metadata_uuid").asText(null);
             ObjectNode entry = mapper.createObjectNode();
-            entry.put("collectionId", productCollectionId);
-            entry.setAll(buildProductEntry(product, productCollectionId, manifestProducts));
+            entry.put("id", id);
+            entry.set("variable", variable);
+
+            // tile_types is a capability list: what THIS service can serve today, not a property of
+            // the data. Visual capability now comes from DAS, which knows whether a variable is
+            // actually renderable — arity cannot tell a colourisable scalar from one the renderer
+            // has no sensible colouring for. The arity rule survives only as a fallback for a DAS
+            // old enough to have no `visual` field, which the OGC-first deployment order requires.
+            // Data tiles still follow arity: the shader packs one or two channels, and DAS config
+            // validation guarantees nothing longer reaches here.
+            boolean canVisual = product.has("visual")
+                    ? product.path("visual").asBoolean()
+                    : variableCount == 1;
+            boolean canData = variableCount == 1 || variableCount == 2;
+            ArrayNode tileTypes = mapper.createArrayNode();
+            if (canVisual) {
+                tileTypes.add("visual");
+            }
+            if (canData) {
+                tileTypes.add("data");
+            }
+            entry.set("tile_types", tileTypes);
+
+            JsonNode availability = manifestProducts != null ? manifestProducts.path(id) : null;
+            entry.set("available_dates", availability != null && !availability.isMissingNode()
+                    ? availability.path("available_dates") : mapper.createArrayNode());
+            entry.set("full_date_range", availability != null && !availability.isMissingNode()
+                    ? availability.path("full_date_range") : mapper.createObjectNode());
+
+            // The tile routes take dataset and variable separately, so split the product id on its
+            // first ':'. That split is the only place the id is treated as anything but opaque. The
+            // variable half of a two-variable product contains '+' (e.g. ucur+vcur), which URLEncoder
+            // renders as %2B — without that a query string would decode it back to a space.
+            int sep = id.indexOf(':');
+            String datasetPart = sep >= 0 ? id.substring(0, sep) : id;
+            String variablePart = sep >= 0 ? id.substring(sep + 1) : "";
+            String encodedDataset = URLEncoder.encode(datasetPart, StandardCharsets.UTF_8);
+            String encodedVariable = URLEncoder.encode(variablePart, StandardCharsets.UTF_8);
+
+            if (canVisual) {
+                entry.put("visual_tile_url_template",
+                        "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{x}/{y}"
+                                + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
+                                + "&datetime={datetime}&f=png");
+                entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend");
+            }
+
+            if (canData) {
+                entry.put("data_tile_url_template",
+                        "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/data_tiles/{lod}/{x}/{y}"
+                                + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
+                                + "&datetime={datetime}");
+                entry.put("data_manifest_url_template",
+                        "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/data_tiles/manifest"
+                                + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
+                                + "&datetime={datetime}");
+            }
+
             result.add(entry);
         }
 
