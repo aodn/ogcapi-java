@@ -2,8 +2,6 @@ package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.exception.DasUpstreamException;
-import au.org.aodn.ogcapi.server.core.service.Search;
-import au.org.aodn.stac.model.StacCollectionModel;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +19,10 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -45,7 +43,6 @@ public class DasTilerService {
     private static final String DATA_TILES_BASE = "/api/v1/das/tiler/data_tiles";
 
     protected final DasProperties dasProperties;
-    protected final Search search;
 
     /**
      * The shared DAS client — short timeouts, and it attaches the DAS API key to every request
@@ -55,11 +52,10 @@ public class DasTilerService {
     private final ObjectMapper mapper;
 
     public DasTilerService(
-            DasProperties dasProperties, Search search,
+            DasProperties dasProperties,
             @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
             ObjectMapper mapper) {
         this.dasProperties = dasProperties;
-        this.search = search;
         this.httpClient = httpClient;
         this.mapper = mapper;
     }
@@ -127,6 +123,24 @@ public class DasTilerService {
     }
 
     /**
+     * Fetches the decoded value(s) at a single lat/lon point for a product on a date. Unlike the
+     * tile route this returns the already-decoded value(s) as JSON, not value-encoded pixels.
+     */
+    public DasJsonResult getPoint(String productId, String date, double lat, double lon) {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/{date}/point")
+                .queryParam("lat", "{lat}")
+                .queryParam("lon", "{lon}");
+        Map<String, Object> params = new HashMap<>();
+        params.put("product", productId);
+        params.put("date", date);
+        params.put("lat", lat);
+        params.put("lon", lon);
+
+        return exchangeForJson(builder, params);
+    }
+
+    /**
      * Fetches the per-date data-tile manifest (decode ranges, bounds, LOD geometry) needed to
      * decode the data tiles. Unlike the plain JSON getters this expands the product id (which
      * contains {@code :}/{@code +}) as a path variable and forwards the immutable
@@ -158,15 +172,14 @@ public class DasTilerService {
         }
     }
 
-    public JsonNode getManifest() {
-        String url = dasProperties.host() + VISUAL_TILES_BASE + "/manifest";
-        try {
-            return httpClient.getForObject(url, JsonNode.class);
-        } catch (HttpStatusCodeException e) {
-            throw mapUpstreamError(e);
-        } catch (ResourceAccessException e) {
-            throw mapNetworkError(e);
-        }
+    /**
+     * Fetches the product/date manifest, forwarding its {@code Cache-Control} rather than this
+     * service inventing a freshness of its own.
+     */
+    public DasJsonResult getManifest() {
+        UriComponentsBuilder builder = UriComponentsBuilder
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/manifest");
+        return exchangeForJson(builder, Map.of());
     }
 
     public JsonNode getColormaps() {
@@ -208,26 +221,23 @@ public class DasTilerService {
     }
 
     public List<JsonNode> productsForCollection(String collectionId) {
+        return productsForCollections(List.of(collectionId));
+    }
+
+    /**
+     * Filters products down to the given collection ids ({@code metadata_uuid}). A null or empty
+     * id collection is unfiltered — every product across every collection is returned.
+     */
+    public List<JsonNode> productsForCollections(Collection<String> collectionIds) {
+        boolean unfiltered = collectionIds == null || collectionIds.isEmpty();
         List<JsonNode> result = new ArrayList<>();
         for (JsonNode product : getProducts()) {
-            if (collectionId.equals(product.path("metadata_uuid").asText(null))) {
+            String uuid = product.path("metadata_uuid").asText(null);
+            if (unfiltered || (uuid != null && collectionIds.contains(uuid))) {
                 result.add(product);
             }
         }
         return result;
-    }
-
-    public boolean isDatasetInCollection(String collectionId, String dataset) {
-        var result = search.searchCollections(collectionId);
-        if (result == null || result.getCollections() == null) {
-            return false;
-        }
-        return result.getCollections().stream()
-                .map(StacCollectionModel::getAssets)
-                .filter(Objects::nonNull)
-                .flatMap(assets -> assets.keySet().stream())
-                .map(key -> key.contains(".") ? key.substring(0, key.indexOf('.')) : key)
-                .anyMatch(dataset::equals);
     }
 
     private DasTileResult exchangeForImage(UriComponentsBuilder builder, Map<String, Object> params, String fallbackContentType) {

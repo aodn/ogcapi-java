@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.tile;
 
 import au.org.aodn.ogcapi.server.core.exception.InvalidParameterException;
-import au.org.aodn.ogcapi.server.core.exception.ResourceNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -43,8 +42,12 @@ public class RestExtApi {
             description = "The discovery call a map client makes before requesting tiles: it supplies every " +
                     "value the tile routes need, including ready-to-use URL templates.\n\n" +
                     "`tile_types` is a capability list — what this service can serve today, not a property of " +
-                    "the data. Single-variable products give `[\"visual\", \"data\"]`; two-variable products " +
-                    "(e.g. `ucur+vcur`) give `[\"data\"]` (they cannot be colourised as visual tiles). Each " +
+                    "the data. It reflects the capability DAS reports per product: a product DAS marks as " +
+                    "visual-capable gives `[\"visual\", \"data\"]`, one it does not gives `[\"data\"]`. " +
+                    "Two-variable products (e.g. `ucur+vcur`) are always `[\"data\"]` — they cannot be " +
+                    "colourised — and a single-variable product may be `[\"data\"]` too when its variable is " +
+                    "not renderable. Variable arity is used only as a fallback against an older DAS that does " +
+                    "not report capability. Each " +
                     "capability carries its own template(s): `visual_tile_url_template` + `legend_url` when " +
                     "`\"visual\"` is present, `data_tile_url_template` + `data_manifest_url_template` when " +
                     "`\"data\"` is present. For two-variable products the `variable` array order (e.g. " +
@@ -77,6 +80,15 @@ public class RestExtApi {
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=ucur%2Bvcur&datetime={datetime}",
                                           "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=ucur%2Bvcur&datetime={datetime}"
+                                        },
+                                        {
+                                          "id": "model_sea_level_anomaly_gridded_realtime:wdir",
+                                          "variable": "WDIR",
+                                          "tile_types": ["data"],
+                                          "available_dates": ["2024-01-01", "2024-01-02"],
+                                          "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
+                                          "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=wdir&datetime={datetime}",
+                                          "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=wdir&datetime={datetime}"
                                         }
                                       ]
                                     }"""))),
@@ -99,8 +111,8 @@ public class RestExtApi {
                     example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
             @PathVariable String collectionId) {
         List<JsonNode> products = dasTilerService.productsForCollection(collectionId);
-        JsonNode manifest = dasTilerService.getManifest();
-        JsonNode manifestProducts = manifest != null ? manifest.path("products") : null;
+        DasTilerService.DasJsonResult manifest = dasTilerService.getManifest();
+        JsonNode manifestProducts = manifest.body() != null ? manifest.body().path("products") : null;
 
         ArrayNode result = mapper.createArrayNode();
         for (JsonNode product : products) {
@@ -113,10 +125,15 @@ public class RestExtApi {
             entry.set("variable", variable);
 
             // tile_types is a capability list: what THIS service can serve today, not a property of
-            // the data. Visual tiles are colourised scalars only; DAS rejects multi-variable products
-            // there. Data tiles support one or exactly two variables (the shader packs one or two
-            // channels); three or more is unsupported by the protocol, so nothing is servable.
-            boolean canVisual = variableCount == 1;
+            // the data. Visual capability now comes from DAS, which knows whether a variable is
+            // actually renderable — arity cannot tell a colourisable scalar from one the renderer
+            // has no sensible colouring for. The arity rule survives only as a fallback for a DAS
+            // old enough to have no `visual` field, which the OGC-first deployment order requires.
+            // Data tiles still follow arity: the shader packs one or two channels, and DAS config
+            // validation guarantees nothing longer reaches here.
+            boolean canVisual = product.has("visual")
+                    ? product.path("visual").asBoolean()
+                    : variableCount == 1;
             boolean canData = variableCount == 1 || variableCount == 2;
             ArrayNode tileTypes = mapper.createArrayNode();
             if (canVisual) {
@@ -133,8 +150,8 @@ public class RestExtApi {
             entry.set("full_date_range", availability != null && !availability.isMissingNode()
                     ? availability.path("full_date_range") : mapper.createObjectNode());
 
-            // The tile routes take dataset and variable separately (they check dataset membership
-            // against the collection's assets), so split the product id on its first ':'. The
+            // The tile routes take dataset and variable separately, so split the product id on its
+            // first ':'. That split is the only place the id is treated as anything but opaque. The
             // variable half of a two-variable product contains '+' (e.g. ucur+vcur), which URLEncoder
             // renders as %2B — without that a query string would decode it back to a space.
             int sep = id.indexOf(':');
@@ -168,9 +185,11 @@ public class RestExtApi {
         ObjectNode body = mapper.createObjectNode();
         body.set("products", result);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300, must-revalidate")
-                .body(body);
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+        if (manifest.cacheControl() != null) {
+            response.header(HttpHeaders.CACHE_CONTROL, manifest.cacheControl());
+        }
+        return response.body(body);
     }
 
     @Operation(
@@ -204,8 +223,9 @@ public class RestExtApi {
                     "negative `x`/`y`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "`dataset` is not in the collection, or DAS has no " +
-                    "such product, LOD or chunk, or no data for that date.",
+            @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
+                    "(`{dataset}:{variable}`), an unavailable date, or an out-of-range LOD or chunk. " +
+                    "Forwarded from DAS, which owns the product catalogue.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "DAS could not process the request (e.g. a " +
@@ -278,10 +298,6 @@ public class RestExtApi {
             throw new InvalidParameterException("x and y (chunk column/row) must be >= 0");
         }
         validateProductParams(dataset, variable, datetime);
-        if (!dasTilerService.isDatasetInCollection(collectionId, dataset)) {
-            throw new ResourceNotFoundException(
-                    "dataset '" + dataset + "' not found in collection '" + collectionId + "'");
-        }
 
         // DAS identifies a product by the combined {dataset}:{variable} id.
         String product = dataset + ":" + variable;
@@ -293,6 +309,104 @@ public class RestExtApi {
             response.header(HttpHeaders.CACHE_CONTROL, tile.cacheControl());
         }
         return response.body(tile.body());
+    }
+
+    @Operation(
+            summary = "Retrieve the decoded value(s) at a point for a product",
+            description = "Returns the already-decoded value(s) at a single lat/lon point — unlike the data-tile " +
+                    "route, this is **not** value-encoded pixels, it's the plain decoded value(s) as JSON. " +
+                    "Useful for point queries (e.g. a click on the map) without fetching and decoding a whole " +
+                    "tile.\n\n" +
+                    "Valid `dataset`, `variable` and `datetime` values come from " +
+                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products`.",
+            tags = {"Data Tiles"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The decoded value(s) at the point.",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "lat": -44.27813720703125,
+                                      "lon": 132.0092315673828,
+                                      "variables": {
+                                        "MCS_category": {
+                                          "value": 0.0,
+                                          "units": null
+                                        }
+                                      }
+                                    }"""))),
+            @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
+                    "containing a space (an unencoded `+`), `datetime` not `YYYY-MM-DD`, or `lat`/`lon` " +
+                    "missing or out of range.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
+                    "(`{dataset}:{variable}`), an unavailable date, or a point outside the product's coverage. " +
+                    "Forwarded from DAS, which owns the product catalogue.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "422", description = "DAS could not process the request (e.g. a " +
+                    "malformed date).",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "The tile service is unavailable. The cause is " +
+                    "deliberately not described and is logged server-side instead.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)))})
+    @GetMapping("/collections/{collectionId}/data_tiles/point")
+    public ResponseEntity<JsonNode> getCollectionDataPoint(
+            @Parameter(in = ParameterIn.PATH, required = true,
+                    description = "The metadata record UUID.",
+                    example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
+            @PathVariable String collectionId,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Dataset name — the `{dataset}` half of a DAS product id. Must be one of the " +
+                            "collection's data assets.",
+                    example = "model_sea_level_anomaly_gridded_realtime")
+            @RequestParam(required = false) String dataset,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Variable name — the `{variable}` half of a DAS product id. A two-variable " +
+                            "value such as `ucur+vcur` must have its `+` percent-encoded as `%2B`.",
+                    example = "gsla")
+            @RequestParam(required = false) String variable,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Date to decode, strict `YYYY-MM-DD`. Must be one of the product's " +
+                            "`available_dates`.",
+                    example = "2024-01-01")
+            @RequestParam(required = false) String datetime,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Latitude of the point, in degrees.",
+                    schema = @Schema(type = "number", minimum = "-90", maximum = "90"), example = "-44.27")
+            @RequestParam(required = false) Double lat,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Longitude of the point, in degrees.",
+                    schema = @Schema(type = "number", minimum = "-180", maximum = "180"), example = "132.00")
+            @RequestParam(required = false) Double lon) {
+
+        validateProductParams(dataset, variable, datetime);
+        validateLatLon(lat, lon);
+
+        String product = dataset + ":" + variable;
+        DasTilerService.DasJsonResult point = dasTilerService.getPoint(product, datetime, lat, lon);
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+        if (point.cacheControl() != null) {
+            response.header(HttpHeaders.CACHE_CONTROL, point.cacheControl());
+        }
+        return response.body(point.body());
     }
 
     @Operation(
@@ -314,8 +428,9 @@ public class RestExtApi {
                     "containing a space (an unencoded `+`), or `datetime` not `YYYY-MM-DD`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "`dataset` is not in the collection, or DAS has " +
-                    "no such product, or no data for that date.",
+            @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
+                    "(`{dataset}:{variable}`) or an unavailable date. Forwarded from DAS, which owns " +
+                    "the product catalogue.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "DAS could not process the request (e.g. a " +
@@ -361,10 +476,6 @@ public class RestExtApi {
             @RequestParam(required = false) String datetime) {
 
         validateProductParams(dataset, variable, datetime);
-        if (!dasTilerService.isDatasetInCollection(collectionId, dataset)) {
-            throw new ResourceNotFoundException(
-                    "dataset '" + dataset + "' not found in collection '" + collectionId + "'");
-        }
 
         String product = dataset + ":" + variable;
         DasTilerService.DasJsonResult manifest = dasTilerService.getDataManifest(product, datetime);
@@ -392,6 +503,15 @@ public class RestExtApi {
         }
         if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new InvalidParameterException("datetime is required and must be YYYY-MM-DD");
+        }
+    }
+
+    private void validateLatLon(Double lat, Double lon) {
+        if (lat == null || lat < -90 || lat > 90) {
+            throw new InvalidParameterException("lat is required and must be between -90 and 90");
+        }
+        if (lon == null || lon < -180 || lon > 180) {
+            throw new InvalidParameterException("lon is required and must be between -180 and 180");
         }
     }
 

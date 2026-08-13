@@ -49,15 +49,16 @@ public class RestServices {
         this.batchJobQueue = batchJobQueue;
     }
 
-    public void notifyUser(String recipient, String uuid, String startDate, String endDate, Object multiPolygon, String collectionTitle,
+    public void notifyUser(String recipient, String uuid, String key, String startDate, String endDate, Object multiPolygon, String collectionTitle,
                            String fullMetadataLink,
-                           String suggestedCitation) {
+                           String suggestedCitation,
+                           String outputFormat) {
 
         String aodnInfoSender = "no.reply@aodn.org.au";
 
         try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
-            var content = Content.builder().data(generateStartedEmailContent(uuid, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation)).build();
+            var content = Content.builder().data(generateStartedEmailContent(uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
 
             var body = Body.builder().html(content).build();
@@ -148,14 +149,17 @@ public class RestServices {
         return jobId;
     }
 
-    private String generateStartedEmailContent(
+    // package-private so JobStartedEmailPreview (test scope) can render it
+    String generateStartedEmailContent(
             String uuid,
+            String key,
             String startDate,
             String endDate,
             Object multipolygon,
             String collectionTitle,
             String fullMetadataLink,
-            String suggestedCitation
+            String suggestedCitation,
+            String outputFormat
     ) {
         try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
 
@@ -174,10 +178,16 @@ public class RestServices {
                     objectMapper
             );
 
+            // Keys arrive comma-separated; show one per line. Absent means "all files".
+            String keysDisplay = (key != null && !key.isBlank()) ? key.replace(",", "<br>") : "*";
+
             // Replace all variables in one chain
             return template
                     .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
                     .replace("{{collectionTitle}}", collectionTitle != null ? collectionTitle : "")
+                    .replace("{{uuid}}", uuid != null ? uuid : "")
+                    .replace("{{keys}}", keysDisplay)
+                    .replace("{{outputFormat}}", outputFormat != null ? outputFormat.toUpperCase() : "")
                     .replace("{{subsettingSection}}", subsettingSection)
                     .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))
                     .replace("{{POLYGON_IMG}}", EmailUtils.readBase64Image("polygon.txt"))
