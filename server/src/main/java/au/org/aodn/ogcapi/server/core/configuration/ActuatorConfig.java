@@ -68,7 +68,6 @@ public class ActuatorConfig {
     public HealthIndicator ogcApiHealth(
             @Value("${elasticsearch.vocabs_index.name}") String vocabIndexName,
             @Value("${elasticsearch.index.name}") String indexName,
-            @Value("${elasticsearch.cloud_optimized_index.name}") String coIndexName,
             ElasticsearchClient client) {
         return () -> {
             try {
@@ -88,13 +87,6 @@ public class ActuatorConfig {
                     return Health.status(ErrorCode.MISSING_CORE_INDEX.getStatus())
                             .withDetail("reason", ErrorCode.MISSING_CORE_INDEX.getMessage())
                             .withDetail("code", ErrorCode.MISSING_CORE_INDEX.getCode())
-                            .build();
-                }
-
-                if(!client.indices().exists(ExistsRequest.of(b -> b.index(coIndexName))).value()) {
-                    return Health.status(ErrorCode.MISSING_CO_CORE_INDEX.getStatus())
-                            .withDetail("reason", ErrorCode.MISSING_CO_CORE_INDEX.getMessage())
-                            .withDetail("code", ErrorCode.MISSING_CO_CORE_INDEX.getCode())
                             .build();
                 }
 

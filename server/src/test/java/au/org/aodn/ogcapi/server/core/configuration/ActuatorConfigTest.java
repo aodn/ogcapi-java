@@ -50,7 +50,6 @@ public class ActuatorConfigTest {
     private ActuatorConfig config;
 
     private static final String INDEX       = "test-core";
-    private static final String CO_INDEX    = "test-co-core";
     private static final String VOCAB_INDEX = "test-vocabs";
 
     @BeforeEach
@@ -74,7 +73,7 @@ public class ActuatorConfigTest {
         when(clusterHealth.status()).thenReturn(HealthStatus.Green);
         when(client.indices().exists(any(ExistsRequest.class))).thenReturn(booleanHealthTrue);
 
-        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, CO_INDEX, client).health();
+        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, client).health();
         assertEquals(Status.UP, health.getStatus());
     }
 
@@ -84,7 +83,7 @@ public class ActuatorConfigTest {
         when(client.cluster().health(any(Function.class))).thenReturn(clusterHealth);
         when(clusterHealth.status()).thenReturn(HealthStatus.Red);
 
-        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, CO_INDEX, client).health();
+        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, client).health();
 
         assertEquals(ErrorCode.ELASTICSEARCH_UNAVAILABLE.getStatus(), health.getStatus().toString());
         assertTrue(health.getDetails().containsValue(ErrorCode.ELASTICSEARCH_UNAVAILABLE.getMessage()));
@@ -96,7 +95,7 @@ public class ActuatorConfigTest {
         when(client.cluster().health(any(Function.class))).thenReturn(clusterHealth);
         when(clusterHealth.status()).thenReturn(HealthStatus.Yellow);
 
-        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, CO_INDEX, client).health();
+        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, client).health();
         assertEquals(ErrorCode.ELASTICSEARCH_UNAVAILABLE.getStatus(), health.getStatus().toString());
     }
 
@@ -105,7 +104,7 @@ public class ActuatorConfigTest {
     void exceptionThrown_returnsUnavailableWithException() throws Exception {
         when(client.cluster().health(any(Function.class))).thenThrow(new RuntimeException("connection failed"));
 
-        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, CO_INDEX, client).health();
+        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, client).health();
 
         assertEquals(ErrorCode.ELASTICSEARCH_UNAVAILABLE.getStatus(), health.getStatus().toString());
         // Exception details in error section
@@ -128,7 +127,7 @@ public class ActuatorConfigTest {
             return req.index().contains(INDEX) ? booleanHealthFalse : booleanHealthTrue;
         });
 
-        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, CO_INDEX, client).health();
+        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, client).health();
         assertEquals(ErrorCode.MISSING_CORE_INDEX.getCode(), health.getDetails().get("code").toString());
     }
 
@@ -141,7 +140,7 @@ public class ActuatorConfigTest {
             return req.index().contains(VOCAB_INDEX) ? booleanHealthFalse : booleanHealthTrue;
         });
 
-        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, CO_INDEX, client).health();
+        Health health = config.ogcApiHealth(VOCAB_INDEX, INDEX, client).health();
         assertEquals(ErrorCode.MISSING_VOCAB_INDEX.getCode(), health.getDetails().get("code").toString());
     }
 }

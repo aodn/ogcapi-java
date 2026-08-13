@@ -111,8 +111,8 @@ public class RestExtApi {
                     example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
             @PathVariable String collectionId) {
         List<JsonNode> products = dasTilerService.productsForCollection(collectionId);
-        JsonNode manifest = dasTilerService.getManifest();
-        JsonNode manifestProducts = manifest != null ? manifest.path("products") : null;
+        DasTilerService.DasJsonResult manifest = dasTilerService.getManifest();
+        JsonNode manifestProducts = manifest.body() != null ? manifest.body().path("products") : null;
 
         ArrayNode result = mapper.createArrayNode();
         for (JsonNode product : products) {
@@ -185,9 +185,11 @@ public class RestExtApi {
         ObjectNode body = mapper.createObjectNode();
         body.set("products", result);
 
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, "public, max-age=300, must-revalidate")
-                .body(body);
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+        if (manifest.cacheControl() != null) {
+            response.header(HttpHeaders.CACHE_CONTROL, manifest.cacheControl());
+        }
+        return response.body(body);
     }
 
     @Operation(
@@ -310,6 +312,104 @@ public class RestExtApi {
     }
 
     @Operation(
+            summary = "Retrieve the decoded value(s) at a point for a product",
+            description = "Returns the already-decoded value(s) at a single lat/lon point — unlike the data-tile " +
+                    "route, this is **not** value-encoded pixels, it's the plain decoded value(s) as JSON. " +
+                    "Useful for point queries (e.g. a click on the map) without fetching and decoding a whole " +
+                    "tile.\n\n" +
+                    "Valid `dataset`, `variable` and `datetime` values come from " +
+                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products`.",
+            tags = {"Data Tiles"})
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The decoded value(s) at the point.",
+                    content = @Content(mediaType = "application/json",
+                            examples = @ExampleObject(value = """
+                                    {
+                                      "lat": -44.27813720703125,
+                                      "lon": 132.0092315673828,
+                                      "variables": {
+                                        "MCS_category": {
+                                          "value": 0.0,
+                                          "units": null
+                                        }
+                                      }
+                                    }"""))),
+            @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
+                    "containing a space (an unencoded `+`), `datetime` not `YYYY-MM-DD`, or `lat`/`lon` " +
+                    "missing or out of range.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
+                    "(`{dataset}:{variable}`), an unavailable date, or a point outside the product's coverage. " +
+                    "Forwarded from DAS, which owns the product catalogue.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "422", description = "DAS could not process the request (e.g. a " +
+                    "malformed date).",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "The tile service is unavailable. The cause is " +
+                    "deliberately not described and is logged server-side instead.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)))})
+    @GetMapping("/collections/{collectionId}/data_tiles/point")
+    public ResponseEntity<JsonNode> getCollectionDataPoint(
+            @Parameter(in = ParameterIn.PATH, required = true,
+                    description = "The metadata record UUID.",
+                    example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
+            @PathVariable String collectionId,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Dataset name — the `{dataset}` half of a DAS product id. Must be one of the " +
+                            "collection's data assets.",
+                    example = "model_sea_level_anomaly_gridded_realtime")
+            @RequestParam(required = false) String dataset,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Variable name — the `{variable}` half of a DAS product id. A two-variable " +
+                            "value such as `ucur+vcur` must have its `+` percent-encoded as `%2B`.",
+                    example = "gsla")
+            @RequestParam(required = false) String variable,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Date to decode, strict `YYYY-MM-DD`. Must be one of the product's " +
+                            "`available_dates`.",
+                    example = "2024-01-01")
+            @RequestParam(required = false) String datetime,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Latitude of the point, in degrees.",
+                    schema = @Schema(type = "number", minimum = "-90", maximum = "90"), example = "-44.27")
+            @RequestParam(required = false) Double lat,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Longitude of the point, in degrees.",
+                    schema = @Schema(type = "number", minimum = "-180", maximum = "180"), example = "132.00")
+            @RequestParam(required = false) Double lon) {
+
+        validateProductParams(dataset, variable, datetime);
+        validateLatLon(lat, lon);
+
+        String product = dataset + ":" + variable;
+        DasTilerService.DasJsonResult point = dasTilerService.getPoint(product, datetime, lat, lon);
+
+        ResponseEntity.BodyBuilder response = ResponseEntity.ok();
+        if (point.cacheControl() != null) {
+            response.header(HttpHeaders.CACHE_CONTROL, point.cacheControl());
+        }
+        return response.body(point.body());
+    }
+
+    @Operation(
             summary = "Retrieve the data-tile decode manifest for a product",
             description = "Returns the per-date manifest a client must fetch **before** requesting data " +
                     "tiles: `bounds`, per-LOD `grid`/`chunkPx`/`storedPx`/`padding`/`zoomThreshold`, and the " +
@@ -403,6 +503,15 @@ public class RestExtApi {
         }
         if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
             throw new InvalidParameterException("datetime is required and must be YYYY-MM-DD");
+        }
+    }
+
+    private void validateLatLon(Double lat, Double lon) {
+        if (lat == null || lat < -90 || lat > 90) {
+            throw new InvalidParameterException("lat is required and must be between -90 and 90");
+        }
+        if (lon == null || lon < -180 || lon > 180) {
+            throw new InvalidParameterException("lon is required and must be between -180 and 180");
         }
     }
 
