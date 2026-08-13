@@ -68,7 +68,6 @@ public class ActuatorConfig {
     public HealthIndicator ogcApiHealth(
             @Value("${elasticsearch.vocabs_index.name}") String vocabIndexName,
             @Value("${elasticsearch.index.name}") String indexName,
-            @Value("${elasticsearch.cloud_optimized_index.name}") String coIndexName,
             ElasticsearchClient client) {
         return () -> {
             try {
