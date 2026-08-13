@@ -91,13 +91,6 @@ public class ActuatorConfig {
                             .build();
                 }
 
-                if(!client.indices().exists(ExistsRequest.of(b -> b.index(coIndexName))).value()) {
-                    return Health.status(ErrorCode.MISSING_CO_CORE_INDEX.getStatus())
-                            .withDetail("reason", ErrorCode.MISSING_CO_CORE_INDEX.getMessage())
-                            .withDetail("code", ErrorCode.MISSING_CO_CORE_INDEX.getCode())
-                            .build();
-                }
-
                 if(!client.indices().exists(ExistsRequest.of(b -> b.index(vocabIndexName))).value()) {
                     return Health.status(ErrorCode.MISSING_VOCAB_INDEX.getStatus())
                             .withDetail("reason", ErrorCode.MISSING_VOCAB_INDEX.getMessage())
