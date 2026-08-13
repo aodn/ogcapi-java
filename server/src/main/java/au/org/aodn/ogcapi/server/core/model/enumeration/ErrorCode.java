@@ -5,7 +5,6 @@ import lombok.Getter;
 @Getter
 public enum ErrorCode {
     ELASTICSEARCH_UNAVAILABLE("DOWN", "E1000", "Dependency unavailable"),
-    MISSING_CO_CORE_INDEX("DEGRADED", "E1001","Missing cloud optimized index"),
     MISSING_VOCAB_INDEX("DEGRADED", "E1002","Missing vocab index"),
     MISSING_CORE_INDEX("DOWN", "E1003","Missing core index");
 
