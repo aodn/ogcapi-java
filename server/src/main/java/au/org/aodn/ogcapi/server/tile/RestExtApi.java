@@ -67,7 +67,7 @@ public class RestExtApi {
                                           "tile_types": ["visual", "data"],
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
-                                          "visual_tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
+                                          "visual_tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
                                           "legend_url": "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend",
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}",
                                           "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}"
@@ -161,8 +161,9 @@ public class RestExtApi {
             String encodedVariable = URLEncoder.encode(variablePart, StandardCharsets.UTF_8);
 
             if (canVisual) {
+                // Placeholders are named after the OGC path variables themselves (tileRow/tileCol, row=y col=x), not {x}/{y}
                 entry.put("visual_tile_url_template",
-                        "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{x}/{y}"
+                        "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}"
                                 + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
                                 + "&datetime={datetime}&f=png");
                 entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend");
