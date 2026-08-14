@@ -1,6 +1,5 @@
 package au.org.aodn.ogcapi.server.tile;
 
-import au.org.aodn.ogcapi.server.core.mapper.BinaryResponseToBytes;
 import au.org.aodn.ogcapi.server.core.mapper.StacToTileSetWmWGS84Q;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.mapper.StacToInlineResponse2002;
@@ -47,9 +46,6 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     protected StacToTileSetWmWGS84Q stacToTileSet;
 
     @Autowired
-    protected BinaryResponseToBytes binaryResponseToByte;
-
-    @Autowired
     protected DasTilerService dasTilerService;
 
     @Override
@@ -77,19 +73,22 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
      * Serves a DAS "visual tile" (colourised raster PNG/WebP for a gridded Zarr ocean product)
      * through the OGC API - Tiles collection map-tile route
      * <p>
-     * Deliberately non-strict OGC: {@code tileMatrix}=z, {@code tileRow}=x, {@code tileCol}=y
-     * (slippy {z}/{x}/{y}), matching the convention already shipped by the vector-tile route
-     * ({@code ElasticSearch.searchCollectionVectorTile}, used by {@code datasetVectorGetTile}
-     * below) and the frontend's {@code VectorTileLayers.tsx} template — not strict OGC
-     * row=y/col=x semantics. A generic OGC client would disagree; Mapbox does not care.
+     * Standard OGC semantics: {@code tileMatrix}=z, {@code tileRow}=y, {@code tileCol}=x —
+     * matching {@code WebMercatorQuad}'s row/column definition. The frontend never hardcodes
+     * this path; it substitutes the ready-made {@code visual_tile_url_template} from the
+     * products listing, whose placeholders are named {@code {tileRow}}/{@code {tileCol}} (not
+     * {@code {x}}/{@code {y}}) precisely so the template can't be "corrected" back into slippy
+     * {@code {z}}/{@code {x}}/{@code {y}} order by someone who doesn't know the row/col swap is
+     * intentional (see {@code RestExtApi.getCollectionProducts}).
      */
     @Operation(
             summary = "Retrieve a DAS visual map tile of a collection",
             description = "Proxies a colourised raster tile (PNG/WebP) rendered by the AODN " +
                     "data-access-service from a gridded Zarr ocean product.\n\n" +
-                    "**Not strict OGC:** the path is slippy-map `{z}/{x}/{y}`, so `tileRow` is **x** and " +
-                    "`tileCol` is **y** — the reverse of OGC's row/column order. This matches the vector-tile " +
-                    "route and the frontend's Mapbox templates.\n\n" +
+                    "Standard OGC row/column order: `tileRow` is the **row** (y) and `tileCol` is the " +
+                    "**column** (x), matching `WebMercatorQuad`. Use the ready-made " +
+                    "`visual_tile_url_template` from the products listing rather than building this " +
+                    "path by hand.\n\n" +
                     "Valid `dataset`, `variable` and `datetime` values come from " +
                     "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products` — use each product's " +
                     "ready-made `visual_tile_url_template`.",
@@ -144,12 +143,12 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             @PathVariable Integer tileMatrix,
 
             @Parameter(in = ParameterIn.PATH, required = true,
-                    description = "Tile **x**, not the OGC row. Range 0 to 2^z - 1.",
+                    description = "Tile row (**y**). Range 0 to 2^z - 1.",
                     schema = @Schema(type = "integer", minimum = "0"), example = "3")
             @PathVariable Integer tileRow,
 
             @Parameter(in = ParameterIn.PATH, required = true,
-                    description = "Tile **y**, not the OGC column. Range 0 to 2^z - 1.",
+                    description = "Tile column (**x**). Range 0 to 2^z - 1.",
                     schema = @Schema(type = "integer", minimum = "0"), example = "2")
             @PathVariable Integer tileCol,
 
@@ -215,8 +214,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
 
         // DAS identifies a renderable product by the combined {dataset}:{variable} id.
         String product = dataset + ":" + variable;
+        // tileRow is the OGC row (y), tileCol is the OGC column (x); getVisualTile takes x before y.
         DasTilerService.DasTileResult tile = dasTilerService.getVisualTile(
-                product, datetime, tileMatrix, tileRow, tileCol, f, colormap, rescale);
+                product, datetime, tileMatrix, tileCol, tileRow, f, colormap, rescale);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(tile.contentType()));
@@ -367,44 +367,12 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
     public ResponseEntity<InlineResponse2001> getTileMatrixSetsList(String f) {
         return null;
     }
-    /**
-     * Return mvt from search instance, type should be protocol buffer
-     * @param tileMatrix
-     * @param tileRow
-     * @param tileCol
-     * @param tileMatrixSetId
-     * @param datetime
-     * @param collections
-     * @param subset
-     * @param crs
-     * @param subsetCrs
-     * @param f
-     * @return
-     */
-    @CrossOrigin(origins = "*") //TODO: Just good for testing
     @Override
     public ResponseEntity<?> datasetVectorGetTile(String tileMatrix, Integer tileRow, Integer tileCol,
                                                   TileMatrixSets tileMatrixSetId, String datetime,
                                                   List<String> collections, List<String> subset,
                                                   String crs, String subsetCrs, String f) {
-
-        OGCMediaTypeMapper type = OGCMediaTypeMapper.convert(f, OGCMediaTypeMapper.mapbox);
-
-        switch(type) {
-            case mapbox -> {
-                return restService.getVectorTileOfCollection(
-                        tileMatrixSetId,
-                        collections,
-                        Integer.valueOf(tileMatrix),
-                        tileRow,
-                        tileCol,
-                        binaryResponseToByte::convert);
-            }
-
-            default -> {
-                return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
-            }
-        }
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 
     @Override

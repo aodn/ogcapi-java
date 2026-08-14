@@ -91,9 +91,9 @@ public class RestApiTest extends BaseTestClass {
         Assertions.assertEquals("Impacts of stress on coral reproduction.", tiles.getBody().getTilesets().get(0).getTitle(), "Title matched 1");
     }
     /**
-     * Verify api call /tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}, this call will return the bounding
-     * box using mvt search, however this mvt search require licence and not enable by default. Without UI it is
-     * very hard to enable it.
+     * Verify api call /tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}. The vector-tile
+     * fetch implementation was removed as dead code (its only frontend consumer was deleted), so
+     * the route is now an unimplemented stub like its siblings.
      */
     @Test
     public void verifyTilesMatrixSetXYZ() throws IOException {
@@ -106,7 +106,7 @@ public class RestApiTest extends BaseTestClass {
                 byte[].class
         );
 
-        // No meaningful verify can be done here, we keep it here so that we know that test case considered.
+        Assertions.assertEquals(HttpStatus.NOT_IMPLEMENTED, tiles.getStatusCode());
     }
 
     /**
@@ -239,7 +239,8 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyVisualMapTileForwardsZXYAndReturnsImage() {
-        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
+        // path .../2/1/3 -> tileMatrix=2, tileRow(y)=1, tileCol(x)=3; getVisualTile takes x before y.
+        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(3), eq(1), eq("png"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("tile-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
@@ -255,7 +256,8 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyVisualMapTileRebuildsProductAndMapsWebpExt() {
         // dataset + variable are recombined into the DAS product id `model_sla:gsla`.
-        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("webp"), isNull(), isNull()))
+        // path .../2/1/3 -> tileMatrix=2, tileRow(y)=1, tileCol(x)=3; getVisualTile takes x before y.
+        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(3), eq(1), eq("webp"), isNull(), isNull()))
                 .thenReturn(new DasTilerService.DasTileResult("webp-bytes".getBytes(), "image/webp", null));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
@@ -269,7 +271,8 @@ public class RestApiTest extends BaseTestClass {
 
     @Test
     public void verifyVisualMapTileUpstreamErrorMirrored() {
-        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(1), eq(3), eq("png"), isNull(), isNull()))
+        // path .../2/1/3 -> tileMatrix=2, tileRow(y)=1, tileCol(x)=3; getVisualTile takes x before y.
+        when(dasTilerService.getVisualTile(eq("model_sla:gsla"), eq("2024-01-01"), eq(2), eq(3), eq(1), eq("png"), isNull(), isNull()))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "no such date"));
 
         ResponseEntity<String> response = testRestTemplate.getForEntity(

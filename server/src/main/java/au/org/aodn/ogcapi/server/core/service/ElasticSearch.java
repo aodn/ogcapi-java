@@ -8,13 +8,10 @@ import au.org.aodn.ogcapi.server.core.parser.elastic.QueryHandler;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
-import co.elastic.clients.elasticsearch.core.SearchMvtRequest;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import co.elastic.clients.elasticsearch.core.search.HighlighterOrder;
-import co.elastic.clients.elasticsearch.core.search_mvt.GridType;
-import co.elastic.clients.transport.endpoints.BinaryResponse;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -55,9 +52,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     @Value("${elasticsearch.search_as_you_type.search_suggestions.fields}")
     protected String[] searchAsYouTypeEnabledFields;
-
-    @Value("${elasticsearch.cloud_optimized_index.name}")
-    protected String dataIndexName;
 
     @Value("${elasticsearch.search_after.split_regex:\\|\\|}")
     protected String searchAfterSplitRegex;
@@ -707,39 +701,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         return explainCollectionById(
                 uuid,
                 buildParameterSearchRequestSupplier(targets, filter, properties, sortBy, coor));
-    }
-
-    @Override
-    public BinaryResponse searchCollectionVectorTile(List<String> ids, Integer tileMatrix, Integer tileRow, Integer tileCol) throws IOException {
-
-        SearchMvtRequest.Builder builder = new SearchMvtRequest.Builder();
-        builder.index(indexName)
-                .field(StacSummeries.Geometry.searchField)
-                .zoom(tileMatrix)
-                .x(tileRow)
-                .y(tileCol)
-                // If true, the meta layer’s feature is a bounding box resulting from a geo_bounds aggregation.
-                // The aggregation runs on <field> values that intersect the <zoom>/<x>/<y> tile with wrap_longitude
-                // set to false. The resulting bounding box may be larger than the vector tile.
-                .exactBounds(Boolean.FALSE)
-                .gridType(GridType.Grid);
-
-        if(ids != null && !ids.isEmpty()) {
-            List<FieldValue> values = ids.stream()
-                    .map(FieldValue::of)
-                    .collect(Collectors.toList());
-
-            List<Query> filters = List.of(
-                    TermsQuery.of(t -> t
-                            .field(StacBasicField.UUID.searchField)
-                            .terms(s -> s.value(values)))._toQuery());
-
-            builder.query(q -> q.bool(b -> b.filter(filters)));
-        }
-
-        log.debug("Final elastic search mvt payload {}", builder);
-
-        return esClient.searchMvt(builder.build());
     }
 
     protected static FieldValue toFieldValue(String s) {
