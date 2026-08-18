@@ -5,3 +5,4 @@
 *.iml
 **/.git-versioned-pom.xml
 tmp/
+.mcp.json
