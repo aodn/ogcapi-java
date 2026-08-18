@@ -28,7 +28,7 @@ public class DasServiceHeadersTest {
 
     private static final DasProperties PROPS = new DasProperties(
             "http://localhost:5000", null,"test-secret", "internal-secret",
-            Duration.ofSeconds(5), Duration.ofSeconds(30));
+            Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20));
 
     private MockRestServiceServer server;
     private DasService dasService;
@@ -83,7 +83,7 @@ public class DasServiceHeadersTest {
     public void testInternalSecretIsOmittedWhenNotConfigured() {
         DasProperties noInternal = new DasProperties(
                 "http://localhost:5000", null,"test-secret", null,
-                Duration.ofSeconds(5), Duration.ofSeconds(30));
+                Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20));
         RestTemplate noInternalTemplate = new Config().createDasRestTemplate(noInternal);
         MockRestServiceServer noInternalServer = MockRestServiceServer.bindTo(noInternalTemplate).build();
 

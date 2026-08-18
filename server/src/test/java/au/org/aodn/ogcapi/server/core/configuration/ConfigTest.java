@@ -26,8 +26,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class ConfigTest {
 
     private static final DasProperties DAS_PROPERTIES = new DasProperties(
-            "http://localhost:5000", null,"test-secret", "internal-secret",
-            Duration.ofSeconds(5), Duration.ofSeconds(30));
+            "http://localhost:5000", null, "test-secret", "internal-secret",
+            Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20));
 
     private final Config config = new Config();
 
@@ -55,6 +55,14 @@ public class ConfigTest {
     }
 
     @Test
+    public void testDasSseTemplateAttachesTheSameCredentials() throws IOException {
+        HttpHeaders headers = headersAfterInterceptors(config.createDasSseRestTemplate(DAS_PROPERTIES));
+
+        assertEquals("test-secret", headers.getFirst("X-API-KEY"));
+        assertEquals("internal-secret", headers.getFirst("x-internal-das-header-secret"));
+    }
+
+    @Test
     public void testApplicationWideTemplateCarriesNoDasCredentials() throws IOException {
         RestTemplate restTemplate = config.createRestTemplate();
 
@@ -68,8 +76,8 @@ public class ConfigTest {
     @Test
     public void testInternalSecretOmittedWhenNotConfigured() throws IOException {
         DasProperties noInternal = new DasProperties(
-                "http://localhost:5000", null,"test-secret", null,
-                Duration.ofSeconds(5), Duration.ofSeconds(30));
+                "http://localhost:5000", null, "test-secret", null,
+                Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20));
 
         HttpHeaders headers = headersAfterInterceptors(config.createDasRestTemplate(noInternal));
 

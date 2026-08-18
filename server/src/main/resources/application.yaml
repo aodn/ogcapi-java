@@ -486,6 +486,7 @@ data-access-service:
   secret: 123
   connect-timeout: 5s
   read-timeout: 30s
+  sse-read-timeout: 20m
 
 management:
   info:

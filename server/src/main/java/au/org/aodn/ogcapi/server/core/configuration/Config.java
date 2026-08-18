@@ -16,9 +16,13 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+
+import java.net.http.HttpClient;
 
 @Configuration
 @EnableScheduling
@@ -31,6 +35,7 @@ import org.springframework.web.client.RestTemplate;
 public class Config {
 
     public static final String DAS_REST_TEMPLATE = "dasRestTemplate";
+    public static final String DAS_SSE_REST_TEMPLATE = "dasSseRestTemplate";
 
     @Autowired
     ObjectMapper mapper;
@@ -69,15 +74,51 @@ public class Config {
         factory.setReadTimeout(dasProperties.readTimeout());
 
         RestTemplate restTemplate = new RestTemplate(factory);
-        restTemplate.getInterceptors().add((request, body, execution) -> {
+        restTemplate.getInterceptors().add(dasCredentials(dasProperties));
+        return restTemplate;
+    }
+
+    /**
+     * The DAS client for streamed endpoints (the cloud-optimised size estimate). It is separate
+     * from createDasRestTemplate because a stream needs two things a plain call does not:
+     * 1. A longer timeout. This factory's read timeout caps the whole exchange, not each read,
+     *    so it uses the generous sseReadTimeout while the shared bean keeps its short
+     *    readTimeout for calls that should answer quickly.
+     * 2. A cancellable body. Closing the response body cancels the exchange, and that is the
+     *    only way to stop a stream: on Java 17 the reader swallows InterruptedException, so the
+     *    read loop must notice for itself. See SseSession.probeClient.
+     */
+    @Bean(name = DAS_SSE_REST_TEMPLATE, defaultCandidate = false)
+    public RestTemplate createDasSseRestTemplate(DasProperties dasProperties) {
+        HttpClient httpClient = HttpClient.newBuilder()
+                .connectTimeout(dasProperties.connectTimeout())
+                // HttpURLConnection follows redirects on GET; the JDK client follows none by
+                // default, so ask for the equivalent rather than silently changing behaviour.
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
+
+        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
+        factory.setReadTimeout(dasProperties.sseReadTimeout());
+
+        RestTemplate restTemplate = new RestTemplate(factory);
+        restTemplate.getInterceptors().add(dasCredentials(dasProperties));
+        return restTemplate;
+    }
+
+    /**
+     * Attaches the DAS credentials to every request. Lives on the client rather than on each
+     * call so no caller can forget them — and so they never ride along on the shared template
+     * GeoServer uses.
+     */
+    private ClientHttpRequestInterceptor dasCredentials(DasProperties dasProperties) {
+        return (request, body, execution) -> {
             HttpHeaders headers = request.getHeaders();
             headers.set("X-API-KEY", dasProperties.secret());
             if (dasProperties.internal() != null) {
                 headers.set("x-internal-das-header-secret", dasProperties.internal());
             }
             return execution.execute(request, body);
-        });
-        return restTemplate;
+        };
     }
 
     @Bean

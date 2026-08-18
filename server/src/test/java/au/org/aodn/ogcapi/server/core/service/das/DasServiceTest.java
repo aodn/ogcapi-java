@@ -44,7 +44,7 @@ public class DasServiceTest {
 
         DasProperties config = new DasProperties(
                 HOST, null,"test-secret", "",
-                Duration.ofSeconds(5), Duration.ofSeconds(30)
+                Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20)
         );
 
         dasService = new DasService(config, httpClient, new ObjectMapper());
