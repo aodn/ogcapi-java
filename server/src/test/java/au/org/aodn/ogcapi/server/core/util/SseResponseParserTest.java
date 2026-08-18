@@ -3,6 +3,10 @@ package au.org.aodn.ogcapi.server.core.util;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
+import java.io.StringReader;
+import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
@@ -163,5 +167,105 @@ public class SseResponseParserTest {
     public void testEmptyBodyThrows() {
         assertThrows(RuntimeException.class, () -> parse(""));
         assertThrows(RuntimeException.class, () -> parse(null));
+    }
+
+    // ---------- streaming form ----------
+
+    /**
+     * Reads {@code body} frame by frame, counting the heartbeat callbacks. This is the form the
+     * estimate actually uses: the callback is where the caller writes to its own client, so what
+     * it is handed (one call per heartbeat, none for the terminal frame) is a contract.
+     */
+    private String parseStreamed(String body, AtomicInteger heartbeats) throws IOException {
+        return SseResponseParser.extractResultData(
+                objectMapper, new StringReader(body), heartbeats::incrementAndGet);
+    }
+
+    @Test
+    public void testStreamedHeartbeatCallbackFiresOncePerNonTerminalFrame() throws IOException {
+        String body = """
+                event: processing
+                data: {"status":"processing","message":"Processing your request..."}
+
+                event: processing
+                data: {"status":"processing","message":"Still processing..."}
+
+                event: result
+                data: {"status":"completed","data":{"estimated_output_bytes":1}}
+
+                """;
+
+        AtomicInteger heartbeats = new AtomicInteger();
+        assertEquals("{\"estimated_output_bytes\":1}", parseStreamed(body, heartbeats));
+        assertEquals(2, heartbeats.get(), "One callback per heartbeat, and none for the terminal frame");
+    }
+
+    @Test
+    public void testStreamedCallbackFailureStopsTheRead() {
+        // The client went away: the write in the callback throws, and that has to abort the
+        // read instead of being swallowed — otherwise the upstream connection stays open.
+        String body = """
+                event: processing
+                data: {"status":"processing","message":"Processing your request..."}
+
+                event: processing
+                data: {"status":"processing","message":"Still processing..."}
+
+                event: result
+                data: {"status":"completed","data":{"estimated_output_bytes":1}}
+
+                """;
+
+        AtomicInteger heartbeats = new AtomicInteger();
+        StringReader reader = new StringReader(body);
+
+        IOException e = assertThrows(IOException.class, () ->
+                SseResponseParser.extractResultData(objectMapper, reader, () -> {
+                    heartbeats.incrementAndGet();
+                    throw new IOException("Broken pipe");
+                }));
+
+        assertEquals("Broken pipe", e.getMessage());
+        assertEquals(1, heartbeats.get(), "Reading must stop at the first failed write, not carry on");
+    }
+
+    @Test
+    public void testStreamedErrorFrameThrowsBeforeAnyFurtherRead() {
+        String body = """
+                event: processing
+                data: {"status":"processing","message":"Processing your request..."}
+
+                event: error
+                data: {"status":"error","message":"404: No matching keys found for uuid=abc"}
+
+                """;
+
+        AtomicInteger heartbeats = new AtomicInteger();
+        RuntimeException e = assertThrows(RuntimeException.class, () -> parseStreamed(body, heartbeats));
+
+        assertEquals("404: No matching keys found for uuid=abc", e.getMessage());
+        assertEquals(1, heartbeats.get());
+    }
+
+    @Test
+    public void testStreamedHeartbeatOnlyStreamThrows() {
+        // DAS closed the connection without ever sending a terminal frame.
+        String body = """
+                event: processing
+                data: {"status":"processing","message":"Processing your request..."}
+
+                """;
+
+        AtomicInteger heartbeats = new AtomicInteger();
+        RuntimeException e = assertThrows(RuntimeException.class, () -> parseStreamed(body, heartbeats));
+        assertTrue(e.getMessage().contains("without a result or error event"), "Got: " + e.getMessage());
+    }
+
+    @Test
+    public void testStreamedEmptyStreamThrows() {
+        AtomicInteger heartbeats = new AtomicInteger();
+        RuntimeException e = assertThrows(RuntimeException.class, () -> parseStreamed("", heartbeats));
+        assertTrue(e.getMessage().contains("Empty response"), "Got: " + e.getMessage());
+        assertEquals(0, heartbeats.get());
     }
 }

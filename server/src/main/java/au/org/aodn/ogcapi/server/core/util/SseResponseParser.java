@@ -3,26 +3,28 @@ package au.org.aodn.ogcapi.server.core.util;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.UncheckedIOException;
+
 /**
  * Extracts the payload of a data-access-service Server-Sent Events response.
- * <p>
- * DAS wraps long-running endpoints in its {@code sse_it} decorator, which keeps the
- * connection alive with {@code processing} heartbeats and then delivers the return
- * value in a single terminal frame:
- * <pre>
+ * DAS wraps long-running endpoints in its sse_it decorator, which keeps the connection alive
+ * with processing heartbeats and then delivers the return value in a single final frame:
  * event: processing
  * data: {"status":"processing","message":"Processing your request..."}
- *
  * event: result
  * data: {"status":"completed","message":"Done","data": { ...the actual payload... }}
- * </pre>
- * Anything the endpoint throws arrives as a terminal {@code error} frame instead —
- * on an HTTP 200, because the stream has already started, so a failed call is
- * <em>only</em> detectable by reading the frames.
- * <p>
- * This parser targets that single-terminal-frame shape. It is not suitable for the
- * chunked {@code sse_wrapper} responses DAS uses elsewhere, which emit many
- * {@code result} frames that all have to be collected.
+ * Three things to know:
+ * 1. Anything the endpoint throws arrives as a final error frame instead, still on an HTTP 200
+ * because the stream has already started. So a failed call is only detectable by reading
+ * the frames.
+ * 2. This parser ONLY handles that single-final-frame shape. It does not handle the chunked
+ * sse_wrapper responses DAS uses elsewhere, which emit many result frames to collect.
+ * 3. Frames are consumed as they arrive rather than from a fully-buffered body, so the caller
+ * gets a callback on every heartbeat.
  */
 public final class SseResponseParser {
 
@@ -37,32 +39,83 @@ public final class SseResponseParser {
     }
 
     /**
-     * Read an SSE body and return the payload nested under the terminal {@code result}
-     * frame's {@code data} field, serialized as JSON.
+     * Notified once per complete non-final frame, that is, once per DAS heartbeat.
      *
-     * @throws RuntimeException if the stream carries an {@code error} frame (with DAS's
-     *                          own message, unmodified, so the caller can forward it), or
-     *                          if it ends without a terminal frame
+     * It is allowed to throw IOException on purpose. The caller forwards a keep-alive to its
+     * own SSE client here, and a broken pipe from that write is the only way to learn the
+     * client has gone. Letting it propagate aborts the read of the DAS stream and closes that
+     * connection, which stops DAS working on a result nobody will read.
+     */
+    @FunctionalInterface
+    public interface FrameCallback {
+
+        /**
+         * Does nothing. For callers reading a body that has already been buffered.
+         */
+        FrameCallback IGNORE = () -> {
+        };
+
+        void onFrame() throws IOException;
+    }
+
+    /**
+     * Read an SSE body and return the payload nested under the final result frame's data
+     * field, serialized as JSON.
+     *
+     * Throws RuntimeException if the stream carries an error frame, or if it ends without a
+     * final frame. An error frame is rethrown with DAS's own message unchanged, so the caller
+     * can forward it.
      */
     public static String extractResultData(ObjectMapper objectMapper, String body) {
         if (body == null || body.isBlank()) {
             throw new RuntimeException("Empty response from data-access-service");
         }
 
+        try {
+            return extractResultData(objectMapper, new StringReader(body), FrameCallback.IGNORE);
+        } catch (IOException e) {
+            // Unreachable: reading an in-memory String cannot fail.
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * Streaming form of the method above: reads frames off source as DAS emits them and calls
+     * onHeartbeat after each complete non-final frame.
+     *
+     * It throws in two cases:
+     * 1. IOException if the stream cannot be read, or if onHeartbeat throws. The caller's
+     *    client has gone, so there is no point reading on.
+     * 2. RuntimeException on an error frame, or a stream that ends without a final frame.
+     *    Same contract as the buffered form.
+     */
+    public static String extractResultData(ObjectMapper objectMapper, Reader source, FrameCallback onHeartbeat)
+            throws IOException {
+
+        BufferedReader reader = source instanceof BufferedReader buffered ? buffered : new BufferedReader(source);
+
         String event = null;
         StringBuilder data = new StringBuilder();
+        boolean sawContent = false;
 
-        for (String line : body.lines().toList()) {
+        String line;
+        while ((line = reader.readLine()) != null) {
             if (line.isEmpty()) {
                 // Blank line terminates a frame.
                 String payload = readTerminalFrame(objectMapper, event, data.toString());
                 if (payload != null) {
                     return payload;
                 }
+                boolean completedFrame = event != null || !data.isEmpty();
                 event = null;
                 data.setLength(0);
+                if (completedFrame) {
+                    onHeartbeat.onFrame();
+                }
                 continue;
             }
+
+            sawContent = true;
             if (line.startsWith(":")) {
                 // Comment line, per the SSE spec.
                 continue;
@@ -78,8 +131,7 @@ public final class SseResponseParser {
 
             if (EVENT_FIELD.equals(field)) {
                 event = value;
-            }
-            else if (DATA_FIELD.equals(field)) {
+            } else if (DATA_FIELD.equals(field)) {
                 if (!data.isEmpty()) {
                     data.append('\n');
                 }
@@ -93,16 +145,16 @@ public final class SseResponseParser {
             return payload;
         }
 
+        if (!sawContent) {
+            throw new RuntimeException("Empty response from data-access-service");
+        }
         throw new RuntimeException("data-access-service stream ended without a result or error event");
     }
 
     /**
-     * Interpret one complete frame.
-     *
-     * @return the payload for a {@code result} frame, or null for any frame that is not
-     * terminal (heartbeats) and so should be skipped
-     * @throws RuntimeException for an {@code error} frame, or a {@code result} frame that
-     *                          carries no payload
+     * Interpret one complete frame. Returns the payload for a result frame, or null for a
+     * frame that is not final (a heartbeat) and so should be skipped. Throws RuntimeException
+     * for an error frame, or a result frame that carries no payload.
      */
     private static String readTerminalFrame(ObjectMapper objectMapper, String event, String data) {
         if (!RESULT_EVENT.equals(event) && !ERROR_EVENT.equals(event)) {
@@ -112,8 +164,7 @@ public final class SseResponseParser {
         JsonNode node;
         try {
             node = objectMapper.readTree(data);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             throw new RuntimeException(
                     String.format("Unreadable data-access-service %s event: %s", event, data), e);
         }

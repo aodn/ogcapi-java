@@ -8,9 +8,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RequestCallback;
+import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -21,15 +26,18 @@ public class DasService implements ApplicationInfo {
 
     protected final DasProperties dasProperties;
     protected final RestTemplate httpClient;
+    protected final RestTemplate sseHttpClient;
     protected final ObjectMapper objectMapper;
-    protected final Map<String, Map<?,?>> appInfo;
+    protected final Map<String, Map<?, ?>> appInfo;
 
     public DasService(
             DasProperties dasProperties,
             @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
+            @Qualifier(Config.DAS_SSE_REST_TEMPLATE) RestTemplate sseHttpClient,
             ObjectMapper objectMapper) {
         this.dasProperties = dasProperties;
         this.httpClient = httpClient;
+        this.sseHttpClient = sseHttpClient;
         this.objectMapper = objectMapper;
         this.appInfo = queryInfo(httpClient, dasProperties.host(), dasProperties.infoPath());
     }
@@ -90,20 +98,25 @@ public class DasService implements ApplicationInfo {
     }
 
     /**
-     * Call the data-access-service cloud-optimised size estimate endpoint.
-     * The {@code parameters} map is the same batch-style subset request the
-     * download job submits (see {@code SubsetParametersUtils}), so DAS interprets
-     * the estimate and the download identically. Returns the estimate JSON so the
-     * SSE layer can forward it to the frontend unchanged.
-     * <p>
-     * DAS streams this endpoint over SSE: it heartbeats while computing and then
-     * sends the estimate in a terminal event, so the body is read to completion and
-     * unwrapped by {@link SseResponseParser}. Because the stream returns 200 as soon
-     * as it opens, a failed estimate arrives as an {@code error} event rather than an
-     * error status — the parser turns those back into an exception. Only failures
-     * raised before the stream starts (auth, API not ready) are still HTTP errors.
+     * Call the data-access-service cloud-optimised size estimate endpoint and return the
+     * estimate JSON, so the SSE layer can forward it to the frontend unchanged. The parameters
+     * map is the same batch-style subset request the download job submits (see
+     * SubsetParametersUtils), so DAS treats the estimate and the download identically.
+     * Two things to know:
+     * 1. DAS streams this endpoint over SSE. It heartbeats while computing and sends the
+     * estimate in a final event, so frames are read as they arrive and unwrapped by
+     * SseResponseParser. The stream returns 200 as soon as it opens, so a failed estimate
+     * arrives as an error event, not an error status, and the parser turns it back into an
+     * exception. Only failures before the stream starts (auth, API not ready) are HTTP errors.
+     * 2. The response is deliberately not buffered. onHeartbeat runs on this thread once per
+     * DAS heartbeat, and callers use it to write to their own SSE client. That write is the
+     * only way to notice the client has disconnected, and since it runs on the thread blocked
+     * on DAS, the IOException it throws unwinds this call and closes the connection to DAS.
+     * DAS then stops the estimate at its next cancellation checkpoint.
      */
-    public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
+    public String estimateCloudOptimisedDownloadSize(String uuid,
+                                                     Map<String, String> parameters,
+                                                     SseResponseParser.FrameCallback onHeartbeat) {
 
         String url = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/{uuid}/estimate_size")
                 .encode()
@@ -112,12 +125,24 @@ public class DasService implements ApplicationInfo {
         Map<String, String> uriVars = new HashMap<>();
         uriVars.put("uuid", uuid);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        RequestCallback requestCallback = request -> {
+            HttpHeaders headers = request.getHeaders();
+            headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
+            // Jackson's XML converter also claims Map bodies, so the content type is explicit.
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            objectMapper.writeValue(request.getBody(), parameters);
+        };
 
-        String body = httpClient.postForObject(url, new HttpEntity<>(parameters, headers), String.class, uriVars);
-        return SseResponseParser.extractResultData(objectMapper, body);
+        ResponseExtractor<String> responseExtractor = response -> {
+            // Closing the reader closes the response body, which cancels the exchange: on the
+            // disconnect path DAS is notified here, before RestTemplate's own cleanup runs.
+            try (BufferedReader reader = new BufferedReader(
+                    new InputStreamReader(response.getBody(), StandardCharsets.UTF_8))) {
+                return SseResponseParser.extractResultData(objectMapper, reader, onHeartbeat);
+            }
+        };
+
+        return sseHttpClient.execute(url, HttpMethod.POST, requestCallback, responseExtractor, uriVars);
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {

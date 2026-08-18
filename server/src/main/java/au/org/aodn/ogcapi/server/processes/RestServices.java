@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.processes;
 
+import au.org.aodn.ogcapi.server.core.exception.SseClientGoneException;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
@@ -331,17 +332,27 @@ public class RestServices {
                     "timestamp", System.currentTimeMillis()
             ));
 
-            // STEP 2: Start keep-alive mechanism while data-access-service computes the estimate
-            session.startKeepAlive(20, () -> Map.of(
-                    "message", "Estimating download size...",
-                    "timestamp", System.currentTimeMillis()
-            ));
-
-            // STEP 3: Call the data-access-service estimate endpoint and forward the result
+            // STEP 2: Call the data-access-service estimate endpoint and forward the result.
+            // The keep-alive is driven by DAS's own heartbeats (~20s) rather than by a timer
+            // thread: sending it from the thread that is blocked on DAS means a disconnected
+            // client breaks that thread out of the upstream read, which closes the connection
+            // to DAS and stops it computing an estimate nobody is waiting for. The event name
+            // and payload are unchanged, so the frontend sees exactly what it saw before.
             try {
-                String estimateJson = dasService.estimateCloudOptimisedDownloadSize(uuid, parameters);
+                String estimateJson = dasService.estimateCloudOptimisedDownloadSize(uuid, parameters,
+                        () -> session.probeClient(Map.of(
+                                "message", "Estimating download size...",
+                                "timestamp", System.currentTimeMillis()
+                        )));
                 session.send(SseEventName.ESTIMATE_COMPLETE, estimateJson);
             } catch (Exception e) {
+                SseClientGoneException clientGone = SseClientGoneException.find(e);
+                if (clientGone != null) {
+                    // Not an estimate failure: the client left, which is what aborted the call.
+                    // Rethrow so the shared handler logs it as the disconnect it is — there is
+                    // no longer a socket to report anything on.
+                    throw clientGone;
+                }
                 log.warn("Cloud-optimised size estimation failed for UUID {}: {}", uuid, e.getMessage());
                 session.send(SseEventName.ESTIMATE_FAILED, Map.of(
                         "message", "Size estimation failed: " + e.getMessage(),

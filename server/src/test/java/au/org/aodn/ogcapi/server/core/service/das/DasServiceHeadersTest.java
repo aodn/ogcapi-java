@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
+import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,13 +32,19 @@ public class DasServiceHeadersTest {
             Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20));
 
     private MockRestServiceServer server;
+    private MockRestServiceServer sseServer;
     private DasService dasService;
 
     @BeforeEach
     public void setUp() {
-        RestTemplate template = new Config().createDasRestTemplate(PROPS);
+        Config config = new Config();
+        RestTemplate template = config.createDasRestTemplate(PROPS);
+        // The estimate is streamed, so it goes out on the second client — which has to carry
+        // the same credentials as the shared one.
+        RestTemplate sseTemplate = config.createDasSseRestTemplate(PROPS);
         server = MockRestServiceServer.bindTo(template).build();
-        dasService = new DasService(PROPS, template, new ObjectMapper());
+        sseServer = MockRestServiceServer.bindTo(sseTemplate).build();
+        dasService = new DasService(PROPS, template, sseTemplate, new ObjectMapper());
     }
 
     @Test
@@ -51,7 +58,7 @@ public class DasServiceHeadersTest {
                 data: {"status":"completed","data":{"estimated_output_bytes":123}}
 
                 """;
-        server.expect(requestTo("http://localhost:5000/api/v1/das/data/test-uuid/estimate_size"))
+        sseServer.expect(requestTo("http://localhost:5000/api/v1/das/data/test-uuid/estimate_size"))
                 .andExpect(method(org.springframework.http.HttpMethod.POST))
                 .andExpect(header("Content-Type", MediaType.APPLICATION_JSON_VALUE))
                 .andExpect(header("Accept", MediaType.TEXT_EVENT_STREAM_VALUE))
@@ -62,9 +69,10 @@ public class DasServiceHeadersTest {
                 .andRespond(withSuccess(sseBody, MediaType.TEXT_EVENT_STREAM));
 
         dasService.estimateCloudOptimisedDownloadSize(
-                "test-uuid", Map.of("uuid", "test-uuid", "output_format", "netcdf"));
+                "test-uuid", Map.of("uuid", "test-uuid", "output_format", "netcdf"),
+                SseResponseParser.FrameCallback.IGNORE);
 
-        server.verify();
+        sseServer.verify();
     }
 
     @Test
@@ -84,14 +92,16 @@ public class DasServiceHeadersTest {
         DasProperties noInternal = new DasProperties(
                 "http://localhost:5000", null,"test-secret", null,
                 Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20));
-        RestTemplate noInternalTemplate = new Config().createDasRestTemplate(noInternal);
+        Config config = new Config();
+        RestTemplate noInternalTemplate = config.createDasRestTemplate(noInternal);
         MockRestServiceServer noInternalServer = MockRestServiceServer.bindTo(noInternalTemplate).build();
 
         noInternalServer.expect(header("X-API-KEY", "test-secret"))
                 .andExpect(headerDoesNotExist("x-internal-das-header-secret"))
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
-        new DasService(noInternal, noInternalTemplate, new ObjectMapper()).getWaveBuoysLatestAvailableDate();
+        new DasService(noInternal, noInternalTemplate, config.createDasSseRestTemplate(noInternal), new ObjectMapper())
+                .getWaveBuoysLatestAvailableDate();
 
         noInternalServer.verify();
     }
