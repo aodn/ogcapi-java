@@ -2,9 +2,14 @@ package au.org.aodn.ogcapi.server.core.service.sse;
 
 import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Shared scaffolding for the long-running SSE endpoints (WFS download / estimate,
@@ -14,6 +19,28 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 public class SseStreamHandler {
+
+    private static final int CORE_STREAMS = 4;
+    private static final int MAX_STREAMS = 64;
+    private static final long IDLE_THREAD_KEEP_ALIVE_SECONDS = 60L;
+
+    /**
+     * Streams block on upstream sockets for minutes at a time, so they get their own pool
+     * rather than {@code ForkJoinPool.commonPool()}, whose parallelism is
+     * {@code availableProcessors - 1} — a single thread on a 2-vCPU container. A blocking
+     * socket read is invisible to ForkJoinPool's compensation mechanism, so one slow estimate
+     * was enough to make every other SSE request queue behind it.
+     * <p>
+     * The queue is a {@link SynchronousQueue}: a stream that cannot get a thread is rejected
+     * immediately and told so, rather than queueing behind work that may run for minutes.
+     */
+    private static final ExecutorService STREAM_EXECUTOR = new ThreadPoolExecutor(
+            CORE_STREAMS,
+            MAX_STREAMS,
+            IDLE_THREAD_KEEP_ALIVE_SECONDS,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new CustomizableThreadFactory("sse-stream-"));
 
     private SseStreamHandler() {
     }
@@ -58,13 +85,18 @@ public class SseStreamHandler {
         emitter.onError(throwable ->
                 WfsErrorHandler.handleError((Exception) throwable, contextId, emitter, session::cleanup));
 
-        CompletableFuture.runAsync(() -> {
-            try {
-                work.run(session);
-            } catch (Exception e) {
-                WfsErrorHandler.handleError(e, contextId, emitter, session::cleanup);
-            }
-        });
+        try {
+            STREAM_EXECUTOR.execute(() -> {
+                try {
+                    work.run(session);
+                } catch (Exception e) {
+                    WfsErrorHandler.handleError(e, contextId, emitter, session::cleanup);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            log.error("No SSE worker available for {}; {} streams already running", contextId, MAX_STREAMS);
+            WfsErrorHandler.handleError(e, contextId, emitter, session::cleanup);
+        }
 
         return emitter;
     }
