@@ -68,7 +68,7 @@ public class RestExtApi {
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "visual_tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
-                                          "legend_url": "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend",
+                                          "legend_url": "/api/v1/ogc/ext/tiles/legend",
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}",
                                           "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}"
                                         },
@@ -166,7 +166,7 @@ public class RestExtApi {
                         "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}"
                                 + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
                                 + "&datetime={datetime}&f=png");
-                entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend");
+                entry.put("legend_url", "/api/v1/ogc/ext/tiles/legend");
             }
 
             if (canData) {
@@ -548,18 +548,16 @@ public class RestExtApi {
 
     @Operation(
             summary = "Render a colour legend for a colormap",
-            description = "Renders a PNG colour bar for use as a map legend. Pass the same `rescale` used on " +
-                    "the tile request to get tick labels; without it only the bare bar is drawn."
+            description = "Renders a PNG colour bar for use as a map legend. `colormap` is optional and " +
+                    "defaults to `viridis`. Pass the same `rescale` used on the tile request to get tick " +
+                    "labels; without it only the bare bar is drawn."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The rendered legend image.",
                     content = @Content(mediaType = "image/png",
                             schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "400", description = "`rescale` is malformed, or was supplied for a " +
-                    "categorical colormap.",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "No colormap exists with that name.",
+            @ApiResponse(responseCode = "400", description = "`colormap` names an unknown colormap, `rescale` " +
+                    "is malformed, or `rescale` was supplied for a categorical colormap.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "`width`/`height` outside 10-2048, or " +
@@ -575,12 +573,12 @@ public class RestExtApi {
             @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)))})
-    @GetMapping("/colormaps/{name}/legend")
+    @GetMapping("/legend")
     public ResponseEntity<byte[]> getColormapLegend(
-            @Parameter(in = ParameterIn.PATH, required = true,
-                    description = "Colormap name, as listed by `GET /api/v1/ogc/ext/tiles/colormaps`.",
+            @Parameter(in = ParameterIn.QUERY,
+                    description = "Colormap name, as listed by GET .../colormaps. Omit for the default (viridis).",
                     example = "viridis")
-            @PathVariable String name,
+            @RequestParam(required = false) String colormap,
 
             @Parameter(in = ParameterIn.QUERY,
                     description = "Value range to label the bar with, as `min,max`. Rejected for categorical colormaps.",
@@ -601,7 +599,7 @@ public class RestExtApi {
                     schema = @Schema(allowableValues = {"horizontal", "vertical"}, defaultValue = "horizontal"))
             @RequestParam(required = false) String orientation) {
 
-        DasTilerService.DasTileResult legend = dasTilerService.getLegend(name, rescale, width, height, orientation);
+        DasTilerService.DasTileResult legend = dasTilerService.getLegend(colormap, rescale, width, height, orientation);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(legend.contentType()));

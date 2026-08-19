@@ -577,7 +577,21 @@ public class RestExtApiTest extends BaseTestClass {
                         "legend-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiles/colormaps/viridis/legend", byte[].class
+                getExternalBasePath() + "/tiles/legend?colormap=viridis", byte[].class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertArrayEquals("legend-bytes".getBytes(), response.getBody());
+    }
+
+    @Test
+    public void verifyColormapLegendOmittedColormapUsesDefault() {
+        when(dasTilerService.getLegend(null, null, null, null, null))
+                .thenReturn(new DasTilerService.DasTileResult(
+                        "legend-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
+
+        ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/legend", byte[].class
         );
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -592,19 +606,19 @@ public class RestExtApiTest extends BaseTestClass {
     @Test
     public void verifyUpstreamErrorUsesErrorResponseEnvelope() {
         when(dasTilerService.getLegend("nosuch", null, null, null, null))
-                .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "no such colormap"));
+                .thenThrow(new DasUpstreamException(HttpStatus.BAD_REQUEST, "no such colormap"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
-                getExternalBasePath() + "/tiles/colormaps/nosuch/legend", ErrorResponse.class
+                getExternalBasePath() + "/tiles/legend?colormap=nosuch", ErrorResponse.class
         );
 
-        Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Assertions.assertNotNull(response.getBody(), "Body not null");
         Assertions.assertEquals("no such colormap", response.getBody().getMessage(),
                 "Message carries the upstream reason");
         Assertions.assertNotNull(response.getBody().getTimestamp(), "Timestamp populated by the handler");
         Assertions.assertTrue(
-                response.getBody().getDetails().contains("/tiles/colormaps/nosuch/legend"),
+                response.getBody().getDetails().contains("/tiles/legend"),
                 "Details identify the failing request, got: " + response.getBody().getDetails());
     }
 }

@@ -193,13 +193,16 @@ public class DasTilerService {
         }
     }
 
-    public DasTileResult getLegend(String name, String rescale, Integer width, Integer height,
+    public DasTileResult getLegend(String colormap, String rescale, Integer width, Integer height,
                                     String orientation) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/colormaps/{name}/legend");
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/legend");
         Map<String, Object> params = new HashMap<>();
-        params.put("name", name);
 
+        if (colormap != null) {
+            builder.queryParam("colormap", "{colormap}");
+            params.put("colormap", colormap);
+        }
         if (rescale != null) {
             builder.queryParam("rescale", "{rescale}");
             params.put("rescale", rescale);
