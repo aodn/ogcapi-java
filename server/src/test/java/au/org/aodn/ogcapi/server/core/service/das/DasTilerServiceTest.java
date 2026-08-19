@@ -421,7 +421,7 @@ public class DasTilerServiceTest {
         when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
                 .thenReturn(new ResponseEntity<>(manifestBody, headers, HttpStatus.OK));
 
-        DasTilerService.DasJsonResult result = service.getManifest();
+        DasTilerService.DasJsonResult result = service.getManifest(null);
 
         CapturedRequest captured = captureJsonRequest();
         assertTrue(captured.url.contains("/visual_tiles/manifest"), "got: " + captured.url);
@@ -437,7 +437,7 @@ public class DasTilerServiceTest {
                 .thenThrow(HttpServerErrorException.create(
                         HttpStatus.INTERNAL_SERVER_ERROR, "Internal Server Error", HttpHeaders.EMPTY, new byte[0], null));
 
-        DasUpstreamException ex = assertThrows(DasUpstreamException.class, () -> service.getManifest());
+        DasUpstreamException ex = assertThrows(DasUpstreamException.class, () -> service.getManifest(null));
 
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus());
     }

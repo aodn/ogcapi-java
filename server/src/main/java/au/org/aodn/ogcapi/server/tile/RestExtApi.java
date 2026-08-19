@@ -111,7 +111,7 @@ public class RestExtApi {
                     example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
             @PathVariable String collectionId) {
         List<JsonNode> products = dasTilerService.productsForCollection(collectionId);
-        DasTilerService.DasJsonResult manifest = dasTilerService.getManifest();
+        DasTilerService.DasJsonResult manifest = dasTilerService.getManifest(collectionId);
         JsonNode manifestProducts = manifest.body() != null ? manifest.body().path("products") : null;
 
         ArrayNode result = mapper.createArrayNode();

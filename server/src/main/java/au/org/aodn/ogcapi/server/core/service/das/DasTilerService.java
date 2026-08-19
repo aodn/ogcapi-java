@@ -176,10 +176,17 @@ public class DasTilerService {
      * Fetches the product/date manifest, forwarding its {@code Cache-Control} rather than this
      * service inventing a freshness of its own.
      */
-    public DasJsonResult getManifest() {
+    public DasJsonResult getManifest(String collectionId) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/manifest");
-        return exchangeForJson(builder, Map.of());
+        Map<String, Object> params = new HashMap<>();
+
+        if (collectionId != null) {
+            builder.queryParam("metadata_uuid", "{metadata_uuid}");
+            params.put("metadata_uuid", collectionId);
+        }
+
+        return exchangeForJson(builder, params);
     }
 
     public JsonNode getColormaps() {

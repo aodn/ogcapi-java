@@ -97,7 +97,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA"))
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+        when(dasTilerService.getManifest(anyString())).thenReturn(manifestWith("model_sla:gsla"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
@@ -124,7 +124,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA"))
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+        when(dasTilerService.getManifest(anyString())).thenReturn(manifestWith("model_sla:gsla"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
@@ -154,7 +154,7 @@ public class RestExtApiTest extends BaseTestClass {
     @Test
     public void verifyCollectionProductsEmptyWhenNoneMatch() {
         when(dasTilerService.productsForCollection("uuid-none")).thenReturn(List.of());
-        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
+        when(dasTilerService.getManifest(anyString())).thenReturn(emptyManifest());
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-none/products", JsonNode.class
@@ -169,7 +169,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR")))
         );
-        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
+        when(dasTilerService.getManifest(anyString())).thenReturn(emptyManifest());
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
@@ -205,7 +205,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(scalarProductWithVisual("model_sla:gsla", "uuid-a", "GSLA", true))
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+        when(dasTilerService.getManifest(anyString())).thenReturn(manifestWith("model_sla:gsla"));
 
         JsonNode entry = getProducts("uuid-a").get(0);
 
@@ -222,7 +222,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(scalarProductWithVisual("model_sla:wdir", "uuid-a", "WDIR", false))
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:wdir"));
+        when(dasTilerService.getManifest(anyString())).thenReturn(manifestWith("model_sla:wdir"));
 
         JsonNode entry = getProducts("uuid-a").get(0);
 
@@ -240,7 +240,7 @@ public class RestExtApiTest extends BaseTestClass {
         JsonNode product = multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR"));
         ((ObjectNode) product).put("visual", false);
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(List.of(product));
-        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
+        when(dasTilerService.getManifest(anyString())).thenReturn(emptyManifest());
 
         JsonNode entry = getProducts("uuid-a").get(0);
 
@@ -262,7 +262,7 @@ public class RestExtApiTest extends BaseTestClass {
                         multiVariableProduct("model_currents:ucur+vcur", "uuid-a", List.of("UCUR", "VCUR"))
                 )
         );
-        when(dasTilerService.getManifest()).thenReturn(manifestWith("model_sla:gsla"));
+        when(dasTilerService.getManifest(anyString())).thenReturn(manifestWith("model_sla:gsla"));
 
         JsonNode products = getProducts("uuid-a");
 
@@ -279,7 +279,7 @@ public class RestExtApiTest extends BaseTestClass {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(scalarProductWithVisual("model_sla:wdir", "uuid-a", "WDIR", false))
         );
-        when(dasTilerService.getManifest()).thenReturn(emptyManifest());
+        when(dasTilerService.getManifest(anyString())).thenReturn(emptyManifest());
 
         JsonNode entry = getProducts("uuid-a").get(0);
 
