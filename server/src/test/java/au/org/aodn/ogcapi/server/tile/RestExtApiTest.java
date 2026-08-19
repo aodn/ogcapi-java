@@ -305,13 +305,13 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyDataTileReturnsImageWithCacheControl() {
-        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 1, 0, 0)).thenReturn(
+        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01T00:00:00Z", 1, 0, 0)).thenReturn(
                 new DasTilerService.DasTileResult(
                         "data-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
         ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", byte[].class);
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z", byte[].class);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assertions.assertArrayEquals("data-bytes".getBytes(), response.getBody());
@@ -323,7 +323,7 @@ public class RestExtApiTest extends BaseTestClass {
     public void verifyDataTileRejectsLodBelowOne() {
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/0/0/0"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         verify(dasTilerService, never()).getDataTile(anyString(), anyString(), anyInt(), anyInt(), anyInt());
@@ -333,10 +333,10 @@ public class RestExtApiTest extends BaseTestClass {
     public void verifyDataTileRejectsNegativeXorY() {
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/-1/0"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class).getStatusCode());
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/-1"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class).getStatusCode());
     }
 
     @Test
@@ -344,12 +344,12 @@ public class RestExtApiTest extends BaseTestClass {
         // missing dataset
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
-                        + "?variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+                        + "?variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class).getStatusCode());
         // missing variable
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
-                        + "?dataset=model_sla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
-        // datetime not YYYY-MM-DD
+                        + "?dataset=model_sla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class).getStatusCode());
+        // datetime not a full UTC ISO-8601 timestamp
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
                         + "?dataset=model_sla&variable=gsla&datetime=2024-1-1", ErrorResponse.class).getStatusCode());
@@ -362,7 +362,7 @@ public class RestExtApiTest extends BaseTestClass {
         // here rather than forwarded to DAS as an unresolvable id.
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
-                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01", ErrorResponse.class);
+                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01T00:00:00Z", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Assertions.assertTrue(response.getBody().getMessage().contains("%2B"),
@@ -375,26 +375,26 @@ public class RestExtApiTest extends BaseTestClass {
         // DAS owns the product catalogue, so an unknown dataset is its answer to give.
         // Previously this 404'd locally from an Elasticsearch membership check that could
         // disagree with what DAS actually publishes.
-        when(dasTilerService.getDataTile("wrong:gsla", "2024-01-01", 1, 0, 0))
+        when(dasTilerService.getDataTile("wrong:gsla", "2024-01-01T00:00:00Z", 1, 0, 0))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "Unknown product: wrong:gsla"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
-                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Assertions.assertEquals("Unknown product: wrong:gsla", response.getBody().getMessage());
-        verify(dasTilerService).getDataTile("wrong:gsla", "2024-01-01", 1, 0, 0);
+        verify(dasTilerService).getDataTile("wrong:gsla", "2024-01-01T00:00:00Z", 1, 0, 0);
     }
 
     @Test
     public void verifyDataTileMirrorsUpstreamNotFound() {
-        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 9, 0, 0))
+        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01T00:00:00Z", 9, 0, 0))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "LOD 9 not in grid"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/9/0/0"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Assertions.assertEquals("LOD 9 not in grid", response.getBody().getMessage());
@@ -402,7 +402,7 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyDataTileMirrorsUpstreamServiceUnavailable() {
-        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01", 1, 0, 0))
+        when(dasTilerService.getDataTile("model_sla:gsla", "2024-01-01T00:00:00Z", 1, 0, 0))
                 .thenThrow(new DasUpstreamException(HttpStatus.SERVICE_UNAVAILABLE, "Service Unavailable"));
 
         // The Accept headers real callers send — a map client (e.g. Mapbox) that names both image formats
@@ -417,7 +417,7 @@ public class RestExtApiTest extends BaseTestClass {
 
             ResponseEntity<ErrorResponse> response = testRestTemplate.exchange(
                     getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/1/0/0"
-                            + "?dataset=model_sla&variable=gsla&datetime=2024-01-01",
+                            + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z",
                     HttpMethod.GET, new HttpEntity<>(headers), ErrorResponse.class);
 
             Assertions.assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode(),
@@ -434,12 +434,12 @@ public class RestExtApiTest extends BaseTestClass {
         ObjectNode pointBody = mapper.createObjectNode();
         pointBody.put("lat", -44.27813720703125);
         pointBody.put("lon", 132.0092315673828);
-        when(dasTilerService.getPoint("model_sla:gsla", "2024-01-01", -44.27, 132.00))
+        when(dasTilerService.getPoint("model_sla:gsla", "2024-01-01T00:00:00Z", -44.27, 132.00))
                 .thenReturn(new DasTilerService.DasJsonResult(pointBody, "public, max-age=31536000, immutable"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=-44.27&lon=132.00", JsonNode.class);
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z&lat=-44.27&lon=132.00", JsonNode.class);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assertions.assertTrue(response.getBody().has("lat"));
@@ -451,12 +451,12 @@ public class RestExtApiTest extends BaseTestClass {
         // missing dataset
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?variable=gsla&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
+                        + "?variable=gsla&datetime=2024-01-01T00:00:00Z&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
         // missing variable
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=model_sla&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
-        // datetime not YYYY-MM-DD
+                        + "?dataset=model_sla&datetime=2024-01-01T00:00:00Z&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
+        // datetime not a full UTC ISO-8601 timestamp
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
                         + "?dataset=model_sla&variable=gsla&datetime=2024-1-1&lat=-44.27&lon=132.00", ErrorResponse.class).getStatusCode());
@@ -467,19 +467,19 @@ public class RestExtApiTest extends BaseTestClass {
         // missing lat
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lon=132.00", ErrorResponse.class).getStatusCode());
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z&lon=132.00", ErrorResponse.class).getStatusCode());
         // missing lon
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=-44.27", ErrorResponse.class).getStatusCode());
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z&lat=-44.27", ErrorResponse.class).getStatusCode());
         // lat out of range
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=91&lon=132.00", ErrorResponse.class).getStatusCode());
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z&lat=91&lon=132.00", ErrorResponse.class).getStatusCode());
         // lon out of range
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01&lat=-44.27&lon=181", ErrorResponse.class).getStatusCode());
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z&lat=-44.27&lon=181", ErrorResponse.class).getStatusCode());
         verify(dasTilerService, never()).getPoint(anyString(), anyString(), anyDouble(), anyDouble());
     }
 
@@ -489,7 +489,7 @@ public class RestExtApiTest extends BaseTestClass {
         // here rather than forwarded to DAS as an unresolvable id.
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class);
+                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01T00:00:00Z&lat=-44.27&lon=132.00", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
         Assertions.assertTrue(response.getBody().getMessage().contains("%2B"),
@@ -500,28 +500,28 @@ public class RestExtApiTest extends BaseTestClass {
     @Test
     public void verifyDataPointUnknownProductIsForwardedToDas() {
         // DAS owns the product catalogue, so an unknown dataset is its answer to give.
-        when(dasTilerService.getPoint("wrong:gsla", "2024-01-01", -44.27, 132.00))
+        when(dasTilerService.getPoint("wrong:gsla", "2024-01-01T00:00:00Z", -44.27, 132.00))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "Unknown product: wrong:gsla"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/point"
-                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01&lat=-44.27&lon=132.00", ErrorResponse.class);
+                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01T00:00:00Z&lat=-44.27&lon=132.00", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Assertions.assertEquals("Unknown product: wrong:gsla", response.getBody().getMessage());
-        verify(dasTilerService).getPoint("wrong:gsla", "2024-01-01", -44.27, 132.00);
+        verify(dasTilerService).getPoint("wrong:gsla", "2024-01-01T00:00:00Z", -44.27, 132.00);
     }
 
     @Test
     public void verifyDataManifestReturnsJsonWithCacheControl() {
         ObjectNode manifestBody = mapper.createObjectNode();
         manifestBody.putArray("bounds").add(0).add(0).add(1).add(1);
-        when(dasTilerService.getDataManifest("model_sla:gsla", "2024-01-01"))
+        when(dasTilerService.getDataManifest("model_sla:gsla", "2024-01-01T00:00:00Z"))
                 .thenReturn(new DasTilerService.DasJsonResult(manifestBody, "public, max-age=31536000, immutable"));
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
-                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01", JsonNode.class);
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z", JsonNode.class);
 
         Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assertions.assertTrue(response.getBody().has("bounds"));
@@ -532,28 +532,28 @@ public class RestExtApiTest extends BaseTestClass {
     public void verifyDataManifestRejectsMissingOrMalformedParams() {
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
-                        + "?variable=gsla&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+                        + "?variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class).getStatusCode());
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
                         + "?dataset=model_sla&variable=gsla&datetime=not-a-date", ErrorResponse.class).getStatusCode());
         // an unencoded '+' in variable decodes to a space
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
-                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01", ErrorResponse.class).getStatusCode());
+                        + "?dataset=model_sla&variable=ucur+vcur&datetime=2024-01-01T00:00:00Z", ErrorResponse.class).getStatusCode());
     }
 
     @Test
     public void verifyDataManifestUnknownProductIsForwardedToDas() {
-        when(dasTilerService.getDataManifest("wrong:gsla", "2024-01-01"))
+        when(dasTilerService.getDataManifest("wrong:gsla", "2024-01-01T00:00:00Z"))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "Unknown product: wrong:gsla"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(
                 getExternalBasePath() + "/tiles/collections/uuid-a/data_tiles/manifest"
-                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01", ErrorResponse.class);
+                        + "?dataset=wrong&variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class);
 
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Assertions.assertEquals("Unknown product: wrong:gsla", response.getBody().getMessage());
-        verify(dasTilerService).getDataManifest("wrong:gsla", "2024-01-01");
+        verify(dasTilerService).getDataManifest("wrong:gsla", "2024-01-01T00:00:00Z");
     }
 
     @Test

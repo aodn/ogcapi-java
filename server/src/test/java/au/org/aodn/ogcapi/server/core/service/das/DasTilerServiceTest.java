@@ -86,8 +86,10 @@ public class DasTilerServiceTest {
         service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", null, null);
 
         CapturedRequest captured = captureImageRequest();
-        assertTrue(captured.url.contains("/{product}/{date}/{z}/{x}/{y}.{ext}"), "product must be a path variable, got: " + captured.url);
+        assertTrue(captured.url.contains("/{product}/{z}/{x}/{y}.{ext}"), "product must be a path variable, got: " + captured.url);
+        assertTrue(captured.url.contains("date={date}"), "date must be a query param, got: " + captured.url);
         assertEquals(PRODUCT_ID, captured.params.get("product"), "product id with ':' must be passed raw as a path variable");
+        assertEquals("2024-01-01", captured.params.get("date"));
     }
 
     @Test
@@ -128,20 +130,21 @@ public class DasTilerServiceTest {
         assertEquals("public, max-age=31536000, immutable", result.cacheControl());
     }
 
-    // --- Data tiles: value-encoded PNGs, product-local LOD, no query params ---
+    // --- Data tiles: value-encoded PNGs, product-local LOD, date as the only query param ---
 
     @Test
-    public void testGetDataTileSendsProductAndPngPathWithoutQuery() {
+    public void testGetDataTileSendsProductAsPathVariableAndDateAsQuery() {
         when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(new ResponseEntity<>("data-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
 
         service.getDataTile(PRODUCT_ID, "2024-01-01", 1, 0, 0);
 
         CapturedRequest captured = captureImageRequest();
-        assertTrue(captured.url.contains("/data_tiles/{product}/{date}/{z}/{x}/{y}.png"),
-                "data tile must expand product/date/lod/x/y as path variables and end in .png, got: " + captured.url);
-        assertFalse(captured.url.contains("?"), "data tiles take no query params, got: " + captured.url);
+        assertTrue(captured.url.contains("/data_tiles/{product}/{z}/{x}/{y}.png"),
+                "data tile must expand product/lod/x/y as path variables and end in .png, got: " + captured.url);
+        assertTrue(captured.url.contains("date={date}"), "date must be a query param, got: " + captured.url);
         assertEquals(PRODUCT_ID, captured.params.get("product"), "product id with ':' must be a raw path variable");
+        assertEquals("2024-01-01", captured.params.get("date"));
         assertEquals(1, captured.params.get("z"));
         assertEquals(0, captured.params.get("x"));
         assertEquals(0, captured.params.get("y"));
@@ -191,7 +194,7 @@ public class DasTilerServiceTest {
     // --- Point: decoded value(s) at a lat/lon, JSON body with query params ---
 
     @Test
-    public void testGetPointSendsProductAndDateAsPathVariablesWithLatLonQuery() {
+    public void testGetPointSendsProductAsPathVariableWithDateLatLonQuery() {
         ObjectNode pointBody = new ObjectMapper().createObjectNode();
         pointBody.put("lat", -44.27813720703125);
         HttpHeaders headers = new HttpHeaders();
@@ -203,10 +206,10 @@ public class DasTilerServiceTest {
         service.getPoint(PRODUCT_ID, "2024-01-01", -44.27, 132.00);
 
         CapturedRequest captured = captureJsonRequest();
-        assertTrue(captured.url.contains("/data_tiles/{product}/{date}/point"),
-                "point must expand product/date as path variables, got: " + captured.url);
-        assertTrue(captured.url.contains("lat={lat}") && captured.url.contains("lon={lon}"),
-                "lat/lon must be query params, got: " + captured.url);
+        assertTrue(captured.url.contains("/data_tiles/{product}/point"),
+                "point must expand product as a path variable, got: " + captured.url);
+        assertTrue(captured.url.contains("date={date}") && captured.url.contains("lat={lat}") && captured.url.contains("lon={lon}"),
+                "date/lat/lon must be query params, got: " + captured.url);
         assertEquals(PRODUCT_ID, captured.params.get("product"), "product id with ':' must be a raw path variable");
         assertEquals("2024-01-01", captured.params.get("date"));
         assertEquals(-44.27, captured.params.get("lat"));
@@ -259,8 +262,9 @@ public class DasTilerServiceTest {
         DasTilerService.DasJsonResult result = service.getDataManifest(PRODUCT_ID, "2024-01-01");
 
         CapturedRequest captured = captureJsonRequest();
-        assertTrue(captured.url.contains("/data_tiles/{product}/{date}/manifest.json"),
-                "manifest must expand product/date as path variables and end in manifest.json, got: " + captured.url);
+        assertTrue(captured.url.contains("/data_tiles/{product}/manifest.json"),
+                "manifest must expand product as a path variable and end in manifest.json, got: " + captured.url);
+        assertTrue(captured.url.contains("date={date}"), "date must be a query param, got: " + captured.url);
         assertEquals(PRODUCT_ID, captured.params.get("product"));
         assertEquals("2024-01-01", captured.params.get("date"));
         assertEquals(manifestBody, result.body());
