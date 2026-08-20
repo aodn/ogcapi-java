@@ -6,8 +6,10 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -262,15 +264,25 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Test that dates are shown as dd MMM yyyy, e.g. 05 Jan 2024
+     * Date-only download filters represent inclusive UTC day boundaries. Run with
+     * a non-UTC server timezone to guard against implicit system-default conversion.
      */
     @Test
-    void testDatesUseDayMonthYearFormat() {
-        String result = EmailUtils.generateSubsettingSection(
-                "2024-01-05", "2024-12-31", null, new ObjectMapper()
-        );
+    void testDatesShowInclusiveUtcRangeInNonUtcServerTimezone() {
+        TimeZone originalTimeZone = TimeZone.getDefault();
+        try {
+            TimeZone.setDefault(TimeZone.getTimeZone("Australia/Sydney"));
+            assertEquals(ZoneId.of("Australia/Sydney"), ZoneId.systemDefault());
 
-        assertTrue(result.contains("05 Jan 2024 - 31 Dec 2024"), "Expected dd MMM yyyy date format");
+            String result = EmailUtils.generateSubsettingSection(
+                    "2024-01-05", "2024-12-31", null, new ObjectMapper()
+            );
+
+            assertTrue(result.contains(
+                    "05 Jan 2024 00:00:00 UTC - 31 Dec 2024 23:59:59 UTC"));
+        } finally {
+            TimeZone.setDefault(originalTimeZone);
+        }
     }
 
     /**
@@ -298,7 +310,7 @@ public class EmailUtilsTest {
 
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Date Range"));
-        assertTrue(result.contains("01 Jan 1970 - 31 Dec 2024"));
+        assertTrue(result.contains("01 Jan 1970 00:00:00 UTC - 31 Dec 2024 23:59:59 UTC"));
     }
 
     /**

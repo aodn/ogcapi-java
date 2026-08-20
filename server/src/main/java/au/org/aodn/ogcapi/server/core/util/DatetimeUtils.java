@@ -1,6 +1,12 @@
 package au.org.aodn.ogcapi.server.core.util;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.OffsetDateTime;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
@@ -8,9 +14,11 @@ public class DatetimeUtils {
     private static final Pattern MM_YYYY_PATTERN = Pattern.compile("^(\\d{2})-(\\d{4})$");
     private static final Pattern YYYY_MM_DD_PATTERN = Pattern.compile("^\\d{4}-\\d{2}-\\d{2}$");
     private static final DateTimeFormatter ISO_DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-    // Email display format (dd MMM yyyy), e.g. 05 Jan 2024; English so the month is stable across locales
-    private static final DateTimeFormatter DISPLAY_DATE_FORMAT =
-            DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.ENGLISH);
+    private static final DateTimeFormatter MONTH_YEAR_FORMAT = DateTimeFormatter.ofPattern("MM-yyyy");
+    // Email display format with an explicit UTC indicator; English keeps month names stable across locales.
+    private static final DateTimeFormatter DISPLAY_UTC_DATE_TIME_FORMAT =
+            DateTimeFormatter.ofPattern("dd MMM yyyy HH:mm:ss 'UTC'", Locale.ENGLISH)
+                    .withZone(ZoneOffset.UTC);
     public static final String NON_SPECIFIED_DATE = "non-specified";
     // Frontend default lower bound (dateDefault.min); its default upper bound is "now"
     public static final String DEFAULT_MIN_DATE = "1970-01-01";
@@ -39,24 +47,52 @@ public class DatetimeUtils {
             return true;
         }
         try {
-            return !java.time.LocalDate.parse(date.trim(), ISO_DATE_FORMAT).isBefore(java.time.LocalDate.now());
-        } catch (java.time.format.DateTimeParseException e) {
+            return !LocalDate.parse(date.trim(), ISO_DATE_FORMAT).isBefore(LocalDate.now(ZoneOffset.UTC));
+        } catch (DateTimeParseException e) {
             return false;
         }
     }
 
     /**
-     * Format an ISO date (yyyy-MM-dd) for display as dd MMM yyyy, e.g. 05 Jan 2024.
-     * Returns "" for null/empty/non-specified, and falls back to the raw input if it cannot be parsed.
+     * Format a download/subsetting boundary in UTC for display in notification emails.
+     * A date-only value is the inclusive UTC day processed by the backend, displayed
+     * at whole-second precision from 00:00:00 UTC through 23:59:59 UTC. A month-only
+     * value uses the equivalent boundaries for its first and last days. An ISO-8601
+     * timestamp with an offset is converted to the same instant in UTC. This method is
+     * deliberately specific to download filters; Tiler date keys are opaque calendar
+     * keys and must not be passed through it.
+     *
+     * @return an explicit UTC timestamp, an empty string for an unspecified value, or
+     *         the unmodified input when it is not a supported temporal value
      */
-    public static String toDisplayDate(String isoDate) {
-        if (isoDate == null || isoDate.trim().isEmpty() || NON_SPECIFIED_DATE.equalsIgnoreCase(isoDate.trim())) {
+    public static String toDisplayUtcDownloadBoundary(String value, boolean endBoundary) {
+        if (value == null || value.trim().isEmpty() || NON_SPECIFIED_DATE.equalsIgnoreCase(value.trim())) {
             return "";
         }
+
+        String trimmed = value.trim();
         try {
-            return java.time.LocalDate.parse(isoDate.trim(), ISO_DATE_FORMAT).format(DISPLAY_DATE_FORMAT);
-        } catch (java.time.format.DateTimeParseException e) {
-            return isoDate;
+            LocalDate date = LocalDate.parse(trimmed, ISO_DATE_FORMAT);
+            return DISPLAY_UTC_DATE_TIME_FORMAT.format(endBoundary
+                    ? date.atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC)
+                    : date.atStartOfDay().toInstant(ZoneOffset.UTC));
+        } catch (DateTimeParseException ignored) {
+            // It may be a month or an ISO-8601 timestamp with an explicit offset.
+        }
+
+        try {
+            YearMonth month = YearMonth.parse(trimmed, MONTH_YEAR_FORMAT);
+            return DISPLAY_UTC_DATE_TIME_FORMAT.format(endBoundary
+                    ? month.atEndOfMonth().atTime(LocalTime.MAX).toInstant(ZoneOffset.UTC)
+                    : month.atDay(1).atStartOfDay().toInstant(ZoneOffset.UTC));
+        } catch (DateTimeParseException ignored) {
+            // It may already be an ISO-8601 timestamp with an explicit offset.
+        }
+
+        try {
+            return DISPLAY_UTC_DATE_TIME_FORMAT.format(OffsetDateTime.parse(trimmed).toInstant());
+        } catch (DateTimeParseException ignored) {
+            return value;
         }
     }
 

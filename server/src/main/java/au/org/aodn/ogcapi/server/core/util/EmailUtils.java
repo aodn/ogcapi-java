@@ -49,9 +49,10 @@ public class EmailUtils {
             ObjectMapper objectMapper
     ) {
         try {
-            // Format dates for display as dd MMM yyyy, e.g. 05 Jan 2024
-            String displayStartDate = DatetimeUtils.toDisplayDate(startDate);
-            String displayEndDate = DatetimeUtils.toDisplayDate(endDate);
+            // Download dates are UTC temporal filters (not Tiler calendar keys). Show
+            // the same inclusive day boundaries that the backend processes.
+            String displayStartDate = DatetimeUtils.toDisplayUtcDownloadBoundary(startDate, false);
+            String displayEndDate = DatetimeUtils.toDisplayUtcDownloadBoundary(endDate, true);
 
             // The frontend default full range (1970-01-01 to now) means "no temporal subset" - treat as unspecified
             boolean isOpenRange = DatetimeUtils.isDefaultLowerBound(startDate) && DatetimeUtils.isOpenUpperBound(endDate);
