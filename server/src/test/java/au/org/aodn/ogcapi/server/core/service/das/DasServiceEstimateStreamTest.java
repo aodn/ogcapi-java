@@ -56,13 +56,13 @@ public class DasServiceEstimateStreamTest {
     private static final String HEARTBEAT_FRAME = """
             event: processing
             data: {"status":"processing","message":"Processing your request..."}
-            
+
             """;
 
     private static final String RESULT_FRAME = """
             event: result
             data: {"status":"completed","data":{"estimated_output_bytes":123}}
-            
+
             """;
 
     private RecordingSseConnector connector;
@@ -188,7 +188,7 @@ public class DasServiceEstimateStreamTest {
         connector.respondWith(List.of(HEARTBEAT_FRAME, """
                 event: error
                 data: {"status":"error","message":"404: No matching keys found for uuid=test-uuid"}
-                
+
                 """));
 
         RuntimeException e = assertThrows(RuntimeException.class,
