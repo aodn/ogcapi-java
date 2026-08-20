@@ -46,12 +46,11 @@ public class SseSession {
     }
 
     /**
-     * Send a {@code keep-alive} and report a dead client as {@link SseClientGoneException}.
-     * <p>
-     * This is how a stream checks its client is still there while it waits on an upstream
-     * server: TCP says nothing about a peer that has gone until you write to it. Call it from
-     * the thread blocked upstream — the exception then unwinds that read and closes the
-     * upstream connection, instead of leaving a server computing a result for nobody.
+     * Send a keep-alive and report a dead client as SseClientGoneException.
+     * This is how a stream checks its client is still there while waiting on an upstream server,
+     * since TCP says nothing about a peer that has gone until you write to it. Call it from the
+     * thread blocked upstream, so the exception unwinds that read and closes the connection
+     * instead of leaving a server computing a result for nobody.
      */
     public void probeClient(Object data) throws SseClientGoneException {
         try {
@@ -72,9 +71,9 @@ public class SseSession {
             try {
                 send(SseEventName.KEEP_ALIVE, payloadSupplier.get());
             } catch (Exception e) {
-                // Note this only ends the ticker and the emitter: a disconnect noticed here
-                // cannot unwind a thread blocked on an upstream socket, which is why the work
-                // itself should probe the client instead — see probeClient.
+                // This only ends the ticker and the emitter: a disconnect noticed here cannot
+                // unwind a thread blocked on an upstream socket, so the work itself should
+                // probe the client instead, see probeClient.
                 WfsErrorHandler.handleError(e, contextId, emitter, this::cleanup);
             }
         }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);

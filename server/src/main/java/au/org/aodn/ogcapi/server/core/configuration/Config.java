@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
+import au.org.aodn.ogcapi.server.core.http.CancelPropagatingJdkConnector;
 import au.org.aodn.ogcapi.server.core.service.das.DasProperties;
 import au.org.aodn.ogcapi.server.core.service.dda.DdaProperties;
 import au.org.aodn.ogcapi.server.core.service.geonetwork.GNProperties;
@@ -17,10 +18,11 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.JdkClientHttpRequestFactory;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.net.http.HttpClient;
 
@@ -35,7 +37,7 @@ import java.net.http.HttpClient;
 public class Config {
 
     public static final String DAS_REST_TEMPLATE = "dasRestTemplate";
-    public static final String DAS_SSE_REST_TEMPLATE = "dasSseRestTemplate";
+    public static final String DAS_SSE_WEB_CLIENT = "dasSseWebClient";
 
     @Autowired
     ObjectMapper mapper;
@@ -79,17 +81,15 @@ public class Config {
     }
 
     /**
-     * The DAS client for streamed endpoints (the cloud-optimised size estimate). It is separate
-     * from createDasRestTemplate because a stream needs two things a plain call does not:
-     * 1. A longer timeout. This factory's read timeout caps the whole exchange, not each read,
-     *    so it uses the generous sseReadTimeout while the shared bean keeps its short
-     *    readTimeout for calls that should answer quickly.
-     * 2. A cancellable body. Closing the response body cancels the exchange, and that is the
-     *    only way to stop a stream: on Java 17 the reader swallows InterruptedException, so the
-     *    read loop must notice for itself. See SseSession.probeClient.
+     * The DAS client for streamed endpoints (the cloud-optimised size estimate). A WebClient
+     * rather than a RestTemplate because a stream has to be cancellable: stopping the read is
+     * what abandons the estimate, and only a cancel reaches the socket. Two things to know:
+     * 1. The connector is customised so a cancel really does reach the socket, see
+     * CancelPropagatingJdkConnector.
+     * 2. There is no timeout here. DasService caps each frame gap with sseIdleTimeout instead.
      */
-    @Bean(name = DAS_SSE_REST_TEMPLATE, defaultCandidate = false)
-    public RestTemplate createDasSseRestTemplate(DasProperties dasProperties) {
+    @Bean(name = DAS_SSE_WEB_CLIENT, defaultCandidate = false)
+    public WebClient createDasSseWebClient(DasProperties dasProperties, ObjectMapper objectMapper) {
         HttpClient httpClient = HttpClient.newBuilder()
                 .connectTimeout(dasProperties.connectTimeout())
                 // HttpURLConnection follows redirects on GET; the JDK client follows none by
@@ -97,18 +97,22 @@ public class Config {
                 .followRedirects(HttpClient.Redirect.NORMAL)
                 .build();
 
-        JdkClientHttpRequestFactory factory = new JdkClientHttpRequestFactory(httpClient);
-        factory.setReadTimeout(dasProperties.sseReadTimeout());
+        WebClient.Builder builder = WebClient.builder()
+                .clientConnector(new CancelPropagatingJdkConnector(httpClient))
+                .baseUrl(dasProperties.host())
+                // The default codec builds its own ObjectMapper. Pass the application's so the DAS
+                // request body follows the same NON_NULL / JsonNullableModule config as everything else.
+                .codecs(codecs -> codecs.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper)))
+                .defaultHeader("X-API-KEY", dasProperties.secret());
 
-        RestTemplate restTemplate = new RestTemplate(factory);
-        restTemplate.getInterceptors().add(dasCredentials(dasProperties));
-        return restTemplate;
+        if (dasProperties.internal() != null) {
+            builder.defaultHeader("x-internal-das-header-secret", dasProperties.internal());
+        }
+        return builder.build();
     }
 
     /**
-     * Attaches the DAS credentials to every request. Lives on the client rather than on each
-     * call so no caller can forget them — and so they never ride along on the shared template
-     * GeoServer uses.
+     * Attaches the DAS credentials to every request.
      */
     private ClientHttpRequestInterceptor dasCredentials(DasProperties dasProperties) {
         return (request, body, execution) -> {

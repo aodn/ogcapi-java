@@ -20,11 +20,11 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import software.amazon.awssdk.services.batch.BatchClient;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
@@ -81,11 +81,9 @@ public class RestApiSseTest {
     }
 
     /**
-     * The SSE work runs on a separate thread, so poll the mock response until the
-     * expected marker shows up (or time out and let the caller's assert fail with
-     * the content collected so far). The emitter writes an event's name and data
-     * lines separately, so also wait for the blank line that terminates the
-     * marker's event — otherwise callers could assert on a half-written payload.
+     * The SSE work runs on another thread, so poll the mock response until the marker appears, or
+     * time out and let the caller's assert fail with what was collected. Wait for the blank line
+     * ending the event too, or callers could assert on a half-written payload.
      */
     private String awaitContent(MockHttpServletResponse response, String expectedMarker) throws Exception {
         long deadline = System.currentTimeMillis() + 5000;
@@ -181,12 +179,11 @@ public class RestApiSseTest {
 
     @Test
     public void testEstimateCODownloadClientDisconnectIsNotReportedAsAFailedEstimate() throws Exception {
-        // A disconnect is what aborts the DAS call, so it comes back wrapped by RestTemplate.
-        // There is no client left to tell about it — reporting estimate-failed here would only
-        // log a failure that never happened.
+        // A disconnect is what aborts the DAS call, and the estimate has an unchecked signature,
+        // so the IOException that unwound it arrives nested. No client is left to tell, and
+        // reporting estimate-failed here would log a failure that never happened.
         when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
-                .thenThrow(new ResourceAccessException(
-                        "I/O error on POST request",
+                .thenThrow(new UncheckedIOException(
                         new SseClientGoneException("test-uuid", new IOException("Broken pipe"))));
 
         TestLogAppender logs = TestLogAppender.attachTo(WfsErrorHandler.class);

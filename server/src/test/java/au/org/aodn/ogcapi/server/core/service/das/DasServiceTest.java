@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 import java.util.Map;
@@ -19,11 +20,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for DasService URL building. Verifies that null date params are omitted (so they are
- * never passed to URI template expansion) and that buoy/mooring identifiers are sent as path
- * variables for single, correct encoding. The API key is attached by the RestTemplate bean, so it
- * is covered by ConfigTest rather than here; the streamed size-estimate call has its own
- * {@link DasServiceEstimateStreamTest}, which needs a real client to exercise the read loop.
+ * Unit tests for DasService URL building: null date params are omitted so they never reach URI
+ * template expansion, and buoy/mooring ids go as path variables so they are encoded once. The API
+ * key is attached by the RestTemplate bean, so ConfigTest covers it, and the streamed size
+ * estimate has its own DasServiceEstimateStreamTest.
  */
 public class DasServiceTest {
 
@@ -41,7 +41,7 @@ public class DasServiceTest {
                 Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20)
         );
 
-        dasService = new DasService(config, httpClient, mock(RestTemplate.class), new ObjectMapper());
+        dasService = new DasService(config, httpClient, mock(WebClient.class), new ObjectMapper());
 
         when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(ResponseEntity.ok("ok".getBytes()));

@@ -25,14 +25,11 @@ public class SseStreamHandler {
     private static final long IDLE_THREAD_KEEP_ALIVE_SECONDS = 60L;
 
     /**
-     * Streams block on upstream sockets for minutes at a time, so they get their own pool
-     * rather than {@code ForkJoinPool.commonPool()}, whose parallelism is
-     * {@code availableProcessors - 1} — a single thread on a 2-vCPU container. A blocking
-     * socket read is invisible to ForkJoinPool's compensation mechanism, so one slow estimate
-     * was enough to make every other SSE request queue behind it.
-     * <p>
-     * The queue is a {@link SynchronousQueue}: a stream that cannot get a thread is rejected
-     * immediately and told so, rather than queueing behind work that may run for minutes.
+     * Streams block on upstream sockets for minutes, so they get their own pool rather than
+     * ForkJoinPool.commonPool(), which runs a single thread on a 2-vCPU container and cannot
+     * see a blocking socket read, so one slow estimate made every other SSE request wait.
+     * The SynchronousQueue means a stream that cannot get a thread is rejected straight away
+     * rather than queueing behind work that may run for minutes.
      */
     private static final ExecutorService STREAM_EXECUTOR = new ThreadPoolExecutor(
             CORE_STREAMS,

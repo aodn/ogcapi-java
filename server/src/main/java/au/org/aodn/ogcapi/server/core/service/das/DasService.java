@@ -3,37 +3,43 @@ package au.org.aodn.ogcapi.server.core.service.das;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
 import au.org.aodn.ogcapi.server.core.service.ApplicationInfo;
-import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
+import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RequestCallback;
-import org.springframework.web.client.ResponseExtractor;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Flux;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service("DataAccessService")
 public class DasService implements ApplicationInfo {
 
+    private static final ParameterizedTypeReference<ServerSentEvent<String>> SSE_FRAME =
+            new ParameterizedTypeReference<>() {
+            };
+
     protected final DasProperties dasProperties;
     protected final RestTemplate httpClient;
-    protected final RestTemplate sseHttpClient;
+    protected final WebClient sseHttpClient;
     protected final ObjectMapper objectMapper;
     protected final Map<String, Map<?, ?>> appInfo;
 
     public DasService(
             DasProperties dasProperties,
             @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
-            @Qualifier(Config.DAS_SSE_REST_TEMPLATE) RestTemplate sseHttpClient,
+            @Qualifier(Config.DAS_SSE_WEB_CLIENT) WebClient sseHttpClient,
             ObjectMapper objectMapper) {
         this.dasProperties = dasProperties;
         this.httpClient = httpClient;
@@ -43,10 +49,9 @@ public class DasService implements ApplicationInfo {
     }
 
     /**
-     * GET a feature-collection from the DAS, optionally bounded by start/end date. Only the date
-     * query params that are non-null are added, so a null value is never passed to URI template
-     * expansion (which would throw). Any path variables in {@code path} are supplied via
-     * {@code pathVariables}.
+     * GET a feature-collection from DAS, optionally bounded by start/end date. Only non-null dates
+     * are added as query params, because expanding a null URI template variable would throw. Any
+     * path variables in path come from pathVariables.
      */
     private ResponseEntity<byte[]> getFeatureCollection(String path, String start, String end, Map<String, String> pathVariables) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasProperties.host() + path);
@@ -98,51 +103,67 @@ public class DasService implements ApplicationInfo {
     }
 
     /**
-     * Call the data-access-service cloud-optimised size estimate endpoint and return the
-     * estimate JSON, so the SSE layer can forward it to the frontend unchanged. The parameters
-     * map is the same batch-style subset request the download job submits (see
-     * SubsetParametersUtils), so DAS treats the estimate and the download identically.
-     * Two things to know:
-     * 1. DAS streams this endpoint over SSE. It heartbeats while computing and sends the
-     * estimate in a final event, so frames are read as they arrive and unwrapped by
-     * SseResponseParser. The stream returns 200 as soon as it opens, so a failed estimate
-     * arrives as an error event, not an error status, and the parser turns it back into an
-     * exception. Only failures before the stream starts (auth, API not ready) are HTTP errors.
-     * 2. The response is deliberately not buffered. onHeartbeat runs on this thread once per
-     * DAS heartbeat, and callers use it to write to their own SSE client. That write is the
-     * only way to notice the client has disconnected, and since it runs on the thread blocked
-     * on DAS, the IOException it throws unwinds this call and closes the connection to DAS.
-     * DAS then stops the estimate at its next cancellation checkpoint.
+     * Ask DAS for a cloud-optimised size estimate and return the estimate JSON unchanged, for the
+     * SSE layer to forward on. The parameters map is the same subset request the download job
+     * sends (see SubsetParametersUtils), so DAS treats both alike. Three things to know:
+     * 1. DAS answers over SSE: heartbeats while it computes, then the estimate as a final event.
+     * The stream returns 200 as soon as it opens, so a failed estimate arrives as an error event
+     * that DasSseFrames turns into an exception. Only failures before the stream opens (auth, API
+     * not ready) are HTTP errors, and onStatus rewrites those to hide the DAS host.
+     * 2. The response is not buffered. onHeartbeat runs on this thread for each heartbeat, and
+     * callers write to their own SSE client there, which is the only way to notice that client
+     * has gone. The IOException it throws unwinds this call, and leaving the try-with-resources
+     * cancels the Flux, closing the connection so DAS stops the estimate. That cancel only
+     * reaches the socket because of CancelPropagatingJdkConnector.
+     * 3. sseIdleTimeout is the gap allowed between frames, not a limit on the whole call. A slow
+     * estimate is fine while DAS keeps heartbeating; a silent DAS is given up on.
      */
     public String estimateCloudOptimisedDownloadSize(String uuid,
                                                      Map<String, String> parameters,
-                                                     SseResponseParser.FrameCallback onHeartbeat) {
+                                                     DasSseFrames.FrameCallback onHeartbeat) {
 
-        String url = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/{uuid}/estimate_size")
-                .encode()
-                .toUriString();
+        Flux<ServerSentEvent<String>> frames = sseHttpClient.post()
+                .uri("/api/v1/das/data/{uuid}/estimate_size", uuid)
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(parameters)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class)
+                        .defaultIfEmpty("")
+                        .map(body -> new RuntimeException(describe(response.statusCode(), body))))
+                .bodyToFlux(SSE_FRAME)
+                .timeout(dasProperties.sseIdleTimeout());
 
-        Map<String, String> uriVars = new HashMap<>();
-        uriVars.put("uuid", uuid);
+        boolean sawFrame = false;
 
-        RequestCallback requestCallback = request -> {
-            HttpHeaders headers = request.getHeaders();
-            headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
-            // Jackson's XML converter also claims Map bodies, so the content type is explicit.
-            headers.setContentType(MediaType.APPLICATION_JSON);
-            objectMapper.writeValue(request.getBody(), parameters);
-        };
-
-        ResponseExtractor<String> responseExtractor = response -> {
-            // Closing the reader closes the response body, which cancels the exchange: on the
-            // disconnect path DAS is notified here, before RestTemplate's own cleanup runs.
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(response.getBody(), StandardCharsets.UTF_8))) {
-                return SseResponseParser.extractResultData(objectMapper, reader, onHeartbeat);
+        // Closing the stream cancels the Flux, and that is what closes the connection to DAS.
+        try (Stream<ServerSentEvent<String>> stream = frames.toStream()) {
+            for (Iterator<ServerSentEvent<String>> it = stream.iterator(); it.hasNext(); ) {
+                sawFrame = true;
+                String payload = DasSseFrames.readTerminalFrame(objectMapper, it.next());
+                if (payload != null) {
+                    return payload;
+                }
+                onHeartbeat.onFrame();
             }
-        };
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
-        return sseHttpClient.execute(url, HttpMethod.POST, requestCallback, responseExtractor, uriVars);
+        throw new RuntimeException(sawFrame ?
+                "data-access-service stream ended without a result or error event" :
+                "Empty response from data-access-service");
+    }
+
+    /**
+     * Describe a failure that arrived before the stream opened. WebClient's own message quotes the
+     * request URL, which would show the DAS host to a user, so only the status and whatever DAS
+     * said are reported.
+     */
+    private static String describe(HttpStatusCode status, String body) {
+        String reason = status instanceof HttpStatus known ? " " + known.getReasonPhrase() : "";
+        String failure = "data-access-service returned " + status.value() + reason;
+        return body.isBlank() ? failure : failure + ": " + body;
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {
