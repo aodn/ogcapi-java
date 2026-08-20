@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.sse;
 
 import au.org.aodn.ogcapi.server.core.exception.SseClientGoneException;
-import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +73,7 @@ public class SseSession {
                 // This only ends the ticker and the emitter: a disconnect noticed here cannot
                 // unwind a thread blocked on an upstream socket, so the work itself should
                 // probe the client instead, see probeClient.
-                WfsErrorHandler.handleError(e, contextId, emitter, this::cleanup);
+                SseErrorHandler.handleError(e, contextId, emitter, this::cleanup);
             }
         }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
 

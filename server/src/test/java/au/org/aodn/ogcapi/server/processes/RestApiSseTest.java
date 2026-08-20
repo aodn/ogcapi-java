@@ -1,7 +1,7 @@
 package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.exception.SseClientGoneException;
-import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
+import au.org.aodn.ogcapi.server.core.service.sse.SseErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import au.org.aodn.ogcapi.server.core.service.das.DasService;
@@ -186,7 +186,7 @@ public class RestApiSseTest {
                 .thenThrow(new UncheckedIOException(
                         new SseClientGoneException("test-uuid", new IOException("Broken pipe"))));
 
-        TestLogAppender logs = TestLogAppender.attachTo(WfsErrorHandler.class);
+        TestLogAppender logs = TestLogAppender.attachTo(SseErrorHandler.class);
         try {
             Map<String, Object> inputs = new HashMap<>();
             inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
@@ -201,7 +201,7 @@ public class RestApiSseTest {
             assertFalse(response.getContentAsString().contains("event:estimate-failed"),
                     "A departed client must not be told its estimate failed: " + response.getContentAsString());
         } finally {
-            logs.detachFrom(WfsErrorHandler.class);
+            logs.detachFrom(SseErrorHandler.class);
         }
     }
 

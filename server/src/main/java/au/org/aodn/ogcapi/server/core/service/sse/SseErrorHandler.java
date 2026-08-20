@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.exception.wfs;
+package au.org.aodn.ogcapi.server.core.service.sse;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
@@ -13,12 +13,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Shared error handling for every SSE stream created by SseStreamHandler. It categorises the
+ * failure, runs the caller's cleanup, tells the client, and completes the emitter.
+ */
 @Slf4j
-public class WfsErrorHandler {
+public class SseErrorHandler {
     private static final Set<SseEmitter> handledEmitters = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private enum ErrorType {
-        WFS_SERVER_ERROR,
+        UPSTREAM_SERVER_ERROR,
         NETWORK_ERROR,
         VALIDATION_ERROR,
         UNAUTHORIZED_SERVER_ERROR,
@@ -45,14 +49,14 @@ public class WfsErrorHandler {
             }
 
             switch (errorType) {
-                case WFS_SERVER_ERROR -> {
-                    // ERROR level so New Relic can alert on failed downloads and identify
+                case UPSTREAM_SERVER_ERROR -> {
+                    // ERROR level so New Relic can alert on failed streams and identify
                     // the problematic upstream server (the URL is in the exception message).
-                    log.error("WFS server error during download for UUID {}", uuid, e);
+                    log.error("Upstream server error during SSE stream for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
                             .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
-                                    "message", "WFS server error",
+                                    "message", "Upstream server error",
                                     "timestamp", System.currentTimeMillis()
                             )));
                     emitter.completeWithError(e);
@@ -75,11 +79,11 @@ public class WfsErrorHandler {
                 }
 
                 case UNAUTHORIZED_SERVER_ERROR -> {
-                    log.warn("Unauthorized wfs server for UUID {}", uuid, e);
+                    log.warn("Unauthorized upstream server for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
                             .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
-                                    "message", "Unauthorized wfs server",
+                                    "message", "Unauthorized upstream server",
                                     "timestamp", System.currentTimeMillis()
                             )));
                     emitter.completeWithError(e);
@@ -97,7 +101,7 @@ public class WfsErrorHandler {
                 }
 
                 case UNKNOWN_ERROR -> {
-                    log.error("Unknown error during WFS download for UUID {}", uuid, e);
+                    log.error("Unknown error during SSE stream for UUID {}", uuid, e);
                     emitter.send(SseEmitter.event()
                             .name(SseEventName.ERROR.getValue())
                             .data(Map.of(
@@ -118,11 +122,11 @@ public class WfsErrorHandler {
     }
 
     private static ErrorType categorizeError(Exception e) {
-        // Upstream WFS server rejected the request (4xx/5xx). Must be checked before
+        // The upstream server rejected the request (4xx/5xx). Must be checked before
         // the network heuristics below so a failing server is never mistaken for a
         // client disconnect.
         if (e instanceof HttpStatusCodeException) {
-            return ErrorType.WFS_SERVER_ERROR;
+            return ErrorType.UPSTREAM_SERVER_ERROR;
         }
 
         if (e instanceof IOException || e instanceof IllegalStateException || e.getMessage() != null && (
@@ -137,7 +141,7 @@ public class WfsErrorHandler {
             return ErrorType.VALIDATION_ERROR;
         }
 
-        // Unauthorized wfs error
+        // Unauthorized upstream server error
         if (e instanceof UnauthorizedServerException) {
             return ErrorType.UNAUTHORIZED_SERVER_ERROR;
         }
