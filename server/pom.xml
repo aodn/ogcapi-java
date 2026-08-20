@@ -65,6 +65,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-tomcat</artifactId>
         </dependency>
+        <!-- WebClient for the streamed DAS endpoints. Not spring-boot-starter-webflux: that
+             drags in reactor-netty and a second event loop; the app stays servlet-based. -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-webflux</artifactId>
+        </dependency>
         <!-- Spring Boot Cache Starter (includes spring-context) -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

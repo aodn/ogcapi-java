@@ -1,6 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.sse;
 
-import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
+import au.org.aodn.ogcapi.server.core.exception.SseClientGoneException;
 import au.org.aodn.ogcapi.server.core.model.enumeration.SseEventName;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +45,21 @@ public class SseSession {
     }
 
     /**
+     * Send a keep-alive and report a dead client as SseClientGoneException.
+     * This is how a stream checks its client is still there while waiting on an upstream server,
+     * since TCP says nothing about a peer that has gone until you write to it. Call it from the
+     * thread blocked upstream, so the exception unwinds that read and closes the connection
+     * instead of leaving a server computing a result for nobody.
+     */
+    public void probeClient(Object data) throws SseClientGoneException {
+        try {
+            send(SseEventName.KEEP_ALIVE, data);
+        } catch (IOException e) {
+            throw new SseClientGoneException(contextId, e);
+        }
+    }
+
+    /**
      * Start sending a {@code keep-alive} event every {@code intervalSeconds}. The
      * payload is recomputed each tick by {@code payloadSupplier} so callers can
      * reflect changing state (e.g. whether an upstream server has responded yet).
@@ -55,7 +70,10 @@ public class SseSession {
             try {
                 send(SseEventName.KEEP_ALIVE, payloadSupplier.get());
             } catch (Exception e) {
-                WfsErrorHandler.handleError(e, contextId, emitter, this::cleanup);
+                // This only ends the ticker and the emitter: a disconnect noticed here cannot
+                // unwind a thread blocked on an upstream socket, so the work itself should
+                // probe the client instead, see probeClient.
+                SseErrorHandler.handleError(e, contextId, emitter, this::cleanup);
             }
         }, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
 

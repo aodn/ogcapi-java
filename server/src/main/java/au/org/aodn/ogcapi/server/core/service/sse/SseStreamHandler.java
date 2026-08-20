@@ -1,10 +1,14 @@
 package au.org.aodn.ogcapi.server.core.service.sse;
 
-import au.org.aodn.ogcapi.server.core.exception.wfs.WfsErrorHandler;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Shared scaffolding for the long-running SSE endpoints (WFS download / estimate,
@@ -14,6 +18,25 @@ import java.util.concurrent.CompletableFuture;
  */
 @Slf4j
 public class SseStreamHandler {
+
+    private static final int CORE_STREAMS = 4;
+    private static final int MAX_STREAMS = 64;
+    private static final long IDLE_THREAD_KEEP_ALIVE_SECONDS = 60L;
+
+    /**
+     * Streams block on upstream sockets for minutes, so they get their own pool rather than
+     * ForkJoinPool.commonPool(), which runs a single thread on a 2-vCPU container and cannot
+     * see a blocking socket read, so one slow estimate made every other SSE request wait.
+     * The SynchronousQueue means a stream that cannot get a thread is rejected straight away
+     * rather than queueing behind work that may run for minutes.
+     */
+    private static final ExecutorService STREAM_EXECUTOR = new ThreadPoolExecutor(
+            CORE_STREAMS,
+            MAX_STREAMS,
+            IDLE_THREAD_KEEP_ALIVE_SECONDS,
+            TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new CustomizableThreadFactory("sse-stream-"));
 
     private SseStreamHandler() {
     }
@@ -34,7 +57,7 @@ public class SseStreamHandler {
      * A never-timing-out {@link SseEmitter} is created, lifecycle callbacks are
      * wired to clean up the keep-alive resources, and any exception from the work
      * (including validation errors thrown at the start) is routed through
-     * {@link WfsErrorHandler}. The work is responsible for completing the stream
+     * SseErrorHandler. The work is responsible for completing the stream
      * once its result has been sent.
      *
      * @param contextId identifier (e.g. uuid) used for logging and error handling
@@ -56,15 +79,20 @@ public class SseStreamHandler {
         });
 
         emitter.onError(throwable ->
-                WfsErrorHandler.handleError((Exception) throwable, contextId, emitter, session::cleanup));
+                SseErrorHandler.handleError((Exception) throwable, contextId, emitter, session::cleanup));
 
-        CompletableFuture.runAsync(() -> {
-            try {
-                work.run(session);
-            } catch (Exception e) {
-                WfsErrorHandler.handleError(e, contextId, emitter, session::cleanup);
-            }
-        });
+        try {
+            STREAM_EXECUTOR.execute(() -> {
+                try {
+                    work.run(session);
+                } catch (Exception e) {
+                    SseErrorHandler.handleError(e, contextId, emitter, session::cleanup);
+                }
+            });
+        } catch (RejectedExecutionException e) {
+            log.error("No SSE worker available for {}; {} streams already running", contextId, MAX_STREAMS);
+            SseErrorHandler.handleError(e, contextId, emitter, session::cleanup);
+        }
 
         return emitter;
     }

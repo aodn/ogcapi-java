@@ -1,4 +1,4 @@
-package au.org.aodn.ogcapi.server.core.exception.wfs;
+package au.org.aodn.ogcapi.server.core.service.sse;
 
 import au.org.aodn.ogcapi.server.core.exception.GeoserverFieldsNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.UnauthorizedServerException;
@@ -18,22 +18,22 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-public class WfsErrorHandlerTest {
+public class SseErrorHandlerTest {
 
     protected TestLogAppender logAppender;
 
     @BeforeEach
     void attachLogAppender() {
-        logAppender = TestLogAppender.attachTo(WfsErrorHandler.class);
+        logAppender = TestLogAppender.attachTo(SseErrorHandler.class);
     }
 
     @AfterEach
     void detachLogAppender() {
-        logAppender.detachFrom(WfsErrorHandler.class);
+        logAppender.detachFrom(SseErrorHandler.class);
     }
 
     /**
-     * An upstream WFS server error status must be logged at ERROR level (so New
+     * An upstream server error status must be logged at ERROR level (so New
      * Relic can pick it up), sent to the client as an SSE error event, and must
      * not be mistaken for a client disconnect.
      */
@@ -41,7 +41,7 @@ public class WfsErrorHandlerTest {
     void verifyUpstreamServerErrorLoggedAtErrorLevel() throws IOException {
         SseEmitter emitter = mock(SseEmitter.class);
 
-        WfsErrorHandler.handleError(
+        SseErrorHandler.handleError(
                 new HttpServerErrorException(HttpStatus.INTERNAL_SERVER_ERROR),
                 "uuid-123", emitter, null);
 
@@ -61,7 +61,7 @@ public class WfsErrorHandlerTest {
     void verifyUnknownErrorLoggedAtErrorLevel() throws IOException {
         SseEmitter emitter = mock(SseEmitter.class);
 
-        WfsErrorHandler.handleError(new RuntimeException("boom"), "uuid-123", emitter, null);
+        SseErrorHandler.handleError(new RuntimeException("boom"), "uuid-123", emitter, null);
 
         assertEquals(1, logAppender.eventsAtLevel(Level.ERROR).size());
         verify(emitter, times(1)).send(any(SseEmitter.SseEventBuilder.class));
@@ -69,7 +69,7 @@ public class WfsErrorHandlerTest {
     }
 
     /**
-     * A WFS server that is not authorized must be logged at WARN with the
+     * An upstream server that is not authorized must be logged at WARN with the
      * exception attached (its message names the server) and reported to the
      * client, without raising an ERROR alert.
      */
@@ -77,7 +77,7 @@ public class WfsErrorHandlerTest {
     void verifyUnauthorizedServerLoggedAtWarnLevel() throws IOException {
         SseEmitter emitter = mock(SseEmitter.class);
 
-        WfsErrorHandler.handleError(
+        SseErrorHandler.handleError(
                 new UnauthorizedServerException("Server http://not-allowed/wfs is not authorized"),
                 "uuid-123", emitter, null);
 
@@ -100,7 +100,7 @@ public class WfsErrorHandlerTest {
     void verifyDownloadableFieldsNotFoundLoggedAtWarnLevel() throws IOException {
         SseEmitter emitter = mock(SseEmitter.class);
 
-        WfsErrorHandler.handleError(
+        SseErrorHandler.handleError(
                 new GeoserverFieldsNotFoundException("No downloadable fields found for all url"),
                 "uuid-123", emitter, null);
 
@@ -122,7 +122,7 @@ public class WfsErrorHandlerTest {
     void verifyClientDisconnectStaysAtWarnLevel() {
         SseEmitter emitter = mock(SseEmitter.class);
 
-        WfsErrorHandler.handleError(new IOException("Broken pipe"), "uuid-123", emitter, null);
+        SseErrorHandler.handleError(new IOException("Broken pipe"), "uuid-123", emitter, null);
 
         assertTrue(logAppender.eventsAtLevel(Level.ERROR).isEmpty());
         assertEquals(1, logAppender.eventsAtLevel(Level.WARN).size());
