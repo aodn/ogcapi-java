@@ -1,10 +1,14 @@
 package au.org.aodn.ogcapi.server.processes;
 
+import au.org.aodn.ogcapi.server.core.exception.SseClientGoneException;
+import au.org.aodn.ogcapi.server.core.service.sse.SseErrorHandler;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.util.TestLogAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.logging.log4j.Level;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -19,9 +23,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import software.amazon.awssdk.services.batch.BatchClient;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -74,11 +81,9 @@ public class RestApiSseTest {
     }
 
     /**
-     * The SSE work runs on a separate thread, so poll the mock response until the
-     * expected marker shows up (or time out and let the caller's assert fail with
-     * the content collected so far). The emitter writes an event's name and data
-     * lines separately, so also wait for the blank line that terminates the
-     * marker's event — otherwise callers could assert on a half-written payload.
+     * The SSE work runs on another thread, so poll the mock response until the marker appears, or
+     * time out and let the caller's assert fail with what was collected. Wait for the blank line
+     * ending the event too, or callers could assert on a half-written payload.
      */
     private String awaitContent(MockHttpServletResponse response, String expectedMarker) throws Exception {
         long deadline = System.currentTimeMillis() + 5000;
@@ -104,7 +109,7 @@ public class RestApiSseTest {
     @Test
     public void testEstimateCODownloadForwardsBatchStyleParameters() throws Exception {
         String dasJson = "{\"estimated_output_bytes\":12345}";
-        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap()))
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
                 .thenReturn(dasJson);
 
         Map<String, Object> inputs = new HashMap<>();
@@ -123,7 +128,7 @@ public class RestApiSseTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, String>> paramsCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(dasService).estimateCloudOptimisedDownloadSize(eq("test-uuid"), paramsCaptor.capture());
+        verify(dasService).estimateCloudOptimisedDownloadSize(eq("test-uuid"), paramsCaptor.capture(), any());
 
         Map<String, String> params = paramsCaptor.getValue();
         // key is forwarded raw (CSV, untrimmed) - DAS splits it, matching the batch download.
@@ -136,7 +141,7 @@ public class RestApiSseTest {
 
     @Test
     public void testEstimateCODownloadForwardsWildcardKeyRaw() throws Exception {
-        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap()))
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
                 .thenReturn("{}");
 
         Map<String, Object> inputs = new HashMap<>();
@@ -150,14 +155,14 @@ public class RestApiSseTest {
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, String>> paramsCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(dasService).estimateCloudOptimisedDownloadSize(eq("test-uuid"), paramsCaptor.capture());
+        verify(dasService).estimateCloudOptimisedDownloadSize(eq("test-uuid"), paramsCaptor.capture(), any());
         assertEquals("*", paramsCaptor.getValue().get(DatasetDownloadEnums.Parameter.KEY.getValue()),
                 "wildcard key is forwarded raw; DAS expands it to all keys");
     }
 
     @Test
     public void testEstimateCODownloadDasFailureEmitsEstimateFailed() throws Exception {
-        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap()))
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
                 .thenThrow(new RuntimeException("das returned 404"));
 
         Map<String, Object> inputs = new HashMap<>();
@@ -170,6 +175,52 @@ public class RestApiSseTest {
 
         assertEventOrder(content, "connection-established", "estimate-failed");
         assertTrue(content.contains("das returned 404"), "Failure reason should be forwarded in: " + content);
+    }
+
+    @Test
+    public void testEstimateCODownloadClientDisconnectIsNotReportedAsAFailedEstimate() throws Exception {
+        // A disconnect is what aborts the DAS call, and the estimate has an unchecked signature,
+        // so the IOException that unwound it arrives nested. No client is left to tell, and
+        // reporting estimate-failed here would log a failure that never happened.
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
+                .thenThrow(new UncheckedIOException(
+                        new SseClientGoneException("test-uuid", new IOException("Broken pipe"))));
+
+        TestLogAppender logs = TestLogAppender.attachTo(SseErrorHandler.class);
+        try {
+            Map<String, Object> inputs = new HashMap<>();
+            inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
+            inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "non-specified");
+            inputs.put(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue(), "netcdf");
+
+            MockHttpServletResponse response = postSse(ProcessIdEnum.DOWNLOAD_CO_ESTIMATE.getValue(), inputs);
+
+            String disconnectLog = awaitLogContaining(logs, "Client disconnected for UUID: test-uuid");
+            assertTrue(disconnectLog.contains("Client disconnected"),
+                    "The disconnect should be logged as a disconnect, got: " + disconnectLog);
+            assertFalse(response.getContentAsString().contains("event:estimate-failed"),
+                    "A departed client must not be told its estimate failed: " + response.getContentAsString());
+        } finally {
+            logs.detachFrom(SseErrorHandler.class);
+        }
+    }
+
+    /**
+     * The stream's work runs on another thread, so wait for the expected line rather than
+     * assuming it has been logged by the time the request returns.
+     */
+    private String awaitLogContaining(TestLogAppender logs, String expected) throws Exception {
+        long deadline = System.currentTimeMillis() + 5000;
+        while (System.currentTimeMillis() < deadline) {
+            String messages = logs.eventsAtLevel(Level.WARN).stream()
+                    .map(event -> event.getMessage().getFormattedMessage())
+                    .collect(Collectors.joining("\n"));
+            if (messages.contains(expected)) {
+                return messages;
+            }
+            Thread.sleep(50);
+        }
+        return "<nothing logged>";
     }
 
     @Test
