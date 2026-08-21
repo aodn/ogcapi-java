@@ -47,7 +47,7 @@ public class DatetimeUtils {
             return true;
         }
         try {
-            return !LocalDate.parse(date.trim(), ISO_DATE_FORMAT).isBefore(LocalDate.now(ZoneOffset.UTC));
+            return !LocalDate.parse(date.trim(), ISO_DATE_FORMAT).isBefore(LocalDate.now());
         } catch (DateTimeParseException e) {
             return false;
         }
