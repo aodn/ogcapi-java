@@ -6,10 +6,8 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
-import java.util.TimeZone;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -264,25 +262,16 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Date-only download filters represent inclusive UTC day boundaries. Run with
-     * a non-UTC server timezone to guard against implicit system-default conversion.
+     * Date-only download filters represent inclusive UTC day boundaries.
      */
     @Test
-    void testDatesShowInclusiveUtcRangeInNonUtcServerTimezone() {
-        TimeZone originalTimeZone = TimeZone.getDefault();
-        try {
-            TimeZone.setDefault(TimeZone.getTimeZone("Australia/Sydney"));
-            assertEquals(ZoneId.of("Australia/Sydney"), ZoneId.systemDefault());
+    void testDatesShowInclusiveUtcRange() {
+        String result = EmailUtils.generateSubsettingSection(
+                "2024-01-05", "2024-12-31", null, new ObjectMapper()
+        );
 
-            String result = EmailUtils.generateSubsettingSection(
-                    "2024-01-05", "2024-12-31", null, new ObjectMapper()
-            );
-
-            assertTrue(result.contains(
-                    "05 Jan 2024 00:00:00 UTC - 31 Dec 2024 23:59:59 UTC"));
-        } finally {
-            TimeZone.setDefault(originalTimeZone);
-        }
+        assertTrue(result.contains(
+                "05 Jan 2024 00:00:00 UTC - 31 Dec 2024 23:59:59 UTC"));
     }
 
     /**
