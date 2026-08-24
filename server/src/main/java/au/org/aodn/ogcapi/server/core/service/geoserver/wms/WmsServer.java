@@ -707,7 +707,7 @@ public class WmsServer {
                             .getRootLayer()
                             .getLayers();
 
-                    log.info("Fetched and cached get-capabilities layers {} ", layers);
+                    log.info("Fetched and cached {} get-capabilities layers for {}", layers.size(), wmsServerUrl);
                     return layers;
                 }
             }

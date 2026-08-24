@@ -49,7 +49,7 @@ public class DasTilerServiceTest {
 
         DasProperties config = new DasProperties(
                 HOST, null,"test-secret", "internal-secret",
-                Duration.ofSeconds(5), Duration.ofSeconds(30)
+                Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20)
         );
 
         service = new DasTilerService(config, httpClient, new ObjectMapper());

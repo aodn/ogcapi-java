@@ -12,6 +12,7 @@ public record DasProperties(
         String secret,
         String internal,
         @DefaultValue("5s") Duration connectTimeout,
-        @DefaultValue("30s") Duration readTimeout
+        @DefaultValue("30s") Duration readTimeout,
+        @DefaultValue("2m") Duration sseIdleTimeout
 ) {
 }
