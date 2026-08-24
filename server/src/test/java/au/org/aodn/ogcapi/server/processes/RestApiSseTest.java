@@ -6,6 +6,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
+import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
 import au.org.aodn.ogcapi.server.core.util.TestLogAppender;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.logging.log4j.Level;
@@ -28,6 +29,8 @@ import java.io.UncheckedIOException;
 import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -57,9 +60,11 @@ public class RestApiSseTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private RestServices restServices;
+
     @BeforeEach
     public void setUp() {
-        RestServices restServices = new RestServices(batchClient, objectMapper, "test-job-definition", "test-job-queue");
+        restServices = new RestServices(batchClient, objectMapper, "test-job-definition", "test-job-queue");
         ReflectionTestUtils.setField(restServices, "downloadWfsDataService", downloadWfsDataService);
         ReflectionTestUtils.setField(restServices, "dasService", dasService);
 
@@ -90,7 +95,7 @@ public class RestApiSseTest {
         String content = response.getContentAsString();
         while (System.currentTimeMillis() < deadline
                 && (!content.contains(expectedMarker)
-                    || !content.substring(content.indexOf(expectedMarker)).contains("\n\n"))) {
+                || !content.substring(content.indexOf(expectedMarker)).contains("\n\n"))) {
             Thread.sleep(50);
             content = response.getContentAsString();
         }
@@ -175,6 +180,84 @@ public class RestApiSseTest {
 
         assertEventOrder(content, "connection-established", "estimate-failed");
         assertTrue(content.contains("das returned 404"), "Failure reason should be forwarded in: " + content);
+    }
+
+    /**
+     * The regression this guards: a data-access-service that fails without ever opening its
+     * stream sends no heartbeat, so with nothing else writing to the client the connection goes
+     * quiet for as long as that failure takes, 30-60s for a gateway timeout.
+     */
+    @Test
+    public void testEstimateCOKeepsTheClientAliveWhileDasSaysNothing() throws Exception {
+        ReflectionTestUtils.setField(restServices, "estimateKeepAliveSeconds", 1L);
+
+        CountDownLatch dasAnswers = new CountDownLatch(1);
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
+                .thenAnswer(invocation -> {
+                    // No heartbeat and no result, the way a gateway 504 for a downed DAS arrives.
+                    assertTrue(dasAnswers.await(5, TimeUnit.SECONDS), "Test did not release the DAS call");
+                    throw new RuntimeException("data-access-service returned 504 Gateway Timeout");
+                });
+
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
+        inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "non-specified");
+        inputs.put(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue(), "netcdf");
+
+        MockHttpServletResponse response = postSse(ProcessIdEnum.DOWNLOAD_CO_ESTIMATE.getValue(), inputs);
+
+        String whileWaiting = awaitContent(response, "event:keep-alive");
+        assertEventOrder(whileWaiting, "connection-established", "keep-alive");
+        assertFalse(whileWaiting.contains("event:estimate-failed"),
+                "The estimate has not failed yet: " + whileWaiting);
+
+        dasAnswers.countDown();
+
+        String content = awaitContent(response, "event:estimate-failed");
+        assertEventOrder(content, "keep-alive", "estimate-failed");
+        assertTrue(content.contains("504 Gateway Timeout"), "Failure reason should be forwarded in: " + content);
+    }
+
+    /**
+     * The regression this guards: every data-access-service heartbeat is probed on, and a probe
+     * used to be a keep-alive event. DAS heartbeats at about the rate the ticker runs at, so the
+     * client received the ticker's keep-alive and a heartbeat's a moment later and read the same
+     * event twice. A probe writes an SSE comment now, which EventSource discards, so heartbeats
+     * keep the connection busy without reaching the client at all.
+     */
+    @Test
+    public void testEstimateCODasHeartbeatsDoNotReachTheClientAsEvents() throws Exception {
+        // The ticker is left at its default interval, longer than this test runs, so every
+        // keep-alive in the response would have to have come from a heartbeat.
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
+                .thenAnswer(invocation -> {
+                    DasSseFrames.FrameCallback onHeartbeat = invocation.getArgument(2);
+                    for (int i = 0; i < 3; i++) {
+                        onHeartbeat.onFrame();
+                    }
+                    return "{\"estimated_output_bytes\":12345}";
+                });
+
+        Map<String, Object> inputs = new HashMap<>();
+        inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
+        inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "non-specified");
+        inputs.put(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue(), "netcdf");
+
+        MockHttpServletResponse response = postSse(ProcessIdEnum.DOWNLOAD_CO_ESTIMATE.getValue(), inputs);
+        String content = awaitContent(response, "event:estimate-complete");
+
+        assertFalse(content.contains("event:keep-alive"),
+                "A heartbeat must not surface as an event the client reads: " + content);
+        assertEquals(3, countOf(content, ":probe"),
+                "Each heartbeat should still write to the client: " + content);
+    }
+
+    private static int countOf(String content, String needle) {
+        int count = 0;
+        for (int at = content.indexOf(needle); at >= 0; at = content.indexOf(needle, at + needle.length())) {
+            count++;
+        }
+        return count;
     }
 
     @Test
