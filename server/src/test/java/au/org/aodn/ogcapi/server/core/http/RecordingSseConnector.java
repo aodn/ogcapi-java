@@ -57,6 +57,16 @@ public final class RecordingSseConnector implements ClientHttpConnector {
         return this;
     }
 
+    /**
+     * Answer with a status and this body, the way a gateway answers on behalf of a DAS that is
+     * down: the body is its own error page, not anything DAS wrote.
+     */
+    public RecordingSseConnector respondWith(HttpStatusCode status, String body) {
+        this.status = status;
+        this.frames = List.of(body);
+        return this;
+    }
+
     public HttpMethod method() {
         return lastRequest.getMethod();
     }

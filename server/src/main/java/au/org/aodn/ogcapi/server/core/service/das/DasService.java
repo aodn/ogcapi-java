@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
 import au.org.aodn.ogcapi.server.core.service.ApplicationInfo;
 import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.ParameterizedTypeReference;
@@ -29,6 +30,8 @@ public class DasService implements ApplicationInfo {
     private static final ParameterizedTypeReference<ServerSentEvent<String>> SSE_FRAME =
             new ParameterizedTypeReference<>() {
             };
+
+    private static final int MAX_UPSTREAM_DETAIL_CHARS = 200;
 
     protected final DasProperties dasProperties;
     protected final RestTemplate httpClient;
@@ -156,14 +159,40 @@ public class DasService implements ApplicationInfo {
     }
 
     /**
-     * Describe a failure that arrived before the stream opened. WebClient's own message quotes the
-     * request URL, which would show the DAS host to a user, so only the status and whatever DAS
-     * said are reported.
+     * Describe a failure that arrived before the stream opened.
      */
-    private static String describe(HttpStatusCode status, String body) {
+    private String describe(HttpStatusCode status, String body) {
         String reason = status instanceof HttpStatus known ? " " + known.getReasonPhrase() : "";
         String failure = "data-access-service returned " + status.value() + reason;
-        return body.isBlank() ? failure : failure + ": " + body;
+        String detail = reasonFrom(body);
+        return detail.isEmpty() ? failure : failure + ": " + detail;
+    }
+
+    /**
+     * Pull the reason out of an error body.
+     */
+    private String reasonFrom(String body) {
+        String flattened = body.replaceAll("\\s+", " ").trim();
+        if (flattened.isEmpty()) {
+            return "";
+        }
+
+        try {
+            JsonNode detail = objectMapper.readTree(flattened).get("detail");
+            if (detail != null && !detail.isNull()) {
+                return truncate(detail.isTextual() ? detail.asText() : detail.toString());
+            }
+        } catch (Exception ignored) {
+            // Not JSON, so not DAS speaking. Fall through and quote what little is useful.
+        }
+
+        return flattened.startsWith("<") ? "" : truncate(flattened);
+    }
+
+    private static String truncate(String detail) {
+        return detail.length() <= MAX_UPSTREAM_DETAIL_CHARS ?
+                detail :
+                detail.substring(0, MAX_UPSTREAM_DETAIL_CHARS) + "...";
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {

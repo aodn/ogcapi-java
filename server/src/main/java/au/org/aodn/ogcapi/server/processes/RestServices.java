@@ -37,6 +37,15 @@ public class RestServices {
     private final String batchJobDefinition;
     private final String batchJobQueue;
 
+    // How often the cloud-optimised estimate reassures its client while data-access-service
+    // works. It has to stay well under the shortest idle timeout in front of this service -
+    // CloudFront allows 30s between packets - so a DAS that fails without ever answering cannot
+    // leave the connection quiet long enough to be dropped before the failure is reported.
+    // Nothing else emits keep-alive on this stream, so this is the rate the client sees, and it
+    // does not matter that it happens to match the DAS heartbeat. Lowered in tests to keep them
+    // fast.
+    private long estimateKeepAliveSeconds = 5;
+
     @Autowired
     private DownloadWfsDataService downloadWfsDataService;
 
@@ -332,16 +341,19 @@ public class RestServices {
                     "timestamp", System.currentTimeMillis()
             ));
 
-            // STEP 2: Call the data-access-service estimate endpoint and forward the result.
-            // DAS's own heartbeats (~20s) drive the keep-alive instead of a timer thread, so a
-            // disconnected client breaks the thread out of the read, closing the connection to
-            // DAS and stopping an estimate nobody waits for. The frontend sees what it saw before.
+            // STEP 2: Keep the connection alive while DAS works, two ways.
+            // 1. This ticker, one keep-alive per interval, so the client keeps receiving bytes.
+            // 2. probeClient on each DAS heartbeat below, so a client that has gone stops the
+            // DAS call instead of leaving it running.
+            session.startKeepAlive(estimateKeepAliveSeconds, () -> Map.of(
+                    "message", "Estimating download size...",
+                    "timestamp", System.currentTimeMillis()
+            ));
+
+            // STEP 3: Call the data-access-service estimate endpoint and forward the result
             try {
-                String estimateJson = dasService.estimateCloudOptimisedDownloadSize(uuid, parameters,
-                        () -> session.probeClient(Map.of(
-                                "message", "Estimating download size...",
-                                "timestamp", System.currentTimeMillis()
-                        )));
+                String estimateJson = dasService.estimateCloudOptimisedDownloadSize(
+                        uuid, parameters, session::probeClient);
                 session.send(SseEventName.ESTIMATE_COMPLETE, estimateJson);
             } catch (Exception e) {
                 SseClientGoneException clientGone = SseClientGoneException.find(e);
@@ -351,7 +363,10 @@ public class RestServices {
                     // socket left to report anything on.
                     throw clientGone;
                 }
-                log.warn("Cloud-optimised size estimation failed for UUID {}: {}", uuid, e.getMessage());
+                // ERROR level, like the shared handler's upstream branch, so New Relic can alert
+                // on a failing data-access-service instead of it only showing up as a silent
+                // estimate in the portal.
+                log.error("Cloud-optimised size estimation failed for UUID {}", uuid, e);
                 session.send(SseEventName.ESTIMATE_FAILED, Map.of(
                         "message", "Size estimation failed: " + e.getMessage(),
                         "timestamp", System.currentTimeMillis()
