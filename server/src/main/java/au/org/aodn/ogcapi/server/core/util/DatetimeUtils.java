@@ -148,11 +148,12 @@ public class DatetimeUtils {
     }
 
     /**
-     * Parse an ISO-8601 date-time and verify it is in UTC (offset 'Z').
+     * Parse an ISO-8601 date-time and verify it is at zero offset from UTC — accepts both the 'Z'
+     * designator and an explicit "+00:00"/"-00:00" offset, since they are equivalent instants.
      *
-     * @param dateTime ISO-8601 date-time string, e.g. "2026-06-16T00:00:00Z"
+     * @param dateTime ISO-8601 date-time string, e.g. "2026-06-16T00:00:00Z" or "2026-06-16T00:00:00+00:00"
      * @return the parsed date-time
-     * @throws IllegalArgumentException if the value is not a valid ISO-8601 date-time or is not in UTC
+     * @throws IllegalArgumentException if the value is not a valid ISO-8601 date-time or is not at zero UTC offset
      */
     public static java.time.OffsetDateTime parseUtcDateTime(String dateTime) {
         java.time.OffsetDateTime parsed;
@@ -163,7 +164,7 @@ public class DatetimeUtils {
         }
 
         if (!parsed.getOffset().equals(java.time.ZoneOffset.UTC)) {
-            throw new IllegalArgumentException("Date-time must be in UTC (offset 'Z'): " + dateTime);
+            throw new IllegalArgumentException("Date-time must be at zero UTC offset (e.g. 'Z' or '+00:00'): " + dateTime);
         }
         return parsed;
     }

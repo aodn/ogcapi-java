@@ -82,7 +82,8 @@ public class DasTilerService {
     public DasTileResult getVisualTile(String productId, String date, int zoom, int tileX, int tileY,
                                        String ext, String colormap, String rescale) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/{product}/{date}/{z}/{x}/{y}.{ext}");
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/{product}/{z}/{x}/{y}.{ext}")
+                .queryParam("date", "{date}");
         Map<String, Object> params = new HashMap<>();
         params.put("product", productId);
         params.put("date", date);
@@ -111,7 +112,8 @@ public class DasTilerService {
      */
     public DasTileResult getDataTile(String productId, String date, int lod, int x, int y) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/{date}/{z}/{x}/{y}.png");
+                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/{z}/{x}/{y}.png")
+                .queryParam("date", "{date}");
         Map<String, Object> params = new HashMap<>();
         params.put("product", productId);
         params.put("date", date);
@@ -128,7 +130,8 @@ public class DasTilerService {
      */
     public DasJsonResult getPoint(String productId, String date, double lat, double lon) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/{date}/point")
+                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/point")
+                .queryParam("date", "{date}")
                 .queryParam("lat", "{lat}")
                 .queryParam("lon", "{lon}");
         Map<String, Object> params = new HashMap<>();
@@ -148,7 +151,8 @@ public class DasTilerService {
      */
     public DasJsonResult getDataManifest(String productId, String date) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/{date}/manifest.json");
+                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/manifest.json")
+                .queryParam("date", "{date}");
         Map<String, Object> params = new HashMap<>();
         params.put("product", productId);
         params.put("date", date);
@@ -176,10 +180,17 @@ public class DasTilerService {
      * Fetches the product/date manifest, forwarding its {@code Cache-Control} rather than this
      * service inventing a freshness of its own.
      */
-    public DasJsonResult getManifest() {
+    public DasJsonResult getManifest(String collectionId) {
         UriComponentsBuilder builder = UriComponentsBuilder
                 .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/manifest");
-        return exchangeForJson(builder, Map.of());
+        Map<String, Object> params = new HashMap<>();
+
+        if (collectionId != null) {
+            builder.queryParam("metadata_uuid", "{metadata_uuid}");
+            params.put("metadata_uuid", collectionId);
+        }
+
+        return exchangeForJson(builder, params);
     }
 
     public JsonNode getColormaps() {
