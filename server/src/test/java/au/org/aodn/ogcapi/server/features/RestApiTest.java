@@ -256,18 +256,20 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(4, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
-        assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after have three values");
+        // 4 values with a text query: dataset_group priority sort, _score, summaries.score, uuid
+        assertEquals(4, collections.getBody().getSearchAfter().size(), "search_after have four values");
         // Ranking depends on BM25 _score (varies by env); assert the cursor is one of the matching docs
-        assertTrue(DATASET_MATCH_IDS.contains(collections.getBody().getSearchAfter().get(2)),
-                "search_after cursor should be a matching doc id, got: " + collections.getBody().getSearchAfter().get(2));
+        assertTrue(DATASET_MATCH_IDS.contains(collections.getBody().getSearchAfter().get(3)),
+                "search_after cursor should be a matching doc id, got: " + collections.getBody().getSearchAfter().get(3));
 
         // Now the same search, same page but search_after the actual cursor returned above
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?q=dataset&filter=page_size=1 AND search_after=" +
-                        String.format("'%s||%s||%s'",
+                        String.format("'%s||%s||%s||%s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
-                                collections.getBody().getSearchAfter().get(2).replace("str:", "")),
+                                collections.getBody().getSearchAfter().get(2),
+                                collections.getBody().getSearchAfter().get(3).replace("str:", "")),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -282,19 +284,20 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(4, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
-        assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after have three values");
+        assertEquals(4, collections.getBody().getSearchAfter().size(), "search_after have four values");
         // Ranking depends on BM25 _score (varies by env); assert the cursor is one of the matching docs
-        assertTrue(DATASET_MATCH_IDS.contains(collections.getBody().getSearchAfter().get(2)),
-                "search_after cursor should be a matching doc id, got: " + collections.getBody().getSearchAfter().get(2));
+        assertTrue(DATASET_MATCH_IDS.contains(collections.getBody().getSearchAfter().get(3)),
+                "search_after cursor should be a matching doc id, got: " + collections.getBody().getSearchAfter().get(3));
 
         // Now the same search, diff page but search_after the actual cursor returned above
         // set a bigger page size (4) which exceed more than remaining record hit as negative test
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?q=dataset&filter=page_size=4 AND search_after=" +
-                        String.format("'%s||%s ||%s'",
+                        String.format("'%s||%s||%s ||%s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
-                                collections.getBody().getSearchAfter().get(2).replace("str:", "")),
+                                collections.getBody().getSearchAfter().get(2),
+                                collections.getBody().getSearchAfter().get(3).replace("str:", "")),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -309,11 +312,11 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(4, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
-        assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
+        assertEquals(4, collections.getBody().getSearchAfter().size(), "search_after four fields");
 
         // Ranking of remaining records depends on BM25 _score (varies by env), so assert the cursor is
         // one of the matching docs instead of a specific value.
-        String lastCursor = collections.getBody().getSearchAfter().get(2);
+        String lastCursor = collections.getBody().getSearchAfter().get(3);
         assertTrue(
                 DATASET_MATCH_IDS.contains(lastCursor),
                 "search_after cursor should be one of the matching doc ids, got: " + lastCursor
@@ -372,22 +375,23 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(4, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
-        assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
+        assertEquals(4, collections.getBody().getSearchAfter().size(), "search_after four fields");
 
         log.info("verifyCorrectPageSizeAndScoreWithQuery - uuid return {}", collections.getBody().getCollections().get(0).getId());
         log.info("verifyCorrectPageSizeAndScoreWithQuery - search after {}", collections.getBody().getSearchAfter());
 
         // Ranking depends on BM25 _score (varies by env); assert the cursor is one of the matching docs
-        assertTrue(DATASET_MATCH_IDS.contains(collections.getBody().getSearchAfter().get(2)),
-                "search_after cursor should be a matching doc id, got: " + collections.getBody().getSearchAfter().get(2));
+        assertTrue(DATASET_MATCH_IDS.contains(collections.getBody().getSearchAfter().get(3)),
+                "search_after cursor should be a matching doc id, got: " + collections.getBody().getSearchAfter().get(3));
 
         // Now the same search, same page but search_after the actual cursor returned above
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?q=dataset&filter=page_size=6 AND score>=1.3 AND search_after=" +
-                        String.format("'%s|| %s || %s'",
+                        String.format("'%s|| %s || %s || %s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
-                                collections.getBody().getSearchAfter().get(2).replace("str:", "")),
+                                collections.getBody().getSearchAfter().get(2),
+                                collections.getBody().getSearchAfter().get(3).replace("str:", "")),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -407,12 +411,12 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(4, collections.getBody().getTotal(), "Get total works");
 
         // The search after give you the value to go to next batch
-        assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after three fields");
+        assertEquals(4, collections.getBody().getSearchAfter().size(), "search_after four fields");
 
         // Note: relative ordering of the remaining docs depends on BM25 _score,
         // which can vary slightly between environments.
         // So we assert that the cursor is one of them instead of expecting a specific exact value.
-        String lastCursor = collections.getBody().getSearchAfter().get(2);
+        String lastCursor = collections.getBody().getSearchAfter().get(3);
         assertTrue(
                 DATASET_MATCH_IDS.contains(lastCursor),
                 "search_after cursor should be one of the matching doc ids, got: " + lastCursor
