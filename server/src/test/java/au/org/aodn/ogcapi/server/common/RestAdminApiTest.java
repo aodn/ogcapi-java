@@ -199,11 +199,10 @@ public class RestAdminApiTest extends BaseTestClass {
 
     @Test
     public void explainSimplifiedFormatReportsTheDatasetGroupPriorityInTheSortValues() throws IOException {
-        // the record sits in the "imos" dataset group; the group ranks through a priority sort
-        // rather than a scored clause, so the explanation of the rank lives in sort_values
+        // the record sits in the "imos" dataset group and its credits name IMOS, so the search recalls it on the text and the group then ranks it
         insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
-        URI simpleUri = explainUri("q", "imos temperature", "format", "simple");
+        URI simpleUri = explainUri("q", "imos", "format", "simple");
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
 
