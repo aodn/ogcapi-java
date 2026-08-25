@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.util;
 import au.org.aodn.ogcapi.server.core.model.ExplainSimplifiedResponse;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.explain.Explanation;
 import co.elastic.clients.elasticsearch.core.explain.ExplanationDetail;
@@ -13,9 +14,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,17 +30,6 @@ public class ExplainSimplifier {
      */
     protected static final Pattern WEIGHT_PATTERN = Pattern.compile("^weight\\((.*) in \\d+\\)");
 
-    /**
-     * A terms set leaf. E.g.  "summaries.dataset_group:(csiro csiro temperature temperature)^100.0"
-     */
-    protected static final Pattern TERMS_SET_PATTERN =
-            Pattern.compile("^([^\\s:()]+):\\((.*)\\)(?:\\^([\\d.eE+-]+))?$");
-
-    protected static final String TERMS_CLAUSE = "terms";
-
-    /** A run two different clauses could have produced, so it cannot be separated safely */
-    protected static final String AMBIGUOUS = "";
-
     protected static final String WEIGHT_PREFIX = "weight(";
 
     protected static final String SYNONYM_PREFIX = "Synonym(";
@@ -54,31 +42,6 @@ public class ExplainSimplifier {
                     Comparator.reverseOrder());
 
     private ExplainSimplifier() {
-    }
-
-    /**
-     * Lucene joins the values of a terms query with a space, "field:(a b c)", and a value can
-     * itself hold a space, e.g. "csiro oceans and atmosphere", so the rendered run cannot be
-     * split on its own. The request still holds the exact values, so pair every rendered leaf
-     * back with the clause that produced it and re-join those values with a comma.
-     *
-     * @param request the search request that produced the response, serialised
-     */
-    public static ExplainSimplifiedResponse from(SearchResponse<ObjectNode> response, JsonNode request) {
-        ExplainSimplifiedResponse simplified = from(response);
-        Map<String, String> byRendering = termsClausesOf(request);
-
-        if (byRendering.isEmpty()) {
-            return simplified;
-        }
-
-        for (ExplainSimplifiedResponse.Hit hit : simplified.getHits()) {
-            for (ExplainSimplifiedResponse.MatchedFilter filter : hit.getFilters()) {
-                filter.setDescription(separateTermsValues(filter.getDescription(), byRendering));
-            }
-        }
-
-        return simplified;
     }
 
     public static ExplainSimplifiedResponse from(SearchResponse<ObjectNode> response) {
@@ -148,9 +111,26 @@ public class ExplainSimplifier {
                 .esRelevance(esRelevance)
                 .internalScore(doubleField(hit.source(), StacSummeries.Score.searchField))
                 .qualityMultiplier(qualityMultiplier)
+                .sortValues(sortValuesOf(hit.sort()))
                 .matchedTerms(terms)
                 .filters(filters)
                 .build();
+    }
+
+    /**
+     * The sort key values that decided the hit's rank, e.g. the dataset_group priority ahead of _score.
+     * So that a priority sort can rank a lower scoring hit above a higher scoring one.
+     */
+    protected static List<Object> sortValuesOf(List<FieldValue> sort) {
+        if (sort == null || sort.isEmpty()) {
+            return null;
+        }
+
+        List<Object> values = new ArrayList<>(sort.size());
+        for (FieldValue value : sort) {
+            values.add(value._get());
+        }
+        return values;
     }
 
     /**
@@ -221,78 +201,6 @@ public class ExplainSimplifier {
 
             collectScoreParts(detail.details(), terms, filters);
         }
-    }
-
-    protected static Map<String, String> termsClausesOf(JsonNode request) {
-        Map<String, String> byRendering = new HashMap<>();
-        collectTermsClauses(request, byRendering);
-        return byRendering;
-    }
-
-    protected static void collectTermsClauses(JsonNode node, Map<String, String> byRendering) {
-        if (node == null || node.isValueNode()) {
-            return;
-        }
-
-        JsonNode terms = node.get(TERMS_CLAUSE);
-        if (terms != null && terms.isObject()) {
-            // one field per clause, the other properties are the query options, e.g. "boost"
-            terms.forEach(values -> indexTermsClause(values, byRendering));
-        }
-
-        // an object iterates over its values, an array over its elements
-        node.forEach(child -> collectTermsClauses(child, byRendering));
-    }
-
-    protected static void indexTermsClause(JsonNode values, Map<String, String> byRendering) {
-        if (!values.isArray() || values.isEmpty()) {
-            return;
-        }
-
-        List<String> written = new ArrayList<>();
-
-        for (JsonNode value : values) {
-            if (!value.isTextual()) {
-                // a numeric value or a terms lookup does not render as a run of words
-                return;
-            }
-            written.add(value.asText());
-        }
-
-        index(written.stream().sorted().toList(), byRendering);
-        index(written, byRendering);
-    }
-
-    protected static void index(List<String> values, Map<String, String> byRendering) {
-        byRendering.merge(
-                String.join(" ", values),
-                String.join(",", values),
-                (existing, added) -> existing.equals(added) ? existing : AMBIGUOUS);
-    }
-
-    /**
-     * Report a terms set leaf with its values separated, keeping the compiled lucene shape, e.g.
-     *   summaries.dataset_group:(csiro csiro temperature temperature)^100.0
-     * becomes
-     *   summaries.dataset_group:(csiro,csiro temperature,temperature)^100.0
-     * Any other description, e.g. a bbox filter or the match_all, is passed through untouche.
-     */
-    protected static String separateTermsValues(String description, Map<String, String> byRendering) {
-        Matcher matcher = TERMS_SET_PATTERN.matcher(description);
-
-        if (!matcher.matches()) {
-            return description;
-        }
-
-        String separated = byRendering.get(matcher.group(2));
-
-        if (separated == null || separated.equals(AMBIGUOUS)) {
-            return description;
-        }
-
-        String boost = matcher.group(3);
-
-        return matcher.group(1) + ":(" + separated + ")" + (boost == null ? "" : "^" + boost);
     }
 
     /**

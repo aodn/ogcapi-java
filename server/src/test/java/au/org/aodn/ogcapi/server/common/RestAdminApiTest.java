@@ -198,9 +198,9 @@ public class RestAdminApiTest extends BaseTestClass {
     }
 
     @Test
-    public void explainSimplifiedFormatSeparatesTheDatasetGroupTerms() throws IOException {
-        // the record sits in the "imos" dataset group, the free text search adds a terms clause
-        // holding the whole input plus each of its words
+    public void explainSimplifiedFormatReportsTheDatasetGroupPriorityInTheSortValues() throws IOException {
+        // the record sits in the "imos" dataset group; the group ranks through a priority sort
+        // rather than a scored clause, so the explanation of the rank lives in sort_values
         insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
         URI simpleUri = explainUri("q", "imos temperature", "format", "simple");
@@ -208,17 +208,17 @@ public class RestAdminApiTest extends BaseTestClass {
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
 
         assertTrue(response.getStatusCode().is2xxSuccessful());
-        List<String> descriptions = fieldValues(
-                Objects.requireNonNull(response.getBody()).path("hits").path(0).path("filters"),
-                "description");
+        JsonNode top = Objects.requireNonNull(response.getBody()).path("hits").path(0);
 
-        // elastic search joins the values with a space, which reads as one run of words
-        assertTrue(descriptions.stream()
-                .noneMatch(d -> d.contains("summaries.dataset_group:(imos imos temperature temperature")));
-        // the boost is left out of the assertion, its value is still being tuned
-        assertTrue(descriptions.stream()
-                        .anyMatch(d -> d.startsWith("summaries.dataset_group:(imos,imos temperature,temperature)^")),
-                "the dataset group values must be separated, got " + descriptions);
+        // dataset_group priority, _score, summaries.score, uuid
+        assertEquals(4, top.path("sort_values").size(),
+                "a text search ranks by four sort keys, got " + top.path("sort_values"));
+        assertEquals(1, top.path("sort_values").path(0).asInt(),
+                "the dataset group of the record matches the search term");
+        // dataset_group no longer contributes to the score
+        List<String> descriptions = fieldValues(top.path("filters"), "description");
+        assertTrue(descriptions.stream().noneMatch(d -> d.contains("summaries.dataset_group")),
+                "dataset_group must not appear as a scored clause, got " + descriptions);
     }
 
     @Test
