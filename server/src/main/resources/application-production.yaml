@@ -14,4 +14,4 @@ ogcapi:
 
 elasticsearch:
   semantic:
-    enabled: false
+    enabled: true
