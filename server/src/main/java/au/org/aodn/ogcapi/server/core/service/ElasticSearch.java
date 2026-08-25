@@ -422,6 +422,55 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
 
     /**
+     * Builds the relevance should clauses for each search keyword. Shared by searchByParameters (search) and buildParameterSearchRequestSupplier (explain) so the two align with each other.
+     * These should clauses contribute to the Elasticsearch BM25 relevance score.
+     */
+    private static List<Query> createKeywordShouldClauses(List<String> keywords) {
+        List<Query> should = new ArrayList<>();
+        for (String t : keywords) {
+            // If user's input (keywords) wrapped with double quot", and the text is not empty, treat the user intend to search with the exact term, so fuzzy matching not applied on title and description
+            boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+            // If search text with double quote, remove quotee, otherwise keeps same
+            String term = isExact ? t.substring(1, t.length() - 1) : t;
+
+            if (isExact) {
+                // Match phrase in original title and description, not use fuzzy fields
+                should.add(CQLFields.title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.description.getPropertyEqualToQuery(term));
+            }
+            else {
+                should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+            }
+            should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+            should.add(CQLFields.id.getPropertyEqualToQuery(term));
+            // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
+            should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
+            should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
+            // credit_contains uses match query by default, exact match is not applied here
+            should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
+        }
+        return should;
+    }
+
+    /**
+     * Dataset-group candidate values for the priority sort, expanded from the search keywords with the same exact/quoted handling as the should clauses.
+     */
+    private static List<String> collectDatasetGroupCandidates(List<String> keywords) {
+        return keywords.stream()
+                .map(t -> {
+                    boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
+                    String term = isExact ? t.substring(1, t.length() - 1) : t;
+                    return CQLFields.getDatasetGroupCandidates(term, isExact);
+                })
+                .flatMap(List::stream)
+                .distinct()
+                .toList();
+    }
+
+    /**
      * Build SearchRequest for searchByParameters and explainByParameters
      * */
     protected Supplier<SearchRequest.Builder> buildParameterSearchRequestSupplier(
@@ -449,34 +498,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         }
 
         List<Query> should = null;
+        List<String> datasetGroupCandidates = List.of();
         if (keywords != null && !keywords.isEmpty()) {
-            should = new ArrayList<>();
-
-            for (String t : keywords) {
-                boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
-                String term = isExact ? t.substring(1, t.length() - 1) : t;
-
-                if (isExact) {
-                    should.add(CQLFields.title.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.description.getPropertyEqualToQuery(term));
-                }
-                else {
-                    should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
-                }
-
-                should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
-                should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
-                should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
-                should.add(CQLFields.id.getPropertyEqualToQuery(term));
-                // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
-                should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
-                should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
-                // credit_contains uses match query by default, exact match is not applied here
-                should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
-                // match the acronym for AODN partner organisations
-                should.add(CQLFields.getDatasetGroupTextSearchQuery(term, isExact));
-            }
+            should = createKeywordShouldClauses(keywords);
+            datasetGroupCandidates = collectDatasetGroupCandidates(keywords);
         }
 
         List<Query> filters = new ArrayList<>();
@@ -530,6 +555,12 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
         }
 
+        // Records whose dataset_group matches a search term rank first among recalled records; prepended last so it is the strongest sort key.
+        if (should != null && !should.isEmpty() && !datasetGroupCandidates.isEmpty()) {
+            if (sortOptions == null) sortOptions = new ArrayList<>();
+            sortOptions.add(0, CQLFields.getDatasetGroupPrioritySort(datasetGroupCandidates));
+        }
+
         return buildCollectionSearchRequestSupplier(
                 null,
                 should,
@@ -550,41 +581,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
         else {
 
             List<Query> should = null;
+            List<String> datasetGroupCandidates = List.of();
             if(keywords != null && !keywords.isEmpty()) {
-                should = new ArrayList<>();
-
-                for (String t : keywords) {
-                    // If user's input (keywords) starts and ends with quote ", and the text is not empty
-                    // treat the user intend to search with the exact term,
-                    // instead of searching in fuzzy fields i.e., fuzzy_title and fuzzy_desc,
-                    // search in the original title and description fields
-                    // other fields are searched with the same term regardless of exact match or not, as they do not use fuzzy matching.
-                    boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
-                    // If search text with double quote, remove quotes,
-                    // otherwise keeps same
-                    String term = isExact ? t.substring(1, t.length() - 1) : t;
-
-                    if (isExact) {
-                        // Match phrase in original title and description, not use fuzzy fields
-                        should.add(CQLFields.title.getPropertyEqualToQuery(term));
-                        should.add(CQLFields.description.getPropertyEqualToQuery(term));
-                    }
-                    else {
-                        should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
-                        should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
-                    }
-                    should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.id.getPropertyEqualToQuery(term));
-                    // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
-                    should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
-                    should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
-                    // credit_contains uses match query by default, exact match is not applied here
-                    should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
-                    // match the acronym for AODN partner organisations
-                    should.add(CQLFields.getDatasetGroupTextSearchQuery(term, isExact));
-                }
+                should = createKeywordShouldClauses(keywords);
+                datasetGroupCandidates = collectDatasetGroupCandidates(keywords);
             }
 
             List<Query> filters = new ArrayList<>();
@@ -674,6 +674,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     sortOptions = new ArrayList<>();
                 }
                 sortOptions.add(0, CQLFields.platform_vocabs.getSortBuilder().apply(SortOrder.Desc).build());
+            }
+
+            // Records whose dataset_group matches a search term rank first among recalled records; prepended last so it is the strongest sort key.
+            if (should != null && !should.isEmpty() && !datasetGroupCandidates.isEmpty()) {
+                if (sortOptions == null) {
+                    sortOptions = new ArrayList<>();
+                }
+                sortOptions.add(0, CQLFields.getDatasetGroupPrioritySort(datasetGroupCandidates));
             }
 
             return searchCollectionBy(
