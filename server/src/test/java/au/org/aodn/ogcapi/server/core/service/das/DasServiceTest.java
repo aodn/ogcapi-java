@@ -4,19 +4,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import java.time.Duration;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -25,11 +20,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 /**
- * Unit tests for DasService URL building. Verifies that null date params are omitted (so they are
- * never passed to URI template expansion) and that buoy/mooring identifiers are sent as path
- * variables for single, correct encoding. Also covers the cloud-optimised size-estimate call
- * (request body shape, SSE unwrapping and error propagation). The API key is attached by the
- * RestTemplate bean, so it is covered by ConfigTest rather than here.
+ * Unit tests for DasService URL building: null date params are omitted so they never reach URI
+ * template expansion, and buoy/mooring ids go as path variables so they are encoded once. The API
+ * key is attached by the RestTemplate bean, so ConfigTest covers it, and the streamed size
+ * estimate has its own DasServiceEstimateStreamTest.
  */
 public class DasServiceTest {
 
@@ -44,10 +38,10 @@ public class DasServiceTest {
 
         DasProperties config = new DasProperties(
                 HOST, null,"test-secret", "",
-                Duration.ofSeconds(5), Duration.ofSeconds(30)
+                Duration.ofSeconds(5), Duration.ofSeconds(30), Duration.ofMinutes(20)
         );
 
-        dasService = new DasService(config, httpClient, new ObjectMapper());
+        dasService = new DasService(config, httpClient, mock(WebClient.class), new ObjectMapper());
 
         when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(ResponseEntity.ok("ok".getBytes()));
@@ -122,100 +116,6 @@ public class DasServiceTest {
         ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
         verify(httpClient).getForEntity(urlCaptor.capture(), eq(byte[].class));
         assertEquals(HOST + "/api/v1/das/data/feature-collection/wave-buoy/latest", urlCaptor.getValue());
-    }
-
-    /**
-     * Mocks a successful SSE estimate response, invokes the estimate, asserts the payload is
-     * unwrapped from the terminal {@code result} frame, and returns the captured request entity so
-     * callers can assert on the forwarded headers / body.
-     */
-    @SuppressWarnings("unchecked")
-    private HttpEntity<Map<String, String>> callEstimateAndCaptureEntity(String uuid, Map<String, String> parameters) {
-
-        // DAS streams the estimate: heartbeats while it computes, then the dict nested
-        // under the terminal result event.
-        String sseBody = """
-                event: processing
-                data: {"status":"processing","message":"Processing your request..."}
-
-                event: result
-                data: {"status":"completed","message":"Done","data":{"estimated_output_bytes":123}}
-
-                """;
-        when(httpClient.postForObject(anyString(), any(), eq(String.class), anyMap()))
-                .thenReturn(sseBody);
-
-        String result = dasService.estimateCloudOptimisedDownloadSize(uuid, parameters);
-        assertEquals("{\"estimated_output_bytes\":123}", result, "The estimate dict should be unwrapped from the stream");
-
-        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        ArgumentCaptor<?> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
-        ArgumentCaptor<Map<String, String>> uriVarsCaptor = ArgumentCaptor.forClass(Map.class);
-        verify(httpClient).postForObject(urlCaptor.capture(), entityCaptor.capture(), eq(String.class), uriVarsCaptor.capture());
-
-        assertEquals(HOST + "/api/v1/das/data/{uuid}/estimate_size", urlCaptor.getValue());
-        assertEquals(uuid, uriVarsCaptor.getValue().get("uuid"));
-
-        return (HttpEntity<Map<String, String>>) entityCaptor.getValue();
-    }
-
-    @Test
-    public void testEstimatePostsBatchStyleParametersUnchanged() {
-        // The estimate forwards the same batch-style subset parameter map to DAS unchanged.
-        Map<String, String> parameters = Map.of(
-                "uuid", "test-uuid",
-                "key", "a.zarr,b.zarr",
-                "start_date", "2023-01-01",
-                "end_date", "2023-01-31",
-                "multi_polygon", "non-specified",
-                "output_format", "netcdf");
-
-        HttpEntity<Map<String, String>> entity = callEstimateAndCaptureEntity("test-uuid", parameters);
-
-        assertEquals(parameters, entity.getBody(),
-                "The batch-style parameter map must be forwarded to DAS unchanged");
-    }
-
-    @Test
-    public void testEstimateAcceptsEventStream() {
-        HttpEntity<Map<String, String>> entity = callEstimateAndCaptureEntity(
-                "test-uuid", Map.of("uuid", "test-uuid", "output_format", "netcdf"));
-
-        assertEquals(MediaType.TEXT_EVENT_STREAM_VALUE, entity.getHeaders().getFirst(HttpHeaders.ACCEPT));
-    }
-
-    @Test
-    public void testEstimateErrorEventThrows() {
-        // A failure raised after the stream opened comes back on an HTTP 200, so it is
-        // only visible in the frames. It must still surface as a thrown exception,
-        // otherwise the SSE layer would report a failed estimate as a successful one.
-        String sseBody = """
-                event: processing
-                data: {"status":"processing","message":"Processing your request..."}
-
-                event: error
-                data: {"status":"error","message":"404: No matching keys found for uuid=bad-uuid"}
-
-                """;
-        when(httpClient.postForObject(anyString(), any(), eq(String.class), anyMap()))
-                .thenReturn(sseBody);
-
-        RuntimeException e = assertThrows(RuntimeException.class, () ->
-                dasService.estimateCloudOptimisedDownloadSize(
-                        "bad-uuid", Map.of("uuid", "bad-uuid", "key", "missing.zarr", "output_format", "netcdf")));
-
-        assertEquals("404: No matching keys found for uuid=bad-uuid", e.getMessage(),
-                "DAS's reason is forwarded verbatim for the SSE layer to report");
-    }
-
-    @Test
-    public void testEstimateNon2xxPropagates() {
-        when(httpClient.postForObject(anyString(), any(), eq(String.class), anyMap()))
-                .thenThrow(HttpClientErrorException.create(HttpStatus.NOT_FOUND, "Not Found", HttpHeaders.EMPTY, null, null));
-
-        assertThrows(HttpClientErrorException.class, () ->
-                dasService.estimateCloudOptimisedDownloadSize(
-                        "bad-uuid", Map.of("uuid", "bad-uuid", "key", "missing.zarr", "output_format", "netcdf")));
     }
 
     private record CapturedRequest(String url, Map<String, String> params) {

@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.tile;
 import au.org.aodn.ogcapi.server.core.exception.InvalidParameterException;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -111,7 +112,7 @@ public class RestExtApi {
                     example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
             @PathVariable String collectionId) {
         List<JsonNode> products = dasTilerService.productsForCollection(collectionId);
-        DasTilerService.DasJsonResult manifest = dasTilerService.getManifest();
+        DasTilerService.DasJsonResult manifest = dasTilerService.getManifest(collectionId);
         JsonNode manifestProducts = manifest.body() != null ? manifest.body().path("products") : null;
 
         ArrayNode result = mapper.createArrayNode();
@@ -220,7 +221,7 @@ public class RestExtApi {
                     content = @Content(mediaType = "image/png",
                             schema = @Schema(type = "string", format = "binary"))),
             @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
-                    "containing a space (an unencoded `+`), `datetime` not `YYYY-MM-DD`, `lod` below 1, or " +
+                    "containing a space (an unencoded `+`), `datetime` not a full UTC ISO-8601 timestamp, `lod` below 1, or " +
                     "negative `x`/`y`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
@@ -283,9 +284,9 @@ public class RestExtApi {
             @RequestParam(required = false) String variable,
 
             @Parameter(in = ParameterIn.QUERY, required = true,
-                    description = "Date to decode, strict `YYYY-MM-DD` — not an RFC 3339 date-time. Must be " +
+                    description = "Date to decode, a full UTC ISO-8601 timestamp (offset `Z`). Must be " +
                             "one of the product's `available_dates`.",
-                    example = "2024-01-01")
+                    example = "2024-01-01T00:00:00Z")
             @RequestParam(required = false) String datetime) {
 
         // Unlike the visual route's z (bounded 0..24 by WebMercatorQuad), the LOD grid is computed
@@ -336,7 +337,7 @@ public class RestExtApi {
                                       }
                                     }"""))),
             @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
-                    "containing a space (an unencoded `+`), `datetime` not `YYYY-MM-DD`, or `lat`/`lon` " +
+                    "containing a space (an unencoded `+`), `datetime` not a full UTC ISO-8601 timestamp, or `lat`/`lon` " +
                     "missing or out of range.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
@@ -382,9 +383,9 @@ public class RestExtApi {
             @RequestParam(required = false) String variable,
 
             @Parameter(in = ParameterIn.QUERY, required = true,
-                    description = "Date to decode, strict `YYYY-MM-DD`. Must be one of the product's " +
-                            "`available_dates`.",
-                    example = "2024-01-01")
+                    description = "Date to decode, a full UTC ISO-8601 timestamp (offset `Z`). Must be one of " +
+                            "the product's `available_dates`.",
+                    example = "2024-01-01T00:00:00Z")
             @RequestParam(required = false) String datetime,
 
             @Parameter(in = ParameterIn.QUERY, required = true,
@@ -426,7 +427,7 @@ public class RestExtApi {
             @ApiResponse(responseCode = "200", description = "The data-tile decode manifest.",
                     content = @Content(mediaType = "application/json")),
             @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
-                    "containing a space (an unencoded `+`), or `datetime` not `YYYY-MM-DD`.",
+                    "containing a space (an unencoded `+`), or `datetime` not a full UTC ISO-8601 timestamp.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
@@ -471,9 +472,9 @@ public class RestExtApi {
             @RequestParam(required = false) String variable,
 
             @Parameter(in = ParameterIn.QUERY, required = true,
-                    description = "Date to decode, strict `YYYY-MM-DD`. Must be one of the product's " +
-                            "`available_dates`.",
-                    example = "2024-01-01")
+                    description = "Date to decode, a full UTC ISO-8601 timestamp (offset `Z`). Must be one of " +
+                            "the product's `available_dates`.",
+                    example = "2024-01-01T00:00:00Z")
             @RequestParam(required = false) String datetime) {
 
         validateProductParams(dataset, variable, datetime);
@@ -502,8 +503,13 @@ public class RestExtApi {
                     "variable must not contain spaces; percent-encode the '+' of a two-variable " +
                             "product as %2B (e.g. variable=ucur%2Bvcur)");
         }
-        if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
-            throw new InvalidParameterException("datetime is required and must be YYYY-MM-DD");
+        if (datetime == null) {
+            throw new InvalidParameterException("datetime is required");
+        }
+        try {
+            DatetimeUtils.parseUtcDateTime(datetime);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidParameterException(e.getMessage());
         }
     }
 

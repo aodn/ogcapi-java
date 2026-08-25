@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.exception.InvalidParameterException;
 import au.org.aodn.ogcapi.server.core.exception.ResourceNotFoundException;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.service.das.DasTilerService;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import au.org.aodn.ogcapi.tile.api.*;
 import au.org.aodn.ogcapi.tile.model.*;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -100,7 +101,7 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
                             @Content(mediaType = "image/png", schema = @Schema(type = "string", format = "binary")),
                             @Content(mediaType = "image/webp", schema = @Schema(type = "string", format = "binary"))}),
             @ApiResponse(responseCode = "400", description = "`dataset`, `variable` or `datetime` missing, " +
-                    "`datetime` not `YYYY-MM-DD`, `f` neither `png` nor `webp`, or z/x/y out of range.",
+                    "`datetime` not a full UTC ISO-8601 timestamp, `f` neither `png` nor `webp`, or z/x/y out of range.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "`tileMatrixSetId` is not `WebMercatorQuad`, " +
@@ -165,9 +166,9 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             @RequestParam(required = false) String variable,
 
             @Parameter(in = ParameterIn.QUERY, required = true,
-                    description = "Date to render, strict `YYYY-MM-DD` — not an RFC 3339 date-time. Must be " +
+                    description = "Date to render, a full UTC ISO-8601 timestamp (offset `Z`). Must be " +
                             "one of the product's `available_dates`.",
-                    example = "2024-01-01")
+                    example = "2024-01-01T00:00:00Z")
             @RequestParam(required = false) String datetime,
 
             @Parameter(in = ParameterIn.QUERY,
@@ -205,8 +206,13 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
         if (variable == null || variable.isBlank()) {
             throw new InvalidParameterException("variable is required");
         }
-        if (datetime == null || !datetime.matches("^\\d{4}-\\d{2}-\\d{2}$")) {
-            throw new InvalidParameterException("datetime is required and must be YYYY-MM-DD");
+        if (datetime == null) {
+            throw new InvalidParameterException("datetime is required");
+        }
+        try {
+            DatetimeUtils.parseUtcDateTime(datetime);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidParameterException(e.getMessage());
         }
         if (!"png".equals(f) && !"webp".equals(f)) {
             throw new InvalidParameterException("f must be 'png' or 'webp'");

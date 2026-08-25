@@ -3,42 +3,58 @@ package au.org.aodn.ogcapi.server.core.service.das;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
 import au.org.aodn.ogcapi.server.core.service.ApplicationInfo;
-import au.org.aodn.ogcapi.server.core.util.SseResponseParser;
+import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
+import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.util.UriComponentsBuilder;
+import reactor.core.publisher.Flux;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service("DataAccessService")
 public class DasService implements ApplicationInfo {
 
+    private static final ParameterizedTypeReference<ServerSentEvent<String>> SSE_FRAME =
+            new ParameterizedTypeReference<>() {
+            };
+
+    private static final int MAX_UPSTREAM_DETAIL_CHARS = 200;
+
     protected final DasProperties dasProperties;
     protected final RestTemplate httpClient;
+    protected final WebClient sseHttpClient;
     protected final ObjectMapper objectMapper;
-    protected final Map<String, Map<?,?>> appInfo;
+    protected final Map<String, Map<?, ?>> appInfo;
 
     public DasService(
             DasProperties dasProperties,
             @Qualifier(Config.DAS_REST_TEMPLATE) RestTemplate httpClient,
+            @Qualifier(Config.DAS_SSE_WEB_CLIENT) WebClient sseHttpClient,
             ObjectMapper objectMapper) {
         this.dasProperties = dasProperties;
         this.httpClient = httpClient;
+        this.sseHttpClient = sseHttpClient;
         this.objectMapper = objectMapper;
         this.appInfo = queryInfo(httpClient, dasProperties.host(), dasProperties.infoPath());
     }
 
     /**
-     * GET a feature-collection from the DAS, optionally bounded by start/end date. Only the date
-     * query params that are non-null are added, so a null value is never passed to URI template
-     * expansion (which would throw). Any path variables in {@code path} are supplied via
-     * {@code pathVariables}.
+     * GET a feature-collection from DAS, optionally bounded by start/end date. Only non-null dates
+     * are added as query params, because expanding a null URI template variable would throw. Any
+     * path variables in path come from pathVariables.
      */
     private ResponseEntity<byte[]> getFeatureCollection(String path, String start, String end, Map<String, String> pathVariables) {
         UriComponentsBuilder builder = UriComponentsBuilder.fromUriString(dasProperties.host() + path);
@@ -90,34 +106,93 @@ public class DasService implements ApplicationInfo {
     }
 
     /**
-     * Call the data-access-service cloud-optimised size estimate endpoint.
-     * The {@code parameters} map is the same batch-style subset request the
-     * download job submits (see {@code SubsetParametersUtils}), so DAS interprets
-     * the estimate and the download identically. Returns the estimate JSON so the
-     * SSE layer can forward it to the frontend unchanged.
-     * <p>
-     * DAS streams this endpoint over SSE: it heartbeats while computing and then
-     * sends the estimate in a terminal event, so the body is read to completion and
-     * unwrapped by {@link SseResponseParser}. Because the stream returns 200 as soon
-     * as it opens, a failed estimate arrives as an {@code error} event rather than an
-     * error status — the parser turns those back into an exception. Only failures
-     * raised before the stream starts (auth, API not ready) are still HTTP errors.
+     * Ask DAS for a cloud-optimised size estimate and return the estimate JSON unchanged, for the
+     * SSE layer to forward on. The parameters map is the same subset request the download job
+     * sends (see SubsetParametersUtils), so DAS treats both alike. Three things to know:
+     * 1. DAS answers over SSE: heartbeats while it computes, then the estimate as a final event.
+     * The stream returns 200 as soon as it opens, so a failed estimate arrives as an error event
+     * that DasSseFrames turns into an exception. Only failures before the stream opens (auth, API
+     * not ready) are HTTP errors, and onStatus rewrites those to hide the DAS host.
+     * 2. The response is not buffered. onHeartbeat runs on this thread for each heartbeat, and
+     * callers write to their own SSE client there, which is the only way to notice that client
+     * has gone. The IOException it throws unwinds this call, and leaving the try-with-resources
+     * cancels the Flux, closing the connection so DAS stops the estimate. That cancel only
+     * reaches the socket because of CancelPropagatingJdkConnector.
+     * 3. sseIdleTimeout is the gap allowed between frames, not a limit on the whole call. A slow
+     * estimate is fine while DAS keeps heartbeating; a silent DAS is given up on.
      */
-    public String estimateCloudOptimisedDownloadSize(String uuid, Map<String, String> parameters) {
+    public String estimateCloudOptimisedDownloadSize(String uuid,
+                                                     Map<String, String> parameters,
+                                                     DasSseFrames.FrameCallback onHeartbeat) {
 
-        String url = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/{uuid}/estimate_size")
-                .encode()
-                .toUriString();
+        Flux<ServerSentEvent<String>> frames = sseHttpClient.post()
+                .uri("/api/v1/das/data/{uuid}/estimate_size", uuid)
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(parameters)
+                .retrieve()
+                .onStatus(HttpStatusCode::isError, response -> response.bodyToMono(String.class)
+                        .defaultIfEmpty("")
+                        .map(body -> new RuntimeException(describe(response.statusCode(), body))))
+                .bodyToFlux(SSE_FRAME)
+                .timeout(dasProperties.sseIdleTimeout());
 
-        Map<String, String> uriVars = new HashMap<>();
-        uriVars.put("uuid", uuid);
+        boolean sawFrame = false;
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setAccept(List.of(MediaType.TEXT_EVENT_STREAM));
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        // Closing the stream cancels the Flux, and that is what closes the connection to DAS.
+        try (Stream<ServerSentEvent<String>> stream = frames.toStream()) {
+            for (Iterator<ServerSentEvent<String>> it = stream.iterator(); it.hasNext(); ) {
+                sawFrame = true;
+                String payload = DasSseFrames.readTerminalFrame(objectMapper, it.next());
+                if (payload != null) {
+                    return payload;
+                }
+                onHeartbeat.onFrame();
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
 
-        String body = httpClient.postForObject(url, new HttpEntity<>(parameters, headers), String.class, uriVars);
-        return SseResponseParser.extractResultData(objectMapper, body);
+        throw new RuntimeException(sawFrame ?
+                "data-access-service stream ended without a result or error event" :
+                "Empty response from data-access-service");
+    }
+
+    /**
+     * Describe a failure that arrived before the stream opened.
+     */
+    private String describe(HttpStatusCode status, String body) {
+        String reason = status instanceof HttpStatus known ? " " + known.getReasonPhrase() : "";
+        String failure = "data-access-service returned " + status.value() + reason;
+        String detail = reasonFrom(body);
+        return detail.isEmpty() ? failure : failure + ": " + detail;
+    }
+
+    /**
+     * Pull the reason out of an error body.
+     */
+    private String reasonFrom(String body) {
+        String flattened = body.replaceAll("\\s+", " ").trim();
+        if (flattened.isEmpty()) {
+            return "";
+        }
+
+        try {
+            JsonNode detail = objectMapper.readTree(flattened).get("detail");
+            if (detail != null && !detail.isNull()) {
+                return truncate(detail.isTextual() ? detail.asText() : detail.toString());
+            }
+        } catch (Exception ignored) {
+            // Not JSON, so not DAS speaking. Fall through and quote what little is useful.
+        }
+
+        return flattened.startsWith("<") ? "" : truncate(flattened);
+    }
+
+    private static String truncate(String detail) {
+        return detail.length() <= MAX_UPSTREAM_DETAIL_CHARS ?
+                detail :
+                detail.substring(0, MAX_UPSTREAM_DETAIL_CHARS) + "...";
     }
 
     public ResponseEntity<DatasetMetadata> getDatasetMetadata(String datasetId) {

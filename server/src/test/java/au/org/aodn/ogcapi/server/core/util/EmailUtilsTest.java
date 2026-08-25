@@ -262,15 +262,16 @@ public class EmailUtilsTest {
     }
 
     /**
-     * Test that dates are shown as dd MMM yyyy, e.g. 05 Jan 2024
+     * Date-only download filters represent inclusive UTC day boundaries.
      */
     @Test
-    void testDatesUseDayMonthYearFormat() {
+    void testDatesShowInclusiveUtcRange() {
         String result = EmailUtils.generateSubsettingSection(
                 "2024-01-05", "2024-12-31", null, new ObjectMapper()
         );
 
-        assertTrue(result.contains("05 Jan 2024 - 31 Dec 2024"), "Expected dd MMM yyyy date format");
+        assertTrue(result.contains(
+                "05 Jan 2024 00:00:00 UTC - 31 Dec 2024 23:59:59 UTC"));
     }
 
     /**
@@ -298,7 +299,7 @@ public class EmailUtilsTest {
 
         assertFalse(result.isEmpty());
         assertTrue(result.contains("Date Range"));
-        assertTrue(result.contains("01 Jan 1970 - 31 Dec 2024"));
+        assertTrue(result.contains("01 Jan 1970 00:00:00 UTC - 31 Dec 2024 23:59:59 UTC"));
     }
 
     /**

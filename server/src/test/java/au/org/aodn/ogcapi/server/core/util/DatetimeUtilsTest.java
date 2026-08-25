@@ -10,6 +10,36 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DatetimeUtilsTest {
 
     @Test
+    public void testDisplayUtcDownloadBoundary_DateOnlyUsesInclusiveDayLimits() {
+        assertEquals("05 Jan 2024 00:00:00 UTC",
+                DatetimeUtils.toDisplayUtcDownloadBoundary("2024-01-05", false));
+        assertEquals("05 Jan 2024 23:59:59 UTC",
+                DatetimeUtils.toDisplayUtcDownloadBoundary("2024-01-05", true));
+    }
+
+    @Test
+    public void testDisplayUtcDownloadBoundary_MonthUsesInclusiveMonthLimits() {
+        assertEquals("01 Feb 2024 00:00:00 UTC",
+                DatetimeUtils.toDisplayUtcDownloadBoundary("02-2024", false));
+        assertEquals("29 Feb 2024 23:59:59 UTC",
+                DatetimeUtils.toDisplayUtcDownloadBoundary("02-2024", true));
+    }
+
+    @Test
+    public void testDisplayUtcDownloadBoundary_NormalizesOffsetTimestamp() {
+        assertEquals("05 Jan 2024 00:30:00 UTC",
+                DatetimeUtils.toDisplayUtcDownloadBoundary("2024-01-05T11:30:00+11:00", false));
+        assertEquals("05 Jan 2024 00:30:00 UTC",
+                DatetimeUtils.toDisplayUtcDownloadBoundary("2024-01-05T00:30:00.123456789Z", true));
+    }
+
+    @Test
+    public void testDisplayUtcDownloadBoundary_OmitsUnspecifiedValues() {
+        assertEquals("", DatetimeUtils.toDisplayUtcDownloadBoundary("non-specified", false));
+        assertEquals("", DatetimeUtils.toDisplayUtcDownloadBoundary(null, true));
+    }
+
+    @Test
     public void testValidateAndFormatDate_ValidYYYY_MM_DD() {
         // Test valid YYYY-MM-DD format
         String result = DatetimeUtils.validateAndFormatDate("2023-01-15", true);
