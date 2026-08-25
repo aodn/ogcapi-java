@@ -402,7 +402,8 @@ public abstract class ElasticSearchBase {
         SearchResponse<ObjectNode> response = esClient.search(request, ObjectNode.class);
 
         if (simplified) {
-            return mapper.valueToTree(ExplainSimplifier.from(response));
+            // the request carries the names of the sort keys, the response their values only so pass the request to explain as well
+            return mapper.valueToTree(ExplainSimplifier.from(response, request.sort()));
         }
 
         ObjectNode result = mapper.createObjectNode();

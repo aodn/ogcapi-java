@@ -213,7 +213,9 @@ public class RestAdminApiTest extends BaseTestClass {
         // dataset_group priority, _score, summaries.score, uuid
         assertEquals(4, top.path("sort_values").size(),
                 "a text search ranks by four sort keys, got " + top.path("sort_values"));
-        assertEquals(1, top.path("sort_values").path(0).asInt(),
+        assertEquals("summaries.dataset_group", top.path("sort_values").path(0).path("field").asText(),
+                "the strongest sort key is the dataset_group priority");
+        assertEquals(1, top.path("sort_values").path(0).path("value").asInt(),
                 "the dataset group of the record matches the search term");
         // dataset_group no longer contributes to the score
         List<String> descriptions = fieldValues(top.path("filters"), "description");

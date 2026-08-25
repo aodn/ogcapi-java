@@ -60,7 +60,7 @@ public class ExplainSimplifiedResponse {
          * The sort key values that decided this hit's rank, strongest first, e.g. the dataset_group priority ahead of _score.
          */
         @JsonProperty("sort_values")
-        private List<Object> sortValues;
+        private List<SortValue> sortValues;
 
         /** The per matched field and term and score which contributed to the esRelevance */
         @JsonProperty("matched_terms")
@@ -71,6 +71,15 @@ public class ExplainSimplifiedResponse {
          * filter or the match_all, so the whole of es_relevance can be accounted for
          */
         private List<MatchedFilter> filters;
+    }
+
+    @Data
+    @Builder
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    public static class SortValue {
+        /** The sort key that produced the value, e.g. "summaries.dataset_group" or "_score" */
+        private String field;
+        private Object value;
     }
 
     @Data

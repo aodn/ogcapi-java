@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.ExplainSimplifiedResponse;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch._types.FieldValue;
+import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch.core.SearchResponse;
 import co.elastic.clients.elasticsearch.core.explain.Explanation;
 import co.elastic.clients.elasticsearch.core.explain.ExplanationDetail;
@@ -32,6 +33,9 @@ public class ExplainSimplifier {
 
     protected static final String WEIGHT_PREFIX = "weight(";
 
+    /** The first quoted token of a painless sort script is the doc field it reads */
+    protected static final Pattern SCRIPT_FIELD_PATTERN = Pattern.compile("'([^']+)'");
+
     protected static final String SYNONYM_PREFIX = "Synonym(";
 
     protected static final String RELEVANCE_DESCRIPTION_PREFIX = "_score:";
@@ -44,7 +48,12 @@ public class ExplainSimplifier {
     private ExplainSimplifier() {
     }
 
-    public static ExplainSimplifiedResponse from(SearchResponse<ObjectNode> response) {
+    /**
+     * @param sortOptions the sort of the request that produced the response, which carries the
+     *                    names of the sort keys, the response holds their values only
+     */
+    public static ExplainSimplifiedResponse from(SearchResponse<ObjectNode> response,
+                                                 List<SortOptions> sortOptions) {
         ExplainSimplifiedResponse.Total total = null;
 
         if (response.hits().total() != null) {
@@ -58,7 +67,7 @@ public class ExplainSimplifier {
         int rank = 1;
 
         for (Hit<ObjectNode> hit : response.hits().hits()) {
-            hits.add(toSimplifiedHit(hit, rank++));
+            hits.add(toSimplifiedHit(hit, rank++, sortOptions));
         }
 
         return ExplainSimplifiedResponse.builder()
@@ -67,7 +76,8 @@ public class ExplainSimplifier {
                 .build();
     }
 
-    protected static ExplainSimplifiedResponse.Hit toSimplifiedHit(Hit<ObjectNode> hit, int rank) {
+    protected static ExplainSimplifiedResponse.Hit toSimplifiedHit(Hit<ObjectNode> hit, int rank,
+                                                                   List<SortOptions> sortOptions) {
         Explanation explanation = hit.explanation();
 
         // hit.score() keeps the precision elastic search reported, the explanation values are floats
@@ -111,7 +121,7 @@ public class ExplainSimplifier {
                 .esRelevance(esRelevance)
                 .internalScore(doubleField(hit.source(), StacSummeries.Score.searchField))
                 .qualityMultiplier(qualityMultiplier)
-                .sortValues(sortValuesOf(hit.sort()))
+                .sortValues(sortValuesOf(hit.sort(), sortOptions))
                 .matchedTerms(terms)
                 .filters(filters)
                 .build();
@@ -120,17 +130,49 @@ public class ExplainSimplifier {
     /**
      * The sort key values that decided the hit's rank, e.g. the dataset_group priority ahead of _score.
      * So that a priority sort can rank a lower scoring hit above a higher scoring one.
+     * Elastic search emits one value per sort option in order, which pairs every value with the
+     * name of its key; values are kept unnamed when the options do not line up.
      */
-    protected static List<Object> sortValuesOf(List<FieldValue> sort) {
+    protected static List<ExplainSimplifiedResponse.SortValue> sortValuesOf(List<FieldValue> sort,
+                                                                            List<SortOptions> options) {
         if (sort == null || sort.isEmpty()) {
             return null;
         }
 
-        List<Object> values = new ArrayList<>(sort.size());
-        for (FieldValue value : sort) {
-            values.add(value._get());
+        boolean aligned = options != null && options.size() == sort.size();
+
+        List<ExplainSimplifiedResponse.SortValue> values = new ArrayList<>(sort.size());
+        for (int i = 0; i < sort.size(); i++) {
+            values.add(ExplainSimplifiedResponse.SortValue.builder()
+                    .field(aligned ? sortFieldOf(options.get(i)) : null)
+                    .value(sort.get(i)._get())
+                    .build());
         }
         return values;
+    }
+
+    /**
+     * Name the sort key of one sort option. A script sort carries no name, so the field the script reads is lifted from its source, e.g. "doc['summaries.dataset_group']" or the
+     * "doc.containsKey('summaries.dataset_group')" guard names the dataset_group priority.
+     */
+    protected static String sortFieldOf(SortOptions option) {
+        if (option.isScore()) {
+            return "_score";
+        }
+        if (option.isField()) {
+            return option.field().field();
+        }
+        if (option.isScript()) {
+            String source = option.script().script().source();
+            if (source != null) {
+                Matcher matcher = SCRIPT_FIELD_PATTERN.matcher(source);
+                if (matcher.find()) {
+                    return matcher.group(1);
+                }
+            }
+            return "script";
+        }
+        return option._kind().jsonValue();
     }
 
     /**
