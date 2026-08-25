@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.server.core.model.DownloadExecutionResponse;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
@@ -55,16 +56,17 @@ public class RestApiTest {
     @Test
     public void testExecuteDownloadDatasetSuccess() throws JsonProcessingException {
         when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(ResponseEntity.ok("Job submitted with ID: test-job-id"));
+                .thenReturn("test-job-id");
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
 
         assertEquals(200, response.getStatusCode().value());
-        assertInstanceOf(Results.class, response.getBody());
-        Results results = (Results) response.getBody();
+        assertInstanceOf(DownloadExecutionResponse.class, response.getBody());
+        DownloadExecutionResponse results = (DownloadExecutionResponse) response.getBody();
         assert results != null;
-        InlineValue message = (InlineValue) results.get("message");
-        assertEquals("Job submitted with ID: test-job-id", message.message());
+        assertEquals("Job submitted with ID: test-job-id", results.message().message());
+        assertEquals("200", results.status().message());
+        assertEquals("test-job-id", results.jobId());
 
         // The "processing started" email must go out only after AWS Batch returned a job id
         InOrder inOrder = inOrder(restServices);

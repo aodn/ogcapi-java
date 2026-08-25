@@ -1,10 +1,14 @@
 package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.processes.api.ProcessesApi;
+import au.org.aodn.ogcapi.processes.api.JobsApi;
 import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.processes.model.JobList;
+import au.org.aodn.ogcapi.processes.model.StatusInfo;
+import au.org.aodn.ogcapi.server.core.model.DownloadExecutionResponse;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
@@ -27,10 +31,13 @@ import java.util.List;
 @Slf4j
 @RestController("ProcessesRestApi")
 @RequestMapping(value = "/api/v1/ogc")
-public class RestApi implements ProcessesApi {
+public class RestApi implements ProcessesApi, JobsApi {
 
     @Autowired
     private RestServices restServices;
+
+    @Autowired
+    private DownloadJobStatusService downloadJobStatusService;
 
     @Override
     // because the produces value in the interface declaration includes "/_" which may
@@ -65,7 +72,8 @@ public class RestApi implements ProcessesApi {
                 String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
                 Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
 
-                var response = restServices.downloadData(uuid, key, startDate, endDate, multiPolygon, recipient, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+                String jobId = restServices.downloadData(uuid, key, startDate, endDate, multiPolygon, recipient,
+                        collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
                 // The notify user email lives here rather than in data-access-service to make the first
                 // email faster
@@ -73,11 +81,9 @@ public class RestApi implements ProcessesApi {
                 // a job id, otherwise we promise the user a file that will never be produced.
                 restServices.notifyUser(recipient, uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
-                var value = new InlineValue(response.getBody());
+                var value = new InlineValue("Job submitted with ID: " + jobId);
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
-                var results = new Results();
-                results.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
-                results.put(InlineResponseKeyEnum.STATUS.getValue(), status);
+                var results = new DownloadExecutionResponse(value, status, jobId);
 
                 return ResponseEntity.ok(results);
 
@@ -112,6 +118,26 @@ public class RestApi implements ProcessesApi {
 
     @Override
     public ResponseEntity<ProcessList> getProcesses() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    public ResponseEntity<JobList> getJobs() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    public ResponseEntity<Results> getResult(String jobId) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    public ResponseEntity<StatusInfo> getStatus(String jobId) {
+        return ResponseEntity.ok(downloadJobStatusService.getStatus(jobId));
+    }
+
+    @Override
+    public ResponseEntity<StatusInfo> dismiss(String jobId) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 

@@ -12,7 +12,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
@@ -82,7 +81,7 @@ public class RestServices {
         }
     }
 
-    public ResponseEntity<String> downloadData(
+    public String downloadData(
             String id,
             String key,
             String startDate,
@@ -114,7 +113,7 @@ public class RestServices {
                 this.batchJobDefinition,
                 parameters);
         log.info("Job submitted with ID: {}", jobId);
-        return ResponseEntity.ok("Job submitted with ID: " + jobId);
+        return jobId;
     }
 
     private String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {

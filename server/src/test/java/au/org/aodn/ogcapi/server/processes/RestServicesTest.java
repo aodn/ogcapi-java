@@ -10,7 +10,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.http.ResponseEntity;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
@@ -51,11 +50,11 @@ public class RestServicesTest {
         when(objectMapper.writeValueAsString(any())).thenReturn("test-multipolygon");
 
         // Act
-        ResponseEntity<String> response = restServices.downloadData(
+        String response = restServices.downloadData(
                 "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com", "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).", "geotiff");
 
         // Assert
-        assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
+        assertEquals(jobId, response);
         verify(batchClient, times(1)).submitJob(any(SubmitJobRequest.class));
     }
 
@@ -81,7 +80,7 @@ public class RestServicesTest {
         when(objectMapper.writeValueAsString(any())).thenReturn("test-multipolygon");
 
         // Act
-        ResponseEntity<String> response = restServices.downloadData(
+        String response = restServices.downloadData(
                 "test-uuid", "test-dname","2023-01-01", "2023-01-31", "non-specified", "test@example.com", "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).", "geotiff");
 
         // Capture the submitted request
@@ -92,7 +91,12 @@ public class RestServicesTest {
 
         // Assert relevant parameters
         assertEquals("non-specified", captured.parameters().get("multi_polygon"));
-        assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
+        assertEquals("test-dname", captured.parameters().get("key"));
+        assertEquals("Test Ocean Data Collection", captured.parameters().get("collection_title"));
+        assertEquals("geotiff", captured.parameters().get("output_format"));
+        assertEquals("https://metadata.imas.utas.edu.au/.../test-uuid-123",
+                captured.parameters().get("full_metadata_link"));
+        assertEquals(jobId, response);
     }
 
     @Test
@@ -104,7 +108,7 @@ public class RestServicesTest {
         // polygons set to 'non-specified' to avoid objectMapper serialization
 
         // Act: pass empty suggestedCitation
-        ResponseEntity<String> response = restServices.downloadData(
+        String response = restServices.downloadData(
                 "test-uuid", "test-dname","2023-01-01", "2023-01-31", "non-specified", "test@example.com",
                 "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "", "geotiff");
 
@@ -115,7 +119,7 @@ public class RestServicesTest {
 
         String suggestedKey = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue();
         assertEquals("unavailable", captured.parameters().get(suggestedKey));
-        assertEquals(ResponseEntity.ok("Job submitted with ID: " + jobId), response);
+        assertEquals(jobId, response);
     }
 
     @Test
