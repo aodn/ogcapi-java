@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.processes.model.StatusCode;
 import au.org.aodn.ogcapi.processes.model.StatusInfo;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobStatusException;
+import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -103,7 +104,7 @@ class DownloadJobStatusServiceTest {
     void acceptsQueueAndDefinitionNamesAgainstAwsArnsAndIgnoresDefinitionRevision() {
         describedJobs.put(JOB_ID, initial(JobStatus.SUCCEEDED, "one.zarr", NOW.minusSeconds(5)));
 
-        StatusInfo result = service.getStatus(JOB_ID);
+        DownloadJobStatusInfo result = service.getStatus(JOB_ID);
 
         assertEquals(StatusCode.SUCCESSFUL, result.getStatus());
         assertEquals(DownloadJobStatusService.PROCESS_ID, result.getProcessID());
@@ -122,7 +123,7 @@ class DownloadJobStatusServiceTest {
                 .parameters(Map.of("type", "sub-setting", "key", "one.zarr"))
                 .build());
 
-        StatusInfo result = service.getStatus(JOB_ID);
+        DownloadJobStatusInfo result = service.getStatus(JOB_ID);
 
         assertEquals("one.zarr", result.getDataSelection());
         assertNull(result.getCollection());

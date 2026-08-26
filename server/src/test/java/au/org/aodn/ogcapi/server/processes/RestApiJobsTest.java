@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.processes.model.StatusInfo;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobStatusException;
 import au.org.aodn.ogcapi.server.core.exception.GlobalExceptionHandler;
+import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -69,17 +70,18 @@ class RestApiJobsTest {
     }
 
     @Test
-    void getStatusSerializesGeneratedStatusInfo() throws Exception {
-        when(downloadJobStatusService.getStatus(JOB_ID)).thenReturn(new StatusInfo()
-                .processID("download-dataset")
-                .type(StatusInfo.TypeEnum.PROCESS)
-                .jobID(JOB_ID)
-                .status(StatusCode.RUNNING)
-                .message("Download job is running")
-                .collection("Test Ocean Data Collection")
-                .dataSelection("satellite_wind_altimeter_delayed_qc.zarr")
-                .format("netcdf")
-                .metadataUrl("https://portal.example.test/details/collection-id"));
+    void getStatusSerializesExtendedStatusInfo() throws Exception {
+        DownloadJobStatusInfo statusInfo = new DownloadJobStatusInfo();
+        statusInfo.setProcessID("download-dataset");
+        statusInfo.setType(StatusInfo.TypeEnum.PROCESS);
+        statusInfo.setJobID(JOB_ID);
+        statusInfo.setStatus(StatusCode.RUNNING);
+        statusInfo.setMessage("Download job is running");
+        statusInfo.setCollection("Test Ocean Data Collection");
+        statusInfo.setDataSelection("satellite_wind_altimeter_delayed_qc.zarr");
+        statusInfo.setFormat("netcdf");
+        statusInfo.setMetadataUrl("https://portal.example.test/details/collection-id");
+        when(downloadJobStatusService.getStatus(JOB_ID)).thenReturn(statusInfo);
 
         mockMvc.perform(get("/api/v1/ogc/jobs/{jobId}", JOB_ID).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())

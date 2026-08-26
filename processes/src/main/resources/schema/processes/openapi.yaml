@@ -173,8 +173,6 @@ paths:
             text/html:
               schema:
                 type: string
-        "501":
-          description: Listing jobs is not implemented.
   /processes/{processID}/execution:
     post:
       tags:
@@ -202,12 +200,6 @@ paths:
             /*:
               schema:
                 $ref: '#/components/schemas/inline_response_200'
-              example:
-                message:
-                  message: "Job submitted with ID: 123e4567-e89b-12d3-a456-426614174000"
-                status:
-                  message: "200"
-                jobID: 123e4567-e89b-12d3-a456-426614174000
         "201":
           description: Started asynchronous execution. Created job.
           headers:
@@ -333,8 +325,6 @@ paths:
             text/html:
               schema:
                 type: string
-        "501":
-          description: Dismissing jobs is not implemented.
   /jobs/{jobId}/results:
     get:
       tags:
@@ -375,8 +365,6 @@ paths:
             text/html:
               schema:
                 type: string
-        "501":
-          description: Retrieving job results is not implemented.
 components:
   schemas:
     landingPage:
@@ -509,18 +497,6 @@ components:
           $ref: '#/components/schemas/statusCode'
         message:
           type: string
-        collection:
-          type: string
-          description: Display name of the requested collection.
-        dataSelection:
-          type: string
-          description: Dataset key or data selection requested for the download.
-        format:
-          type: string
-          description: Requested output document format.
-        metadataUrl:
-          type: string
-          description: Link to the metadata page supplied when the download was submitted.
         created:
           type: string
           format: date-time

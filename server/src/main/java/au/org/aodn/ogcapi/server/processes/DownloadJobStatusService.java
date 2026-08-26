@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.processes.model.StatusCode;
 import au.org.aodn.ogcapi.processes.model.StatusInfo;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobStatusException;
+import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +69,7 @@ public class DownloadJobStatusService {
         this.clock = clock;
     }
 
-    public StatusInfo getStatus(String jobId) {
+    public DownloadJobStatusInfo getStatus(String jobId) {
         validateJobId(jobId);
 
         try {
@@ -217,18 +218,18 @@ public class DownloadJobStatusService {
         return true;
     }
 
-    private StatusInfo toStatusInfo(
+    private DownloadJobStatusInfo toStatusInfo(
             String jobId,
             StatusCode status,
             JobDetail initial,
             JobDetail prepare,
             JobDetail collect) {
-        StatusInfo result = new StatusInfo()
-                .processID(PROCESS_ID)
-                .type(StatusInfo.TypeEnum.PROCESS)
-                .jobID(jobId)
-                .status(status)
-                .message(messageFor(status));
+        DownloadJobStatusInfo result = new DownloadJobStatusInfo();
+        result.setProcessID(PROCESS_ID);
+        result.setType(StatusInfo.TypeEnum.PROCESS);
+        result.setJobID(jobId);
+        result.setStatus(status);
+        result.setMessage(messageFor(status));
 
         Map<String, String> parameters = initial.parameters();
         result.setCollection(nonBlank(parameters.get(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue())));
