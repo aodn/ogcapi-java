@@ -1,17 +1,25 @@
 package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.processes.api.ProcessesApi;
+import au.org.aodn.ogcapi.processes.api.JobsApi;
 import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.processes.model.JobList;
+import au.org.aodn.ogcapi.processes.model.StatusInfo;
+import au.org.aodn.ogcapi.server.core.model.DownloadExecutionResponse;
+import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
 import au.org.aodn.ogcapi.server.core.model.enumeration.ProcessIdEnum;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.coyote.BadRequestException;
@@ -27,10 +35,13 @@ import java.util.List;
 @Slf4j
 @RestController("ProcessesRestApi")
 @RequestMapping(value = "/api/v1/ogc")
-public class RestApi implements ProcessesApi {
+public class RestApi implements ProcessesApi, JobsApi {
 
     @Autowired
     private RestServices restServices;
+
+    @Autowired
+    private DownloadJobStatusService downloadJobStatusService;
 
     @Override
     // because the produces value in the interface declaration includes "/_" which may
@@ -41,6 +52,19 @@ public class RestApi implements ProcessesApi {
             consumes = {MediaType.APPLICATION_JSON_VALUE},
             method = RequestMethod.POST
     )
+    @ApiResponse(
+            responseCode = "200",
+            description = "Download job accepted.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = DownloadExecutionResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                              "message": {"message": "Job submitted with ID: 123e4567-e89b-12d3-a456-426614174000"},
+                              "status": {"message": "200"},
+                              "jobID": "123e4567-e89b-12d3-a456-426614174000"
+                            }
+                            """)))
     public ResponseEntity<InlineResponse200> execute(
             @Parameter(in = ParameterIn.PATH, required = true, schema = @Schema())
             @PathVariable("processID")
@@ -65,7 +89,8 @@ public class RestApi implements ProcessesApi {
                 String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
                 Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
 
-                var response = restServices.downloadData(uuid, key, startDate, endDate, multiPolygon, recipient, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+                String jobId = restServices.downloadData(uuid, key, startDate, endDate, multiPolygon, recipient,
+                        collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
                 // The notify user email lives here rather than in data-access-service to make the first
                 // email faster
@@ -73,11 +98,9 @@ public class RestApi implements ProcessesApi {
                 // a job id, otherwise we promise the user a file that will never be produced.
                 restServices.notifyUser(recipient, uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
-                var value = new InlineValue(response.getBody());
+                var value = new InlineValue("Job submitted with ID: " + jobId);
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
-                var results = new Results();
-                results.put(InlineResponseKeyEnum.MESSAGE.getValue(), value);
-                results.put(InlineResponseKeyEnum.STATUS.getValue(), status);
+                var results = new DownloadExecutionResponse(value, status, jobId);
 
                 return ResponseEntity.ok(results);
 
@@ -112,6 +135,35 @@ public class RestApi implements ProcessesApi {
 
     @Override
     public ResponseEntity<ProcessList> getProcesses() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    @ApiResponse(responseCode = "501", description = "Listing jobs is not implemented.")
+    public ResponseEntity<JobList> getJobs() {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    @ApiResponse(responseCode = "501", description = "Retrieving job results is not implemented.")
+    public ResponseEntity<Results> getResult(String jobId) {
+        return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
+    }
+
+    @Override
+    @ApiResponse(
+            responseCode = "200",
+            description = "Download job status.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = DownloadJobStatusInfo.class)))
+    public ResponseEntity<StatusInfo> getStatus(String jobId) {
+        return ResponseEntity.ok(downloadJobStatusService.getStatus(jobId));
+    }
+
+    @Override
+    @ApiResponse(responseCode = "501", description = "Dismissing jobs is not implemented.")
+    public ResponseEntity<StatusInfo> dismiss(String jobId) {
         return ResponseEntity.status(HttpStatus.NOT_IMPLEMENTED).build();
     }
 

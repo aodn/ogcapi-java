@@ -43,6 +43,9 @@ aws:
     job:
         queue: data-access-service-batch-job-queue
         definition: data-access-service-batch-job-definition
+        # Defaults to the initial queue in BatchJobProperties. Dev deployments whose DAS
+        # uses generate-csv-data-file must override this value explicitly.
+        child-queue: data-access-service-batch-job-queue
 
 wfs-default-param:
   fields:

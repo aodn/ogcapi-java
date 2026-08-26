@@ -20,3 +20,9 @@ geonetwork4:
 elasticsearch:
   semantic:
     enabled: false
+
+aws:
+  batch:
+    job:
+      # DAS dev submits its preparation/collection parents to this separate queue.
+      child-queue: generate-csv-data-file

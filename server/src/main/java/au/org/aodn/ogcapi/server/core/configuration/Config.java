@@ -8,6 +8,7 @@ import au.org.aodn.ogcapi.server.core.service.indexer.IndexerProperties;
 import au.org.aodn.ogcapi.server.core.util.ConstructUtils;
 import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
+import au.org.aodn.ogcapi.server.processes.BatchJobProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -32,7 +33,8 @@ import java.net.http.HttpClient;
         DdaProperties.class,
         IndexerProperties.class,
         GNProperties.class,
-        DasProperties.class
+        DasProperties.class,
+        BatchJobProperties.class
 })
 public class Config {
 
