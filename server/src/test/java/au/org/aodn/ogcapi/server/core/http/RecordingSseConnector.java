@@ -38,6 +38,7 @@ public final class RecordingSseConnector implements ClientHttpConnector {
     private String lastBody;
     private final AtomicBoolean cancelled = new AtomicBoolean();
     private final AtomicInteger framesDelivered = new AtomicInteger();
+    private final AtomicInteger requests = new AtomicInteger();
 
     /**
      * Answer with 200 and these SSE frames, each one a complete frame ending in a blank line.
@@ -91,12 +92,21 @@ public final class RecordingSseConnector implements ClientHttpConnector {
         return framesDelivered.get();
     }
 
+    /**
+     * How many times a WebClient asked to connect, so a test can tell a real call from a
+     * cached one.
+     */
+    public int requests() {
+        return requests.get();
+    }
+
     @Override
     public Mono<ClientHttpResponse> connect(HttpMethod method, URI uri,
                                             Function<? super ClientHttpRequest, Mono<Void>> requestCallback) {
 
         MockClientHttpRequest request = new MockClientHttpRequest(method, uri);
         lastRequest = request;
+        requests.incrementAndGet();
 
         return requestCallback.apply(request)
                 // Deferred: the mock only has a body once the callback above has written one.

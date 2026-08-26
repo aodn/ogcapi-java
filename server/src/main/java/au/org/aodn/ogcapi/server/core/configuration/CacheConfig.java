@@ -35,6 +35,7 @@ public class CacheConfig {
 
     public static final String DOWNLOADABLE_FIELDS = "downloadable-fields";
     public static final String DOWNLOADABLE_SIZE = "downloadable-size";
+    public static final String CLOUD_OPTIMISED_ESTIMATE = "cloud-optimised-estimate";
 
     public static final String ALL_NO_LAND_GEOMETRY = "all-noland-geometry";
     public static final String ALL_PARAM_VOCABS = "parameter-vocabs";
@@ -89,6 +90,12 @@ public class CacheConfig {
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                 Object.class, BigInteger.class,
                                 ResourcePoolsBuilder.heap(100)
+                        ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
+                )
+                .withCache(CLOUD_OPTIMISED_ESTIMATE,
+                        CacheConfigurationBuilder.newCacheConfigurationBuilder(
+                                Object.class, String.class,
+                                ResourcePoolsBuilder.heap(200)
                         ).withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
                 )
                 .withCache(ELASTIC_SEARCH_UUID_ONLY,
