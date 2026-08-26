@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
+import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
 import au.org.aodn.ogcapi.server.core.service.ApplicationInfo;
@@ -7,6 +8,7 @@ import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.http.codec.ServerSentEvent;
@@ -108,7 +110,7 @@ public class DasService implements ApplicationInfo {
     /**
      * Ask DAS for a cloud-optimised size estimate and return the estimate JSON unchanged, for the
      * SSE layer to forward on. The parameters map is the same subset request the download job
-     * sends (see SubsetParametersUtils), so DAS treats both alike. Three things to know:
+     * sends (see SubsetParametersUtils), so DAS treats both alike. Four things to know:
      * 1. DAS answers over SSE: heartbeats while it computes, then the estimate as a final event.
      * The stream returns 200 as soon as it opens, so a failed estimate arrives as an error event
      * that DasSseFrames turns into an exception. Only failures before the stream opens (auth, API
@@ -120,7 +122,14 @@ public class DasService implements ApplicationInfo {
      * reaches the socket because of CancelPropagatingJdkConnector.
      * 3. sseIdleTimeout is the gap allowed between frames, not a limit on the whole call. A slow
      * estimate is fine while DAS keeps heartbeating; a silent DAS is given up on.
+     * 4. The result is cached for 24 hours under uuid plus parameters, so repeating the same
+     * subset answers without calling DAS at all. Only the final result is ever cached: heartbeats
+     * are handed to onHeartbeat as they arrive and never become a return value. onHeartbeat is
+     * left out of the key on purpose, because it is a new lambda per request and including it
+     * would make every key unique; on a hit the body never runs, so there is nothing to keep
+     * alive anyway. A failed estimate throws, and a throwing call caches nothing.
      */
+    @Cacheable(cacheNames = CacheConfig.CLOUD_OPTIMISED_ESTIMATE, key = "{#uuid, #parameters}")
     public String estimateCloudOptimisedDownloadSize(String uuid,
                                                      Map<String, String> parameters,
                                                      DasSseFrames.FrameCallback onHeartbeat) {
