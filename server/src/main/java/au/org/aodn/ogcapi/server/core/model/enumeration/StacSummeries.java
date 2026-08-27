@@ -9,6 +9,8 @@ public enum StacSummeries {
     TemporalStart("summaries.temporal.start", ""),
     TemporalEnd("summaries.temporal.end", ""),
     Temporal("summaries.temporal", "extent.temporal", "summaries.temporal", List.of(TemporalStart, TemporalEnd)),
+    Creation("summaries.creation", "summaries.creation"),
+    Revision("summaries.revision", "summaries.revision"),
     UpdateFrequency("summaries.update_frequency", "summaries.update_frequency"),
     AiUpdateFrequency("summaries.ai:update_frequency", "summaries.ai:update_frequency"),
     DatasetProvider("summaries.dataset_provider", "summaries.dataset_provider"),

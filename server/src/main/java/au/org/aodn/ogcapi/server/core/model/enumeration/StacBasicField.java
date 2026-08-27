@@ -25,7 +25,9 @@ public enum StacBasicField {
     LinksAiRole("links.ai:role", "links.ai:role"),
     Collection("collection", "collection", "collection.keyword"),
     AssetsSummary("assets", "assets"),
-    Themes("themes", "themes")
+    Themes("themes", "themes"),
+    License("license", "license"),
+    Citation("sci:citation", "sci:citation")
     ;
 
     // Field that use to do sort, elastic search treat FieldData (searchField) differently, a searchField is not
