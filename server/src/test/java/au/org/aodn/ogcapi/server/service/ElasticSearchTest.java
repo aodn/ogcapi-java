@@ -58,6 +58,24 @@ public class ElasticSearchTest {
         assertTrue(capturingSearch.should.get(0).isMatch(), "fuzzy_title should be MatchQuery");
     }
 
+    // The portal SEO pipeline requests these in bulk to build Dataset JSON-LD
+    @Test
+    public void seoPropertiesMapToStacFields() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+
+        capturingSearch.searchByParameters(
+                List.of("temperature"),
+                null,
+                List.of("id", "title", "description", "bbox", "temporal", "themes",
+                        "providers", "creation", "revision", "citation", "license"),
+                "-score,-rank",
+                CQLCrsType.EPSG4326);
+
+        List<String> includes = capturingSearch.normalRequest.source().filter().includes();
+        assertTrue(includes.containsAll(List.of(
+                "summaries.creation", "summaries.revision", "sci:citation", "license")));
+    }
+
     @Test
     public void emptySearchByParametersMatchesSearchAllCollections() throws Exception {
         CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);

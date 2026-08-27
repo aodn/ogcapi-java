@@ -282,6 +282,26 @@ public enum CQLFields implements CQLFieldsInterface {
                         StacSummeries.Statement.displayField,
                         null,
                         null),
+        creation(
+                        StacSummeries.Creation.searchField,
+                        StacSummeries.Creation.displayField,
+                        null,
+                        null),
+        revision(
+                        StacSummeries.Revision.searchField,
+                        StacSummeries.Revision.displayField,
+                        null,
+                        null),
+        citation(
+                        StacBasicField.Citation.searchField,
+                        StacBasicField.Citation.displayField,
+                        null,
+                        null),
+        license(
+                        StacBasicField.License.searchField,
+                        StacBasicField.License.displayField,
+                        null,
+                        null),
                         ;
 
         private final String searchField;
