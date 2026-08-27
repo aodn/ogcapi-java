@@ -12,6 +12,10 @@ ogcapi:
 elasticsearch:
   index:
     name: dev_portal_records
+    # search_after batch for full-document / geometry / links queries
+    pageSize: 2200
+    # search_after batch when properties is a small field list (id, temporal, title, ...)
+    lightweightPageSize: 7000
   vocabs_index:
     name: vocabs_index
   cloud_optimized_index:

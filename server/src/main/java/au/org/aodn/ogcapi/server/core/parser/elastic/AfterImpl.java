@@ -39,6 +39,7 @@ public class AfterImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHand
 
                     this.query = NestedQuery.of(n -> n
                             .path(StacSummeries.Temporal.searchField)
+                            .scoreMode(ChildScoreMode.None)
                             .query(q1 -> q1
                                     .range(r -> r
                                             .date(d -> d

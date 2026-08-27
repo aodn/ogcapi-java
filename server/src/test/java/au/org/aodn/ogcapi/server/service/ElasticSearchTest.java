@@ -114,7 +114,8 @@ public class ElasticSearchTest {
                 false);
 
         assertEquals("captured", result.path("status").asText());
-        assertEquals(100, capturingSearch.explainRequest.size());
+        assertEquals(10000, capturingSearch.explainRequest.size(),
+                "title-only _source is lightweight so the larger search_after batch is used");
         assertNotNull(capturingSearch.explainRequest.query());
         assertTrue(capturingSearch.explainRequest.query().isScriptScore());
         assertEquals(10, capturingSearch.explainRequest.query().scriptScore()
@@ -179,6 +180,73 @@ public class ElasticSearchTest {
         assertFalse(explainRequest.query().scriptScore().query().bool().filter().isEmpty());
     }
 
+    @Test
+    public void lightweightPropertiesUseLargerSearchPageSize() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+
+        capturingSearch.searchByParameters(
+                null,
+                "temporal AFTER 1970-01-01T00:00:00Z",
+                List.of("id", "temporal"),
+                "id",
+                CQLCrsType.EPSG4326);
+
+        assertEquals(10000, capturingSearch.normalRequest.size(),
+                "id,temporal is a small _source so the catalog query can fetch 10000 hits per page");
+
+        capturingSearch.searchByParameters(
+                null,
+                "temporal AFTER 1970-01-01T00:00:00Z",
+                List.of("id", "providers"),
+                "id",
+                CQLCrsType.EPSG4326);
+
+        assertEquals(10000, capturingSearch.normalRequest.size(),
+                "id,providers is also a small _source");
+    }
+
+    @Test
+    public void heavyOrMissingPropertiesKeepDefaultSearchPageSize() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+
+        capturingSearch.searchByParameters(
+                null,
+                "temporal AFTER 1970-01-01T00:00:00Z",
+                List.of("id", "centroid"),
+                "id",
+                CQLCrsType.EPSG4326);
+        assertEquals(100, capturingSearch.normalRequest.size(),
+                "centroid pulls no-land geometry so the conservative batch size is kept");
+
+        capturingSearch.searchByParameters(
+                null,
+                "temporal AFTER 1970-01-01T00:00:00Z",
+                List.of("id", "links"),
+                "id",
+                CQLCrsType.EPSG4326);
+        assertEquals(100, capturingSearch.normalRequest.size(),
+                "links payloads stay on the conservative batch size");
+
+        capturingSearch.searchAllCollections("id");
+        assertEquals(100, capturingSearch.normalRequest.size(),
+                "full-document searches keep the conservative batch size");
+    }
+
+    @Test
+    public void cqlPageSizeStillCapsLightweightSearch() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+
+        capturingSearch.searchByParameters(
+                null,
+                "temporal AFTER 1970-01-01T00:00:00Z AND page_size=3",
+                List.of("id", "temporal"),
+                "id",
+                CQLCrsType.EPSG4326);
+
+        assertEquals(3, capturingSearch.normalRequest.size(),
+                "CQL page_size remains the upper bound even for lightweight property lists");
+    }
+
     private record SearchArguments(
             List<Query> queries,
             List<Query> should,
@@ -197,7 +265,7 @@ public class ElasticSearchTest {
         private SearchRequest explainRequest;
 
         private CapturingElasticSearch(ElasticsearchClient client) {
-            super(client, null, new ObjectMapper(), "test-index", 100, 10);
+            super(client, null, new ObjectMapper(), "test-index", 100, 10000, 10);
             this.searchAfterSplitRegex = "\\|\\|";
         }
 

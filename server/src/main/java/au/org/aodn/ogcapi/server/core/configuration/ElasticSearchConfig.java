@@ -54,7 +54,8 @@ public class ElasticSearchConfig {
      * @param client - The elastic search client
      * @param mapper - Object mapper for string to object transformation
      * @param indexName - The elastic index name that store the STAC from es-indexer
-     * @param pageSize - Do not set this value too high, say 5000 will crash elastic search
+     * @param pageSize - Do not set this value too high, say 5000 will crash elastic search when _source is the full document
+     * @param lightweightPageSize - Larger search_after batch for small property lists (id, temporal, title, ...)
      * @param searchAsYouTypeSize - The number of search result return for search as you type
      * @return The search object
      */
@@ -64,8 +65,9 @@ public class ElasticSearchConfig {
                                       ObjectMapper mapper,
                                       @Value("${elasticsearch.index.name}") String indexName,
                                       @Value("${elasticsearch.index.pageSize:2200}") Integer pageSize,
+                                      @Value("${elasticsearch.index.lightweightPageSize:10000}") Integer lightweightPageSize,
                                       @Value("${elasticsearch.search_as_you_type.size:10}") Integer searchAsYouTypeSize) {
 
-        return new ElasticSearch(client, cacheNoLandGeometry, mapper, indexName, pageSize, searchAsYouTypeSize);
+        return new ElasticSearch(client, cacheNoLandGeometry, mapper, indexName, pageSize, lightweightPageSize, searchAsYouTypeSize);
     }
 }

@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
+import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
@@ -12,12 +13,9 @@ import org.junit.jupiter.api.Test;
 import org.opengis.filter.Filter;
 
 import java.util.List;
+import java.util.Objects;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class CQLToElasticFilterFactoryTest {
 
@@ -36,7 +34,7 @@ public class CQLToElasticFilterFactoryTest {
         assertTrue(parameterFilter.getQuery().isBool());
         assertEquals(6, parameterFilter.getQuery().bool().should().size());
         assertTrue(
-                parameterFilter.getQuery().bool().should().stream().noneMatch(query -> query.isBool()),
+                parameterFilter.getQuery().bool().should().stream().noneMatch(Query::isBool),
                 "Parameter vocabulary clauses should be flattened into one should list");
     }
 
@@ -54,7 +52,7 @@ public class CQLToElasticFilterFactoryTest {
         assertTrue(platformFilter.getQuery().isBool());
         assertEquals(4, platformFilter.getQuery().bool().should().size());
         assertTrue(
-                platformFilter.getQuery().bool().should().stream().noneMatch(query -> query.isBool()),
+                platformFilter.getQuery().bool().should().stream().noneMatch(Query::isBool),
                 "Grouped platform vocabulary clauses should be flattened into one should list");
     }
 
@@ -80,13 +78,14 @@ public class CQLToElasticFilterFactoryTest {
 
         DuringImpl<?> duringFilter = assertInstanceOf(DuringImpl.class, filter);
         assertTrue(duringFilter.getQuery().isNested());
+        assertEquals(ChildScoreMode.None, duringFilter.getQuery().nested().scoreMode());
 
         List<Query> must = duringFilter.getQuery().nested().query().bool().must();
         assertEquals(2, must.size());
 
         Query startRange = findDateRange(must, StacSummeries.TemporalStart.searchField);
         assertEquals("strict_date_optional_time", startRange.range().date().format());
-        assertTrue(startRange.range().date().lte().contains("2026-06-25"));
+        assertTrue(Objects.requireNonNull(startRange.range().date().lte()).contains("2026-06-25"));
 
         Query endAfterFilterStartOrOngoing = must.stream()
                 .filter(Query::isBool)
@@ -97,13 +96,31 @@ public class CQLToElasticFilterFactoryTest {
         List<Query> should = endAfterFilterStartOrOngoing.bool().should();
         Query endRange = findDateRange(should, StacSummeries.TemporalEnd.searchField);
         assertEquals("strict_date_optional_time", endRange.range().date().format());
-        assertTrue(endRange.range().date().gte().contains("2025-06-25"));
+        assertTrue(Objects.requireNonNull(endRange.range().date().gte()).contains("2025-06-25"));
 
         assertTrue(should.stream()
                 .filter(Query::isBool)
                 .flatMap(query -> query.bool().mustNot().stream())
                 .anyMatch(query -> query.isExists()
                         && StacSummeries.TemporalEnd.searchField.equals(query.exists().field())));
+    }
+
+    @Test
+    public void temporalAfterUsesNestedRangeWithoutScoring() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "temporal AFTER 1970-01-01T00:00:00Z",
+                newFactory());
+
+        AfterImpl<?> afterFilter = assertInstanceOf(AfterImpl.class, filter);
+        assertTrue(afterFilter.getQuery().isNested());
+        assertEquals(ChildScoreMode.None, afterFilter.getQuery().nested().scoreMode());
+        assertEquals(StacSummeries.Temporal.searchField, afterFilter.getQuery().nested().path());
+
+        Query range = afterFilter.getQuery().nested().query();
+        assertTrue(range.isRange());
+        assertEquals(StacSummeries.TemporalStart.searchField, range.range().date().field());
+        assertTrue(Objects.requireNonNull(range.range().date().gte()).contains("1970-01-01"));
     }
 
     @Test
