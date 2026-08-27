@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.ExistsQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -91,6 +92,7 @@ public class DuringImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHan
 
                     this.query = NestedQuery.of(n -> n
                             .path(StacSummeries.Temporal.searchField)
+                            .scoreMode(ChildScoreMode.None)
                             .query(BoolQuery.of(q -> q
                                     .must(endAfterFilterStartOrOngoing, startBeforeOrAtFilterEnd))._toQuery()
                             )
