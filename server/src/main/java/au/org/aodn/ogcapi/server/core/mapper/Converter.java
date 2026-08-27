@@ -123,13 +123,12 @@ public interface Converter<F, T> {
         if (m.getExtent() != null) {
             extent.setSpatial(new ExtentSpatial());
 
+            // Do not show WARN for missing bbox here because some query intentionally do not have bbox
             if (m.getExtent().getBbox() != null
                     && !m.getExtent().getBbox().isEmpty()) {
                 // The first item is the overall bbox, this is STAC spec requirement and it ok with ogc api
                 extent.getSpatial().bbox(m.getExtent().getBbox());
                 collection.setExtent(extent);
-            } else {
-                logger.warn("BBOX is missing for this UUID {}", m.getUuid());
             }
 
             extent.setTemporal(new ExtentTemporal());

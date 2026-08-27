@@ -8,6 +8,7 @@ elasticsearch:
   index:
     name: testing_index
     pageSize: 4
+    lightweightPageSize: 4
 
   vocabs_index:
     name: test_vocabs_index

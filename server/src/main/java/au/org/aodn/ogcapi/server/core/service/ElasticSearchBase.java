@@ -54,6 +54,11 @@ public abstract class ElasticSearchBase {
     protected Integer searchAsYouTypeSize;
     protected String indexName;
     protected Integer pageSize;
+    /**
+     * Larger search_after batch used when {@code properties} is a small field list (no geometries/links).
+     * Full-document queries keep {@link #pageSize} because a large _source batch can overwhelm Elasticsearch.
+     */
+    protected Integer lightweightPageSize;
     protected ElasticsearchClient esClient;
     protected ObjectMapper mapper;
     protected CacheNoLandGeometry cacheNoLandGeometry;
@@ -103,6 +108,24 @@ public abstract class ElasticSearchBase {
         }
         return sos;
     }
+
+    /**
+     * Choose the Elasticsearch {@code size} for one search_after page.
+     * Lightweight property lists can use a larger batch; CQL {@code page_size} still caps it.
+     */
+    protected int resolveSearchPageSize(List<String> properties, Long maxSize) {
+        int batchSize = pageSize;
+        if (CQLFields.requestsLightweightSource(properties)
+                && lightweightPageSize != null
+                && lightweightPageSize > pageSize) {
+            batchSize = lightweightPageSize;
+        }
+        if (maxSize != null && maxSize < batchSize) {
+            return maxSize.intValue();
+        }
+        return batchSize;
+    }
+
     /**
      * Construct the skeleton of in the elastic query and fill in values
      * @param must - The must portion of Elastic query
@@ -172,8 +195,10 @@ public abstract class ElasticSearchBase {
                     // If user query request a page that is smaller then the internal default, then
                     // we use the smaller one. The internal page size is used to get the result by
                     // batch, lets say page is 20 and internal is 10, then we do it in two batch.
-                    // But if we request 5 only, then there is no point to load 10
-                    .size(maxSize != null && maxSize < pageSize ? maxSize.intValue() : pageSize);
+                    // But if we request 5 only, then there is no point to load 10.
+                    // Lightweight property lists (id, temporal, title, ...) use a larger batch so
+                    // unbounded catalog queries need fewer serial search_after round-trips.
+                    .size(resolveSearchPageSize(properties, maxSize));
 
             // use script score if search with text, in such case, the final score depends on both relevance and metadata quality
             // put query in script block
