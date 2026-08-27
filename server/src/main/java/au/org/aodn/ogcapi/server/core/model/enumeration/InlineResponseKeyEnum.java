@@ -6,6 +6,7 @@ import lombok.Getter;
 public enum InlineResponseKeyEnum {
     MESSAGE("message"),
     STATUS("status"),
+    JOB_ID("jobID"),
     ;
     private final String value;
 

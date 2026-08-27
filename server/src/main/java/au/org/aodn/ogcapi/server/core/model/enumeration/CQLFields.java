@@ -283,6 +283,26 @@ public enum CQLFields implements CQLFieldsInterface {
                         StacSummeries.Statement.displayField,
                         null,
                         null),
+        creation(
+                        StacSummeries.Creation.searchField,
+                        StacSummeries.Creation.displayField,
+                        null,
+                        null),
+        revision(
+                        StacSummeries.Revision.searchField,
+                        StacSummeries.Revision.displayField,
+                        null,
+                        null),
+        citation(
+                        StacBasicField.Citation.searchField,
+                        StacBasicField.Citation.displayField,
+                        null,
+                        null),
+        license(
+                        StacBasicField.License.searchField,
+                        StacBasicField.License.displayField,
+                        null,
+                        null),
                         ;
 
         private final String searchField;
@@ -470,5 +490,36 @@ public enum CQLFields implements CQLFieldsInterface {
                                         }
                                 })
                                 .collect(Collectors.toList());
+        }
+
+        /**
+         * Fields whose _source payload is large enough that Elasticsearch should keep the
+         * conservative search_after batch size.
+         */
+        public boolean isHeavySourceField() {
+                return switch (this) {
+                        case geometry, bbox, centroid, centroid_nocache, links, themes -> true;
+                        default -> false;
+                };
+        }
+
+        /**
+         * True when the caller asked for a non-empty property list that contains none of the
+         * heavy source fields. Full-document requests (null/empty properties) are not lightweight.
+         */
+        public static boolean requestsLightweightSource(List<String> properties) {
+                if (properties == null || properties.isEmpty()) {
+                        return false;
+                }
+                for (String property : properties) {
+                        try {
+                                if (valueOf(property).isHeavySourceField()) {
+                                        return false;
+                                }
+                        } catch (IllegalArgumentException e) {
+                                return false;
+                        }
+                }
+                return true;
         }
 }

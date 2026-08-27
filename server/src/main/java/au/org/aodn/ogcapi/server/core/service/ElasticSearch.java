@@ -79,12 +79,14 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                          ObjectMapper mapper,
                          String indexName,
                          Integer pageSize,
+                         Integer lightweightPageSize,
                          Integer searchAsYouTypeSize) {
 
         this.setEsClient(client);
         this.setMapper(mapper);
         this.setIndexName(indexName);
         this.setPageSize(pageSize);
+        this.setLightweightPageSize(lightweightPageSize);
         this.setSearchAsYouTypeSize(searchAsYouTypeSize);
         this.setCacheNoLandGeometry(cacheNoLandGeometry);
         this.defaultElasticSetting = CQLToElasticFilterFactory.getDefaultSetting();

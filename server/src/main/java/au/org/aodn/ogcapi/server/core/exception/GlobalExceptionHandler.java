@@ -88,6 +88,34 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    @ExceptionHandler(DownloadJobNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleDownloadJobNotFoundException(
+            DownloadJobNotFoundException ex,
+            WebRequest request) {
+        ErrorResponse errorResponse = ErrorResponse
+                .builder()
+                .timestamp(LocalDateTime.now())
+                .message(ex.getMessage())
+                .details(request.getDescription(false))
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    @ExceptionHandler(DownloadJobStatusException.class)
+    public ResponseEntity<ErrorResponse> handleDownloadJobStatusException(
+            DownloadJobStatusException ex,
+            WebRequest request) {
+        ErrorResponse errorResponse = ErrorResponse
+                .builder()
+                .timestamp(LocalDateTime.now())
+                .message(ex.getMessage())
+                .details(request.getDescription(false))
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
     @ExceptionHandler(DasUpstreamException.class)
     public ResponseEntity<ErrorResponse> handleDasUpstreamException(DasUpstreamException ex, WebRequest request) {
         ErrorResponse errorResponse = ErrorResponse
