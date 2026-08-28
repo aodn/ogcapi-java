@@ -8,6 +8,15 @@ server:
 ogcapi:
   debug:
     elasticsearch-explain-enabled: false
+  http-cache:
+    enabled: true
+    mappings:
+      - path: "/api/v1/ogc/collections"
+        max-age-hours: 1
+        expected-params:
+          properties: "id,temporal"
+          filter: "temporal after 1970-01-01T00:00:00Z" # Decoded space format
+          sortby: "id"
 
 elasticsearch:
   index:
