@@ -8,6 +8,7 @@ import lombok.Getter;
 
 import java.io.StringReader;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.Arrays;
@@ -355,6 +356,7 @@ public enum CQLFields implements CQLFieldsInterface {
                 return value.toLowerCase(Locale.ROOT).trim();
         }
 
+        // used by the dataset_group CQL filter only without boost
         private static Query datasetGroupTermsQuery(List<String> values) {
                 List<FieldValue> terms = values.stream()
                         .filter(value -> !value.isBlank())
@@ -364,19 +366,16 @@ public enum CQLFields implements CQLFieldsInterface {
 
                 return TermsQuery.of(query -> query
                                 .field(StacSummeries.DatasetGroup.searchField)
-                                .terms(field -> field.value(terms))
-                                .boost(100.0F))
+                                .terms(field -> field.value(terms)))
                         ._toQuery();
         }
 
         /**
-         * Builds a dataset-group query specifically for free-text search.
-         * Unquoted input includes both the complete normalized input and its individual words.
-         * For example, "csiro temperature" => ["csiro temperature", "csiro", "temperature"].
-         * Double-quoted free-text input is treated as one exact value.
+         * Expands a free-text term into dataset-group candidate values. For example, "csiro temperature" => ["csiro temperature", "csiro", "temperature"].
+         * Unquoted input includes both the complete normalized input and its individual words. Double-quoted free-text input is treated as one exact value.
          * Dataset-group CQL filters continue to use getPropertyEqualToQuery().
          */
-        public static Query getDatasetGroupTextSearchQuery(
+        public static List<String> getDatasetGroupCandidates(
                 String literal,
                 boolean isExact) {
 
@@ -389,7 +388,30 @@ public enum CQLFields implements CQLFieldsInterface {
                                 Arrays.stream(normalized.split("\\s+")))
                         .toList();
 
-                return datasetGroupTermsQuery(candidates);
+                return candidates.stream()
+                        .filter(value -> !value.isBlank())
+                        .distinct()
+                        .toList();
+        }
+
+        /**
+         * Priority sort for dataset_group: records whose group matches any of the search terms rank first.
+         */
+        public static SortOptions getDatasetGroupPrioritySort(List<String> candidates) {
+                String field = StacSummeries.DatasetGroup.searchField;
+                return new SortOptions.Builder().script(s -> s
+                                .type(ScriptSortType.Number)
+                                .script(sc -> sc
+                                                .lang("painless")
+                                                .params(Map.of("groups", JsonData.of(candidates)))
+                                                .source("if (!doc.containsKey('" + field + "') || doc['" + field
+                                                                + "'].empty) { return 0; } "
+                                                                + "for (g in params.groups) { "
+                                                                + "if (doc['" + field + "'].contains(g)) { return 1; } "
+                                                                + "} "
+                                                                + "return 0;"))
+                                .order(SortOrder.Desc))
+                        .build();
         }
 
         @Override
