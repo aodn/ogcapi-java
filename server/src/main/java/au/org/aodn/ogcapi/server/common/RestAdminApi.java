@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.common;
 
 
+import au.org.aodn.ogcapi.server.core.configuration.OgcApiProperties;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import com.fasterxml.jackson.databind.JsonNode;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,6 +29,9 @@ public class RestAdminApi {
     @Autowired
     protected RestAdminService restAdminService;
 
+    @Autowired
+    protected OgcApiProperties ogcApiProperties;
+
     /**
      * Explain the detail relevance score of a search query
      * Internal debugging/troubleshooting usage only
@@ -51,7 +55,7 @@ public class RestAdminApi {
             @Parameter(in = ParameterIn.QUERY, description = "Response format, simple for the flattened score breakdown, anything else returns the full elastic search explanation")
             @RequestParam(value = "format", required = false) String format
     ) throws Exception {
-        if (!restAdminService.isElasticsearchExplainEnabled()) {
+        if (!ogcApiProperties.debug().elasticsearchExplainEnabled()) {
             //return 404 NotFound error if elasticsearch-explain-enabled is set as false
             return ResponseEntity.notFound().build();
         }
@@ -88,7 +92,7 @@ public class RestAdminApi {
             @Parameter(in = ParameterIn.QUERY, description = "Filter language")
             @RequestParam(value = "filter-lang", required = false, defaultValue = "cql-text") String filterLang
     ) throws Exception {
-        if (!restAdminService.isElasticsearchExplainEnabled()) {
+        if (!ogcApiProperties.debug().elasticsearchExplainEnabled()) {
             //return 404 NotFound error if elasticsearch-explain-enabled is set as false
             return ResponseEntity.notFound().build();
         }

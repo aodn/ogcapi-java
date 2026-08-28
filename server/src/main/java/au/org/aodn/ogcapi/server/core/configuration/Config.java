@@ -34,7 +34,8 @@ import java.net.http.HttpClient;
         IndexerProperties.class,
         GNProperties.class,
         DasProperties.class,
-        BatchJobProperties.class
+        BatchJobProperties.class,
+        OgcApiProperties.class
 })
 public class Config {
 

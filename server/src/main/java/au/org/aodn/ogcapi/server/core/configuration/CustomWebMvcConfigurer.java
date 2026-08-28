@@ -8,6 +8,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Component
 public class CustomWebMvcConfigurer implements WebMvcConfigurer {
+
     /**
      * In springboot, parameter and path variable conversion isn't done via @JsonCreator but Converter, here
      * we define additional generic converter for the Enum types.

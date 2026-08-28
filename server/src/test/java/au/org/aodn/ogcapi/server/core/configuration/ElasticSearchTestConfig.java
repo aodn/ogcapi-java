@@ -8,7 +8,11 @@ import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.elasticsearch.client.Request;
+import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -19,11 +23,15 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 import org.testcontainers.utility.DockerImageName;
 
+import java.io.IOException;
+
 /**
  * We use test container with docker image throughout the testing.
  */
 @Configuration
 public class ElasticSearchTestConfig {
+
+    private static final Logger log = LoggerFactory.getLogger(ElasticSearchTestConfig.class);
 
     @Lazy
     @Autowired
@@ -53,6 +61,7 @@ public class ElasticSearchTestConfig {
                 .allowInsecure();
 
         ElasticsearchContainer container = new ElasticsearchContainer(ELASTICSEARCH_IMAGE)
+                .withEnv("xpack.license.self_generated.type", "trial")
                 .waitingFor(httpsWaitStrategy);
 
         container.start();
@@ -83,7 +92,24 @@ public class ElasticSearchTestConfig {
                 })
                 .build();
 
+        startTrialLicense(client);
+
         // Create the transport with a Jackson mapper
         return new RestClientTransport(client, new JacksonJsonpMapper());
+    }
+
+    /**
+     * Testcontainers ships a basic licence. {@code semantic_text} needs the {@code inference}
+     * feature, which a 30-day self-generated trial enables. The container is discarded after tests.
+     */
+    private static void startTrialLicense(RestClient client) {
+        try {
+            Request request = new Request("POST", "/_license/start_trial");
+            request.addParameter("acknowledge", "true");
+            Response response = client.performRequest(request);
+            log.info("Elasticsearch trial licence start returned {}", response.getStatusLine());
+        } catch (IOException e) {
+            log.warn("Could not start Elasticsearch trial licence (may already be trial): {}", e.getMessage());
+        }
     }
 }

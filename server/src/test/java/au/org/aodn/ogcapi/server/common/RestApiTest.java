@@ -805,4 +805,26 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1");
         assertEquals("516811d7-cd1e-207a-e0440003ba8c79dd", Objects.requireNonNull(collections.getBody()).getCollections().get(0).getId(), "id correct");
     }
+    /**
+     * A config set for this particular api call, we need to set the cache control header to signal cloud-front caching
+     * @throws IOException Not expected
+     */
+    @Test
+    public void verifyCacheHeaderSetForQuery() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "073fde5a-bff3-1c1f-e053-08114f8c5588.json",
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "35234913-aa3c-48ec-b9a4-77f822f66ef8.json" // This one have cloud optimized index, that is assets.summary value
+        );
+
+        ResponseEntity<Collections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?properties=id,temporal&filter=temporal after 1970-01-01T00:00:00Z&sortby=id",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertNotNull(collections.getHeaders().getFirst("Cache-Control"));
+    }
 }
