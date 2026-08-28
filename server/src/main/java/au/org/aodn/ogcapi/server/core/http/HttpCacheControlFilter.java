@@ -19,7 +19,8 @@ import java.io.PrintWriter;
 
 /**
  * When HTTP cache is enabled, sets {@code Cache-Control} on GET responses that do not
- * already have one: a matching mapping's value, otherwise {@code no-cache}.
+ * already have one: a matching mapping's value, otherwise
+ * {@code no-store, no-cache, must-revalidate}.
  * <p>
  * Implemented as a filter (not a {@code HandlerInterceptor}) so the header is applied
  * before the response body is written. {@code postHandle} runs after {@code @ResponseBody}
@@ -28,7 +29,7 @@ import java.io.PrintWriter;
 @Component
 public class HttpCacheControlFilter extends OncePerRequestFilter {
 
-    static final String NO_CACHE = "no-cache";
+    static final String NO_CACHE = "no-store, no-cache, must-revalidate";
 
     private final OgcApiProperties ogcApiProperties;
 
