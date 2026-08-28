@@ -18,8 +18,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 /**
- * Sets {@code Cache-Control} only when HTTP cache is enabled and the request path plus
- * query parameters match a mapping exactly. Unmatched requests get no cache header.
+ * When HTTP cache is enabled, sets {@code Cache-Control} on GET responses that do not
+ * already have one: a matching mapping's value, otherwise
+ * {@code no-store, no-cache, must-revalidate}.
  * <p>
  * Implemented as a filter (not a {@code HandlerInterceptor}) so the header is applied
  * before the response body is written. {@code postHandle} runs after {@code @ResponseBody}
@@ -27,6 +28,8 @@ import java.io.PrintWriter;
  */
 @Component
 public class HttpCacheControlFilter extends OncePerRequestFilter {
+
+    static final String NO_CACHE = "no-store, no-cache, must-revalidate";
 
     private final OgcApiProperties ogcApiProperties;
 
@@ -75,19 +78,19 @@ public class HttpCacheControlFilter extends OncePerRequestFilter {
                 return;
             }
             applied = true;
-            if (getStatus() != HttpStatus.OK.value()) {
-                return;
-            }
             if (containsHeader(HttpHeaders.CACHE_CONTROL)) {
                 return;
             }
-            String path = request.getRequestURI();
-            for (OgcApiProperties.Mapping mapping : httpCache.mappings()) {
-                if (mapping.matches(path, request.getParameterMap())) {
-                    setHeader(HttpHeaders.CACHE_CONTROL, mapping.cacheControlHeader());
-                    return;
+            if (getStatus() == HttpStatus.OK.value()) {
+                String path = request.getRequestURI();
+                for (OgcApiProperties.Mapping mapping : httpCache.mappings()) {
+                    if (mapping.matches(path, request.getParameterMap())) {
+                        setHeader(HttpHeaders.CACHE_CONTROL, mapping.cacheControlHeader());
+                        return;
+                    }
                 }
             }
+            setHeader(HttpHeaders.CACHE_CONTROL, NO_CACHE);
         }
 
         @Override

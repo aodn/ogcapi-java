@@ -77,7 +77,7 @@ public class HttpCacheControlFilterTest {
     }
 
     @Test
-    void noHeaderWhenPathDiffers() throws Exception {
+    void noCacheWhenPathDiffers() throws Exception {
         HttpCacheControlFilter filter = new HttpCacheControlFilter(properties(true));
         MockHttpServletRequest request = matchingGet();
         request.setRequestURI("/api/v1/ogc/collections/other");
@@ -85,11 +85,11 @@ public class HttpCacheControlFilterTest {
 
         run(filter, request, response, statusThenWrite(200));
 
-        assertNull(response.getHeader(HttpHeaders.CACHE_CONTROL));
+        assertEquals(HttpCacheControlFilter.NO_CACHE, response.getHeader(HttpHeaders.CACHE_CONTROL));
     }
 
     @Test
-    void noHeaderWhenExtraQueryParamPresent() throws Exception {
+    void noCacheWhenExtraQueryParamPresent() throws Exception {
         HttpCacheControlFilter filter = new HttpCacheControlFilter(properties(true));
         MockHttpServletRequest request = matchingGet();
         request.setParameter("q", "fish");
@@ -97,11 +97,11 @@ public class HttpCacheControlFilterTest {
 
         run(filter, request, response, statusThenWrite(200));
 
-        assertNull(response.getHeader(HttpHeaders.CACHE_CONTROL));
+        assertEquals(HttpCacheControlFilter.NO_CACHE, response.getHeader(HttpHeaders.CACHE_CONTROL));
     }
 
     @Test
-    void noHeaderWhenExpectedParamValueDiffers() throws Exception {
+    void noCacheWhenExpectedParamValueDiffers() throws Exception {
         HttpCacheControlFilter filter = new HttpCacheControlFilter(properties(true));
         MockHttpServletRequest request = matchingGet();
         request.setParameter("sortby", "-score");
@@ -109,17 +109,17 @@ public class HttpCacheControlFilterTest {
 
         run(filter, request, response, statusThenWrite(200));
 
-        assertNull(response.getHeader(HttpHeaders.CACHE_CONTROL));
+        assertEquals(HttpCacheControlFilter.NO_CACHE, response.getHeader(HttpHeaders.CACHE_CONTROL));
     }
 
     @Test
-    void noHeaderWhenNotOk() throws Exception {
+    void noCacheWhenNotOk() throws Exception {
         HttpCacheControlFilter filter = new HttpCacheControlFilter(properties(true));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         run(filter, matchingGet(), response, statusThenWrite(500));
 
-        assertNull(response.getHeader(HttpHeaders.CACHE_CONTROL));
+        assertEquals(HttpCacheControlFilter.NO_CACHE, response.getHeader(HttpHeaders.CACHE_CONTROL));
     }
 
     @Test
