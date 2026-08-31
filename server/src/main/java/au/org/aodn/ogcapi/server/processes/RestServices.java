@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -134,12 +135,18 @@ public class RestServices {
         // Filter out null or empty parameter values before submitting to AWS Batch.
         // AWS Batch returns "Parameter values must be provided" when the job definition
         // declares parameters but some submitted values are null/empty.
+        //
+        // A defensive copy, never the caller's own map: a held download keeps this exact map
+        // instance around so the status endpoint can describe it while it waits, and readers
+        // of that map run on other threads with no synchronization of their own.
+        Map<String, String> submitParameters = parameters;
         if (parameters != null) {
             var suggestedCitation = parameters.get(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue());
             // empty suggested citation is acceptable since it may be from external orgs
             if (suggestedCitation == null || suggestedCitation.isEmpty()) {
                 log.warn("Suggested citation is null or empty for job '{}'. Submitting with unavailable as value.", jobName);
-                parameters.replace(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), "unavailable");
+                submitParameters = new HashMap<>(parameters);
+                submitParameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), "unavailable");
             }
         }
 
@@ -147,7 +154,7 @@ public class RestServices {
                 .jobName(jobName)
                 .jobQueue(jobQueue)
                 .jobDefinition(jobDefinition)
-                .parameters(parameters)
+                .parameters(submitParameters)
                 .build();
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);

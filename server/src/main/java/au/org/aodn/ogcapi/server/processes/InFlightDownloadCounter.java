@@ -106,11 +106,19 @@ public class InFlightDownloadCounter {
     /**
      * Refresh the shared snapshot if it has aged past the release interval. Call this before
      * taking any admission lock: it is the only part of counting that talks to AWS.
+     *
+     * <p>Synchronized so that when several callers arrive after the snapshot has expired, only
+     * the first actually sweeps; the rest block briefly on this monitor and then see the fresh
+     * snapshot the first caller just took, rather than each repeating the sweep themselves.
      */
-    public void refreshIfStale() {
-        if (Duration.between(snapshot.takenAt(), clock.instant()).compareTo(limits.releaseInterval()) >= 0) {
+    public synchronized void refreshIfStale() {
+        if (isStale()) {
             refresh();
         }
+    }
+
+    private boolean isStale() {
+        return Duration.between(snapshot.takenAt(), clock.instant()).compareTo(limits.releaseInterval()) >= 0;
     }
 
     /** Sweep the queues now, whatever the age of the current snapshot. */

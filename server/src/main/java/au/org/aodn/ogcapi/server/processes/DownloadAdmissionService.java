@@ -10,10 +10,12 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.ReentrantLock;
@@ -47,9 +49,12 @@ public class DownloadAdmissionService {
     private final Clock clock;
 
     /**
-     * Guards the admit-or-hold decision and the release loop against each other. The AWS
-     * sweep is deliberately done before this is taken; the submit itself is inside it, so
-     * that reading the count and acting on it cannot interleave and over-admit.
+     * Guards the in-memory bookkeeping only: the held queue, {@link #heldById} and
+     * {@link #reserved}. The actual AWS Batch submit call is a synchronous network call and is
+     * always made outside this lock, so a slow or throttled call from one admission decision
+     * or release never stalls every other user's admission decision and every status poll.
+     *
+     * <p>The AWS sweep is deliberately done before this is taken.
      */
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -58,6 +63,15 @@ public class DownloadAdmissionService {
 
     private final Map<String, HeldDownload> heldById = new ConcurrentHashMap<>();
     private final Map<String, Released> released = new ConcurrentHashMap<>();
+
+    /**
+     * Recipients with a submit currently in flight, not yet reflected in {@link #counter}
+     * because the AWS call it is waiting on has not returned. Consulted, together with the
+     * counter, whenever admission checks whether a recipient has room - without it, two
+     * decisions racing during the same in-flight submit could both see room and over-admit.
+     * Guarded by {@link #lock}.
+     */
+    private final Map<String, Integer> reserved = new HashMap<>();
 
     record Released(String awsJobId, Instant releasedAt) {
     }
@@ -98,26 +112,28 @@ public class DownloadAdmissionService {
         // Outside the lock: the sweep is the only expensive step and every user shares it.
         counter.refreshIfStale();
 
-        DownloadAdmission admission;
+        String key = InFlightDownloadCounter.recipientKey(request.recipient());
         lock.lock();
         try {
-            if (hasHeldFor(request.recipient())) {
-                // Never jump ahead of this user's own waiting requests.
-                admission = hold(request, jobName, parameters);
-            } else if (counter.countInFlight(request.recipient()) < limits.maxConcurrent()) {
-                admission = DownloadAdmission.submitted(submit(jobName, parameters, request.recipient()));
-            } else {
-                admission = hold(request, jobName, parameters);
+            // Never jump ahead of this user's own waiting requests.
+            boolean hasRoom = !hasHeldFor(request.recipient())
+                    && counter.countInFlight(request.recipient()) + reservedCount(key) < limits.maxConcurrent();
+            if (!hasRoom) {
+                return hold(request, jobName, parameters);
             }
+            reserve(key);
         } finally {
             lock.unlock();
         }
 
-        if (!admission.queued()) {
-            // Outside the lock: this is a synchronous SES call, and it is best effort anyway.
+        // Outside the lock: this is the synchronous AWS Batch call.
+        try {
+            DownloadAdmission admission = DownloadAdmission.submitted(submit(jobName, parameters, request.recipient()));
             notifyStarted(request);
+            return admission;
+        } finally {
+            releaseReservation(key);
         }
-        return admission;
     }
 
     /**
@@ -167,6 +183,12 @@ public class DownloadAdmissionService {
     /**
      * Submit whatever is waiting and now fits. Nothing held means no AWS call at all, which
      * is both the steady state and what keeps the scheduler away from live AWS Batch in tests.
+     *
+     * <p>Each release is claimed - removed from the held queue - under the lock, then submitted
+     * to AWS outside it, so this loop's AWS calls never block admission decisions or status
+     * polls for other downloads. When a claimed submit fails, its recipient is blocked for the
+     * rest of this sweep: without that, a later held download from the same recipient would be
+     * free to take the slot the failed one was retrying for, submitting out of order.
      */
     @Scheduled(fixedDelayString = "${aws.batch.job.user-limit.release-interval:15s}")
     public void releaseHeldDownloads() {
@@ -177,44 +199,77 @@ public class DownloadAdmissionService {
 
         counter.refresh();
 
-        List<DownloadRequest> toNotify = new ArrayList<>();
         lock.lock();
         try {
             expireStale();
-
-            Deque<HeldDownload> blocked = new ArrayDeque<>();
-            HeldDownload job;
-            while ((job = held.pollFirst()) != null) {
-                String recipient = job.request().recipient();
-                if (counter.countInFlight(recipient) >= limits.maxConcurrent()) {
-                    blocked.addLast(job);
-                    continue;
-                }
-                try {
-                    String awsJobId = submit(job.jobName(), job.parameters(), recipient);
-                    heldById.remove(job.jobId());
-                    released.put(job.jobId(), new Released(awsJobId, clock.instant()));
-                    toNotify.add(job.request());
-                    log.info("Released held download {} as AWS Batch job {}", job.jobId(), awsJobId);
-                } catch (Exception e) {
-                    HeldDownload retried = job.withAttempt();
-                    if (retried.attempts() >= MAX_SUBMIT_ATTEMPTS) {
-                        heldById.remove(job.jobId());
-                        log.error("Abandoning held download {} after {} failed submissions",
-                                job.jobId(), retried.attempts(), e);
-                    } else {
-                        log.warn("Could not release held download {}, will retry", job.jobId(), e);
-                        heldById.put(retried.jobId(), retried);
-                        blocked.addLast(retried);
-                    }
-                }
-            }
-            held.addAll(blocked);
         } finally {
             lock.unlock();
         }
 
-        toNotify.forEach(this::notifyStarted);
+        Set<String> blockedRecipients = new HashSet<>();
+        HeldDownload job;
+        while ((job = claimNextReleasable(blockedRecipients)) != null) {
+            String recipient = job.request().recipient();
+            String key = InFlightDownloadCounter.recipientKey(recipient);
+            try {
+                String awsJobId = submit(job.jobName(), job.parameters(), recipient);
+                released.put(job.jobId(), new Released(awsJobId, clock.instant()));
+                log.info("Released held download {} as AWS Batch job {}", job.jobId(), awsJobId);
+                notifyStarted(job.request());
+            } catch (Exception e) {
+                blockedRecipients.add(key);
+                HeldDownload retried = job.withAttempt();
+                if (retried.attempts() >= MAX_SUBMIT_ATTEMPTS) {
+                    log.error("Abandoning held download {} after {} failed submissions",
+                            job.jobId(), retried.attempts(), e);
+                } else {
+                    log.warn("Could not release held download {}, will retry", job.jobId(), e);
+                    requeue(retried);
+                }
+            } finally {
+                releaseReservation(key);
+            }
+        }
+    }
+
+    /**
+     * Remove and return the earliest held download whose recipient is not blocked this sweep
+     * and currently has room, reserving its slot; null when nothing in the queue qualifies.
+     */
+    private HeldDownload claimNextReleasable(Set<String> blockedRecipients) {
+        lock.lock();
+        try {
+            Iterator<HeldDownload> it = held.iterator();
+            while (it.hasNext()) {
+                HeldDownload job = it.next();
+                String recipient = job.request().recipient();
+                String key = InFlightDownloadCounter.recipientKey(recipient);
+                if (blockedRecipients.contains(key)) {
+                    continue;
+                }
+                if (counter.countInFlight(recipient) + reservedCount(key) >= limits.maxConcurrent()) {
+                    continue;
+                }
+                it.remove();
+                heldById.remove(job.jobId());
+                reserve(key);
+                return job;
+            }
+            return null;
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    /** Put a download that failed to submit back at the end of the held queue for another try. */
+    private void requeue(HeldDownload job) {
+        lock.lock();
+        try {
+            held.addLast(job);
+            heldById.put(job.jobId(), job);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private String submit(String jobName, Map<String, String> parameters, String recipient) {
@@ -227,6 +282,25 @@ public class DownloadAdmissionService {
         String key = InFlightDownloadCounter.recipientKey(recipient);
         return held.stream()
                 .anyMatch(job -> InFlightDownloadCounter.recipientKey(job.request().recipient()).equals(key));
+    }
+
+    /** Must be called with {@link #lock} held. */
+    private void reserve(String key) {
+        reserved.merge(key, 1, Integer::sum);
+    }
+
+    /** Must be called with {@link #lock} held. */
+    private int reservedCount(String key) {
+        return reserved.getOrDefault(key, 0);
+    }
+
+    private void releaseReservation(String key) {
+        lock.lock();
+        try {
+            reserved.computeIfPresent(key, (k, count) -> count <= 1 ? null : count - 1);
+        } finally {
+            lock.unlock();
+        }
     }
 
     private DownloadAdmission hold(DownloadRequest request, String jobName, Map<String, String> parameters) {
