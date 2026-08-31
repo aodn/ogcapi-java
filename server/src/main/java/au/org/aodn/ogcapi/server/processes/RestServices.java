@@ -91,37 +91,40 @@ public class RestServices {
         }
     }
 
-    public String downloadData(
-            String id,
-            String key,
-            String startDate,
-            String endDate,
-            Object polygons,
-            String recipient,
-            String collectionTitle,
-            String fullMetadataLink,
-            String suggestedCitation,
-            String outputFormat
-    ) throws JsonProcessingException {
-
-        // Build the shared subset filters (uuid, key, dates, multi_polygon, output
-        // format) exactly as the estimate does, then add the download-only fields.
+    /**
+     * Build the AWS Batch parameters for a download: the shared subset filters (uuid, key,
+     * dates, multi_polygon, output format) exactly as the estimate builds them, plus the
+     * download-only fields.
+     *
+     * <p>Separate from the submit so a request that has to wait for a free slot is validated
+     * and rendered at accept time, and releasing it later is a plain submit.
+     */
+    public Map<String, String> buildDownloadParameters(DownloadRequest request) throws JsonProcessingException {
         Map<String, String> parameters = SubsetParametersUtils.buildSubsetParameters(
-                objectMapper, id, key, startDate, endDate, polygons, outputFormat);
-        parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), recipient);
-        parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), collectionTitle);
-        parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), fullMetadataLink);
-        parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), suggestedCitation);
+                objectMapper, request.uuid(), request.key(), request.startDate(), request.endDate(),
+                request.multiPolygon(), request.outputFormat());
+        parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), request.recipient());
+        parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), request.collectionTitle());
+        parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), request.fullMetadataLink());
+        parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), request.suggestedCitation());
         parameters.put(
                 DatasetDownloadEnums.Parameter.TYPE.getValue(),
                 DatasetDownloadEnums.Type.SUB_SETTING.getValue()
         );
+        return parameters;
+    }
 
-        String jobId = submitJob(
-                "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
-                this.batchJobQueue,
-                this.batchJobDefinition,
-                parameters);
+    /**
+     * The AWS Batch job name for a download. Note this sanitises the address, so it is not a
+     * safe key for the owning user - read the recipient job parameter instead.
+     */
+    public static String downloadJobName(String recipient) {
+        return "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-");
+    }
+
+    /** Submit a prepared download to the configured queue and job definition. */
+    public String submitDownloadJob(String jobName, Map<String, String> parameters) {
+        String jobId = submitJob(jobName, this.batchJobQueue, this.batchJobDefinition, parameters);
         log.info("Job submitted with ID: {}", jobId);
         return jobId;
     }

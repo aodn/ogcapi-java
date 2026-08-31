@@ -21,3 +21,11 @@ elasticsearch:
   # no inference feature in test env so turn it off.
   semantic:
     enabled: false
+
+# Tests must never reach live AWS Batch. The release loop already makes no AWS call while
+# nothing is held; this makes that explicit for any test that does build a Spring context.
+aws:
+  batch:
+    job:
+      user-limit:
+        enabled: false

@@ -43,6 +43,9 @@ public class RestApi implements ProcessesApi, JobsApi {
     @Autowired
     private DownloadJobStatusService downloadJobStatusService;
 
+    @Autowired
+    private DownloadAdmissionService downloadAdmissionService;
+
     @Override
     // because the produces value in the interface declaration includes "/_" which may
     // cause exception thrown sometimes. So i re-declared the produces value here
@@ -62,7 +65,8 @@ public class RestApi implements ProcessesApi, JobsApi {
                             {
                               "message": {"message": "Job submitted with ID: 123e4567-e89b-12d3-a456-426614174000"},
                               "status": {"message": "200"},
-                              "jobID": "123e4567-e89b-12d3-a456-426614174000"
+                              "jobID": "123e4567-e89b-12d3-a456-426614174000",
+                              "queued": false
                             }
                             """)))
     public ResponseEntity<InlineResponse200> execute(
@@ -89,18 +93,27 @@ public class RestApi implements ProcessesApi, JobsApi {
                 String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
                 Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
 
-                String jobId = restServices.downloadData(uuid, key, startDate, endDate, multiPolygon, recipient,
-                        collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+                DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, multiPolygon,
+                        recipient, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
-                // The notify user email lives here rather than in data-access-service to make the first
-                // email faster
-                // It must only be sent once AWS Batch has accepted the job and returned
-                // a job id, otherwise we promise the user a file that will never be produced.
-                restServices.notifyUser(recipient, uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+                // The per-user limit is applied here: a user already at their limit has this
+                // request held and released later, and gets a job id to poll either way.
+                //
+                // The notify user email lives on this side rather than in data-access-service to
+                // make the first email faster. It goes out with the submit wherever that happens,
+                // so it is still sent only once AWS Batch has accepted the job and returned a job
+                // id - otherwise we promise the user a file that will never be produced - and it
+                // is not sent at all while a download is still waiting for a slot.
+                DownloadAdmission admission = downloadAdmissionService.submitOrHold(request);
 
-                var value = new InlineValue("Job submitted with ID: " + jobId);
+                // The message keeps its historical wording for a download that went straight
+                // through, so existing clients that read it see no change.
+                var value = new InlineValue(admission.queued()
+                        ? "Job queued with ID: " + admission.jobId()
+                        : "Job submitted with ID: " + admission.jobId());
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
-                var results = new DownloadExecutionResponse(value, status, jobId);
+                var results = new DownloadExecutionResponse(
+                        value, status, admission.jobId(), admission.queued(), admission.queuePosition());
 
                 return ResponseEntity.ok(results);
 

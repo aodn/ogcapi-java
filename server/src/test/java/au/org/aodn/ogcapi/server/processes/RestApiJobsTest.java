@@ -38,6 +38,9 @@ class RestApiJobsTest {
     @Mock
     private DownloadJobStatusService downloadJobStatusService;
 
+    @Mock
+    private DownloadAdmissionService downloadAdmissionService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
 
@@ -46,6 +49,7 @@ class RestApiJobsTest {
         RestApi restApi = new RestApi();
         ReflectionTestUtils.setField(restApi, "restServices", restServices);
         ReflectionTestUtils.setField(restApi, "downloadJobStatusService", downloadJobStatusService);
+        ReflectionTestUtils.setField(restApi, "downloadAdmissionService", downloadAdmissionService);
         mockMvc = MockMvcBuilders.standaloneSetup(restApi)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -53,8 +57,8 @@ class RestApiJobsTest {
 
     @Test
     void postKeepsExistingFieldsAndAddsPureJobId() throws Exception {
-        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(JOB_ID);
+        when(downloadAdmissionService.submitOrHold(any()))
+                .thenReturn(new DownloadAdmission(JOB_ID, false, null));
         String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
                 "uuid", "collection-id",
                 "recipient", "person@example.com")));
@@ -67,6 +71,41 @@ class RestApiJobsTest {
                 .andExpect(jsonPath("$.message.message").value("Job submitted with ID: " + JOB_ID))
                 .andExpect(jsonPath("$.status.message").value("200"))
                 .andExpect(jsonPath("$.jobID").value(JOB_ID));
+    }
+
+    @Test
+    void postSurfacesTheQueuedStateAndPosition() throws Exception {
+        when(downloadAdmissionService.submitOrHold(any()))
+                .thenReturn(new DownloadAdmission(JOB_ID, true, 3));
+        String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
+                "uuid", "collection-id",
+                "recipient", "person@example.com")));
+
+        mockMvc.perform(post("/api/v1/ogc/processes/download/execution")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.jobID").value(JOB_ID))
+                .andExpect(jsonPath("$.queued").value(true))
+                .andExpect(jsonPath("$.queuePosition").value(3));
+    }
+
+    @Test
+    void postOmitsQueuePositionWhenTheDownloadWentStraightThrough() throws Exception {
+        when(downloadAdmissionService.submitOrHold(any()))
+                .thenReturn(new DownloadAdmission(JOB_ID, false, null));
+        String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
+                "uuid", "collection-id",
+                "recipient", "person@example.com")));
+
+        mockMvc.perform(post("/api/v1/ogc/processes/download/execution")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.queued").value(false))
+                .andExpect(jsonPath("$.queuePosition").doesNotExist());
     }
 
     @Test

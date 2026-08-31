@@ -41,6 +41,19 @@ public class RestServicesTest {
         closeableMock.close();
     }
 
+    /**
+     * The two-step call the admission service makes: render the request at accept time, then
+     * submit it. Kept as one helper so these tests still read as one download request.
+     */
+    private String downloadData(String uuid, String key, String startDate, String endDate, Object polygons,
+                                String recipient, String collectionTitle, String fullMetadataLink,
+                                String suggestedCitation, String outputFormat) throws JsonProcessingException {
+        DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, polygons, recipient,
+                collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+        return restServices.submitDownloadJob(
+                RestServices.downloadJobName(recipient), restServices.buildDownloadParameters(request));
+    }
+
     @Test
     public void testDownloadDataSuccess() throws JsonProcessingException {
         // Arrange
@@ -50,7 +63,7 @@ public class RestServicesTest {
         when(objectMapper.writeValueAsString(any())).thenReturn("test-multipolygon");
 
         // Act
-        String response = restServices.downloadData(
+        String response = downloadData(
                 "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com", "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).", "geotiff");
 
         // Assert
@@ -65,7 +78,7 @@ public class RestServicesTest {
 
         // Act & Assert
         try {
-            restServices.downloadData("test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com","Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).", "geotiff");
+            downloadData("test-uuid", "test-dname", "2023-01-01", "2023-01-31", "test-multipolygon", "test@example.com","Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).", "geotiff");
         } catch (JsonProcessingException e) {
             assertEquals("Error", e.getMessage());
         }
@@ -80,7 +93,7 @@ public class RestServicesTest {
         when(objectMapper.writeValueAsString(any())).thenReturn("test-multipolygon");
 
         // Act
-        String response = restServices.downloadData(
+        String response = downloadData(
                 "test-uuid", "test-dname","2023-01-01", "2023-01-31", "non-specified", "test@example.com", "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "Cite data as: Mazor, T., Watermeyer, K., Hobley, T., Grinter, V., Holden, R., MacDonald, K. and Ferns, L. (2023).", "geotiff");
 
         // Capture the submitted request
@@ -108,7 +121,7 @@ public class RestServicesTest {
         // polygons set to 'non-specified' to avoid objectMapper serialization
 
         // Act: pass empty suggestedCitation
-        String response = restServices.downloadData(
+        String response = downloadData(
                 "test-uuid", "test-dname","2023-01-01", "2023-01-31", "non-specified", "test@example.com",
                 "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "", "geotiff");
 
@@ -126,10 +139,10 @@ public class RestServicesTest {
     public void submitJobWithoutJobIdThrows() {
         // AWS Batch answered but gave us no job id, so the job was never really queued.
         // This must fail loudly: the caller sends the "processing started" email off the
-        // back of a successful downloadData().
+        // back of a successful submit.
         when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(SubmitJobResponse.builder().build());
 
-        assertThrows(IllegalStateException.class, () -> restServices.downloadData(
+        assertThrows(IllegalStateException.class, () -> downloadData(
                 "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "non-specified", "test@example.com",
                 "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "", "geotiff"));
     }
