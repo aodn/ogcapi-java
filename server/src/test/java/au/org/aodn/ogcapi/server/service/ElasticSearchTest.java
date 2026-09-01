@@ -62,6 +62,26 @@ public class ElasticSearchTest {
                 "dataset_group priority sort should be the first sort key");
     }
 
+    // AAD is indexed under a group name that does not look like the acronym users type
+    @Test
+    public void datasetGroupPrioritySortExpandsTheAadAcronym() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+
+        capturingSearch.searchByParameters(
+                List.of("aad"),
+                null,
+                null,
+                "-score,-rank",
+                CQLCrsType.EPSG4326);
+
+        SortOptions prioritySort = capturingSearch.arguments.sortOptions().get(0);
+        assertTrue(prioritySort.isScript(), "dataset_group priority sort should be the first sort key");
+        assertEquals(
+                List.of("aad", "australian_antarctic_division"),
+                prioritySort.script().script().params().get("groups").to(List.class),
+                "aad must also boost records grouped as australian_antarctic_division");
+    }
+
     // The portal SEO pipeline requests these in bulk to build Dataset JSON-LD
     @Test
     public void seoPropertiesMapToStacFields() throws Exception {
