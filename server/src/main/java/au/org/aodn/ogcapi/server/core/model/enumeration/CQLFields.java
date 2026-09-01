@@ -356,6 +356,17 @@ public enum CQLFields implements CQLFieldsInterface {
                 return value.toLowerCase(Locale.ROOT).trim();
         }
 
+        // AAD's indexed group name differs from the acronym users type, so map it here.
+        // Sorting only: the dataset_group CQL filter stays literal.
+        private static final Map<String, String> GROUP_ALIASES = Map.of(
+                "aad", "australian_antarctic_division");
+
+        /** A group term plus the alias it stands for, e.g. "aad" -> ["aad", "australian_antarctic_division"]. */
+        private static Stream<String> withGroupAliases(String value) {
+                String alias = GROUP_ALIASES.get(value);
+                return alias == null ? Stream.of(value) : Stream.of(value, alias);
+        }
+
         // used by the dataset_group CQL filter only without boost
         private static Query datasetGroupTermsQuery(List<String> values) {
                 List<FieldValue> terms = values.stream()
@@ -373,7 +384,8 @@ public enum CQLFields implements CQLFieldsInterface {
         /**
          * Expands a free-text term into dataset-group candidate values. For example, "csiro temperature" => ["csiro temperature", "csiro", "temperature"].
          * Unquoted input includes both the complete normalized input and its individual words. Double-quoted free-text input is treated as one exact value.
-         * Dataset-group CQL filters continue to use getPropertyEqualToQuery().
+         * Each candidate also carries its GROUP_ALIASES expansion, e.g. "aad" => ["aad", "australian_antarctic_division"]. Aliases apply regardless of quoting, and
+         * to the priority sort only; dataset-group CQL filters continue to use getPropertyEqualToQuery() and stay literal.
          */
         public static List<String> getDatasetGroupCandidates(
                 String literal,
@@ -390,6 +402,7 @@ public enum CQLFields implements CQLFieldsInterface {
 
                 return candidates.stream()
                         .filter(value -> !value.isBlank())
+                        .flatMap(CQLFields::withGroupAliases)
                         .distinct()
                         .toList();
         }
