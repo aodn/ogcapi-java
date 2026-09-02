@@ -118,7 +118,7 @@ public class InFlightDownloadCounter {
     }
 
     private boolean isStale() {
-        return Duration.between(snapshot.takenAt(), clock.instant()).compareTo(limits.releaseInterval()) >= 0;
+        return Duration.between(snapshot.takenAt(), clock.instant()).compareTo(limits.refreshInterval()) >= 0;
     }
 
     /** Sweep the queues now, whatever the age of the current snapshot. */

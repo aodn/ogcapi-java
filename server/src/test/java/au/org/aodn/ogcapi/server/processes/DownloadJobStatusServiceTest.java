@@ -31,7 +31,6 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -39,7 +38,6 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DownloadJobStatusServiceTest {
@@ -55,9 +53,6 @@ class DownloadJobStatusServiceTest {
 
     @Mock
     private BatchClient batchClient;
-
-    @Mock
-    private DownloadAdmissionService admissionService;
 
     private final Map<String, JobDetail> describedJobs = new HashMap<>();
     private final Map<String, ListJobsResponse> listedJobs = new HashMap<>();
@@ -84,7 +79,6 @@ class DownloadJobStatusServiceTest {
                 batchClient,
                 new BatchJobProperties(QUEUE_NAME, DEFINITION_NAME, CHILD_QUEUE_NAME),
                 new DownloadJobStatusAggregator(),
-                admissionService,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -142,7 +136,6 @@ class DownloadJobStatusServiceTest {
                 batchClient,
                 new BatchJobProperties(QUEUE_ARN, DEFINITION_ARN, CHILD_QUEUE_NAME),
                 new DownloadJobStatusAggregator(),
-                admissionService,
                 Clock.fixed(NOW, ZoneOffset.UTC));
         describedJobs.put(JOB_ID, initial(JobStatus.SUCCEEDED, "one.zarr", NOW.minusSeconds(5)));
         assertEquals(StatusCode.SUCCESSFUL, service.getStatus(JOB_ID).getStatus());
@@ -284,61 +277,6 @@ class DownloadJobStatusServiceTest {
         ArgumentCaptor<ListJobsRequest> captor = ArgumentCaptor.forClass(ListJobsRequest.class);
         verify(batchClient, org.mockito.Mockito.atLeast(2)).listJobs(captor.capture());
         assertTrue(captor.getAllValues().stream().allMatch(request -> CHILD_QUEUE_NAME.equals(request.jobQueue())));
-    }
-
-    @Test
-    void heldDownloadReportsAcceptedWithoutCallingAws() {
-        String heldId = "9f1d3a2c-0000-4000-8000-000000000001";
-        Map<String, String> parameters = Map.of(
-                "collection_title", "Test Ocean Data Collection",
-                "key", "satellite_wind_altimeter_delayed_qc.zarr",
-                "output_format", "netcdf",
-                "full_metadata_link", "https://portal.example.test/details/collection-id");
-        when(admissionService.findHeld(heldId)).thenReturn(new DownloadAdmissionService.HeldView(
-                new HeldDownload(
-                        heldId,
-                        new DownloadRequest("collection-id", null, null, null, null,
-                                "person@example.com", null, null, null, "netcdf"),
-                        "generating-data-file-for-person-example-com",
-                        parameters,
-                        NOW.minusSeconds(30),
-                        0),
-                2));
-
-        DownloadJobStatusInfo status = service.getStatus(heldId);
-
-        assertEquals(StatusCode.ACCEPTED, status.getStatus());
-        assertEquals(DownloadAdmissionService.QUEUED_MESSAGE, status.getMessage());
-        assertEquals(heldId, status.getJobID());
-        // Machine readable, so the portal never has to match on the message text.
-        assertTrue(status.isQueued());
-        assertEquals(2, status.getQueuePosition());
-        // The display fields come from the parameters built when the download was accepted,
-        // so a waiting job looks the same on the status page as a running one.
-        assertEquals("Test Ocean Data Collection", status.getCollection());
-        assertEquals("satellite_wind_altimeter_delayed_qc.zarr", status.getDataSelection());
-        assertEquals("netcdf", status.getFormat());
-        assertEquals("https://portal.example.test/details/collection-id", status.getMetadataUrl());
-        assertEquals(Date.from(NOW.minusSeconds(30)), status.getCreated());
-        assertNull(status.getStarted());
-        assertNull(status.getFinished());
-        verify(batchClient, never()).describeJobs(any(DescribeJobsRequest.class));
-        verify(batchClient, never()).listJobs(any(ListJobsRequest.class));
-    }
-
-    @Test
-    void releasedDownloadResolvesToItsAwsJobButAnswersOnTheCallerJobId() {
-        String heldId = "9f1d3a2c-0000-4000-8000-000000000002";
-        when(admissionService.awsJobIdOf(heldId)).thenReturn(JOB_ID);
-        describedJobs.put(JOB_ID, initial(JobStatus.RUNNING, null, null));
-
-        DownloadJobStatusInfo status = service.getStatus(heldId);
-
-        assertEquals(StatusCode.RUNNING, status.getStatus());
-        // The caller polls the id it was handed, never the AWS job the release created.
-        assertEquals(heldId, status.getJobID());
-        assertFalse(status.isQueued());
-        assertNull(status.getQueuePosition());
     }
 
     @Test

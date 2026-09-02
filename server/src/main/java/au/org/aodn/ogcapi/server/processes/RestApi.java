@@ -8,8 +8,10 @@ import au.org.aodn.ogcapi.processes.model.ProcessList;
 import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.processes.model.JobList;
 import au.org.aodn.ogcapi.processes.model.StatusInfo;
+import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
 import au.org.aodn.ogcapi.server.core.model.DownloadExecutionResponse;
 import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
+import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import au.org.aodn.ogcapi.server.core.model.enumeration.InlineResponseKeyEnum;
@@ -65,8 +67,18 @@ public class RestApi implements ProcessesApi, JobsApi {
                             {
                               "message": {"message": "Job submitted with ID: 123e4567-e89b-12d3-a456-426614174000"},
                               "status": {"message": "200"},
-                              "jobID": "123e4567-e89b-12d3-a456-426614174000",
-                              "queued": false
+                              "jobID": "123e4567-e89b-12d3-a456-426614174000"
+                            }
+                            """)))
+    @ApiResponse(
+            responseCode = "429",
+            description = "The recipient already has the maximum number of downloads in progress.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                              "message": "You already have 10 downloads in progress. Wait for one of them to complete before starting another."
                             }
                             """)))
     public ResponseEntity<InlineResponse200> execute(
@@ -96,27 +108,25 @@ public class RestApi implements ProcessesApi, JobsApi {
                 DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, multiPolygon,
                         recipient, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
-                // The per-user limit is applied here: a user already at their limit has this
-                // request held and released later, and gets a job id to poll either way.
+                // The per-user limit is applied here: a recipient already at their limit is
+                // rejected outright, before anything is submitted to AWS Batch.
                 //
                 // The notify user email lives on this side rather than in data-access-service to
-                // make the first email faster. It goes out with the submit wherever that happens,
-                // so it is still sent only once AWS Batch has accepted the job and returned a job
-                // id - otherwise we promise the user a file that will never be produced - and it
-                // is not sent at all while a download is still waiting for a slot.
-                DownloadAdmission admission = downloadAdmissionService.submitOrHold(request);
+                // make the first email faster. It is sent only once AWS Batch has accepted the
+                // job and returned a job id - otherwise we promise the user a file that will
+                // never be produced.
+                String awsJobId = downloadAdmissionService.submit(request);
 
-                // The message keeps its historical wording for a download that went straight
-                // through, so existing clients that read it see no change.
-                var value = new InlineValue(admission.queued()
-                        ? "Job queued with ID: " + admission.jobId()
-                        : "Job submitted with ID: " + admission.jobId());
+                var value = new InlineValue("Job submitted with ID: " + awsJobId);
                 var status = new InlineValue(Integer.toString(HttpStatus.OK.value()));
-                var results = new DownloadExecutionResponse(
-                        value, status, admission.jobId(), admission.queued(), admission.queuePosition());
+                var results = new DownloadExecutionResponse(value, status, awsJobId);
 
                 return ResponseEntity.ok(results);
 
+            } catch (DownloadLimitExceededException e) {
+                // Let GlobalExceptionHandler turn this into a real 429 with a message the
+                // caller can act on, instead of the generic 200-wrapped error below.
+                throw e;
             } catch (Exception e) {
 
                 // TODO: currently all the errors return badRequest. This should be changed to return the correct status code

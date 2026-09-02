@@ -90,7 +90,7 @@ class InFlightDownloadCounterTest {
         return new InFlightDownloadCounter(
                 batchClient,
                 new BatchJobProperties(QUEUE_NAME, DEFINITION_NAME, CHILD_QUEUE_NAME),
-                new DownloadLimitProperties(true, 10, Duration.ofSeconds(15), Duration.ofHours(24), 1000),
+                new DownloadLimitProperties(true, 10, Duration.ofSeconds(15)),
                 clock);
     }
 

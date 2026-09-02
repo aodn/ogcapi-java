@@ -31,19 +31,6 @@ public class DownloadJobStatusInfo extends StatusInfo {
     @Schema(description = "Link to the metadata page supplied when the download was submitted.")
     private String metadataUrl;
 
-    @JsonProperty("queued")
-    @Schema(description = "True while the download is waiting for one of this user's "
-            + "concurrent download slots to free. Always present, so clients never have to "
-            + "infer the queued state from the message text.")
-    private boolean queued;
-
-    @JsonProperty("queuePosition")
-    @JsonInclude(JsonInclude.Include.NON_ABSENT)
-    @Schema(description = "How many of this user's downloads, including this one, are waiting "
-            + "ahead of it; 1 means it starts next. Omitted unless queued. This is a position, "
-            + "not an estimated time: it depends on when the running downloads finish.")
-    private Integer queuePosition;
-
     public String getCollection() {
         return collection;
     }
@@ -74,21 +61,5 @@ public class DownloadJobStatusInfo extends StatusInfo {
 
     public void setMetadataUrl(String metadataUrl) {
         this.metadataUrl = metadataUrl;
-    }
-
-    public boolean isQueued() {
-        return queued;
-    }
-
-    public void setQueued(boolean queued) {
-        this.queued = queued;
-    }
-
-    public Integer getQueuePosition() {
-        return queuePosition;
-    }
-
-    public void setQueuePosition(Integer queuePosition) {
-        this.queuePosition = queuePosition;
     }
 }

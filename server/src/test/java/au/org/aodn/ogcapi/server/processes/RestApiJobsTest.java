@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.processes.model.StatusCode;
 import au.org.aodn.ogcapi.processes.model.StatusInfo;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobStatusException;
+import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
 import au.org.aodn.ogcapi.server.core.exception.GlobalExceptionHandler;
 import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -57,8 +58,7 @@ class RestApiJobsTest {
 
     @Test
     void postKeepsExistingFieldsAndAddsPureJobId() throws Exception {
-        when(downloadAdmissionService.submitOrHold(any()))
-                .thenReturn(new DownloadAdmission(JOB_ID, false, null));
+        when(downloadAdmissionService.submit(any())).thenReturn(JOB_ID);
         String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
                 "uuid", "collection-id",
                 "recipient", "person@example.com")));
@@ -74,9 +74,9 @@ class RestApiJobsTest {
     }
 
     @Test
-    void postSurfacesTheQueuedStateAndPosition() throws Exception {
-        when(downloadAdmissionService.submitOrHold(any()))
-                .thenReturn(new DownloadAdmission(JOB_ID, true, 3));
+    void postAtTheDownloadLimitReturnsTooManyRequestsWithAClearMessage() throws Exception {
+        when(downloadAdmissionService.submit(any()))
+                .thenThrow(new DownloadLimitExceededException(10));
         String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
                 "uuid", "collection-id",
                 "recipient", "person@example.com")));
@@ -85,27 +85,9 @@ class RestApiJobsTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON)
                         .content(body))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.jobID").value(JOB_ID))
-                .andExpect(jsonPath("$.queued").value(true))
-                .andExpect(jsonPath("$.queuePosition").value(3));
-    }
-
-    @Test
-    void postOmitsQueuePositionWhenTheDownloadWentStraightThrough() throws Exception {
-        when(downloadAdmissionService.submitOrHold(any()))
-                .thenReturn(new DownloadAdmission(JOB_ID, false, null));
-        String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
-                "uuid", "collection-id",
-                "recipient", "person@example.com")));
-
-        mockMvc.perform(post("/api/v1/ogc/processes/download/execution")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaType.APPLICATION_JSON)
-                        .content(body))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.queued").value(false))
-                .andExpect(jsonPath("$.queuePosition").doesNotExist());
+                .andExpect(status().is(429))
+                .andExpect(jsonPath("$.message").value("You already have 10 downloads in progress. "
+                        + "Wait for one of them to complete before starting another."));
     }
 
     @Test

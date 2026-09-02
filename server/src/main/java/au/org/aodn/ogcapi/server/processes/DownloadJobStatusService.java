@@ -52,61 +52,44 @@ public class DownloadJobStatusService {
     private final BatchClient batchClient;
     private final BatchJobProperties properties;
     private final DownloadJobStatusAggregator aggregator;
-    private final DownloadAdmissionService admissionService;
     private final Clock clock;
 
     @Autowired
     public DownloadJobStatusService(
             BatchClient batchClient,
             BatchJobProperties properties,
-            DownloadJobStatusAggregator aggregator,
-            DownloadAdmissionService admissionService) {
-        this(batchClient, properties, aggregator, admissionService, Clock.systemUTC());
+            DownloadJobStatusAggregator aggregator) {
+        this(batchClient, properties, aggregator, Clock.systemUTC());
     }
 
     DownloadJobStatusService(
             BatchClient batchClient,
             BatchJobProperties properties,
             DownloadJobStatusAggregator aggregator,
-            DownloadAdmissionService admissionService,
             Clock clock) {
         this.batchClient = batchClient;
         this.properties = properties;
         this.aggregator = aggregator;
-        this.admissionService = admissionService;
         this.clock = clock;
     }
 
     public DownloadJobStatusInfo getStatus(String jobId) {
         validateJobId(jobId);
-
-        DownloadAdmissionService.HeldView heldDownload = admissionService.findHeld(jobId);
-        if (heldDownload != null) {
-            return heldStatus(jobId, heldDownload);
-        }
-
-        // A download that waited for a slot answers on the id its caller was given, not on
-        // the AWS job id it eventually turned into.
-        String awsJobId = admissionService.awsJobIdOf(jobId);
-        return awsStatus(awsJobId == null ? jobId : awsJobId, jobId);
-    }
-
-    private DownloadJobStatusInfo awsStatus(String awsJobId, String publicJobId) {
         try {
-            JobDetail initial = describeInitialJob(awsJobId);
+            JobDetail initial = describeInitialJob(jobId);
 
             if (initial.status() == JobStatus.FAILED) {
                 StatusCode status = aggregator.aggregate(new DownloadJobStatusAggregator.Snapshot(
                         initial.status(), null, null,
                         DownloadJobStatusAggregator.WorkflowMode.CHILD_DISCOVERY_REQUIRED,
                         false));
-                return toStatusInfo(publicJobId, status, initial, null, null);
+                return toStatusInfo(jobId, status, initial, null, null);
             }
 
             JobDetail prepare = findChildJob(
-                    PREPARE_NAME_PREFIX + awsJobId, awsJobId, PREPARE_TYPE);
+                    PREPARE_NAME_PREFIX + jobId, jobId, PREPARE_TYPE);
             JobDetail collect = findChildJob(
-                    COLLECT_NAME_PREFIX + awsJobId, awsJobId, COLLECT_TYPE);
+                    COLLECT_NAME_PREFIX + jobId, jobId, COLLECT_TYPE);
 
             boolean discoveryWindowExpired = discoveryWindowExpired(initial);
             DownloadJobStatusAggregator.WorkflowMode workflowMode = isExplicitZarr(initial.parameters())
@@ -120,38 +103,13 @@ public class DownloadJobStatusService {
                     workflowMode,
                     discoveryWindowExpired));
 
-            return toStatusInfo(publicJobId, status, initial, prepare, collect);
+            return toStatusInfo(jobId, status, initial, prepare, collect);
         } catch (DownloadJobNotFoundException e) {
             throw e;
         } catch (Exception e) {
-            log.error("Failed to reconstruct AWS Batch workflow for download job {}", publicJobId, e);
+            log.error("Failed to reconstruct AWS Batch workflow for download job {}", jobId, e);
             throw new DownloadJobStatusException(e);
         }
-    }
-
-    /**
-     * A download still waiting for a free slot. It has no AWS job yet, so the display fields
-     * come from the parameters that were built when it was accepted.
-     */
-    private DownloadJobStatusInfo heldStatus(String jobId, DownloadAdmissionService.HeldView heldView) {
-        HeldDownload heldDownload = heldView.download();
-
-        DownloadJobStatusInfo result = new DownloadJobStatusInfo();
-        result.setProcessID(PROCESS_ID);
-        result.setType(StatusInfo.TypeEnum.PROCESS);
-        result.setJobID(jobId);
-        result.setStatus(StatusCode.ACCEPTED);
-        result.setMessage(DownloadAdmissionService.QUEUED_MESSAGE);
-        result.setQueued(true);
-        result.setQueuePosition(heldView.position());
-
-        Map<String, String> parameters = heldDownload.parameters();
-        result.setCollection(nonBlank(parameters.get(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue())));
-        result.setDataSelection(nonBlank(parameters.get(DatasetDownloadEnums.Parameter.KEY.getValue())));
-        result.setFormat(nonBlank(parameters.get(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue())));
-        result.setMetadataUrl(nonBlank(parameters.get(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue())));
-        result.setCreated(Date.from(heldDownload.acceptedAt()));
-        return result;
     }
 
     private void validateJobId(String jobId) {

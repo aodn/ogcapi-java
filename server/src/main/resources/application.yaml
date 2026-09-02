@@ -59,19 +59,13 @@ aws:
         # Defaults to the initial queue in BatchJobProperties. Dev deployments whose DAS
         # uses generate-csv-data-file must override this value explicitly.
         child-queue: data-access-service-batch-job-queue
-        # Per-user download concurrency. Requests past max-concurrent are held in memory and
-        # submitted as that user's slots free, so they are queued rather than rejected. The
-        # hold queue does not survive a restart.
+        # Per-user download concurrency. A recipient already running max-concurrent downloads
+        # is rejected outright until one of their own downloads finishes.
         user-limit:
           enabled: true
           max-concurrent: 10
-          # How often held downloads are reconsidered, and how long the shared in-flight
-          # snapshot is reused before the queues are swept again.
-          release-interval: 15s
-          # A download waiting longer than this is abandoned.
-          max-hold-age: 24h
-          # Safety valve on total memory held, across all users.
-          max-held-total: 1000
+          # How long the shared in-flight snapshot is reused before the queues are swept again.
+          refresh-interval: 15s
 
 wfs-default-param:
   fields:
