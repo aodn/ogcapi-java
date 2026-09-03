@@ -4,6 +4,7 @@ import au.org.aodn.ogcapi.processes.model.StatusCode;
 import au.org.aodn.ogcapi.processes.model.StatusInfo;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobStatusException;
+import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
 import au.org.aodn.ogcapi.server.core.exception.GlobalExceptionHandler;
 import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,6 +39,9 @@ class RestApiJobsTest {
     @Mock
     private DownloadJobStatusService downloadJobStatusService;
 
+    @Mock
+    private DownloadAdmissionService downloadAdmissionService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
 
@@ -46,6 +50,7 @@ class RestApiJobsTest {
         RestApi restApi = new RestApi();
         ReflectionTestUtils.setField(restApi, "restServices", restServices);
         ReflectionTestUtils.setField(restApi, "downloadJobStatusService", downloadJobStatusService);
+        ReflectionTestUtils.setField(restApi, "downloadAdmissionService", downloadAdmissionService);
         mockMvc = MockMvcBuilders.standaloneSetup(restApi)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();
@@ -53,8 +58,7 @@ class RestApiJobsTest {
 
     @Test
     void postKeepsExistingFieldsAndAddsPureJobId() throws Exception {
-        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
-                .thenReturn(JOB_ID);
+        when(downloadAdmissionService.submit(any())).thenReturn(JOB_ID);
         String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
                 "uuid", "collection-id",
                 "recipient", "person@example.com")));
@@ -67,6 +71,23 @@ class RestApiJobsTest {
                 .andExpect(jsonPath("$.message.message").value("Job submitted with ID: " + JOB_ID))
                 .andExpect(jsonPath("$.status.message").value("200"))
                 .andExpect(jsonPath("$.jobID").value(JOB_ID));
+    }
+
+    @Test
+    void postAtTheDownloadLimitReturnsTooManyRequestsWithAClearMessage() throws Exception {
+        when(downloadAdmissionService.submit(any()))
+                .thenThrow(new DownloadLimitExceededException(10));
+        String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
+                "uuid", "collection-id",
+                "recipient", "person@example.com")));
+
+        mockMvc.perform(post("/api/v1/ogc/processes/download/execution")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().is(429))
+                .andExpect(jsonPath("$.message").value("You already have 10 downloads in progress. "
+                        + "Wait for one of them to complete before starting another."));
     }
 
     @Test

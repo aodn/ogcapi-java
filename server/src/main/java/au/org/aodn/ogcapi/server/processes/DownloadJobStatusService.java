@@ -37,6 +37,10 @@ public class DownloadJobStatusService {
 
     static final String PROCESS_ID = "download-dataset";
     static final Duration CHILD_DISCOVERY_WINDOW = Duration.ofSeconds(30);
+    // These exact names are an internal contract with data-access-service. Any DAS
+    // naming change must be applied here at the same time.
+    static final String PREPARE_NAME_PREFIX = "prepare-data-for-job-";
+    static final String COLLECT_NAME_PREFIX = "collect-data-for-job-";
 
     private static final String INITIAL_TYPE = "sub-setting";
     private static final String PREPARE_TYPE = "sub-setting-data-preparation";
@@ -71,7 +75,6 @@ public class DownloadJobStatusService {
 
     public DownloadJobStatusInfo getStatus(String jobId) {
         validateJobId(jobId);
-
         try {
             JobDetail initial = describeInitialJob(jobId);
 
@@ -83,12 +86,10 @@ public class DownloadJobStatusService {
                 return toStatusInfo(jobId, status, initial, null, null);
             }
 
-            // These exact names are an internal contract with data-access-service. Any DAS
-            // naming change must be applied here at the same time.
             JobDetail prepare = findChildJob(
-                    "prepare-data-for-job-" + jobId, jobId, PREPARE_TYPE);
+                    PREPARE_NAME_PREFIX + jobId, jobId, PREPARE_TYPE);
             JobDetail collect = findChildJob(
-                    "collect-data-for-job-" + jobId, jobId, COLLECT_TYPE);
+                    COLLECT_NAME_PREFIX + jobId, jobId, COLLECT_TYPE);
 
             boolean discoveryWindowExpired = discoveryWindowExpired(initial);
             DownloadJobStatusAggregator.WorkflowMode workflowMode = isExplicitZarr(initial.parameters())

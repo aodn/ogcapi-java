@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -91,37 +92,40 @@ public class RestServices {
         }
     }
 
-    public String downloadData(
-            String id,
-            String key,
-            String startDate,
-            String endDate,
-            Object polygons,
-            String recipient,
-            String collectionTitle,
-            String fullMetadataLink,
-            String suggestedCitation,
-            String outputFormat
-    ) throws JsonProcessingException {
-
-        // Build the shared subset filters (uuid, key, dates, multi_polygon, output
-        // format) exactly as the estimate does, then add the download-only fields.
+    /**
+     * Build the AWS Batch parameters for a download: the shared subset filters (uuid, key,
+     * dates, multi_polygon, output format) exactly as the estimate builds them, plus the
+     * download-only fields.
+     *
+     * <p>Separate from the submit so a request that has to wait for a free slot is validated
+     * and rendered at accept time, and releasing it later is a plain submit.
+     */
+    public Map<String, String> buildDownloadParameters(DownloadRequest request) throws JsonProcessingException {
         Map<String, String> parameters = SubsetParametersUtils.buildSubsetParameters(
-                objectMapper, id, key, startDate, endDate, polygons, outputFormat);
-        parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), recipient);
-        parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), collectionTitle);
-        parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), fullMetadataLink);
-        parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), suggestedCitation);
+                objectMapper, request.uuid(), request.key(), request.startDate(), request.endDate(),
+                request.multiPolygon(), request.outputFormat());
+        parameters.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), request.recipient());
+        parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), request.collectionTitle());
+        parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), request.fullMetadataLink());
+        parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), request.suggestedCitation());
         parameters.put(
                 DatasetDownloadEnums.Parameter.TYPE.getValue(),
                 DatasetDownloadEnums.Type.SUB_SETTING.getValue()
         );
+        return parameters;
+    }
 
-        String jobId = submitJob(
-                "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-"),
-                this.batchJobQueue,
-                this.batchJobDefinition,
-                parameters);
+    /**
+     * The AWS Batch job name for a download. Note this sanitises the address, so it is not a
+     * safe key for the owning user - read the recipient job parameter instead.
+     */
+    public static String downloadJobName(String recipient) {
+        return "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-");
+    }
+
+    /** Submit a prepared download to the configured queue and job definition. */
+    public String submitDownloadJob(String jobName, Map<String, String> parameters) {
+        String jobId = submitJob(jobName, this.batchJobQueue, this.batchJobDefinition, parameters);
         log.info("Job submitted with ID: {}", jobId);
         return jobId;
     }
@@ -131,12 +135,18 @@ public class RestServices {
         // Filter out null or empty parameter values before submitting to AWS Batch.
         // AWS Batch returns "Parameter values must be provided" when the job definition
         // declares parameters but some submitted values are null/empty.
+        //
+        // A defensive copy, never the caller's own map: a held download keeps this exact map
+        // instance around so the status endpoint can describe it while it waits, and readers
+        // of that map run on other threads with no synchronization of their own.
+        Map<String, String> submitParameters = parameters;
         if (parameters != null) {
             var suggestedCitation = parameters.get(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue());
             // empty suggested citation is acceptable since it may be from external orgs
             if (suggestedCitation == null || suggestedCitation.isEmpty()) {
                 log.warn("Suggested citation is null or empty for job '{}'. Submitting with unavailable as value.", jobName);
-                parameters.replace(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), "unavailable");
+                submitParameters = new HashMap<>(parameters);
+                submitParameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), "unavailable");
             }
         }
 
@@ -144,7 +154,7 @@ public class RestServices {
                 .jobName(jobName)
                 .jobQueue(jobQueue)
                 .jobDefinition(jobDefinition)
-                .parameters(parameters)
+                .parameters(submitParameters)
                 .build();
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);

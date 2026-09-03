@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import au.org.aodn.ogcapi.processes.model.Execute;
 import au.org.aodn.ogcapi.processes.model.InlineResponse200;
 import au.org.aodn.ogcapi.processes.model.Results;
+import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
 import au.org.aodn.ogcapi.server.core.model.DownloadExecutionResponse;
 import au.org.aodn.ogcapi.server.core.model.InlineValue;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
@@ -12,7 +13,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InOrder;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -23,8 +24,8 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -34,6 +35,9 @@ public class RestApiTest {
 
     @Mock
     private RestServices restServices;
+
+    @Mock
+    private DownloadAdmissionService downloadAdmissionService;
 
     @InjectMocks
     private RestApi restApi;
@@ -55,7 +59,7 @@ public class RestApiTest {
 
     @Test
     public void testExecuteDownloadDatasetSuccess() throws JsonProcessingException {
-        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(downloadAdmissionService.submit(any()))
                 .thenReturn("test-job-id");
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
@@ -67,16 +71,28 @@ public class RestApiTest {
         assertEquals("Job submitted with ID: test-job-id", results.message().message());
         assertEquals("200", results.status().message());
         assertEquals("test-job-id", results.jobId());
+    }
 
-        // The "processing started" email must go out only after AWS Batch returned a job id
-        InOrder inOrder = inOrder(restServices);
-        inOrder.verify(restServices).downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
-        inOrder.verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    @Test
+    public void testExecutePassesEveryRequestInputToAdmission() throws JsonProcessingException {
+        when(downloadAdmissionService.submit(any()))
+                .thenReturn("test-job-id");
+
+        restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
+
+        ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
+        verify(downloadAdmissionService).submit(captor.capture());
+        DownloadRequest request = captor.getValue();
+        assertEquals("test-uuid", request.uuid());
+        assertEquals("2023-01-01", request.startDate());
+        assertEquals("2023-01-31", request.endDate());
+        assertEquals("test-multipolygon", request.multiPolygon());
+        assertEquals("test@example.com", request.recipient());
     }
 
     @Test
     public void testExecuteDownloadDatasetError() throws JsonProcessingException {
-        when(restServices.downloadData(any(), any(), any(), any(), any(), any(), any(), any(), any(), any()))
+        when(downloadAdmissionService.submit(any()))
                 .thenThrow(new RuntimeException("Error while getting dataset"));
 
         ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
@@ -87,8 +103,21 @@ public class RestApiTest {
         InlineValue error = (InlineValue) results.get(InlineResponseKeyEnum.MESSAGE.getValue());
         assertEquals("Error while getting dataset", error.message());
 
-        // No job was submitted, so the user must not be told their data is being processed
+        // No job was submitted, so the user must not be told their data is being processed.
+        // The admission service owns that email now, so nothing here may send one either.
         verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    public void testExecuteAtTheDownloadLimitLetsTheExceptionPropagate() throws JsonProcessingException {
+        DownloadLimitExceededException limitExceeded = new DownloadLimitExceededException(10);
+        when(downloadAdmissionService.submit(any())).thenThrow(limitExceeded);
+
+        // Unlike a generic failure, this must reach GlobalExceptionHandler as a real 429 -
+        // not be swallowed into the 200-wrapped "Error while getting dataset" response.
+        DownloadLimitExceededException thrown = assertThrows(DownloadLimitExceededException.class,
+                () -> restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest));
+        assertEquals(limitExceeded.getMessage(), thrown.getMessage());
     }
 
     @Test
