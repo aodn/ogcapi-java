@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.parser.elastic;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.opengis.filter.Filter;
@@ -28,6 +29,10 @@ public class OrImpl extends QueryHandler implements Or {
      */
     private static List<Query> collectQueries(Filter filter) {
         if (filter instanceof OrImpl orFilter) {
+            // Keep collapsed membership queries (e.g. dataset_group IN) intact; flatten bool/should only.
+            if (orFilter.getQuery() != null && !orFilter.getQuery().isBool()) {
+                return List.of(orFilter.getQuery());
+            }
             return orFilter.getChildren().stream()
                     .flatMap(child -> collectQueries(child).stream())
                     .toList();
@@ -40,10 +45,39 @@ public class OrImpl extends QueryHandler implements Or {
         return List.of();
     }
 
+    /**
+     * GeoTools compiles {@code property IN (v1, v2)} as {@code or(equals...)} even for one value.
+     * If every child is equality on the same field that implements membership, emit that IN query.
+     */
+    private static Query collapseToInQuery(List<Filter> filters) {
+        if (filters.isEmpty()) {
+            return null;
+        }
+
+        List<PropertyEqualToImpl<?>> equals = new ArrayList<>();
+        for (Filter filter : filters) {
+            if (filter instanceof PropertyEqualToImpl<?> equal
+                    && equal.getField() != null
+                    && equal.getLiteralValue() != null) {
+                equals.add(equal);
+            } else {
+                return null;
+            }
+        }
+
+        CQLFieldsInterface field = equals.get(0).getField();
+        if (equals.stream().anyMatch(equal -> equal.getField() != field)) {
+            return null;
+        }
+
+        return field.getPropertyInQuery(equals.stream()
+                .map(PropertyEqualToImpl::getLiteralValue)
+                .toList());
+    }
+
 
     /**
      * Builds the Elasticsearch representation of an OR expression.
-     *
      * A single query is returned directly. Multiple queries are combined into
      * one flat bool/should query to avoid deeply nested bool queries for large
      * vocabulary selections.
@@ -51,6 +85,12 @@ public class OrImpl extends QueryHandler implements Or {
     private void buildQuery(List<Filter> filters) {
         if (filters.stream().anyMatch(OrImpl::containsElasticSetting)) {
             throw new IllegalArgumentException("Or combine with query setting do not make sense");
+        }
+
+        Query inQuery = collapseToInQuery(filters);
+        if (inQuery != null) {
+            this.query = inQuery;
+            return;
         }
 
         List<Query> queries = filters.stream()

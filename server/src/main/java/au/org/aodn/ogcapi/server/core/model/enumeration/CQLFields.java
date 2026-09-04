@@ -26,179 +26,217 @@ import java.util.stream.Stream;
  */
 public enum CQLFields implements CQLFieldsInterface {
         dataset_provider(
-                        StacSummeries.DatasetProvider.searchField,
-                        StacSummeries.DatasetProvider.displayField,
-                        null,
-                        null),
+                StacSummeries.DatasetProvider.searchField,
+                StacSummeries.DatasetProvider.displayField,
+                null,
+                null,
+                null),
         dataset_group(
                 StacSummeries.DatasetGroup.searchField,
                 StacSummeries.DatasetGroup.displayField,
-                literal -> datasetGroupTermsQuery(List.of(
-                        normalizeDatasetGroupTerm(literal))),
+                literal -> {
+                    // Exactly one item in the group and match exactly, ie. dataset_group = 'imos' match only
+                    // if the group is exactly ['imos'] not ['imos', 'other']
+                    String field = StacSummeries.DatasetGroup.searchField;
+                    Query term = TermQuery.of(query -> query
+                                    .field(field)
+                                    .value(normalizeDatasetGroupTerm(literal))
+                            )._toQuery();
+                    Query sizeOne = ScriptQuery.of(query -> query
+                                    .script(script -> script
+                                            .lang("painless")
+                                            .source("doc.containsKey('" + field + "') && !doc['" + field
+                                                    + "'].empty && doc['" + field + "'].size() == 1")))
+                            ._toQuery();
+                    return BoolQuery.of(query -> query.filter(term, sizeOne))._toQuery();
+                },
+                literals -> datasetGroupTermsQuery(literals.stream()
+                            .map(CQLFields::normalizeDatasetGroupTerm)
+                            .toList()),
                 null),
         update_frequency(
-                        StacSummeries.UpdateFrequency.searchField,
-                        StacSummeries.UpdateFrequency.displayField,
-                        null,
-                        null),
+                StacSummeries.UpdateFrequency.searchField,
+                StacSummeries.UpdateFrequency.displayField,
+                null,
+                null,
+                null),
         ai_update_frequency(
-                        StacSummeries.AiUpdateFrequency.searchField,
-                        StacSummeries.AiUpdateFrequency.displayField,
-                        null,
-                        null),
+                StacSummeries.AiUpdateFrequency.searchField,
+                StacSummeries.AiUpdateFrequency.displayField,
+                null,
+                null,
+                null),
         geometry(
-                        StacSummeries.Geometry.searchField,
-                        StacSummeries.Geometry.searchField,
-                        null,
-                        null),
+                StacSummeries.Geometry.searchField,
+                StacSummeries.Geometry.searchField,
+                null,
+                null,
+                null),
         bbox(
-                        StacSummeries.Geometry.searchField,
-                        StacSummeries.Geometry.displayField,
-                        null,
-                        null),
+                StacSummeries.Geometry.searchField,
+                StacSummeries.Geometry.displayField,
+                null,
+                null,
+                null),
         centroid(
-                        StacSummeries.GeometryNoLand.searchField,
-                        StacSummeries.GeometryNoLand.displayField,
-                        null,
-                        null),
+                StacSummeries.GeometryNoLand.searchField,
+                StacSummeries.GeometryNoLand.displayField,
+                null,
+                null,
+                null),
         centroid_nocache(
-                        StacSummeries.GeometryNoLand.searchField,
-                        StacSummeries.GeometryNoLand.displayField,
-                        null,
-                        null),
+                StacSummeries.GeometryNoLand.searchField,
+                StacSummeries.GeometryNoLand.displayField,
+                null,
+                null,
+                null),
         temporal(
-                        StacSummeries.Temporal.searchField,
-                        StacSummeries.Temporal.displayField,
-                        null,
-                        /*
-                         * You need to test this in elastic console, basically if end is null aka not
-                         * exist then set the value
-                         * to max, else convert the time to epochMilli secs and get the largest if
-                         * multiple exist,
-                         * so it means, when null it is on going and always, then follow by some valid
-                         * large end dates
-                         * desc order always make on going on top.
-                         * {
-                         * "_script": {
-                         * "type": "number",
-                         * "nested": {
-                         * "path": "summaries.temporal"
-                         * },
-                         * "script": {
-                         * "lang": "painless",
-                         * "source": """
-                         * if (doc['summaries.temporal.end'].size() == 0) {
-                         * return Double.MAX_VALUE;
-                         * }
-                         * else {
-                         * return doc['summaries.temporal.end'].stream()
-                         * .mapToLong(f -> f.toEpochMilli())
-                         * .max()
-                         * .getAsLong()
-                         * }
-                         * """
-                         * },
-                         * "order": "desc"
-                         * }
-                         * }
-                         */
-                        (order) -> new SortOptions.Builder().script(s -> s
-                                        .type(ScriptSortType.Number)
-                                        .nested(NestedSortValue.of(p -> p.path(StacSummeries.Temporal.sortField)))
-                                        .script(script -> script
-                                                        .lang("painless")
-                                                        .source("if (doc['" + StacSummeries.TemporalEnd.searchField
-                                                                        + "'].size() == 0) {" +
-                                                                        "  return Long.MAX_VALUE; " +
-                                                                        "     } " +
-                                                                        "     else {" +
-                                                                        "       return doc['"
-                                                                        + StacSummeries.TemporalEnd.searchField
-                                                                        + "'].stream()" +
-                                                                        "           .mapToLong(f -> f.toEpochMilli())" +
-                                                                        "           .max()" +
-                                                                        "           .getAsLong()" +
-                                                                        "     }"))
-                                        .order(order))),
+                StacSummeries.Temporal.searchField,
+                StacSummeries.Temporal.displayField,
+                null,
+                null,
+                /*
+                 * You need to test this in elastic console, basically if end is null aka not
+                 * exist then set the value
+                 * to max, else convert the time to epochMilli secs and get the largest if
+                 * multiple exist,
+                 * so it means, when null it is on going and always, then follow by some valid
+                 * large end dates
+                 * desc order always make on going on top.
+                 * {
+                 * "_script": {
+                 * "type": "number",
+                 * "nested": {
+                 * "path": "summaries.temporal"
+                 * },
+                 * "script": {
+                 * "lang": "painless",
+                 * "source": """
+                 * if (doc['summaries.temporal.end'].size() == 0) {
+                 * return Double.MAX_VALUE;
+                 * }
+                 * else {
+                 * return doc['summaries.temporal.end'].stream()
+                 * .mapToLong(f -> f.toEpochMilli())
+                 * .max()
+                 * .getAsLong()
+                 * }
+                 * """
+                 * },
+                 * "order": "desc"
+                 * }
+                 * }
+                 */
+                (order) -> new SortOptions.Builder().script(s -> s
+                                .type(ScriptSortType.Number)
+                                .nested(NestedSortValue.of(p -> p.path(StacSummeries.Temporal.sortField)))
+                                .script(script -> script
+                                                .lang("painless")
+                                                .source("if (doc['" + StacSummeries.TemporalEnd.searchField
+                                                                + "'].size() == 0) {" +
+                                                                "  return Long.MAX_VALUE; " +
+                                                                "     } " +
+                                                                "     else {" +
+                                                                "       return doc['"
+                                                                + StacSummeries.TemporalEnd.searchField
+                                                                + "'].stream()" +
+                                                                "           .mapToLong(f -> f.toEpochMilli())" +
+                                                                "           .max()" +
+                                                                "           .getAsLong()" +
+                                                                "     }"))
+                                .order(order))),
         title(
-                        StacBasicField.Title.searchField,
-                        StacBasicField.Title.displayField,
-                        null,
-                        (order) -> new SortOptions.Builder()
-                                        .field(f -> f.field(StacBasicField.Title.sortField).order(order))),
+                StacBasicField.Title.searchField,
+                StacBasicField.Title.displayField,
+                null,
+                null,
+                (order) -> new SortOptions.Builder()
+                                .field(f -> f.field(StacBasicField.Title.sortField).order(order))),
         description(
-                        StacBasicField.Description.searchField,
-                        StacBasicField.Description.displayField,
-                        null,
-                        null),
+                StacBasicField.Description.searchField,
+                StacBasicField.Description.displayField,
+                null,
+                null,
+                null),
         providers(
-                        StacBasicField.Providers.searchField,
-                        StacBasicField.Providers.displayField,
-                        null,
-                        null),
+                StacBasicField.Providers.searchField,
+                StacBasicField.Providers.displayField,
+                null,
+                null,
+                null),
         parameter_vocabs(
-                        StacBasicField.ParameterVocabs.searchField,
-                        StacBasicField.ParameterVocabs.displayField,
-                        null,
-                        vocabPrioritySortBuilder(StacBasicField.ParameterVocabs.searchField)),
+                StacBasicField.ParameterVocabs.searchField,
+                StacBasicField.ParameterVocabs.displayField,
+                null,
+                null,
+                vocabPrioritySortBuilder(StacBasicField.ParameterVocabs.searchField)),
         platform_vocabs(
-                        StacBasicField.PlatformVocabs.searchField,
-                        StacBasicField.PlatformVocabs.displayField,
-                        null,
-                        vocabPrioritySortBuilder(StacBasicField.PlatformVocabs.searchField)),
+                StacBasicField.PlatformVocabs.searchField,
+                StacBasicField.PlatformVocabs.displayField,
+                null,
+                null,
+                vocabPrioritySortBuilder(StacBasicField.PlatformVocabs.searchField)),
         ai_parameter_vocabs(
-                        StacSummeries.AiParameterVocabs.searchField,
-                        StacSummeries.AiParameterVocabs.displayField,
-                        null,
-                        null),
+                StacSummeries.AiParameterVocabs.searchField,
+                StacSummeries.AiParameterVocabs.displayField,
+                null,
+                null,
+                null),
         ai_platform_vocabs(
-                        StacSummeries.AiPlatformVocabs.searchField,
-                        StacSummeries.AiPlatformVocabs.displayField,
-                        null,
-                        null),
+                StacSummeries.AiPlatformVocabs.searchField,
+                StacSummeries.AiPlatformVocabs.displayField,
+                null,
+                null,
+                null),
         organisation_vocabs(
-                        StacBasicField.OrganisationVocabs.searchField,
-                        StacBasicField.OrganisationVocabs.displayField,
-                        null,
-                        null),
+                StacBasicField.OrganisationVocabs.searchField,
+                StacBasicField.OrganisationVocabs.displayField,
+                null,
+                null,
+                null),
         id(
-                        StacBasicField.UUID.searchField,
-                        StacBasicField.UUID.displayField,
-                        // Make sure if id match, it will show up as the first result
-                        (literal) -> MatchPhraseQuery.of(builder -> builder
-                                        .field(StacBasicField.UUID.searchField)
-                                        .query(literal)
-                                        .boost(100.0F))._toQuery(),
-                        (order) -> new SortOptions.Builder()
-                                        .field(f -> f.field(StacBasicField.UUID.sortField).order(order))),
+                StacBasicField.UUID.searchField,
+                StacBasicField.UUID.displayField,
+                // Make sure if id match, it will show up as the first result
+                (literal) -> MatchPhraseQuery.of(builder -> builder
+                                .field(StacBasicField.UUID.searchField)
+                                .query(literal)
+                                .boost(100.0F))._toQuery(),
+                null,
+                (order) -> new SortOptions.Builder()
+                                .field(f -> f.field(StacBasicField.UUID.sortField).order(order))),
         links(
-                        StacBasicField.Links.searchField,
-                        StacBasicField.Links.displayField,
-                        null,
-                        null),
+                StacBasicField.Links.searchField,
+                StacBasicField.Links.displayField,
+                null,
+                null,
+                null),
         links_airole_contains(
-                        StacBasicField.LinksAiRole.searchField,
-                        StacBasicField.LinksAiRole.displayField,
-                        (literal) -> NestedQuery.of(m -> m
-                                        .path(StacBasicField.Links.searchField)// "links"
-                                        .query(q -> q
-                                                        .term(t -> t
-                                                                        .field(StacBasicField.LinksAiRole.searchField)// "links.ai:role"
-                                                                        .value(literal))))
-                                        ._toQuery(),
-                        null),
+                StacBasicField.LinksAiRole.searchField,
+                StacBasicField.LinksAiRole.displayField,
+                (literal) -> NestedQuery.of(m -> m
+                                .path(StacBasicField.Links.searchField)// "links"
+                                .query(q -> q
+                                                .term(t -> t
+                                                                .field(StacBasicField.LinksAiRole.searchField)// "links.ai:role"
+                                                                .value(literal))))
+                                ._toQuery(),
+                null,
+                null),
         credit_contains(
-                        StacSummeries.Credits.searchField,
-                        StacSummeries.Credits.displayField,
-                        (literal) -> MatchPhraseQuery.of(m -> m// We want the words exact so need to add space in front and end
-                                        .field(StacSummeries.Credits.searchField)
-                                        .query(literal))._toQuery(),
-                        null),
+                StacSummeries.Credits.searchField,
+                StacSummeries.Credits.displayField,
+                (literal) -> MatchPhraseQuery.of(m -> m// We want the words exact so need to add space in front and end
+                                .field(StacSummeries.Credits.searchField)
+                                .query(literal))._toQuery(),
+                null,
+                null),
         status(
-                        StacSummeries.Status.searchField,
-                        StacSummeries.Status.displayField,
-                        null,
-                        null),
+                StacSummeries.Status.searchField,
+                StacSummeries.Status.displayField,
+                null,
+                null,
+                null),
         scope(
                 StacSummeries.Scope.searchField,
                 StacSummeries.Scope.displayField,
@@ -209,101 +247,115 @@ public enum CQLFields implements CQLFieldsInterface {
                                                 .field(StacSummeries.Scope.searchField)
                                                 .value(literal))))
                         ._toQuery(),
+                null,
                 null),
         score(
-                        CQLElasticSetting.score.getSetting(),
-                        CQLElasticSetting.score.getSetting(),
-                        null,
-                        (order) -> new SortOptions.Builder()
-                                        .field(f -> f.field(CQLElasticSetting.score.getSetting()).order(order))),
+                CQLElasticSetting.score.getSetting(),
+                CQLElasticSetting.score.getSetting(),
+                null,
+                null,
+                (order) -> new SortOptions.Builder()
+                    .field(f -> f.field(CQLElasticSetting.score.getSetting()).order(order))),
         // Rank score is an internal calculated score, it is different from the one use
         // by ElasticSearch,
         // @see es-indexer RankingService
         rank(
-                        StacSummeries.Score.searchField,
-                        StacSummeries.Score.displayField,
-                        null,
-                        (order) -> new SortOptions.Builder()
-                                        .field(f -> f.field(StacSummeries.Score.sortField).order(order))),
+                StacSummeries.Score.searchField,
+                StacSummeries.Score.displayField,
+                null,
+                null,
+                (order) -> new SortOptions.Builder()
+                                .field(f -> f.field(StacSummeries.Score.sortField).order(order))),
         fuzzy_title(
-                        null,
-                        StacBasicField.Title.displayField,
-                        (literal) -> MatchQuery.of(m -> m
-                                        .fuzziness("AUTO")
-                                        .field(StacBasicField.Title.searchField)
-                                        .prefixLength(4)// Use 4 to deal with NRMN short form may match NRM records
-                                        // Increase the relevance of matches in title
-                                        .boost(2.0F)
-                                        .operator(Operator.And)// ensure all terms are matched with fuzziness
-                                        .query(literal))._toQuery(),
-                        null),
+                null,
+                StacBasicField.Title.displayField,
+                (literal) -> MatchQuery.of(m -> m
+                                .fuzziness("AUTO")
+                                .field(StacBasicField.Title.searchField)
+                                .prefixLength(4)// Use 4 to deal with NRMN short form may match NRM records
+                                // Increase the relevance of matches in title
+                                .boost(2.0F)
+                                .operator(Operator.And)// ensure all terms are matched with fuzziness
+                                .query(literal))._toQuery(),
+                null,
+                null),
         fuzzy_desc(
-                        null,
-                        StacBasicField.Description.displayField,
-                        (literal) -> MatchQuery.of(m -> m
-                                        .fuzziness("AUTO")
-                                        .field(StacBasicField.Description.searchField)
-                                        .prefixLength(4)// Use 4 to deal with NRMN short form may match NRM records
-                                        .operator(Operator.And)// ensure all terms are matched with fuzziness
-                                        .query(literal))._toQuery(),
-                        null),
+                null,
+                StacBasicField.Description.displayField,
+                (literal) -> MatchQuery.of(m -> m
+                                .fuzziness("AUTO")
+                                .field(StacBasicField.Description.searchField)
+                                .prefixLength(4)// Use 4 to deal with NRMN short form may match NRM records
+                                .operator(Operator.And)// ensure all terms are matched with fuzziness
+                                .query(literal))._toQuery(),
+                null,
+                null),
         // Acronym match on the synonyms sub-fields (search-time expansion), e.g. "SOOP" -> "ships of opportunity".
         acronym_title(
-                        StacBasicField.Title.searchField + ".synonyms",
-                        StacBasicField.Title.displayField,
-                        (literal) -> MatchQuery.of(m -> m
-                                        .field(StacBasicField.Title.searchField + ".synonyms")
-                                        .operator(Operator.And)// all expanded terms must match
-                                        .boost(2.0F)// align with fuzzy_title weighting
-                                        .query(literal))._toQuery(),
-                        null),
+                StacBasicField.Title.searchField + ".synonyms",
+                StacBasicField.Title.displayField,
+                (literal) -> MatchQuery.of(m -> m
+                                .field(StacBasicField.Title.searchField + ".synonyms")
+                                .operator(Operator.And)// all expanded terms must match
+                                .boost(2.0F)// align with fuzzy_title weighting
+                                .query(literal))._toQuery(),
+                null,
+                null),
         acronym_desc(
-                        StacBasicField.Description.searchField + ".synonyms",
-                        StacBasicField.Description.displayField,
-                        (literal) -> MatchQuery.of(m -> m
-                                        .field(StacBasicField.Description.searchField + ".synonyms")
-                                        .operator(Operator.And)
-                                        .query(literal))._toQuery(),
-                        null),
+                StacBasicField.Description.searchField + ".synonyms",
+                StacBasicField.Description.displayField,
+                (literal) -> MatchQuery.of(m -> m
+                                .field(StacBasicField.Description.searchField + ".synonyms")
+                                .operator(Operator.And)
+                                .query(literal))._toQuery(),
+                null,
+                null),
         // Contains cloud-optimized data
         assets_summary(
-                        StacBasicField.AssetsSummary.searchField,
-                        StacBasicField.AssetsSummary.displayField,
-                        null,
-                        null),
+                StacBasicField.AssetsSummary.searchField,
+                StacBasicField.AssetsSummary.displayField,
+                null,
+                null,
+                null),
         // Fields for training ML keyword classification model and delivery mode
         // classification model
         themes(
-                        StacBasicField.Themes.searchField,
-                        StacBasicField.Themes.searchField,
-                        null,
-                        null),
+                StacBasicField.Themes.searchField,
+                StacBasicField.Themes.searchField,
+                null,
+                null,
+                null),
         statement(
-                        StacSummeries.Statement.searchField,
-                        StacSummeries.Statement.displayField,
-                        null,
-                        null),
+                StacSummeries.Statement.searchField,
+                StacSummeries.Statement.displayField,
+                null,
+                null,
+                null),
         creation(
-                        StacSummeries.Creation.searchField,
-                        StacSummeries.Creation.displayField,
-                        null,
-                        null),
+                StacSummeries.Creation.searchField,
+                StacSummeries.Creation.displayField,
+                null,
+                null,
+                null),
         revision(
-                        StacSummeries.Revision.searchField,
-                        StacSummeries.Revision.displayField,
-                        null,
-                        null),
+                StacSummeries.Revision.searchField,
+                StacSummeries.Revision.displayField,
+                null,
+                null,
+                null),
         citation(
-                        StacBasicField.Citation.searchField,
-                        StacBasicField.Citation.displayField,
-                        null,
-                        null),
+                StacBasicField.Citation.searchField,
+                StacBasicField.Citation.displayField,
+                null,
+                null,
+                null),
         license(
-                        StacBasicField.License.searchField,
-                        StacBasicField.License.displayField,
-                        null,
-                        null),
-                        ;
+                StacBasicField.License.searchField,
+                StacBasicField.License.displayField,
+                null,
+                null,
+                null),
+        ;
 
         private final String searchField;
 
@@ -312,33 +364,39 @@ public enum CQLFields implements CQLFieldsInterface {
         // do search
         @Getter
         private final Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder;
-
-        // We provided a default match query but there are cases where it isn't enough
-        // and need more complex
-        // match, one example is multiple field. Move this logic out of the parser make
-        // it easier to read
+        /*
+         * Override the default query for this field, e.g. dataset_group is a special case, it is a list of values, but it is not a property, so it cannot be used in getPropertyEqualToQuery()
+         */
         @Getter
         private final Function<String, Query> overridePropertyEqualsToQuery;
+        /*
+         * Override the default query for this field, e.g. dataset_group is a special case, it is a list of values, but it is not a property, so it cannot be used in getPropertyInQuery()
+         */
+        @Getter
+        private final Function<List<String>, Query> overridePropertyInQuery;
 
         @Getter
         private final List<String> displayField;
 
         CQLFields(String fields,
-                        String displayField,
-                        Function<String, Query> overridePropertyEqualsToQuery,
-                        Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
+                  String displayField,
+                  Function<String, Query> overridePropertyEqualsToQuery,
+                  Function<List<String>, Query> overridePropertyInQuery,
+                  Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
-                this(fields, List.of(displayField), overridePropertyEqualsToQuery, sortBuilder);
+                this(fields, List.of(displayField), overridePropertyEqualsToQuery, overridePropertyInQuery, sortBuilder);
         }
 
         CQLFields(String fields,
-                        List<String> displayField,
-                        Function<String, Query> overridePropertyEqualsToQuery,
-                        Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
+                  List<String> displayField,
+                  Function<String, Query> overridePropertyEqualsToQuery,
+                  Function<List<String>, Query> overridePropertyInQuery,
+                  Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
                 this.searchField = fields;
                 this.displayField = displayField;
                 this.overridePropertyEqualsToQuery = overridePropertyEqualsToQuery;
+                this.overridePropertyInQuery = overridePropertyInQuery;
                 this.sortBuilder = sortBuilder;
         }
 
@@ -356,7 +414,7 @@ public enum CQLFields implements CQLFieldsInterface {
                 return value.toLowerCase(Locale.ROOT).trim();
         }
 
-        // used by the dataset_group CQL filter only without boost
+        // used by dataset_group IN (...) without boost
         private static Query datasetGroupTermsQuery(List<String> values) {
                 List<FieldValue> terms = values.stream()
                         .filter(value -> !value.isBlank())
@@ -373,7 +431,7 @@ public enum CQLFields implements CQLFieldsInterface {
         /**
          * Expands a free-text term into dataset-group candidate values. For example, "csiro temperature" => ["csiro temperature", "csiro", "temperature"].
          * Unquoted input includes both the complete normalized input and its individual words. Double-quoted free-text input is treated as one exact value.
-         * Dataset-group CQL filters continue to use getPropertyEqualToQuery().
+         * Dataset-group equality uses getPropertyEqualToQuery(); membership uses getPropertyInQuery().
          */
         public static List<String> getDatasetGroupCandidates(
                 String literal,
@@ -423,6 +481,16 @@ public enum CQLFields implements CQLFieldsInterface {
                 } else {
                         return getOverridePropertyEqualsToQuery().apply(literal);
                 }
+        }
+
+        @Override
+        public Query getPropertyInQuery(List<String> literals) {
+            if(getOverridePropertyInQuery() == null) {
+                return null;
+            }
+            else {
+                return getOverridePropertyInQuery().apply(literals);
+            }
         }
 
         @Override
