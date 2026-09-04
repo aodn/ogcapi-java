@@ -485,8 +485,8 @@ public class RestApiTest extends BaseTestClass {
     @Test
     public void verifyCQLPropertyDatasetGroup() throws IOException {
         super.insertJsonToElasticRecordIndex(
-                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",   // Provider null
-                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // Provider is IMOS
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",   // dataset_group is aodn
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json"             // dataset_group is IMOS
         );
 
         ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='aodn'", Collections.class);
@@ -497,28 +497,43 @@ public class RestApiTest extends BaseTestClass {
                 "UUID matches");
     }
     /**
-     * Show that in case of dataset falls in multiple group, it works too
+     * Equals matches a single-group array only. IN matches any record that contains the group.
      * @throws IOException - Not expected to throw
      */
     @Test
     public void verifyCQLPropertyMultiDatasetGroup() throws IOException {
         super.insertJsonToElasticRecordIndex(
-                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",   // dataset_group null
-                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",             // dataset_group is IMOS,
-                "b9bf6b57-54a0-44b3-bd17-30ccfb2b246f.json"              //  dataset_group aims, imas
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",   // dataset_group aodn
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",             // dataset_group is IMOS
+                "b9bf6b57-54a0-44b3-bd17-30ccfb2b246f.json"              // dataset_group aims, imas
         );
 
         ResponseEntity<Collections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='imas'", Collections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "equals must not match a multi-group record");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='AIMS'", Collections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getCollections().size(),
+                "equals must not match a multi-group record");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group IN ('imas')", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
         assertEquals(
                 "b9bf6b57-54a0-44b3-bd17-30ccfb2b246f",
                 collections.getBody().getCollections().get(0).getId(),
                 "UUID matches");
 
-        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='AIMS'", Collections.class);
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group IN ('AIMS')", Collections.class);
         assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 1, only one record");
         assertEquals(
                 "b9bf6b57-54a0-44b3-bd17-30ccfb2b246f",
+                collections.getBody().getCollections().get(0).getId(),
+                "UUID matches");
+
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?filter=dataset_group='aodn'", Collections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "exact single-group still hits");
+        assertEquals(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62",
                 collections.getBody().getCollections().get(0).getId(),
                 "UUID matches");
     }

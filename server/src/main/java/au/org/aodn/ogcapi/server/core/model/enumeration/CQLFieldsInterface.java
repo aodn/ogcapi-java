@@ -19,4 +19,10 @@ public interface CQLFieldsInterface {
     Query getLikeQuery(String literal);
     Query getPropertyGreaterThanOrEqualsToQuery(String literal);
     Query getBoundingBoxQuery(TopLeftBottomRightGeoBounds tlbr);
+
+    /**
+     * Membership query for {@code property IN (v1, v2, ...)}. Null means the caller should
+     * keep the default OR of equals clauses.
+     */
+    Query getPropertyInQuery(List<String> literals);
 }

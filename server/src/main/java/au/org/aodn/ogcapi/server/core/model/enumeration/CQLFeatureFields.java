@@ -20,11 +20,13 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
             StacBasicField.UUID.searchField,
             StacBasicField.UUID.displayField,
             null,
+            null,
             (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.UUID.sortField).order(order))
     ),
     collection(
             StacBasicField.Collection.searchField,
             StacBasicField.Collection.displayField,
+            null,
             null,
             (order) -> new SortOptions.Builder().field(f -> f.field(StacBasicField.Collection.sortField).order(order))
     ),
@@ -32,11 +34,13 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
             "properties.time",
             "properties.time",
             null,
+            null,
             null
     ),
     count(
             "properties.count",
             "properties.count",
+            null,
             null,
             null
     ),
@@ -44,17 +48,20 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
             "geometry",
             "geometry",
             null,
+            null,
             (order) -> new SortOptions.Builder().field(f -> f.field("geometry.geometry.coordinates").order(order))
     ),
     lat(
             "properties.lat",
             "properties.lat",
             null,
+            null,
             (order) -> new SortOptions.Builder().field(f -> f.field("properties.lat").order(order))
     ),
     lng(
             "properties.lng",
             "properties.lng",
+            null,
             null,
             (order) -> new SortOptions.Builder().field(f -> f.field("properties.lng").order(order))
     );
@@ -76,23 +83,30 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
     @Getter
     private final Function<String, Query> overridePropertyEqualsToQuery;
 
+    // We provided a default match query but there are cases where it isn't enough and need more complex
+    // match, one example is multiple field. Move this logic out of the parser make it easier to read
+    @Getter
+    private final Function<List<String>, Query> overridePropertyInQuery;
 
     CQLFeatureFields(String fields,
                      String displayField,
                      Function<String, Query> overridePropertyEqualsToQuery,
+                     Function<List<String>, Query> overridePropertyInQuery,
                      Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
-        this(fields, List.of(displayField), overridePropertyEqualsToQuery, sortBuilder);
+        this(fields, List.of(displayField), overridePropertyEqualsToQuery, overridePropertyInQuery, sortBuilder);
     }
 
     CQLFeatureFields(String fields,
                      List<String> displayField,
                      Function<String, Query> overridePropertyEqualsToQuery,
+                     Function<List<String>, Query> overridePropertyInQuery,
                      Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
         this.searchField = fields;
         this.displayField = displayField;
         this.overridePropertyEqualsToQuery = overridePropertyEqualsToQuery;
+        this.overridePropertyInQuery = overridePropertyInQuery;
         this.sortBuilder = sortBuilder;
     }
 
@@ -125,6 +139,10 @@ public enum CQLFeatureFields implements CQLFieldsInterface {
     public Query getBoundingBoxQuery(TopLeftBottomRightGeoBounds tlbr) {
         return null;
     }
+
+    @Override
+    public Query getPropertyInQuery(List<String> literals) { return null; }
+
     /**
      * Given param, find any of those is not a valid CQLCollectionsField
      * @param args -

@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
+import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.opengis.filter.FilterVisitor;
@@ -15,6 +16,12 @@ public class PropertyEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends
     protected Boolean isMatchingCase;
     protected MultiValuedFilter.MatchAction matchAction;
 
+    @Getter
+    protected T field;
+
+    @Getter
+    protected String literalValue;
+
     public PropertyEqualToImpl(Expression expression1, Expression expression2, boolean isMatchingCase, MultiValuedFilter.MatchAction matchAction, Class<T> enumType) {
         this.expression1 = expression1;
         this.expression2 = expression2;
@@ -23,8 +30,10 @@ public class PropertyEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends
 
         if (expression1 instanceof AttributeExpressionImpl attribute && expression2 instanceof LiteralExpressionImpl literal) {
             T v = Enum.valueOf(enumType, attribute.toString().toLowerCase());
+            this.field = v;
+            this.literalValue = literal.toString();
             // It is not an Elastic setting, so normal route.
-            this.query = v.getPropertyEqualToQuery(literal.toString());
+            this.query = v.getPropertyEqualToQuery(this.literalValue);
         }
     }
 

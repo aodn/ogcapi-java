@@ -3,7 +3,9 @@ package au.org.aodn.ogcapi.server.core.parser.elastic;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
+import au.org.aodn.ogcapi.server.core.model.enumeration.StacBasicField;
 import au.org.aodn.ogcapi.server.core.model.enumeration.StacSummeries;
+import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.query_dsl.ChildScoreMode;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import org.geotools.filter.text.commons.CompilerUtil;
@@ -14,6 +16,8 @@ import org.opengis.filter.Filter;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -124,6 +128,101 @@ public class CQLToElasticFilterFactoryTest {
     }
 
     @Test
+    public void datasetGroupEqualsRequiresSingleValueArray() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "dataset_group='imas'",
+                newFactory());
+
+        PropertyEqualToImpl<?> equalFilter = assertInstanceOf(PropertyEqualToImpl.class, filter);
+        Query query = equalFilter.getQuery();
+        assertTrue(query.isBool());
+        List<Query> filters = query.bool().filter();
+        assertEquals(2, filters.size());
+
+        Query term = filters.stream().filter(Query::isTerm).findFirst().orElseThrow();
+        assertEquals(StacSummeries.DatasetGroup.searchField, term.term().field());
+        assertEquals("imas", term.term().value().stringValue());
+
+        Query script = filters.stream().filter(Query::isScript).findFirst().orElseThrow();
+        assertTrue(Objects.requireNonNull(script.script().script().source()).contains("size() == 1"));
+    }
+
+    @Test
+    public void datasetGroupInMatchesAnyArrayElement() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "dataset_group IN ('imas')",
+                newFactory());
+
+        OrImpl inFilter = assertInstanceOf(OrImpl.class, filter);
+        Query query = inFilter.getQuery();
+        assertTrue(query.isTerms(), "IN must be a terms membership query, not bool/should of exact equals");
+        assertEquals(StacSummeries.DatasetGroup.searchField, query.terms().field());
+        assertEquals(List.of("imas"), termValues(query));
+    }
+
+    @Test
+    public void datasetGroupInNormalizesAndCollectsAllLiterals() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "dataset_group IN ('AIMS', 'imas')",
+                newFactory());
+
+        OrImpl inFilter = assertInstanceOf(OrImpl.class, filter);
+        Query query = inFilter.getQuery();
+        assertTrue(query.isTerms());
+        assertEquals(StacSummeries.DatasetGroup.searchField, query.terms().field());
+        assertEquals(Set.of("aims", "imas"), Set.copyOf(termValues(query)));
+    }
+
+    @Test
+    public void datasetGroupEqualsOrOtherFieldIsNotCollapsedToTerms() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "dataset_group='imas' OR title='wave'",
+                newFactory());
+
+        OrImpl orFilter = assertInstanceOf(OrImpl.class, filter);
+        Query query = orFilter.getQuery();
+        assertTrue(query.isBool());
+        assertEquals(2, query.bool().should().size());
+        assertTrue(
+                query.bool().should().stream().noneMatch(Query::isTerms),
+                "Mixed OR must not collapse to a dataset_group terms query");
+    }
+
+    @Test
+    public void datasetGroupInOrOtherFieldKeepsTermsMembership() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "dataset_group IN ('imas') OR title='wave'",
+                newFactory());
+
+        OrImpl orFilter = assertInstanceOf(OrImpl.class, filter);
+        Query query = orFilter.getQuery();
+        assertTrue(query.isBool());
+        assertEquals(2, query.bool().should().size());
+        assertTrue(
+                query.bool().should().stream().anyMatch(Query::isTerms),
+                "dataset_group IN must remain a terms query when OR'd with another field");
+    }
+
+    @Test
+    public void idInRemainsATermsQueryOnUuid() throws CQLException {
+        Filter filter = CompilerUtil.parseFilter(
+                Language.ECQL,
+                "id IN ('516811d7-cd1e-207a-e0440003ba8c79dd')",
+                newFactory());
+
+        IdImpl<?> idFilter = assertInstanceOf(IdImpl.class, filter);
+        Query query = idFilter.getQuery();
+        assertTrue(query.isTerms());
+        assertEquals(StacBasicField.UUID.searchField, query.terms().field());
+        assertEquals(List.of("516811d7-cd1e-207a-e0440003ba8c79dd"), termValues(query));
+    }
+
+    @Test
     public void querySettingsCannotBeCombinedWithOr() {
         IllegalArgumentException settingFirst = assertThrows(
                 IllegalArgumentException.class,
@@ -158,5 +257,11 @@ public class CQLToElasticFilterFactoryTest {
                 .filter(query -> field.equals(query.range().date().field()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    private List<String> termValues(Query query) {
+        return query.terms().terms().value().stream()
+                .map(FieldValue::stringValue)
+                .collect(Collectors.toList());
     }
 }
