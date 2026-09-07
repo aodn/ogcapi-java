@@ -30,7 +30,8 @@ public enum CollectionProperty {
     platformVocabs("platform_vocabs"),
     organisationVocabs("organisation_vocabs"),
     aiPlatformVocabs("ai:platform_vocabs"),
-    datasetProvider("dataset_provider");
+    datasetProvider("dataset_provider"),
+    spatialExtents("spatial_extents");
 
     private final String value;
 

@@ -230,6 +230,10 @@ public interface Converter<F, T> {
                 collection.getProperties().put(CollectionProperty.geometry, m.getSummaries().getGeometry());
             }
 
+            if (m.getSummaries().getSpatialExtents() != null) {
+                collection.getProperties().put(CollectionProperty.spatialExtents, m.getSummaries().getSpatialExtents());
+            }
+
             if (m.getSummaries().getTemporal() != null) {
                 collection.getProperties().put(CollectionProperty.temporal, m.getSummaries().getTemporal());
             }

@@ -14,6 +14,7 @@ import au.org.aodn.stac.model.ExtentModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.stac.model.SummariesModel;
+import au.org.aodn.stac.model.SpatialExtentModel;
 import au.org.aodn.stac.model.ThemesModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CollectionProperty;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
@@ -30,6 +31,7 @@ import org.springframework.boot.autoconfigure.jackson.JacksonAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
 
@@ -312,5 +314,30 @@ public class StacToCollectionTest {
                 result,
                 CompilerUtil.parseFilter(Language.CQL, "score>=1.5 AND INTERSECTS(geometry,POLYGON ((104 -43, 163 -43, 163 -8, 104 -8, 104 -43)))", factory)
         );
+    }
+
+    @Test
+    public void verifySpatialExtentsInProperties() {
+        SpatialExtentModel extent = SpatialExtentModel.builder()
+                .description("Pelorus Reef")
+                .bbox(List.of(BigDecimal.valueOf(146.5), BigDecimal.valueOf(-18.5),
+                        BigDecimal.valueOf(146.5), BigDecimal.valueOf(-18.5)))
+                .build();
+        StacCollectionModel model = StacCollectionModel.builder()
+                .summaries(SummariesModel.builder().score(0).spatialExtents(List.of(extent)).build())
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) new StacToCollectionImpl().convert(model, null);
+        Assertions.assertEquals(List.of(extent), collection.getProperties().get(CollectionProperty.spatialExtents));
+    }
+
+    @Test
+    public void verifyNoSpatialExtentsNoProperty() {
+        StacCollectionModel model = StacCollectionModel.builder()
+                .summaries(SummariesModel.builder().score(0).build())
+                .build();
+
+        ExtendedCollection collection = (ExtendedCollection) new StacToCollectionImpl().convert(model, null);
+        Assertions.assertFalse(collection.getProperties().containsKey(CollectionProperty.spatialExtents));
     }
 }
