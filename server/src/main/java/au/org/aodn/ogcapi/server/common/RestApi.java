@@ -26,6 +26,7 @@ import jakarta.validation.constraints.Size;
 import org.apache.commons.lang3.NotImplementedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -51,6 +52,9 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
     @Autowired
     @Qualifier("FeaturesRestService")
     protected OGCApiService featuresService;
+
+    @Value("${ogcapi.collections.default-page-size:800}")
+    protected int defaultPageSize;
 
     @Autowired
     protected StacToCollections stacToCollection;
@@ -149,8 +153,6 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 @RequestParam(value = "crs", required = false, defaultValue = "https://epsg.io/4326") String crs,
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
                 @RequestParam(value = "filter", required = false) String filter,
-            @Parameter(in = ParameterIn.QUERY, description = "Max number of collections in the response, 1..10000, default 10")
-                @RequestParam(value = "limit", required = false) Integer limit,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "Sort by, property needs to valid in the CQL" ,schema=@Schema())
                 @Valid @RequestParam(value = "sortby", required = false, defaultValue = "-score,-rank") String sortBy) {
 
@@ -164,7 +166,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 // the same, we append the bbox parameter to the filter in case user use this parameter
                 filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), bbox, filter);
             }
-            filter = OGCApiService.processLimitParameter(limit, filter);
+            filter = OGCApiService.addDefaultPageSize(filter, defaultPageSize);
             return commonService.getCollectionList(
                     q,
                     filter,

@@ -6,6 +6,9 @@ server:
     min-response-size: 1024 # Minimum response size in bytes to compress
 
 ogcapi:
+  collections:
+    # page_size applied when the CQL filter has none, the portal's largest page
+    default-page-size: 800
   debug:
     elasticsearch-explain-enabled: false
   http-cache:
@@ -21,8 +24,8 @@ ogcapi:
 elasticsearch:
   index:
     name: dev_portal_records
-    # search_after batch for full-document / geometry / links queries
-    pageSize: 2200
+    # search_after batch for full-document / geometry / links queries, the portal's largest page
+    pageSize: 800
     # search_after batch when properties is a small field list (id, temporal, title, ...)
     lightweightPageSize: 7000
   vocabs_index:

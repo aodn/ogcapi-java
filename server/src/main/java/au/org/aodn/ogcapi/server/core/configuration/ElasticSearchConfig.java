@@ -64,7 +64,7 @@ public class ElasticSearchConfig {
                                       CacheNoLandGeometry cacheNoLandGeometry,
                                       ObjectMapper mapper,
                                       @Value("${elasticsearch.index.name}") String indexName,
-                                      @Value("${elasticsearch.index.pageSize:2200}") Integer pageSize,
+                                      @Value("${elasticsearch.index.pageSize:800}") Integer pageSize,
                                       @Value("${elasticsearch.index.lightweightPageSize:10000}") Integer lightweightPageSize,
                                       @Value("${elasticsearch.search_as_you_type.size:10}") Integer searchAsYouTypeSize) {
 

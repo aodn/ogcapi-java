@@ -232,6 +232,7 @@ public class BaseTestClass {
         // Check the number of doc store inside the ES instance is correct
         SearchRequest.Builder b = new SearchRequest.Builder()
                 .index(index)
+                .size(filenames.length)   // elastic returns 10 hits by default, tests may insert more files
                 .query(QueryBuilders.matchAll().build()._toQuery());
 
         SearchRequest request = b.build();
