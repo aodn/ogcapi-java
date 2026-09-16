@@ -54,10 +54,10 @@ public class GeometryUtils {
     @Setter
     protected static int centroidScale = 5;
 
-    // Create an ExecutorService with a fixed thread pool size
+    // Create an ExecutorService with a fixed thread pool size, at least 1 so a 1 cpu container can still start
     @Getter
     @Setter
-    protected static ExecutorService executorService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors() - 1);
+    protected static ExecutorService executorService = Executors.newFixedThreadPool(Math.max(1, Runtime.getRuntime().availableProcessors() - 1));
 
     protected static Logger logger = LoggerFactory.getLogger(GeometryUtils.class);
 

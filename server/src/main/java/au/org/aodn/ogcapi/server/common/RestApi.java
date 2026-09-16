@@ -149,6 +149,8 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 @RequestParam(value = "crs", required = false, defaultValue = "https://epsg.io/4326") String crs,
             @Parameter(in = ParameterIn.QUERY, description = "Filter expression")
                 @RequestParam(value = "filter", required = false) String filter,
+            @Parameter(in = ParameterIn.QUERY, description = "Max number of collections in the response, 1..10000, default 10")
+                @RequestParam(value = "limit", required = false) Integer limit,
             @Size(min=1) @Parameter(in = ParameterIn.QUERY, description = "Sort by, property needs to valid in the CQL" ,schema=@Schema())
                 @Valid @RequestParam(value = "sortby", required = false, defaultValue = "-score,-rank") String sortBy) {
 
@@ -162,6 +164,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 // the same, we append the bbox parameter to the filter in case user use this parameter
                 filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), bbox, filter);
             }
+            filter = OGCApiService.processLimitParameter(limit, filter);
             return commonService.getCollectionList(
                     q,
                     filter,

@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.core.service;
 
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
+import au.org.aodn.ogcapi.server.core.exception.InvalidParameterException;
 import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
@@ -20,6 +21,7 @@ import org.springframework.http.ResponseEntity;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.regex.Pattern;
 
 /**
  *
@@ -27,6 +29,11 @@ import java.util.function.BiFunction;
 public abstract class OGCApiService {
 
     protected Logger logger = LoggerFactory.getLogger(RestApi.class);
+
+    // OGC API Records limit parameter: default and maximum from the bundled spec
+    public static final int DEFAULT_LIMIT = 10;
+    public static final int MAX_LIMIT = 10000;
+    protected static final Pattern PAGE_SIZE_IN_FILTER = Pattern.compile("\\bpage_size\\s*=", Pattern.CASE_INSENSITIVE);
 
     @Autowired
     protected Search search;
@@ -173,5 +180,20 @@ public abstract class OGCApiService {
         else {
             return String.join(" AND ", filter, f);
         }
+    }
+
+    /**
+     * Rewrite limit as CQL page_size. limit wins over page_size in the filter, without either use the spec default.
+     */
+    public static String processLimitParameter(Integer limit, String filter) {
+        if (limit != null && (limit < 1 || limit > MAX_LIMIT)) {
+            throw new InvalidParameterException("limit must be between 1 and " + MAX_LIMIT);
+        }
+        boolean filterHasPageSize = filter != null && PAGE_SIZE_IN_FILTER.matcher(filter).find();
+        if (limit == null && filterHasPageSize) {
+            return filter;
+        }
+        String f = "page_size=" + (limit != null ? limit : DEFAULT_LIMIT);
+        return (filter == null || filter.isBlank()) ? f : String.join(" AND ", filter, f);
     }
 }

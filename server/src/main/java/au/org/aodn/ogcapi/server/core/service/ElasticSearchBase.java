@@ -354,12 +354,12 @@ public abstract class ElasticSearchBase {
                                                                    final Double score,
                                                                    final Long maxSize) {
         Supplier<SearchRequest.Builder> builderSupplier = buildCollectionSearchRequestSupplier(
-                queries, should, filters, properties, searchAfter, sortOptions, score, maxSize
+                queries, should, filters, properties, null, sortOptions, score, maxSize
         );
 
         try {
             log.info("Start search {} {}", ZonedDateTime.now(), Thread.currentThread().getName());
-            Iterable<Hit<ObjectNode>> response = pageableSearch(builderSupplier, ObjectNode.class, maxSize);
+            Iterable<Hit<ObjectNode>> response = pageableSearch(builderSupplier, ObjectNode.class, maxSize, searchAfter);
 
             SearchResult<StacCollectionModel> result = new SearchResult<>();
             result.collections = new ArrayList<>();
@@ -515,12 +515,19 @@ public abstract class ElasticSearchBase {
      *
      * @param requestBuilder, assume it is sorted with order, what order isn't important, as long as it is sorted
      * @param clazz - The type
+     * @param maxSize - Stop after this many hits, null means every hit
+     * @param searchAfter - Cursor for the first batch, later batches use the last hit's sort values. The supplier
+     *                    must not set it because the builder appends search_after values instead of replacing them
      * @return - The items that matches the query mentioned in the requestBuilder
      * @param <T> A generic type for Elastic query
      */
-    protected <T> Iterable<Hit<T>> pageableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize) {
+    protected <T> Iterable<Hit<T>> pageableSearch(Supplier<SearchRequest.Builder> requestBuilder, Class<T> clazz, Long maxSize, List<FieldValue> searchAfter) {
         try {
-            SearchRequest sr = requestBuilder.get().build();
+            SearchRequest.Builder first = requestBuilder.get();
+            if(searchAfter != null) {
+                first.searchAfter(searchAfter);
+            }
+            SearchRequest sr = first.build();
             log.debug("Final elastic search payload {}", sr);
 
             final AtomicLong count = new AtomicLong(0);
@@ -533,9 +540,9 @@ public abstract class ElasticSearchBase {
 
                 @Override
                 public boolean hasNext() {
-                    // No need continue if we already hit the end
-                    if(maxSize != null) {
-                        return count.get() < maxSize;
+                    // Stop once the caller's cap is reached, otherwise keep loading batches below
+                    if(maxSize != null && count.get() >= maxSize) {
+                        return false;
                     }
                     // If we hit the end, that means we have iterated to end of page.
                     if (index < response.get().hits().hits().size()) {

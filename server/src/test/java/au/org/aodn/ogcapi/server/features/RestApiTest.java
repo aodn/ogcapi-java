@@ -498,4 +498,101 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(154.0, bbox.get(0).get(2).doubleValue(), "Overall bounding box coor 3");
         assertEquals(-9.0, bbox.get(0).get(3).doubleValue(), "Overall bounding box coor 4");
     }
+
+    /**
+     * limit caps the collections in one response the same way filter=page_size does
+     */
+    @Test
+    public void verifyLimitCapsCollections() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?limit=1",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getCollections().size(), "limit=1 returns one record");
+        assertEquals(6, collections.getBody().getTotal(), "Total still counts every record");
+        assertEquals(3, collections.getBody().getSearchAfter().size(), "search_after given for the next page");
+    }
+
+    /**
+     * limit larger than one elastic batch keeps loading batches until the limit, test batch size is 4
+     */
+    @Test
+    public void verifyLimitSpansElasticBatches() throws IOException {
+        assertEquals(4, pageSize, "This test only works with small page");
+
+        super.insertJsonToElasticRecordIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?limit=5",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(5, Objects.requireNonNull(collections.getBody()).getCollections().size(), "limit=5 spans two batches of 4");
+        assertEquals(6, collections.getBody().getTotal(), "Total still counts every record");
+    }
+
+    /**
+     * An explicit limit wins over page_size in the filter
+     */
+    @Test
+    public void verifyLimitOverridesFilterPageSize() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
+                "19da2ce7-138f-4427-89de-a50c724f5f54.json",
+                "516811d7-cd1e-207a-e0440003ba8c79dd.json",
+                "7709f541-fc0c-4318-b5b9-9053aa474e0e.json",
+                "bc55eff4-7596-3565-e044-00144fdd4fa6.json",
+                "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
+
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?limit=2&filter=page_size=3",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {
+                });
+
+        assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
+        assertEquals(2, Objects.requireNonNull(collections.getBody()).getCollections().size(), "limit wins over page_size");
+    }
+
+    /**
+     * limit outside 1..10000 is rejected
+     */
+    @Test
+    public void verifyLimitOutOfRangeRejected() {
+        ResponseEntity<String> response = testRestTemplate.exchange(
+                getBasePath() + "/collections?limit=0",
+                HttpMethod.GET,
+                null,
+                String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "limit=0 rejected");
+
+        response = testRestTemplate.exchange(
+                getBasePath() + "/collections?limit=10001",
+                HttpMethod.GET,
+                null,
+                String.class);
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode(), "limit above max rejected");
+    }
 }

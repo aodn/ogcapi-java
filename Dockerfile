@@ -6,6 +6,9 @@ ENV MAX_HEAP_PERCENTAGE=70
 COPY ./server/target/ogcapi-java-server-*-exec.jar app.jar
 ENTRYPOINT ["/bin/sh", "-c", "java \
     -XX:MaxRAMPercentage=${MAX_HEAP_PERCENTAGE} \
+    -XX:+ExitOnOutOfMemoryError \
+    -XX:+HeapDumpOnOutOfMemoryError \
+    -XX:HeapDumpPath=/tmp \
     -Duser.timezone=UTC \
     -Delasticsearch.index.name=${INDEX_NAME} \
     -Delasticsearch.cloud_optimized_index.name=${CO_INDEX_NAME} \
