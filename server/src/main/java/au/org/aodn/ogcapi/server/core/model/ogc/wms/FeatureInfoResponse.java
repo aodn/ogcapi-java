@@ -37,4 +37,9 @@ public class FeatureInfoResponse {
     @JacksonXmlProperty(localName = "FeatureInfo")
     @JacksonXmlElementWrapper(useWrapping = false)
     protected List<FeatureInfo> featureInfo;
+
+    // ncWMS put the FeatureInfo one level down, inside a Feature element
+    @JacksonXmlProperty(localName = "Feature")
+    @JacksonXmlElementWrapper(useWrapping = false)
+    protected List<Feature> feature;
 }

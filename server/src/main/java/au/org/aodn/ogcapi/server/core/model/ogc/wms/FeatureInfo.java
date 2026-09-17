@@ -10,6 +10,9 @@ import java.time.ZonedDateTime;
 @Getter
 @Setter
 public class FeatureInfo {
+    @JacksonXmlProperty(localName = "id")
+    protected String id;
+
     @JacksonXmlProperty(localName = "time")
     protected ZonedDateTime time;
 

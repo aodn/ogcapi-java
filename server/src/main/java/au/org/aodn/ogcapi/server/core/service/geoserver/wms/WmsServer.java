@@ -42,6 +42,9 @@ import static au.org.aodn.ogcapi.server.core.util.GeoserverUtils.*;
 
 @Slf4j
 public class WmsServer {
+    // Max chars of a geoserver response body we put in the log
+    protected static final int LOG_BODY_LIMIT = 2000;
+
     protected final XmlMapper xmlMapper;
 
     @Autowired
@@ -430,34 +433,115 @@ public class WmsServer {
 
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
 
-        if (mapServerUrl.isPresent()) {
-            List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), collectionId, request);
-            // Try one by one, we exit when any works
-            for (String url : urls) {
-                ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class), String.class, pretendUserEntity);
-                if (response.getStatusCode().is2xxSuccessful()) {
-                    // Now try to unify the return
-                    if (MediaType.TEXT_HTML.isCompatibleWith(response.getHeaders().getContentType())) {
-                        String html = response.getBody();
-                        // This is a simple trick to check if the html is in fact empty body, if empty
-                        // try another url
-                        if (html != null && (html.contains("class=\"feature\"") || html.contains("class=\"featureInfo\""))) {
-                            // Some source strangely encode the html tags
-                            return FeatureInfoResponse.builder()
-                                    .html(HtmlUtils.htmlUnescape(html))
-                                    .build();
-                        }
-                    } else if (MediaType.APPLICATION_XML.isCompatibleWith(response.getHeaders().getContentType())) {
-                        FeatureInfoResponse r = xmlMapper.readValue(response.getBody(), FeatureInfoResponse.class);
-                        //  give another url a chance
-                        if (!r.getFeatureInfo().isEmpty()) {
-                            return r;
-                        }
+        if (mapServerUrl.isEmpty()) {
+            log.warn("GetFeatureInfo no wms server url for uuid {} layer {}", collectionId, request.getLayerName());
+            return null;
+        }
+
+        List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), collectionId, request);
+
+        if (urls == null || urls.isEmpty()) {
+            log.warn("GetFeatureInfo cannot build query url from {} for uuid {} layer {}", mapServerUrl.get(), collectionId, request.getLayerName());
+            return null;
+        }
+
+        log.debug("GetFeatureInfo request uuid {} layer {} x {} y {} width {} height {} bbox {}",
+                collectionId, request.getLayerName(), request.getX(), request.getY(),
+                request.getWidth(), request.getHeight(), request.getBbox());
+
+        // Try one by one, we exit when any works
+        for (String url : urls) {
+            log.debug("GetFeatureInfo call geoserver {}", url);
+            ResponseEntity<String> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class), String.class, pretendUserEntity);
+            String body = response.getBody();
+
+            log.debug("GetFeatureInfo response status {} content-type {} body length {}",
+                    response.getStatusCode(), response.getHeaders().getContentType(),
+                    body == null ? 0 : body.length());
+            log.debug("GetFeatureInfo response body {}", truncateForLog(body));
+
+            if (response.getStatusCode().is2xxSuccessful()) {
+                // Now try to unify the return
+                if (MediaType.TEXT_HTML.isCompatibleWith(response.getHeaders().getContentType())) {
+                    // This is a simple trick to check if the html is in fact empty body, if empty
+                    // try another url
+                    if (body != null && (body.contains("class=\"feature\"") || body.contains("class=\"featureInfo\""))) {
+                        // Some source strangely encode the html tags
+                        log.debug("GetFeatureInfo html has feature marker, return it to caller");
+                        return FeatureInfoResponse.builder()
+                                .html(HtmlUtils.htmlUnescape(body))
+                                .build();
                     }
+                    log.debug("GetFeatureInfo html has no feature marker, skip url {}", url);
+                } else if (isXml(response.getHeaders().getContentType())) {
+                    FeatureInfoResponse r = xmlMapper.readValue(body, FeatureInfoResponse.class);
+                    flattenFeatures(r);
+                    //  give another url a chance
+                    if (r.getFeatureInfo() != null && !r.getFeatureInfo().isEmpty()) {
+                        log.debug("GetFeatureInfo xml parsed {} feature(s), return it to caller", r.getFeatureInfo().size());
+                        return r;
+                    }
+                    log.debug("GetFeatureInfo xml has no FeatureInfo element, skip url {}", url);
+                } else {
+                    log.warn("GetFeatureInfo unexpected content-type {} from {}", response.getHeaders().getContentType(), url);
                 }
+            } else {
+                log.warn("GetFeatureInfo failed with status {} from {}", response.getStatusCode(), url);
             }
         }
+
+        log.warn("GetFeatureInfo no usable response for uuid {} layer {}, caller gets empty body", collectionId, request.getLayerName());
         return null;
+    }
+
+    /**
+     * Check if the content type is some flavour of xml. Geoserver wms answer text/html, but ncwms answer
+     * text/xml, and some server answer application/xml, so we need to accept all of them.
+     *
+     * @param contentType - The content type from the response header, can be null
+     * @return - True if we can parse the body as xml
+     */
+    protected static boolean isXml(MediaType contentType) {
+        if (contentType == null) {
+            return false;
+        }
+        return MediaType.APPLICATION_XML.isCompatibleWith(contentType)
+                || MediaType.TEXT_XML.isCompatibleWith(contentType)
+                || contentType.getSubtype().endsWith("+xml");
+    }
+
+    /**
+     * ncWMS nest the FeatureInfo inside a Feature element, one Feature per layer. Move them up to the top
+     * level list so the response looks the same no matter which server answered.
+     *
+     * @param response - The parsed response, changed in place
+     */
+    protected static void flattenFeatures(FeatureInfoResponse response) {
+        if (response.getFeatureInfo() != null && !response.getFeatureInfo().isEmpty()) {
+            return;
+        }
+        if (response.getFeature() == null) {
+            return;
+        }
+        response.setFeatureInfo(
+                response.getFeature()
+                        .stream()
+                        .filter(f -> f.getFeatureInfo() != null)
+                        .flatMap(f -> f.getFeatureInfo().stream())
+                        .toList());
+    }
+
+    /**
+     * Cut a response body down to a size that is safe to put in the log.
+     *
+     * @param body - The raw response body, can be null
+     * @return - The body, cut at 2000 chars
+     */
+    protected static String truncateForLog(String body) {
+        if (body == null) {
+            return null;
+        }
+        return body.length() <= LOG_BODY_LIMIT ? body : body.substring(0, LOG_BODY_LIMIT) + "... [truncated]";
     }
 
     /**
