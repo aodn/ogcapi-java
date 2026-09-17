@@ -9,6 +9,7 @@ import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.stac.model.LinkModel;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wms.DescribeLayerResponse;
+import au.org.aodn.ogcapi.server.core.model.ogc.wms.FeatureInfoResponse;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearchBase;
 import au.org.aodn.ogcapi.server.core.service.Search;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.WfsDefaultParam;
@@ -306,6 +307,48 @@ public class WmsServerTest {
         assertEquals("imos:srs_ghrsst_l4_gamssa_url", value.getLayerDescription().getName());
         assertEquals("https://geoserver-123.aodn.org.au/geoserver/wfs?", value.getLayerDescription().getWfs());
         assertEquals("imos:srs_ghrsst_l4_gamssa_url", value.getLayerDescription().getQuery().getTypeName());
+    }
+
+    /**
+     * ncWMS answer text/xml and nest the FeatureInfo inside a Feature element, make sure we still pick it up.
+     */
+    @Test
+    public void verifyNcwmsFeatureInfoParseCorrect() throws JsonProcessingException {
+        FeatureInfoResponse value = wmsServer.xmlMapper.readValue(
+                """
+                        <FeatureInfoResponse>
+                            <longitude>95.33578364084919</longitude>
+                            <latitude>-20.364301475359852</latitude>
+                            <Feature>
+                                <layer>sea_surface_temperature</layer>
+                                <FeatureInfo>
+                                    <id>sea_surface_temperature</id>
+                                    <value>297.5120817180723</value>
+                                </FeatureInfo>
+                            </Feature>
+                        </FeatureInfoResponse>""", FeatureInfoResponse.class);
+
+        assertEquals(95.33578364084919, value.getLongitude());
+        assertEquals(1, value.getFeature().size());
+        assertEquals("sea_surface_temperature", value.getFeature().get(0).getLayer());
+
+        // Before flatten the top level list is empty, that is why the popup was empty
+        assertNull(value.getFeatureInfo());
+
+        WmsServer.flattenFeatures(value);
+
+        assertEquals(1, value.getFeatureInfo().size());
+        assertEquals("sea_surface_temperature", value.getFeatureInfo().get(0).getId());
+        assertEquals("297.5120817180723", value.getFeatureInfo().get(0).getValue());
+    }
+
+    @Test
+    public void verifyXmlContentTypeAccepted() {
+        assertTrue(WmsServer.isXml(MediaType.parseMediaType("text/xml;charset=ISO-8859-1")));
+        assertTrue(WmsServer.isXml(MediaType.parseMediaType("application/xml")));
+        assertTrue(WmsServer.isXml(MediaType.parseMediaType("application/vnd.ogc.gml+xml")));
+        assertFalse(WmsServer.isXml(MediaType.TEXT_HTML));
+        assertFalse(WmsServer.isXml(null));
     }
 
     /**

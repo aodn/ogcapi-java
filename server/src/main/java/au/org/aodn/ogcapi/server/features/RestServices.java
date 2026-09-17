@@ -93,8 +93,17 @@ public class RestServices extends OGCApiService {
 
     public ResponseEntity<FeatureInfoResponse> getWmsMapFeature(String collectionId, FeatureRequest request) {
         try {
-            return ResponseEntity.ok()
-                    .body(wmsServer.getMapFeatures(collectionId, request));
+            FeatureInfoResponse response = wmsServer.getMapFeatures(collectionId, request);
+
+            if (response == null) {
+                log.warn("GetFeatureInfo returns null for uuid {} layer {}, popup will render nothing", collectionId, request.getLayerName());
+            } else {
+                log.debug("GetFeatureInfo returns uuid {} layer {} html length {} featureInfo count {}",
+                        collectionId, request.getLayerName(),
+                        response.getHtml() == null ? 0 : response.getHtml().length(),
+                        response.getFeatureInfo() == null ? 0 : response.getFeatureInfo().size());
+            }
+            return ResponseEntity.ok().body(response);
         } catch (JsonProcessingException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
