@@ -56,14 +56,8 @@ public class BaseTestClass {
     @Value("${elasticsearch.index.name}")
     protected String record_index_name;
 
-    @Value("${elasticsearch.cloud_optimized_index.name}")
-    protected String co_data_index_name;
-
     @Value("${elasticsearch.vocabs_index.name}")
     protected String vocabs_index_name;
-
-    @Value("${elasticsearch.cloud_optimized_index.name}")
-    protected String data_index_name;
 
     protected String getBasePath() {
         return "http://localhost:" + port + "/api/v1/ogc";
@@ -79,8 +73,7 @@ public class BaseTestClass {
     public void initSchemas() {
         schemas = List.of(
                 Map.of("name", record_index_name, "mapping", "portal_records_index_schema.json"),
-                Map.of("name", vocabs_index_name, "mapping", "vocabs_index_schema.json"),
-                Map.of("name", data_index_name, "mapping", "data_index_schema.json")
+                Map.of("name", vocabs_index_name, "mapping", "vocabs_index_schema.json")
         );
     }
 
@@ -250,10 +243,6 @@ public class BaseTestClass {
 
     protected void insertJsonToElasticRecordIndex(String... filenames) throws IOException {
         this.insertJsonToElasticIndex(record_index_name, filenames);
-    }
-
-    protected void insertJsonToElasticCODataIndex(String... filenames) throws IOException {
-        this.insertJsonToElasticIndex(co_data_index_name, filenames);
     }
 
     protected Response getClusterHealth() throws IOException {

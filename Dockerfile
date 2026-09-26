@@ -8,7 +8,6 @@ ENTRYPOINT ["/bin/sh", "-c", "java \
     -XX:MaxRAMPercentage=${MAX_HEAP_PERCENTAGE} \
     -Duser.timezone=UTC \
     -Delasticsearch.index.name=${INDEX_NAME} \
-    -Delasticsearch.cloud_optimized_index.name=${CO_INDEX_NAME} \
     -Delasticsearch.vocabs_index.name=${VOCABS_INDEX_NAME} \
     -Dapi.host=${HOST}:${PORT} \
     -Dserver.port=${PORT} \
