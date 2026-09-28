@@ -117,7 +117,19 @@
 							<replacements>
 								<replacement>
 									<token>import au\.org\.aodn\.ogcapi\.coverages\.model\.TimeStamp</token>
-									<value></value>
+									<value />
+								</replacement>
+								<!--
+									Component "schema" generates class Schema, which clashes with
+									io.swagger.v3.oas.annotations.media.Schema in the same file.
+								-->
+								<replacement>
+									<token>import io\.swagger\.v3\.oas\.annotations\.media\.Schema;</token>
+									<value />
+								</replacement>
+								<replacement>
+									<token>@Schema</token>
+									<value>@io.swagger.v3.oas.annotations.media.Schema</value>
 								</replacement>
 							</replacements>
 						</configuration>

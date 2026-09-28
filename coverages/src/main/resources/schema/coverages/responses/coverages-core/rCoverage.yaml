@@ -1,13 +1,43 @@
-description: A full coverage.
+description: A coverage, including any self-describing information supported by the encoding.
 content:
+   application/vnd.cov+json:
+     schema:
+       type: string
+       # SwaggerUI Validation errors? $ref: 'https://schemas.opengis.net/covjson/1.0/coveragejson.json'
    application/json:
      schema:
-       $ref: '../../schemas/cis/coverage-schema.yaml'
+       anyOf:
+       - $ref: '../../schemas/cis/coverage-schema.yaml'
+       - $ref: '../../schemas/coverages-core/position-query-response.yaml'
    image/tiff; application=geotiff:
      schema:
        type: string
        format: binary
-   multipart/related:
+   application/x-netcdf:
+     schema:
+       type: string
+       format: binary
+   vnd.las:
+     schema:
+       type: string
+       format: binary
+   vnd.laszip:
+     schema:
+       type: string
+       format: binary
+   image/png:
+     schema:
+       type: string
+       format: binary
+   image/jxl:
+     schema:
+       type: string
+       format: binary
+   image/jp2:
+     schema:
+       type: string
+       format: binary
+   application/x-zarr:
      schema:
        type: string
        format: binary

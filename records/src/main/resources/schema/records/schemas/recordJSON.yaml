@@ -1,0 +1,36 @@
+---
+allOf:
+  - $ref: 'recordCommonProperties.yaml'
+  - type:
+      object
+    required:
+      - id
+    properties:
+      id:
+        description: |-
+          The unique identifier for this record.
+        oneOf:
+          - type: string
+          - type: integer
+      time:
+        $ref: 'time.yaml'
+      geometry:
+        $ref: 'https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/schemas/geometryGeoJSON.yaml'
+      conformsTo:
+        type: array
+        description: |-
+          The extensions/conformance classes used in this record.
+        items:
+          type: string
+      links:
+        description: |-
+          A list of static links associated with this record.
+        type: array
+        items:
+          $ref: 'link.yaml'
+      linkTemplates:
+        description: |-
+          A list of dynamic links associated with this record.
+        type: array
+        items:
+          $ref: 'linkTemplate.yaml'

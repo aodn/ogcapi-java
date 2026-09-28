@@ -1,0 +1,29 @@
+---
+allOf:
+  - $ref: 'https://schemas.opengis.net/ogcapi/features/part1/1.0/openapi/schemas/collection.yaml'
+  - $ref: 'catalogCommonProperties.yaml'
+  - type: object
+    properties:
+      itemType:
+        description: |-
+          If this catalog is a homogenous collection
+          of records then itemType is a string of fixed
+          value of record.
+          If this catalog is a homogenous collection
+          of other catalogs then itemType is a string of
+          fixed value of catalog.
+          If this catalog is a heterogenous collection
+          of records and catalogs then itemType is a array
+          indicated that item types of the members of this
+          collections (i.e. record and/or catalog).
+        oneOf:
+          - type: string
+            enum:
+              - record
+              - catalog
+          - type: array
+            items:
+              type: string
+              enum:
+                - record
+                - catalog
