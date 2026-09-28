@@ -42,6 +42,7 @@ import java.net.http.HttpClient;
 public class Config {
 
     public static final String DAS_REST_TEMPLATE = "dasRestTemplate";
+    public static final String DOWNLOAD_REST_TEMPLATE = "downloadRestTemplate";
     public static final String DAS_SSE_WEB_CLIENT = "dasSseWebClient";
 
     @Autowired
@@ -65,8 +66,20 @@ public class Config {
         );
     }
 
+    /**
+     * The default template, short timeouts so a down service cannot hang the caller.
+     */
     @Bean
     public RestTemplate createRestTemplate() {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(10000);   // 10 seconds connection timeout
+        factory.setReadTimeout(60000);      // 1 minute read timeout
+
+        return new RestTemplate(factory);
+    }
+
+    @Bean(name = DOWNLOAD_REST_TEMPLATE, defaultCandidate = false)
+    public RestTemplate createDownloadRestTemplate() {
         SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
         factory.setConnectTimeout(1200000); // 20 minutes connection timeout
         factory.setReadTimeout(1200000);    // 20 minutes read timeout for large downloads
