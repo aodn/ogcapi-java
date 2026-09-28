@@ -9,4 +9,4 @@ content:
          A JSON Schema document that defines all the sortables.
   text/html:
     schema:
-      type: string 
+      type: string

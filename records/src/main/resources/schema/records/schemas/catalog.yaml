@@ -24,6 +24,6 @@ allOf:
           - type: array
             items:
               type: string
-              enum: 
+              enum:
                 - record
                 - catalog

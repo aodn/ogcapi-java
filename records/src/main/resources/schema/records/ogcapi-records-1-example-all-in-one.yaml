@@ -245,36 +245,36 @@ components:
         selected.  The bounding box is provided as four or six numbers,
         depending on whether the coordinate reference system includes a
         vertical axis (height or depth):
-      
+
         * Lower left corner, coordinate axis 1
         * Lower left corner, coordinate axis 2
         * Minimum value, coordinate axis 3 (optional)
         * Upper right corner, coordinate axis 1
         * Upper right corner, coordinate axis 2
         * Maximum value, coordinate axis 3 (optional)
-      
+
         If the value consists of four numbers, the coordinate reference system
         is WGS 84 longitude/latitude (http://www.opengis.net/def/crs/OGC/1.3/
         CRS84) unless a different coordinate reference system is specified in
         the parameter `bbox-crs`.
-      
+
         If the value consists of six numbers, the coordinate reference system
         is WGS 84 longitude/latitude/ellipsoidal height (http://www.opengis.
         net/def/crs/OGC/0/CRS84h) unless a different coordinate reference
         system is specified in the parameter `bbox-crs`.
-      
+
         The query parameter `bbox-crs` is specified in
         OGC API - Features - Part 2: Coordinate Reference Systems by Reference.
-      
+
         For WGS 84 longitude/latitude the values are in most cases the sequence
         of minimum longitude, minimum latitude, maximum longitude and maximum
         latitude.  However, in cases where the box spans the antimeridian the
         first value (west-most box edge) is larger than the third value
         (east-most box edge).
-      
+
         If the vertical axis is included, the third and the sixth number are the
         bottom and the top of the 3-dimensional bounding box.
-      
+
         If a feature has multiple spatial geometry properties, it is the
         decision of the server whether only a single spatial geometry property
         is used to determine the extent or all relevant geometries.
@@ -314,10 +314,10 @@ components:
         * A bounded interval: "2018-02-12T00:00:00Z/2018-03-18T12:31:12Z"
         * Half-bounded intervals: "2018-02-12T00:00:00Z/.." or
           "../2018-03-18T12:31:12Z"
-      
+
         Only features that have a temporal property that intersects the value
         of `datetime` are selected.
-      
+
         If a feature has multiple temporal properties, it is the decision of the
         server whether only a single temporal property is used to determine
         the extent or all relevant temporal properties.
@@ -348,7 +348,7 @@ components:
     ids:
       name: ids
       in: query
-      description: 
+      description:
         The optional ids parameter allows a specific list of records, identified
         by their identifiers, to be fetched from a catalog.  Only records whose
         identifier matches one of the values listed for this parameter shall
@@ -387,12 +387,12 @@ components:
 
         The optional limit parameter limits the number of items that are
         presented in the response document.
-      
+
         Only items are counted that are on the first level of the collection
         in the response document.
         Nested objects contained within the explicitly requested items shall
         not be counted.
-      
+
         Minimum = 1. Maximum = 10000. Default = 10.
       name: limit
       in: query
@@ -409,7 +409,7 @@ components:
       in: query
       description: |-
         One or more identifiers that provide information about additional
-        semantics (constraints, conventions, extensions), in addition to 
+        semantics (constraints, conventions, extensions), in addition to
         those defined by the media type, that are associated with the
         target resource.
       required: false
@@ -594,28 +594,28 @@ components:
                   * Upper right corner, coordinate axis 1
                   * Upper right corner, coordinate axis 2
                   * Maximum value, coordinate axis 3 (optional)
-      
+
                   If the value consists of four numbers, the coordinate
                   reference system is WGS 84 longitude/latitude (http://www.
                   opengis.net/def/crs/OGC/1.3/CRS84) unless a different
                   coordinate reference system is specified in `crs`.
-      
+
                   If the value consists of six numbers, the coordinate
                   reference system is WGS 84 longitude/latitude/ellipsoidal
                   height (http://www.opengis.net/def/crs/OGC/0/CRS84h)
                   unless a different coordinate reference system is specified
                   in `crs`.
-      
+
                   For WGS 84 longitude/latitude the values are in most cases
                   the sequence of minimum longitude, minimum latitude, maximum
                   longitude and maximum latitude.  However, in cases where the
                   box spans the antimeridian the first value (west-most box
                   edge) is larger than the third value (east-most box edge).
-      
+
                   If the vertical axis is included, the third and the sixth
                   number are the bottom and the top of the 3-dimensional
                   bounding box.
-      
+
                   If a feature has multiple spatial geometry properties, it is
                   the decision of the server whether only a single spatial
                   geometry property is used to determine the extent or all
@@ -657,7 +657,7 @@ components:
                 One or more time intervals that describe the temporal extent
                 of the dataset.  In the Core only a single time interval is
                 supported.
-                
+
                 Extensions may support multiple intervals.
                 The first time interval describes the overall temporal extent
                 of the data. All subsequent time intervals describe more
@@ -672,7 +672,7 @@ components:
                   Begin and end times of the time interval. The timestamps are
                   in the temporal coordinate reference system specified in
                   `trs`. By default this is the Gregorian calendar.
-                  
+
                   The value `null` at start or end is supported and indicates
                   a half-bounded interval.
                 type: array
@@ -990,13 +990,13 @@ components:
             recordsArrayName:
               description: |-
                 If records are encoded in-line within the catalog object,
-                this member advertises the name of the array member that 
+                this member advertises the name of the array member that
                 contains the catalog records.  By default the name of the
-                records array is "records".  However, the name of this 
+                records array is "records".  However, the name of this
                 array member may be different.  A local resources catalog
                 is an example of a circumstance where the records array
                 member may be named something other than "records".  For
-                example, in the case of a local resource catalog at the 
+                example, in the case of a local resource catalog at the
                 /collections endpoint, the name of the records array is
                 "collections".
               type: string
@@ -1066,7 +1066,7 @@ components:
                 - type: array
                   items:
                     type: string
-                    enum: 
+                    enum:
                       - record
                       - catalog
     contact:
@@ -1102,7 +1102,7 @@ components:
             Graphic identifying a contact. The link relation should be `icon`
             and the media type should be an image media type.
           allOf:
-            - $ref: '#/components/schemas/link' 
+            - $ref: '#/components/schemas/link'
             - type: object
               required:
                 - rel
@@ -1124,7 +1124,7 @@ components:
                 description: The value is the phone number itself.
                 pattern: "^\\+[1-9]{1}[0-9]{3,14}$"
               roles:
-                $ref: '#/components/schemas/roles' 
+                $ref: '#/components/schemas/roles'
         emails:
           type: array
           description: Email addresses at which contact can be made.
@@ -1138,7 +1138,7 @@ components:
                 description: The value is the email number itself.
                 format: email
               roles:
-                $ref: '#/components/schemas/roles' 
+                $ref: '#/components/schemas/roles'
         addresses:
           type: array
           description: Physical location at which contact can be made.
@@ -1164,13 +1164,13 @@ components:
                 description: |-
                   Country of the physical address.  ISO 3166-1 is recommended.
               roles:
-                $ref: '#/components/schemas/roles' 
+                $ref: '#/components/schemas/roles'
         links:
           type: array
           description: On-line information about the contact.
           items:
             allOf:
-              - $ref: '#/components/schemas/link' 
+              - $ref: '#/components/schemas/link'
               - type: object
                 required:
                   - type
@@ -1183,7 +1183,7 @@ components:
             Supplemental instructions on how or when to contact the
             responsible party.
         roles:
-          $ref: '#/components/schemas/roles' 
+          $ref: '#/components/schemas/roles'
     defaultSortOrder:
       type: array
       items:
@@ -1290,7 +1290,7 @@ components:
           type: array
           description: |-
             One or more identifiers that provide information about additional
-            semantics (constraints, conventions, extensions), in addition to 
+            semantics (constraints, conventions, extensions), in addition to
             those defined by the media type, that are associated with the
             target resource.
           items:
@@ -1313,7 +1313,7 @@ components:
         - type: object
           required:
             - uriTemplate
-          properties: 
+          properties:
             uriTemplate:
               type: string
               description: |-
@@ -1522,13 +1522,13 @@ components:
     scheme:
       type: object
       required:
-        - scheme-id 
+        - scheme-id
         - namespace
       properties:
         scheme-id:
           type: string
           description: |-
-            An identifier for this namespace.  The identifier can be used as a 
+            An identifier for this namespace.  The identifier can be used as a
             short-form for the namespace.
         namespace:
           type: string
@@ -1766,7 +1766,7 @@ components:
                A JSON Schema document that defines all the sortables.
         text/html:
           schema:
-            type: string 
+            type: string
   securitySchemes:
     openIdConnect:
       type: "openIdConnect"

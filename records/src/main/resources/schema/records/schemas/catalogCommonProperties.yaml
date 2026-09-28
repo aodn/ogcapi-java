@@ -21,13 +21,13 @@ allOf:
       recordsArrayName:
         description: |-
           If records are encoded in-line within the catalog object,
-          this member advertises the name of the array member that 
+          this member advertises the name of the array member that
           contains the catalog records.  By default the name of the
-          records array is "records".  However, the name of this 
+          records array is "records".  However, the name of this
           array member may be different.  A local resources catalog
           is an example of a circumstance where the records array
           member may be named something other than "records".  For
-          example, in the case of a local resource catalog at the 
+          example, in the case of a local resource catalog at the
           /collections endpoint, the name of the records array is
           "collections".
         type: string

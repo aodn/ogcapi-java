@@ -40,5 +40,3 @@ properties:
       CQL2, by exposing a queryable (e.g. named `scheme`) and
       enumerating the list of schemes in the queryable's schema
       definition.
-
-

@@ -47,7 +47,7 @@ components:
     ids:
       name: ids
       in: query
-      description: 
+      description:
         The optional ids parameter allows a specific list of records, identified
         by their identifiers, to be fetched from a catalog.  Only records whose
         identifier matches one of the values listed for this parameter shall
@@ -86,7 +86,7 @@ components:
       in: query
       description: |-
         One or more identifiers that provide information about additional
-        semantics (constraints, conventions, extensions), in addition to 
+        semantics (constraints, conventions, extensions), in addition to
         those defined by the media type, that are associated with the
         target resource.
       required: false
@@ -181,13 +181,13 @@ components:
             recordsArrayName:
               description: |-
                 If records are encoded in-line within the catalog object,
-                this member advertises the name of the array member that 
+                this member advertises the name of the array member that
                 contains the catalog records.  By default the name of the
-                records array is "records".  However, the name of this 
+                records array is "records".  However, the name of this
                 array member may be different.  A local resources catalog
                 is an example of a circumstance where the records array
                 member may be named something other than "records".  For
-                example, in the case of a local resource catalog at the 
+                example, in the case of a local resource catalog at the
                 /collections endpoint, the name of the records array is
                 "collections".
               type: string
@@ -257,7 +257,7 @@ components:
                 - type: array
                   items:
                     type: string
-                    enum: 
+                    enum:
                       - record
                       - catalog
     contact:
@@ -293,7 +293,7 @@ components:
             Graphic identifying a contact. The link relation should be `icon`
             and the media type should be an image media type.
           allOf:
-            - $ref: '#/components/schemas/link' 
+            - $ref: '#/components/schemas/link'
             - type: object
               required:
                 - rel
@@ -315,7 +315,7 @@ components:
                 description: The value is the phone number itself.
                 pattern: "^\\+[1-9]{1}[0-9]{3,14}$"
               roles:
-                $ref: '#/components/schemas/roles' 
+                $ref: '#/components/schemas/roles'
         emails:
           type: array
           description: Email addresses at which contact can be made.
@@ -329,7 +329,7 @@ components:
                 description: The value is the email number itself.
                 format: email
               roles:
-                $ref: '#/components/schemas/roles' 
+                $ref: '#/components/schemas/roles'
         addresses:
           type: array
           description: Physical location at which contact can be made.
@@ -355,13 +355,13 @@ components:
                 description: |-
                   Country of the physical address.  ISO 3166-1 is recommended.
               roles:
-                $ref: '#/components/schemas/roles' 
+                $ref: '#/components/schemas/roles'
         links:
           type: array
           description: On-line information about the contact.
           items:
             allOf:
-              - $ref: '#/components/schemas/link' 
+              - $ref: '#/components/schemas/link'
               - type: object
                 required:
                   - type
@@ -374,7 +374,7 @@ components:
             Supplemental instructions on how or when to contact the
             responsible party.
         roles:
-          $ref: '#/components/schemas/roles' 
+          $ref: '#/components/schemas/roles'
     defaultSortOrder:
       type: array
       items:
@@ -493,7 +493,7 @@ components:
           type: array
           description: |-
             One or more identifiers that provide information about additional
-            semantics (constraints, conventions, extensions), in addition to 
+            semantics (constraints, conventions, extensions), in addition to
             those defined by the media type, that are associated with the
             target resource.
           items:
@@ -516,7 +516,7 @@ components:
         - type: object
           required:
             - uriTemplate
-          properties: 
+          properties:
             uriTemplate:
               type: string
               description: |-
@@ -725,13 +725,13 @@ components:
     scheme:
       type: object
       required:
-        - scheme-id 
+        - scheme-id
         - namespace
       properties:
         scheme-id:
           type: string
           description: |-
-            An identifier for this namespace.  The identifier can be used as a 
+            An identifier for this namespace.  The identifier can be used as a
             short-form for the namespace.
         namespace:
           type: string
@@ -969,4 +969,4 @@ components:
                A JSON Schema document that defines all the sortables.
         text/html:
           schema:
-            type: string 
+            type: string

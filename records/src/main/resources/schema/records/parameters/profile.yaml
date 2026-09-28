@@ -3,7 +3,7 @@ name: profile
 in: query
 description: |-
   One or more identifiers that provide information about additional
-  semantics (constraints, conventions, extensions), in addition to 
+  semantics (constraints, conventions, extensions), in addition to
   those defined by the media type, that are associated with the
   target resource.
 required: false

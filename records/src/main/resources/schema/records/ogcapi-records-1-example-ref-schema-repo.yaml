@@ -12,7 +12,7 @@ info:
     * Local Resources Catalog - Query Parameters
     * Local Resources Catalog - Sorting
     * OpenAPI 3.0
-    
+
     This example is a generic definition that uses path parameters to
     describe all catalogs and records.  The generic OpenAPI definition
     does not provide any details on the catalogs or the record content.

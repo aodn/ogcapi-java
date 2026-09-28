@@ -31,7 +31,7 @@ properties:
       Graphic identifying a contact. The link relation should be `icon`
       and the media type should be an image media type.
     allOf:
-      - $ref: 'link.yaml' 
+      - $ref: 'link.yaml'
       - type: object
         required:
           - rel

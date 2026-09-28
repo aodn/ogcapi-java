@@ -13,5 +13,3 @@ schema:
     type: string
 explode: false
 style: form
-
-
