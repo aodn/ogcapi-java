@@ -102,7 +102,7 @@
           "API"
         ],
         "operationId": "getAPICollections",
-        "summary": "Retrieve the list of collections available from this API implementation & deployment.",
+        "summary": "JSON enumeration of all the collections available from this API implementation & deployment (for inclusion in the API definition).",
         "parameters": [
           {
             "$ref": "#/components/parameters/f-metadata"
@@ -130,7 +130,7 @@
           "API"
         ],
         "operationId": "getAPICoverageCollections",
-        "summary": "Retrieve the list of coverages collections available from this API implementation & deployment.",
+        "summary": "JSON enumeration of the coverage collections available from this API implementation & deployment (for inclusion in the API definition).",
         "parameters": [
           {
             "$ref": "#/components/parameters/f-metadata"
@@ -158,7 +158,7 @@
           "API"
         ],
         "operationId": "getAPITileMatrixSets",
-        "summary": "Retrieve the list of shared TileMatrixSets available from this API implementation & deployment.",
+        "summary": "JSON enumeration of the shared TileMatrixSets available from this API implementation & deployment (for inclusion in the API definition).",
         "parameters": [
           {
             "$ref": "#/components/parameters/f-metadata"
@@ -266,13 +266,16 @@
             "$ref": "#/components/parameters/properties"
           },
           {
-            "$ref": "#/components/parameters/scale-factor"
+            "$ref": "#/components/parameters/exclude-properties"
           },
           {
-            "$ref": "#/components/parameters/scale-axes"
+            "$ref": "#/components/parameters/resolution"
           },
           {
-            "$ref": "#/components/parameters/scale-size"
+            "$ref": "#/components/parameters/width"
+          },
+          {
+            "$ref": "#/components/parameters/height"
           },
           {
             "$ref": "#/components/parameters/subset-crs"
@@ -289,31 +292,7 @@
         ],
         "responses": {
           "200": {
-            "description": "A full coverage.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/coverageSchema"
-                }
-              },
-              "image/tiff; application=geotiff": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              },
-              "multipart/related": {
-                "schema": {
-                  "type": "string",
-                  "format": "binary"
-                }
-              },
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
+            "$ref": "#/components/responses/Coverage"
           },
           "default": {
             "$ref": "#/components/responses/Exception"
@@ -321,176 +300,14 @@
         }
       }
     },
-    "/collections/{collectionId}/coverage/domainset": {
+    "/collections/{collectionId}/schema": {
       "get": {
         "tags": [
           "Coverage"
         ],
-        "summary": "Retrieve a coverage's domainset; use content negotiation to request HTML or JSON",
-        "description": "a coverage's domainset",
-        "operationId": "getCoverageDomainSet",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/collectionId-coverage"
-          },
-          {
-            "$ref": "#/components/parameters/subset"
-          },
-          {
-            "$ref": "#/components/parameters/bbox"
-          },
-          {
-            "$ref": "#/components/parameters/datetime"
-          },
-          {
-            "$ref": "#/components/parameters/crs"
-          },
-          {
-            "$ref": "#/components/parameters/bbox-crs"
-          },
-          {
-            "$ref": "#/components/parameters/subset-crs"
-          },
-          {
-            "$ref": "#/components/parameters/f-domainset"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A coverages domainset.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/domainSet"
-                }
-              },
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/components/responses/Exception"
-          }
-        }
-      }
-    },
-    "/collections/{collectionId}/coverage/rangetype": {
-      "get": {
-        "tags": [
-          "Coverage"
-        ],
-        "summary": "Retrieve a coverage's rangetype; use content negotiation to request HTML or JSON",
-        "description": "a coverage's rangetype",
-        "operationId": "getCoverageRangeType",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/collectionId-coverage"
-          },
-          {
-            "$ref": "#/components/parameters/f-rangetype"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A coverage's rangetype.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/rangeType"
-                }
-              },
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/components/responses/Exception"
-          }
-        }
-      }
-    },
-    "/collections/{collectionId}/coverage/rangeset": {
-      "get": {
-        "tags": [
-          "Coverage"
-        ],
-        "summary": "Retrieve a coverage's rangeset (i.e., the data record values only); use content negotiation to specify output format",
-        "description": "a coverage's rangeset",
-        "operationId": "getCoverageRangeSet",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/collectionId-coverage"
-          },
-          {
-            "$ref": "#/components/parameters/subset"
-          },
-          {
-            "$ref": "#/components/parameters/bbox"
-          },
-          {
-            "$ref": "#/components/parameters/datetime"
-          },
-          {
-            "$ref": "#/components/parameters/properties"
-          },
-          {
-            "$ref": "#/components/parameters/scale-factor"
-          },
-          {
-            "$ref": "#/components/parameters/scale-axes"
-          },
-          {
-            "$ref": "#/components/parameters/scale-size"
-          },
-          {
-            "$ref": "#/components/parameters/bbox-crs"
-          },
-          {
-            "$ref": "#/components/parameters/subset-crs"
-          },
-          {
-            "$ref": "#/components/parameters/crs"
-          },
-          {
-            "$ref": "#/components/parameters/f-rangeset"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "A coverage's range set.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/rangeSet"
-                }
-              },
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          },
-          "default": {
-            "$ref": "#/components/responses/Exception"
-          }
-        }
-      }
-    },
-    "/collections/{collectionId}/coverage/metadata": {
-      "get": {
-        "tags": [
-          "Coverage"
-        ],
-        "summary": "retrieve a coverage's metadata; use content negotiation to request HTML or GeoJSON",
-        "description": "a coverage's metadata",
-        "operationId": "getCoverageMetadata",
+        "summary": "Retrieve the schema of the coverage identified by {collectionId}",
+        "description": "Schema for coverage identified by {collectionId}.\nUse content negotiation to request required format.",
+        "operationId": "getCollectionSchema",
         "parameters": [
           {
             "$ref": "#/components/parameters/collectionId-coverage"
@@ -501,11 +318,11 @@
         ],
         "responses": {
           "200": {
-            "description": "A coverage's metadata.",
+            "description": "Collection schema describing all fields of the coverage",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/coverageSchema/oneOf/0/properties/metadata"
+                  "$ref": "#/components/schemas/schema"
                 }
               },
               "text/html": {
@@ -521,10 +338,10 @@
         }
       }
     },
-    "/collections/{collectionId}/coverage/tiles": {
+    "/collections/{collectionId}/tiles": {
       "get": {
         "tags": [
-          "Coverage Tiles"
+          "Tiled Coverage Data"
         ],
         "summary": "Retrieve the list of available coverage tilesets for the specified collection.",
         "operationId": ".collection.coverage.getTileSetsList",
@@ -552,10 +369,10 @@
         }
       }
     },
-    "/collections/{collectionId}/coverage/tiles/{tileMatrixSetId}": {
+    "/collections/{collectionId}/tiles/{tileMatrixSetId}": {
       "get": {
         "tags": [
-          "Coverage Tiles"
+          "Tiled Coverage Data"
         ],
         "summary": "Retrieve the coverage tileset metadata for the specified collection and tiling scheme (tile matrix set)",
         "operationId": ".collection.coverage.getTileSet",
@@ -586,12 +403,12 @@
         }
       }
     },
-    "/collections/{collectionId}/coverage/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}": {
+    "/collections/{collectionId}/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}": {
       "get": {
         "tags": [
-          "Coverage Tiles"
+          "Tiled Coverage Data"
         ],
-        "summary": "Retrieve coverage tiles",
+        "summary": "Retrieve tiled coverage data",
         "operationId": ".collection.coverage.getTile",
         "parameters": [
           {
@@ -683,15 +500,6 @@
             "description": "A hint indicating what the media type of the result of dereferencing the link should be.",
             "example": "application/geo+json"
           },
-          "templated": {
-            "type": "boolean",
-            "description": "This flag set to true if the link is a URL template."
-          },
-          "varBase": {
-            "description": "A base path to retrieve semantic information about the variables used in URL template.",
-            "type": "string",
-            "example": "/ogcapi/vars/"
-          },
           "hreflang": {
             "type": "string",
             "description": "A hint indicating what the language of the result of dereferencing the link should be.",
@@ -779,24 +587,20 @@
             "format": "date-time"
           },
           "numberMatched": {
-            "type": "integer",
-            "minimum": 0,
-            "example": 1
+            "$ref": "#/components/schemas/numberMatched"
           },
           "numberReturned": {
-            "type": "integer",
-            "minimum": 0,
-            "example": 1
+            "$ref": "#/components/schemas/numberReturned"
           },
           "collections": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/collectionInfo"
+              "$ref": "#/components/schemas/collectionDesc"
             }
           }
         }
       },
-      "collectionInfo": {
+      "collectionDesc": {
         "type": "object",
         "required": [
           "id",
@@ -817,6 +621,10 @@
             "type": "string",
             "description": "a description of the data in the collection",
             "example": "A Digital Elevation Model."
+          },
+          "attribution": {
+            "type": "string",
+            "title": "attribution for the collection"
           },
           "links": {
             "type": "array",
@@ -884,6 +692,12 @@
               "http://www.opengis.net/def/crs/EPSG/0/4326"
             ]
           },
+          "storageCrs": {
+            "description": "the native coordinate reference system (i.e., the most efficient CRS in which to request the data, possibly how the data is stored on the server); this is the default output coordinate reference system for Maps and Coverages",
+            "type": "string",
+            "default": "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
+            "example": "http://www.opengis.net/def/crs/OGC/1.3/CRS84"
+          },
           "dataType": {
             "allOf": [
               {
@@ -927,11 +741,39 @@
             "type": "object",
             "properties": {
               "bbox": {
-                "description": "One or more bounding boxes that describe the spatial extent of the dataset.\nIn the Core only a single bounding box is supported.\n\nExtensions may support additional areas.\nThe first bounding box describes the overall spatial\nextent of the data. All subsequent bounding boxes describe\nmore precise bounding boxes, e.g., to identify clusters of data.\nClients only interested in the overall spatial extent will\nonly need to access the first item in each array.",
+                "description": "One or more bounding boxes that describe the spatial extent of the dataset.\n\nThe first bounding box describes the overall spatial\nextent of the data. All subsequent bounding boxes describe\nmore precise bounding boxes, e.g., to identify clusters of data.\nClients only interested in the overall spatial extent will\nonly need to access the first item in each array.",
                 "type": "array",
                 "minItems": 1,
                 "items": {
-                  "description": "Each bounding box is provided as four or six numbers, depending on\nwhether the coordinate reference system includes a vertical axis\n(height or depth):\n\n* Lower left corner, coordinate axis 1\n* Lower left corner, coordinate axis 2\n* Minimum value, coordinate axis 3 (optional)\n* Upper right corner, coordinate axis 1\n* Upper right corner, coordinate axis 2\n* Maximum value, coordinate axis 3 (optional)\n\nIf the value consists of four numbers, the coordinate reference system is\nWGS 84 longitude/latitude (http://www.opengis.net/def/crs/OGC/1.3/CRS84)\nunless a different coordinate reference system is specified in a parameter `bbox-crs`.\n\nIf the value consists of six numbers, the coordinate reference system is WGS 84\nlongitude/latitude/ellipsoidal height (http://www.opengis.net/def/crs/OGC/0/CRS84h)\nunless a different coordinate reference system is specified in a parameter `bbox-crs`.\n\nFor WGS 84 longitude/latitude the values are in most cases the sequence of\nminimum longitude, minimum latitude, maximum longitude and maximum latitude.\nHowever, in cases where the box spans the antimeridian the first value\n(west-most box edge) is larger than the third value (east-most box edge).\n\nIf the vertical axis is included, the third and the sixth number are\nthe bottom and the top of the 3-dimensional bounding box.\n\nIf a feature has multiple spatial geometry properties, it is the decision of the\nserver whether only a single spatial geometry property is used to determine\nthe extent or all relevant geometries.",
+                  "description": "Each bounding box is provided as four or six numbers, depending on\nwhether the coordinate reference system includes a vertical axis\n(height or depth):\n\n* Lower left corner, coordinate axis 1\n* Lower left corner, coordinate axis 2\n* Minimum value, coordinate axis 3 (optional)\n* Upper right corner, coordinate axis 1\n* Upper right corner, coordinate axis 2\n* Maximum value, coordinate axis 3 (optional)\n\nIf the value consists of four numbers, the coordinate reference system is\nWGS 84 longitude/latitude (http://www.opengis.net/def/crs/OGC/1.3/CRS84)\nunless a different coordinate reference system is specified in `crs` property.\n\nIf the value consists of six numbers, the coordinate reference system is WGS 84\nlongitude/latitude/ellipsoidal height (http://www.opengis.net/def/crs/OGC/0/CRS84h)\nunless a different coordinate reference system is specified in `crs` property.\n\nFor WGS 84 longitude/latitude the values are in most cases the sequence of\nminimum longitude, minimum latitude, maximum longitude and maximum latitude.\nHowever, in cases where the box spans the antimeridian the first value\n(west-most box edge) is larger than the third value (east-most box edge).\n\nIf the vertical axis is included, the third and the sixth number are\nthe bottom and the top of the 3-dimensional bounding box.\n\nIf a feature has multiple spatial geometry properties, it is the decision of the\nserver whether only a single spatial geometry property is used to determine\nthe extent or all relevant geometries.",
+                  "type": "array",
+                  "oneOf": [
+                    {
+                      "minItems": 4,
+                      "maxItems": 4
+                    },
+                    {
+                      "minItems": 6,
+                      "maxItems": 6
+                    }
+                  ],
+                  "items": {
+                    "type": "number"
+                  },
+                  "example": [
+                    -180,
+                    -90,
+                    180,
+                    90
+                  ]
+                }
+              },
+              "storageCrsBbox": {
+                "description": "One or more bounding boxes that describe the spatial extent of the dataset in the storage (native) CRS (`storageCrs` property).\n\nThe first bounding box describes the overall spatial\nextent of the data. All subsequent bounding boxes describe\nmore precise bounding boxes, e.g., to identify clusters of data.\nClients only interested in the overall spatial extent will\nonly need to access the first item in each array.",
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "description": "Each bounding box is provided as four or six numbers, depending on\nwhether the coordinate reference system includes a vertical axis\n(height or depth):\n\n* Lower left corner, coordinate axis 1\n* Lower left corner, coordinate axis 2\n* Minimum value, coordinate axis 3 (optional)\n* Upper right corner, coordinate axis 1\n* Upper right corner, coordinate axis 2\n* Maximum value, coordinate axis 3 (optional)",
                   "type": "array",
                   "oneOf": [
                     {
@@ -955,7 +797,7 @@
                 }
               },
               "crs": {
-                "description": "Coordinate reference system of the coordinates in the spatial extent\n(property `bbox`). The default reference system is WGS 84 longitude/latitude.\nIn the Core the only other supported coordinate reference system is\nWGS 84 longitude/latitude/ellipsoidal height for coordinates with height.\nExtensions may support additional coordinate reference systems and add\nadditional enum values.",
+                "description": "Coordinate reference system of the coordinates of the `bbox` property.\nThe default reference system is WGS 84 longitude/latitude.\nWGS 84 longitude/latitude/ellipsoidal height for coordinates with height.\nFor non-terrestrial coordinate reference system, another CRS may be specified.",
                 "type": "string",
                 "enum": [
                   "http://www.opengis.net/def/crs/OGC/1.3/CRS84",
@@ -1025,7 +867,7 @@
                 "type": "array",
                 "minItems": 1,
                 "items": {
-                  "description": "Begin and end times of the time interval. The timestamps are in the\ntemporal coordinate reference system specified in `trs`. By default\nthis is the Gregorian calendar.\n\nThe value `null` for start or end time is supported and indicates a half-bounded time interval.",
+                  "description": "Begin and end times of the time interval. The timestamps are in the\ntemporal coordinate reference system specified in `trs`. By default\nthis is the Gregorian calendar, expressed using RFC 3339 section 5.6.\nNote that these times may be specified using time zone offsets to UTC time other than zero.\n\nThe value `null` for start or end time is supported and indicates a half-bounded time interval.",
                   "type": "array",
                   "minItems": 2,
                   "maxItems": 2,
@@ -1036,6 +878,7 @@
                   },
                   "example": [
                     "2011-11-11T12:22:11Z",
+                    "2011-11-11T08:22:11-04:00",
                     null
                   ]
                 }
@@ -1047,6 +890,46 @@
                   "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"
                 ],
                 "default": "http://www.opengis.net/def/uom/ISO-8601/0/Gregorian"
+              },
+              "grid": {
+                "type": "object",
+                "description": "Provides information about the limited availability of data within the collection organized as a grid (regular or irregular) along the temporal dimension.",
+                "properties": {
+                  "coordinates": {
+                    "description": "List of coordinates along the temporal dimension for which data organized as an irregular grid in the collection is available\n(e.g., \"2017-11-14T09:00Z\",\"2017-11-14T12:00Z\",\"2017-11-14T15:00Z\",\"2017-11-14T18:00Z\",\"2017-11-14T21:00Z\").",
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "example": [
+                      [
+                        "2020-11-12T12:15Z",
+                        "2020-11-12T12:30Z",
+                        "2020-11-12T12:45Z"
+                      ]
+                    ]
+                  },
+                  "cellsCount": {
+                    "description": "Number of samples available along the temporal dimension for data organized as a regular grid.\nFor values representing the whole area of contiguous cells spanning _resolution_ units along the dimension, this will be (_upperBound_ - _lowerBound_) / _resolution_.\nFor values representing infinitely small point cells spaced by _resolution_ units along the dimension, this will be (_upperBound_ - _lowerBound_) / _resolution_ + 1.",
+                    "type": "integer",
+                    "example": 50
+                  },
+                  "resolution": {
+                    "description": "Resolution of regularly gridded data along the temporal dimension in the collection",
+                    "oneOf": [
+                      {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      {
+                        "type": "number"
+                      }
+                    ],
+                    "example": "PT1H"
+                  }
+                }
               }
             }
           }
@@ -1068,7 +951,7 @@
                 {
                   "required": [
                     "interval",
-                    "crs"
+                    "definition"
                   ]
                 },
                 {
@@ -1107,14 +990,11 @@
                     },
                     "example": [
                       "2011-11-11T12:22:11Z",
+                      "2011-11-11T08:22:11-04:00",
                       32.5,
                       null
                     ]
                   }
-                },
-                "crs": {
-                  "type": "string",
-                  "description": "generic coordinate reference system suitable for any type of dimensions"
                 },
                 "trs": {
                   "type": "string",
@@ -1172,6 +1052,20 @@
                       ]
                     }
                   }
+                },
+                "definition": {
+                  "type": "string",
+                  "format": "uri",
+                  "description": "A URI to the definition of the measured or observed property corresponding to this dimension."
+                },
+                "unit": {
+                  "type": "string",
+                  "description": "The unit of measure in which the interval and/or grid values are expressed."
+                },
+                "unitLang": {
+                  "type": "string",
+                  "default": "UCUM",
+                  "description": "The language (or vocabulary) in which the unit is expressed (defaults to \"UCUM\" if not specified)."
                 }
               }
             }
@@ -1208,7 +1102,7 @@
                   "wkt": {
                     "allOf": [
                       {
-                        "description": "A string defining the CRS using the JSON encodng for Well-known text representation of coordinate reference systems 2.0"
+                        "description": "An object defining the CRS using the JSON encoding for Well-known text representation of coordinate reference systems 2.0"
                       },
                       {
                         "type": "object"
@@ -1233,7 +1127,7 @@
         ]
       },
       "dataType": {
-        "oneOf": [
+        "anyOf": [
           {
             "type": "string"
           },
@@ -1254,647 +1148,130 @@
         "example": "2017-08-17T08:05:32Z"
       },
       "numberReturned": {
-        "description": "The number of features in the feature collection.\nA server may omit this information in a response, if the information\nabout the number of features is not known or difficult to compute.\nIf the value is provided, the value shall be identical to the number\nof items in the \"features\" array.",
+        "description": "The number of elements in the response.\nA server may omit this information, if the information about the\nnumber of elements is not known or difficult to compute.\nIf the value is provided, the value shall be identical to the number\nof elements in the response.",
         "type": "integer",
         "minimum": 0,
         "example": 10
       },
       "numberMatched": {
-        "description": "The number of features of the feature type that match the selection\nparameters like `bbox`.",
+        "description": "The number of elements in the response that match the selection parameters like `bbox`.",
         "type": "integer",
         "minimum": 0,
         "example": 127
       },
-      "domainSet": {
+      "schema": {
+        "description": "Attributes of the features or rangetypes of a coverage. Defined by a subset of the JSON Schema for the properties of a feature",
         "type": "object",
-        "title": "domainSet",
-        "description": "The domainSet describes the *direct positions* of the coverage, i.e., the locations for which values are available.",
-        "oneOf": [
-          {
-            "required": [
-              "type",
-              "generalGrid"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "DomainSet"
-                ]
-              },
-              "generalGrid": {
-                "title": "General Grid",
-                "description": "A general n-D grid is defined through a sequence of axes, each of which can be of a particular axis type.",
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "type": {
-                    "enum": [
-                      "GeneralGridCoverage"
-                    ]
-                  },
-                  "id": {
-                    "type": "string"
-                  },
-                  "srsName": {
-                    "type": "string",
-                    "format": "uri"
-                  },
-                  "axisLabels": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  },
-                  "axis": {
-                    "type": "array",
-                    "items": {
-                      "type": "object",
-                      "oneOf": [
-                        {
-                          "title": "Index Axis",
-                          "description": "An Index Axis is an axis with only integer positions allowed.",
-                          "required": [
-                            "type",
-                            "axisLabel",
-                            "lowerBound",
-                            "upperBound"
-                          ],
-                          "additionalProperties": false,
-                          "properties": {
-                            "type": {
-                              "enum": [
-                                "IndexAxis"
-                              ]
-                            },
-                            "id": {
-                              "type": "string"
-                            },
-                            "axisLabel": {
-                              "type": "string"
-                            },
-                            "lowerBound": {
-                              "type": "number"
-                            },
-                            "upperBound": {
-                              "type": "number"
-                            }
-                          }
-                        },
-                        {
-                          "title": "Regular Axis",
-                          "description": "A Regular Axis is an axis where all direct coordinates are at a common distance from its immediate neighbors.",
-                          "required": [
-                            "type",
-                            "axisLabel",
-                            "lowerBound",
-                            "upperBound",
-                            "resolution",
-                            "uomLabel"
-                          ],
-                          "additionalProperties": false,
-                          "properties": {
-                            "type": {
-                              "enum": [
-                                "RegularAxis"
-                              ]
-                            },
-                            "id": {
-                              "type": "string"
-                            },
-                            "axisLabel": {
-                              "type": "string"
-                            },
-                            "lowerBound": {
-                              "type": "string"
-                            },
-                            "upperBound": {
-                              "type": "string"
-                            },
-                            "uomLabel": {
-                              "type": "string"
-                            },
-                            "resolution": {
-                              "type": "number"
-                            }
-                          }
-                        },
-                        {
-                          "title": "Irregular Axis",
-                          "description": "An irregular axis enumerates all possible direct position coordinates.",
-                          "required": [
-                            "type",
-                            "axisLabel",
-                            "uomLabel",
-                            "coordinate"
-                          ],
-                          "additionalProperties": false,
-                          "properties": {
-                            "type": {
-                              "enum": [
-                                "IrregularAxis"
-                              ]
-                            },
-                            "id": {
-                              "type": "string"
-                            },
-                            "axisLabel": {
-                              "type": "string"
-                            },
-                            "uomLabel": {
-                              "type": "string"
-                            },
-                            "coordinate": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  },
-                  "displacement": {
-                    "title": "Displacement",
-                    "description": "A Displacement is a warped axis nest where points on the grid all have their individual direct position coordinates. The sequenceRule element describes linearization order.",
-                    "type": "object",
-                    "oneOf": [
-                      {
-                        "required": [
-                          "type",
-                          "axisLabels",
-                          "uomLabels",
-                          "coordinates"
-                        ],
-                        "properties": {
-                          "type": {
-                            "enum": [
-                              "DisplacementAxisNest"
-                            ]
-                          },
-                          "id": {
-                            "type": "string"
-                          },
-                          "axisLabel": {
-                            "type": "string"
-                          },
-                          "srsName": {
-                            "type": "string",
-                            "format": "uri"
-                          },
-                          "axisLabels": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "uomLabels": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "coordinates": {
-                            "type": "array",
-                            "items": {
-                              "type": "array",
-                              "items": {
-                                "type": "string"
-                              }
-                            }
-                          }
-                        }
-                      },
-                      {
-                        "required": [
-                          "type",
-                          "axisLabels",
-                          "uomLabels",
-                          "coordinatesRef"
-                        ],
-                        "properties": {
-                          "type": {
-                            "enum": [
-                              "DisplacementAxisNestRef"
-                            ]
-                          },
-                          "id": {
-                            "type": "string"
-                          },
-                          "axisLabel": {
-                            "type": "string"
-                          },
-                          "srsName": {
-                            "type": "string",
-                            "format": "uri"
-                          },
-                          "axisLabels": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "uomLabels": {
-                            "type": "array",
-                            "items": {
-                              "type": "string"
-                            }
-                          },
-                          "coordinatesRef": {
-                            "type": "string",
-                            "format": "uri"
-                          }
-                        }
-                      }
-                    ]
-                  },
-                  "model": {
-                    "title": "Sensor model",
-                    "description": "A Transformation By Sensor Model is a transformation definition which is given by a SensorML 2.0 transformation specification.",
-                    "type": "object",
-                    "required": [
-                      "type",
-                      "sensorModelRef"
-                    ],
-                    "properties": {
-                      "type": {
-                        "enum": [
-                          "TransformationBySensorModel"
-                        ]
-                      },
-                      "id": {
-                        "type": "string"
-                      },
-                      "axisLabels": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "uomLabels": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      },
-                      "sensorModelRef": {
-                        "type": "string",
-                        "format": "uri"
-                      },
-                      "sensorInstanceRef": {
-                        "type": "string",
-                        "format": "uri"
-                      }
-                    }
-                  },
-                  "gridLimits": {
-                    "title": "Grid limits",
-                    "description": "This is the boundary of the array underlying the grid, given by its diagonal corner points in integer _60_3D. The grid limits can be omitted in case all axes are of type index axis, because then it repeats the grid information in a redundant way. The purpose of the axisLabels attribute, which lists the axis labels of all axisExtent elements in proper sequence, is to enforce axis sequence also in XML systems which do not preserve document order.",
-                    "type": "object",
-                    "required": [
-                      "type"
-                    ],
-                    "properties": {
-                      "type": {
-                        "enum": [
-                          "GridLimits"
-                        ]
-                      },
-                      "indexAxis": {
-                        "title": "Index Axis",
-                        "description": "An Index Axis is an axis with only integer positions allowed.",
-                        "type": "object",
-                        "required": [
-                          "type",
-                          "lowerBound",
-                          "upperBound"
-                        ],
-                        "additionalProperties": false,
-                        "properties": {
-                          "type": {
-                            "enum": [
-                              "IndexAxis"
-                            ]
-                          },
-                          "id": {
-                            "type": "string"
-                          },
-                          "axisLabel": {
-                            "type": "string"
-                          },
-                          "lowerBound": {
-                            "type": "number"
-                          },
-                          "upperBound": {
-                            "type": "number"
-                          }
-                        }
-                      },
-                      "srsName": {
-                        "type": "string",
-                        "format": "uri"
-                      },
-                      "axisLabels": {
-                        "type": "array",
-                        "items": {
-                          "type": "string"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
+        "required": [
+          "type",
+          "properties"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "object"
+            ]
+          },
+          "required": {
+            "description": "Implements 'multiplicity' by citing property 'name' defined as 'additionalProperties'",
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string"
             }
           },
-          {
-            "required": [
-              "type",
-              "directMultiPoint"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "DomainSet"
-                ]
-              },
-              "directMultiPoint": {
-                "oneOf": [
-                  {
-                    "required": [
-                      "type",
-                      "coordinates"
-                    ],
-                    "properties": {
-                      "type": {
-                        "enum": [
-                          "DirectMultiPoint"
-                        ]
-                      },
-                      "coordinates": {
-                        "type": "array",
-                        "items": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  },
-                  {
-                    "required": [
-                      "type",
-                      "coordinatesRef"
-                    ],
-                    "properties": {
-                      "type": {
-                        "enum": [
-                          "DirectMultiPointRef"
-                        ]
-                      },
-                      "coordinatesRef": {
-                        "type": "string",
-                        "format": "uri"
-                      }
-                    }
-                  }
-                ]
-              }
-            }
-          },
-          {
-            "required": [
-              "type",
-              "fileReference"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "DomainSetRef"
-                ]
-              },
-              "id": {
-                "type": "string",
-                "format": "uri"
-              },
-              "fileReference": {
-                "type": "string",
-                "format": "uri"
-              }
-            }
-          }
-        ]
-      },
-      "rangeType": {
-        "title": "rangeType",
-        "description": "The rangeType element describes the structure and semantics of a coverage's range values, including (optionally) restrictions on the interpolation allowed on such values.",
-        "type": "object",
-        "oneOf": [
-          {
-            "required": [
-              "type",
-              "field"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "DataRecord"
-                ]
-              },
-              "field": {
-                "type": "array",
-                "items": {
-                  "title": "DataRecord field",
-                  "description": "e.g. Quantity or Count",
-                  "type": "object",
-                  "required": [
-                    "type"
-                  ],
-                  "properties": {
-                    "type": {
-                      "enum": [
-                        "Quantity",
-                        "Count"
-                      ]
-                    },
-                    "id": {
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "name": {
-                      "type": "string"
-                    },
-                    "definition": {
-                      "type": "string",
-                      "format": "uri"
-                    },
-                    "uom": {
-                      "title": "units of measure",
-                      "description": "units of measure",
-                      "type": "object",
-                      "required": [
-                        "type",
-                        "code"
-                      ],
-                      "properties": {
-                        "type": {
-                          "enum": [
-                            "UnitReference"
-                          ]
-                        },
-                        "id": {
-                          "type": "string",
-                          "format": "uri"
-                        },
-                        "code": {
-                          "type": "string"
-                        }
-                      }
-                    },
-                    "constraint": {
-                      "title": "Constraint",
-                      "description": "Constraint",
-                      "type": "object",
-                      "required": [
-                        "type"
-                      ],
-                      "properties": {
-                        "type": {
-                          "enum": [
-                            "AllowedValues"
-                          ]
-                        },
-                        "id": {
-                          "type": "string",
-                          "format": "uri"
-                        },
-                        "interval": {
-                          "type": "array",
-                          "items": {
-                            "type": "string"
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-              },
-              "interpolationRestriction": {
-                "title": "interpolationRestriction",
-                "description": "Interpolation restriction",
-                "type": "object",
-                "required": [
-                  "type"
-                ],
-                "properties": {
-                  "type": {
-                    "enum": [
-                      "InterpolationRestriction"
-                    ]
-                  },
-                  "id": {
-                    "type": "string",
-                    "format": "uri"
-                  },
-                  "allowedInterpolation": {
-                    "type": "array",
-                    "items": {
-                      "type": "string",
-                      "format": "uri"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          {
-            "required": [
-              "type",
-              "fileReference"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "RangeTypeRef"
-                ]
-              },
-              "id": {
-                "type": "string",
-                "format": "uri"
-              },
-              "fileReference": {
-                "type": "string",
-                "format": "uri"
-              }
-            }
-          }
-        ]
-      },
-      "rangeSet": {
-        "title": "rangeSet",
-        "description": "The rangeSet lists a value for each of the coverage's direct positions. Values resemble the *payload* information of some particular direct positions. Values can be composite (with a single nesting level, i.e.: composites always consist of atomics), or atomic (emulated through single-component composites) whereby the sequence, structure, and meaning of every value is defined through the rangeType. Values can be represented in-line or by reference to an external file which may have any suitable encoding.",
-        "type": "object",
-        "oneOf": [
-          {
-            "required": [
-              "type",
-              "dataBlock"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "RangeSet"
-                ]
-              },
-              "dataBlock": {
-                "title": "dataBlock",
-                "description": "Data block objects",
-                "type": "object",
-                "required": [
-                  "type",
-                  "values"
-                ],
-                "properties": {
-                  "type": {
-                    "enum": [
-                      "VDataBlock",
-                      "CVDataBlock"
-                    ]
-                  },
-                  "values": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          {
-            "required": [
-              "type",
-              "fileReference"
-            ],
-            "properties": {
-              "type": {
-                "enum": [
-                  "RangeSetRef"
-                ]
-              },
-              "fileReference": {
-                "type": "array",
-                "items": {
+          "properties": {
+            "type": "object",
+            "default": {},
+            "additionalProperties": {
+              "description": "No property names are defined but any property name they should be described by JSON Schema. So 'additionalProperties' implements 'name'.",
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "description": {
+                  "description": "Implements 'description'",
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "array",
+                    "boolean",
+                    "integer",
+                    "null",
+                    "number",
+                    "object",
+                    "string"
+                  ]
+                },
+                "enum": {
+                  "description": "Implements 'acceptedValues'",
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {},
+                  "uniqueItems": true
+                },
+                "format": {
+                  "description": "Complements implementation of 'type'",
+                  "type": "string"
+                },
+                "contentMediaType": {
+                  "description": "Implements 'mediaType'",
+                  "type": "string"
+                },
+                "maximum": {
+                  "description": "Implements 'range'",
+                  "type": "number"
+                },
+                "exclusiveMaximum": {
+                  "description": "Implements 'range'",
+                  "type": "number"
+                },
+                "minimum": {
+                  "description": "Implements 'range'",
+                  "type": "number"
+                },
+                "exclusiveMinimum": {
+                  "description": "Implements 'range'",
+                  "type": "number"
+                },
+                "pattern": {
+                  "type": "string",
+                  "format": "regex"
+                },
+                "maxItems": {
+                  "description": "Implements 'upperMultiplicity'",
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "minItems": {
+                  "description": "Implements 'lowerMultiplicity'",
+                  "type": "integer",
+                  "default": 0,
+                  "minimum": 0
+                },
+                "x-ogc-definition": {
                   "type": "string",
                   "format": "uri"
+                },
+                "x-ogc-unit": {
+                  "type": "string"
+                },
+                "x-ogc-unitLang": {
+                  "type": "string",
+                  "format": "uri"
+                },
+                "x-ogc-propertySeq": {
+                  "type": "integer",
+                  "minimum": 0
                 }
               }
             }
           }
-        ]
+        }
       },
       "coverageSchema": {
         "title": "Coverage object",
@@ -2006,13 +1383,635 @@
                 }
               },
               "domainSet": {
-                "$ref": "#/components/schemas/domainSet"
+                "type": "object",
+                "title": "domainSet",
+                "description": "The domainSet describes the *direct positions* of the coverage, i.e., the locations for which values are available.",
+                "oneOf": [
+                  {
+                    "required": [
+                      "type",
+                      "generalGrid"
+                    ],
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "DomainSet"
+                        ]
+                      },
+                      "generalGrid": {
+                        "title": "General Grid",
+                        "description": "A general n-D grid is defined through a sequence of axes, each of which can be of a particular axis type.",
+                        "type": "object",
+                        "required": [
+                          "type"
+                        ],
+                        "additionalProperties": false,
+                        "properties": {
+                          "type": {
+                            "enum": [
+                              "GeneralGridCoverage"
+                            ]
+                          },
+                          "id": {
+                            "type": "string"
+                          },
+                          "srsName": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "axisLabels": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "axis": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "oneOf": [
+                                {
+                                  "title": "Index Axis",
+                                  "description": "An Index Axis is an axis with only integer positions allowed.",
+                                  "required": [
+                                    "type",
+                                    "axisLabel",
+                                    "lowerBound",
+                                    "upperBound"
+                                  ],
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "type": {
+                                      "enum": [
+                                        "IndexAxis"
+                                      ]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "axisLabel": {
+                                      "type": "string"
+                                    },
+                                    "lowerBound": {
+                                      "type": "number"
+                                    },
+                                    "upperBound": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                {
+                                  "title": "Regular Axis",
+                                  "description": "A Regular Axis is an axis where all direct coordinates are at a common distance from its immediate neighbors.",
+                                  "required": [
+                                    "type",
+                                    "axisLabel",
+                                    "lowerBound",
+                                    "upperBound",
+                                    "resolution",
+                                    "uomLabel"
+                                  ],
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "type": {
+                                      "enum": [
+                                        "RegularAxis"
+                                      ]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "axisLabel": {
+                                      "type": "string"
+                                    },
+                                    "lowerBound": {
+                                      "type": "string"
+                                    },
+                                    "upperBound": {
+                                      "type": "string"
+                                    },
+                                    "uomLabel": {
+                                      "type": "string"
+                                    },
+                                    "resolution": {
+                                      "type": "number"
+                                    }
+                                  }
+                                },
+                                {
+                                  "title": "Irregular Axis",
+                                  "description": "An irregular axis enumerates all possible direct position coordinates.",
+                                  "required": [
+                                    "type",
+                                    "axisLabel",
+                                    "uomLabel",
+                                    "coordinate"
+                                  ],
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "type": {
+                                      "enum": [
+                                        "IrregularAxis"
+                                      ]
+                                    },
+                                    "id": {
+                                      "type": "string"
+                                    },
+                                    "axisLabel": {
+                                      "type": "string"
+                                    },
+                                    "uomLabel": {
+                                      "type": "string"
+                                    },
+                                    "coordinate": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                }
+                              ]
+                            }
+                          },
+                          "displacement": {
+                            "title": "Displacement",
+                            "description": "A Displacement is a warped axis nest where points on the grid all have their individual direct position coordinates. The sequenceRule element describes linearization order.",
+                            "type": "object",
+                            "oneOf": [
+                              {
+                                "required": [
+                                  "type",
+                                  "axisLabels",
+                                  "uomLabels",
+                                  "coordinates"
+                                ],
+                                "properties": {
+                                  "type": {
+                                    "enum": [
+                                      "DisplacementAxisNest"
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "axisLabel": {
+                                    "type": "string"
+                                  },
+                                  "srsName": {
+                                    "type": "string",
+                                    "format": "uri"
+                                  },
+                                  "axisLabels": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "uomLabels": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "coordinates": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "array",
+                                      "items": {
+                                        "type": "string"
+                                      }
+                                    }
+                                  }
+                                }
+                              },
+                              {
+                                "required": [
+                                  "type",
+                                  "axisLabels",
+                                  "uomLabels",
+                                  "coordinatesRef"
+                                ],
+                                "properties": {
+                                  "type": {
+                                    "enum": [
+                                      "DisplacementAxisNestRef"
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "axisLabel": {
+                                    "type": "string"
+                                  },
+                                  "srsName": {
+                                    "type": "string",
+                                    "format": "uri"
+                                  },
+                                  "axisLabels": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "uomLabels": {
+                                    "type": "array",
+                                    "items": {
+                                      "type": "string"
+                                    }
+                                  },
+                                  "coordinatesRef": {
+                                    "type": "string",
+                                    "format": "uri"
+                                  }
+                                }
+                              }
+                            ]
+                          },
+                          "model": {
+                            "title": "Sensor model",
+                            "description": "A Transformation By Sensor Model is a transformation definition which is given by a SensorML 2.0 transformation specification.",
+                            "type": "object",
+                            "required": [
+                              "type",
+                              "sensorModelRef"
+                            ],
+                            "properties": {
+                              "type": {
+                                "enum": [
+                                  "TransformationBySensorModel"
+                                ]
+                              },
+                              "id": {
+                                "type": "string"
+                              },
+                              "axisLabels": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "uomLabels": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              },
+                              "sensorModelRef": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "sensorInstanceRef": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            }
+                          },
+                          "gridLimits": {
+                            "title": "Grid limits",
+                            "description": "This is the boundary of the array underlying the grid, given by its diagonal corner points in integer _60_3D. The grid limits can be omitted in case all axes are of type index axis, because then it repeats the grid information in a redundant way. The purpose of the axisLabels attribute, which lists the axis labels of all axisExtent elements in proper sequence, is to enforce axis sequence also in XML systems which do not preserve document order.",
+                            "type": "object",
+                            "required": [
+                              "type"
+                            ],
+                            "properties": {
+                              "type": {
+                                "enum": [
+                                  "GridLimits"
+                                ]
+                              },
+                              "indexAxis": {
+                                "title": "Index Axis",
+                                "description": "An Index Axis is an axis with only integer positions allowed.",
+                                "type": "object",
+                                "required": [
+                                  "type",
+                                  "lowerBound",
+                                  "upperBound"
+                                ],
+                                "additionalProperties": false,
+                                "properties": {
+                                  "type": {
+                                    "enum": [
+                                      "IndexAxis"
+                                    ]
+                                  },
+                                  "id": {
+                                    "type": "string"
+                                  },
+                                  "axisLabel": {
+                                    "type": "string"
+                                  },
+                                  "lowerBound": {
+                                    "type": "number"
+                                  },
+                                  "upperBound": {
+                                    "type": "number"
+                                  }
+                                }
+                              },
+                              "srsName": {
+                                "type": "string",
+                                "format": "uri"
+                              },
+                              "axisLabels": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string"
+                                }
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "type",
+                      "directMultiPoint"
+                    ],
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "DomainSet"
+                        ]
+                      },
+                      "directMultiPoint": {
+                        "oneOf": [
+                          {
+                            "required": [
+                              "type",
+                              "coordinates"
+                            ],
+                            "properties": {
+                              "type": {
+                                "enum": [
+                                  "DirectMultiPoint"
+                                ]
+                              },
+                              "coordinates": {
+                                "type": "array",
+                                "items": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          },
+                          {
+                            "required": [
+                              "type",
+                              "coordinatesRef"
+                            ],
+                            "properties": {
+                              "type": {
+                                "enum": [
+                                  "DirectMultiPointRef"
+                                ]
+                              },
+                              "coordinatesRef": {
+                                "type": "string",
+                                "format": "uri"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "type",
+                      "fileReference"
+                    ],
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "DomainSetRef"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "fileReference": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    }
+                  }
+                ]
               },
               "rangeSet": {
-                "$ref": "#/components/schemas/rangeSet"
+                "title": "rangeSet",
+                "description": "The rangeSet lists a value for each of the coverage's direct positions. Values resemble the *payload* information of some particular direct positions. Values can be composite (with a single nesting level, i.e.: composites always consist of atomics), or atomic (emulated through single-component composites) whereby the sequence, structure, and meaning of every value is defined through the rangeType. Values can be represented in-line or by reference to an external file which may have any suitable encoding.",
+                "type": "object",
+                "oneOf": [
+                  {
+                    "required": [
+                      "type",
+                      "dataBlock"
+                    ],
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "RangeSet"
+                        ]
+                      },
+                      "dataBlock": {
+                        "title": "dataBlock",
+                        "description": "Data block objects",
+                        "type": "object",
+                        "required": [
+                          "type",
+                          "values"
+                        ],
+                        "properties": {
+                          "type": {
+                            "enum": [
+                              "VDataBlock",
+                              "CVDataBlock"
+                            ]
+                          },
+                          "values": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "type",
+                      "fileReference"
+                    ],
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "RangeSetRef"
+                        ]
+                      },
+                      "fileReference": {
+                        "type": "array",
+                        "items": {
+                          "type": "string",
+                          "format": "uri"
+                        }
+                      }
+                    }
+                  }
+                ]
               },
               "rangeType": {
-                "$ref": "#/components/schemas/rangeType"
+                "title": "rangeType",
+                "description": "The rangeType element describes the structure and semantics of a coverage's range values, including (optionally) restrictions on the interpolation allowed on such values.",
+                "type": "object",
+                "oneOf": [
+                  {
+                    "required": [
+                      "type",
+                      "field"
+                    ],
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "DataRecord"
+                        ]
+                      },
+                      "field": {
+                        "type": "array",
+                        "items": {
+                          "title": "DataRecord field",
+                          "description": "e.g. Quantity or Count",
+                          "type": "object",
+                          "required": [
+                            "type"
+                          ],
+                          "properties": {
+                            "type": {
+                              "enum": [
+                                "Quantity",
+                                "Count"
+                              ]
+                            },
+                            "id": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "name": {
+                              "type": "string"
+                            },
+                            "definition": {
+                              "type": "string",
+                              "format": "uri"
+                            },
+                            "uom": {
+                              "title": "units of measure",
+                              "description": "units of measure",
+                              "type": "object",
+                              "required": [
+                                "type",
+                                "code"
+                              ],
+                              "properties": {
+                                "type": {
+                                  "enum": [
+                                    "UnitReference"
+                                  ]
+                                },
+                                "id": {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "code": {
+                                  "type": "string"
+                                }
+                              }
+                            },
+                            "constraint": {
+                              "title": "Constraint",
+                              "description": "Constraint",
+                              "type": "object",
+                              "required": [
+                                "type"
+                              ],
+                              "properties": {
+                                "type": {
+                                  "enum": [
+                                    "AllowedValues"
+                                  ]
+                                },
+                                "id": {
+                                  "type": "string",
+                                  "format": "uri"
+                                },
+                                "interval": {
+                                  "type": "array",
+                                  "items": {
+                                    "type": "string"
+                                  }
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "interpolationRestriction": {
+                        "title": "interpolationRestriction",
+                        "description": "Interpolation restriction",
+                        "type": "object",
+                        "required": [
+                          "type"
+                        ],
+                        "properties": {
+                          "type": {
+                            "enum": [
+                              "InterpolationRestriction"
+                            ]
+                          },
+                          "id": {
+                            "type": "string",
+                            "format": "uri"
+                          },
+                          "allowedInterpolation": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "format": "uri"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                  {
+                    "required": [
+                      "type",
+                      "fileReference"
+                    ],
+                    "properties": {
+                      "type": {
+                        "enum": [
+                          "RangeTypeRef"
+                        ]
+                      },
+                      "id": {
+                        "type": "string",
+                        "format": "uri"
+                      },
+                      "fileReference": {
+                        "type": "string",
+                        "format": "uri"
+                      }
+                    }
+                  }
+                ]
               },
               "metadata": {
                 "title": "Metadata",
@@ -2162,7 +2161,7 @@
                 }
               },
               "rangeType": {
-                "$ref": "#/components/schemas/rangeType"
+                "$ref": "#/components/schemas/coverageSchema/oneOf/0/properties/rangeType"
               },
               "metadata": {
                 "$ref": "#/components/schemas/coverageSchema/oneOf/0/properties/metadata"
@@ -2389,117 +2388,7 @@
                       "description": "Properties represented by the features in this layer. Can be the attributes of a feature dataset (datatype=geometries) or the rangeType of a coverage (datatype=coverage)"
                     },
                     {
-                      "description": "Attributes of the features or rangetypes of a coverage. Defined by a subset of the JSON Schema for the properties of a feature",
-                      "type": "object",
-                      "required": [
-                        "type",
-                        "properties"
-                      ],
-                      "properties": {
-                        "type": {
-                          "type": "string",
-                          "enum": [
-                            "object"
-                          ]
-                        },
-                        "required": {
-                          "description": "Implements 'multiplicity' by citing property 'name' defined as 'additionalProperties'",
-                          "type": "array",
-                          "minItems": 1,
-                          "items": {
-                            "type": "string"
-                          }
-                        },
-                        "properties": {
-                          "type": "object",
-                          "default": {},
-                          "additionalProperties": {
-                            "description": "No property names are defined but any property name they should be described by JSON Schema. So 'additionalProperties' implements 'name'.",
-                            "type": "object",
-                            "properties": {
-                              "title": {
-                                "type": "string"
-                              },
-                              "description": {
-                                "description": "Implements 'description'",
-                                "type": "string"
-                              },
-                              "type": {
-                                "type": "string",
-                                "enum": [
-                                  "array",
-                                  "boolean",
-                                  "integer",
-                                  "null",
-                                  "number",
-                                  "object",
-                                  "string"
-                                ]
-                              },
-                              "enum": {
-                                "description": "Implements 'acceptedValues'",
-                                "type": "array",
-                                "minItems": 1,
-                                "items": {},
-                                "uniqueItems": true
-                              },
-                              "format": {
-                                "description": "Complements implementation of 'type'",
-                                "type": "string"
-                              },
-                              "contentMediaType": {
-                                "description": "Implements 'mediaType'",
-                                "type": "string"
-                              },
-                              "maximum": {
-                                "description": "Implements 'range'",
-                                "type": "number"
-                              },
-                              "exclusiveMaximum": {
-                                "description": "Implements 'range'",
-                                "type": "number"
-                              },
-                              "minimum": {
-                                "description": "Implements 'range'",
-                                "type": "number"
-                              },
-                              "exclusiveMinimum": {
-                                "description": "Implements 'range'",
-                                "type": "number"
-                              },
-                              "pattern": {
-                                "type": "string",
-                                "format": "regex"
-                              },
-                              "maxItems": {
-                                "description": "Implements 'upperMultiplicity'",
-                                "type": "integer",
-                                "minimum": 0
-                              },
-                              "minItems": {
-                                "description": "Implements 'lowerMultiplicity'",
-                                "type": "integer",
-                                "default": 0,
-                                "minimum": 0
-                              },
-                              "observedProperty": {
-                                "type": "string"
-                              },
-                              "observedPropertyURI": {
-                                "type": "string",
-                                "format": "uri"
-                              },
-                              "uom": {
-                                "type": "string"
-                              },
-                              "uomURI": {
-                                "type": "string",
-                                "format": "uri"
-                              }
-                            }
-                          }
-                        }
-                      }
+                      "$ref": "#/components/schemas/schema"
                     }
                   ]
                 },
@@ -2883,7 +2772,7 @@
       "datetime": {
         "name": "datetime",
         "in": "query",
-        "description": "Either a date-time or an interval, half-bounded or bounded. Date and time expressions\nadhere to RFC 3339. Half-bounded intervals are expressed using double-dots.\n\nExamples:\n\n* A date-time: \"2018-02-12T23:20:50Z\"\n* A bounded interval: \"2018-02-12T00:00:00Z/2018-03-18T12:31:12Z\"\n* Half-bounded intervals: \"2018-02-12T00:00:00Z/..\" or \"../2018-03-18T12:31:12Z\"\n\nOnly features that have a temporal property that intersects the value of\n`datetime` are selected.\n\nIf a feature has multiple temporal properties, it is the decision of the\nserver whether only a single temporal property is used to determine\nthe extent or all relevant temporal properties.",
+        "description": "Either a date-time or an interval. Date and time expressions adhere to RFC 3339, section 5.6. Intervals may be bounded or half-bounded (double-dots at start or end). Server implementations may or may not support times expressed using time offsets from UTC, but need to support UTC time with the notation ending with a Z.\nExamples:\n* A date-time: \"2018-02-12T23:20:50Z\" * A bounded interval: \"2018-02-12T00:00:00Z/2018-03-18T12:31:12Z\" * Half-bounded intervals: \"2018-02-12T00:00:00Z/..\" or \"../2018-03-18T12:31:12Z\"\nOnly resources that have a temporal property that intersects the value of `datetime` are selected.\nIf a feature has multiple temporal properties, it is the decision of the server whether only a single temporal property is used to determine the extent or all relevant temporal properties.",
         "required": false,
         "schema": {
           "type": "string"
@@ -2891,24 +2780,10 @@
         "style": "form",
         "explode": false
       },
-      "subset": {
-        "name": "subset",
-        "in": "query",
-        "description": "Retrieve only part of the data by slicing or trimming along one or more axis\nFor trimming: {axisAbbrev}({low}:{high}) (preserves dimensionality)\n   An asterisk (`*`) can be used instead of {low} or {high} to indicate the minimum/maximum value.\nFor slicing:  {axisAbbrev}({value})      (reduces dimensionality)\n",
-        "style": "form",
-        "explode": false,
-        "required": false,
-        "schema": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        }
-      },
       "bbox": {
         "name": "bbox",
         "in": "query",
-        "description": "Only features that have a geometry that intersects the bounding box are selected. The bounding box is provided as four or six numbers, depending on whether the coordinate reference system includes a vertical axis (height or depth):\n* Lower left corner, coordinate axis 1 * Lower left corner, coordinate axis 2 * Minimum value, coordinate axis 3 (optional) * Upper right corner, coordinate axis 1 * Upper right corner, coordinate axis 2 * Maximum value, coordinate axis 3 (optional)\nThe coordinate reference system of the values is WGS 84 longitude/latitude (http://www.opengis.net/def/crs/OGC/1.3/CRS84) unless a different coordinate reference system is specified in the parameter `bbox-crs`.\nFor WGS 84 longitude/latitude the values are in most cases the sequence of minimum longitude, minimum latitude, maximum longitude and maximum latitude. However, in cases where the box spans the antimeridian the first value (west-most box edge) is larger than the third value (east-most box edge).\nIf the vertical axis is included, the third and the sixth number are the bottom and the top of the 3-dimensional bounding box.\nIf a feature has multiple spatial geometry properties, it is the decision of the server whether only a single spatial geometry property is used to determine the extent or all relevant geometries.",
+        "description": "Only resources that have a geometry that intersects the bounding box are selected. The bounding box is provided as four or six numbers, depending on whether the coordinate reference system includes a vertical axis (elevation or depth):\n* Lower left corner, coordinate axis 1 * Lower left corner, coordinate axis 2 * Minimum value, coordinate axis 3 (optional) * Upper right corner, coordinate axis 1 * Upper right corner, coordinate axis 2 * Maximum value, coordinate axis 3 (optional)\nIf the value consists of four numbers, the coordinate reference system is WGS84 longitude/latitude (http://www.opengis.net/def/crs/OGC/1.3/CRS84)  unless a different coordinate reference system is specified in the parameter `bbox-crs`.\nIf the value consists of six numbers, the coordinate reference system is WGS 84  longitude/latitude/ellipsoidal height (http://www.opengis.net/def/crs/OGC/0/CRS84h) unless a different coordinate reference system is specified in a parameter `bbox-crs`.\nFor WGS84 longitude/latitude the values are in most cases the sequence of minimum longitude, minimum latitude, maximum longitude and maximum latitude. However, in cases where the box spans the antimeridian the first value (west-most box edge) is larger than the third value (east-most box edge).\nIf the vertical axis is included, the third and the sixth number are the bottom and the top of the 3-dimensional bounding box.\nIf a resource has multiple spatial geometry properties, it is the decision of the server  whether only a single spatial geometry property is used to determine the extent or all relevant geometries.",
         "required": false,
         "schema": {
           "type": "array",
@@ -2923,12 +2798,74 @@
             }
           ],
           "items": {
-            "type": "number",
-            "format": "double"
+            "type": "number"
           }
         },
         "style": "form",
         "explode": false
+      },
+      "resolution": {
+        "name": "resolution",
+        "in": "query",
+        "description": "Request a specific resolution for one or more dimension in terms of the minimum distance between two samples.\nFor a regular grid coverage output, the resolution corresponds to the grid resolution.\nThe parameter value is a comma separated list of dimensions followed by values in parentheses.\nFor example, `resolution=Lat(0.5),Lon(0.5),time(P1D)` specifies a 0.5 degrees spatial resolution and a daily temporal resolution.\nFor server supporting Spatial subsetting, the `Lat` and `Lon` dimensions are supported for a geographic output CRS,\nthe `E` and `N` dimensions are supported for a projected output CRS, and the `x` and `y` dimensions are supported for a 3D Cartesian CRS,\nwith the resolution specified in positive CRS units.\nFor a 3D geographic CRS, the resolution for an additional `h` dimension can be specified corresponding to the height above the ellipsoid.\nFor a 3D Cartesian CRS, the resolution for an additional `z` dimension can be specified corresponding to the vertical or third dimension.\nFor server supporting Temporal subsetting, the `time` dimension is supported referring to the primary temporal dimensions,\nwith units specified in ISO 8601 UTC / Gregorian date and time.\nFor server supporting General subsetting, a resolution for additional dimensions, as named in the collection description's extent,\ncan also be specified in the units of those dimensions.",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "properties": {
+        "name": "properties",
+        "in": "query",
+        "description": "Select specific data record fields (measured/observed properties) to be returned.\nThe selected field names must be one of the fields defined in the collection's logical schema (the fields of the RangeType DataRecord in the Coverage Implementation Schema model).",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "exclude-properties": {
+        "name": "exclude-properties",
+        "in": "query",
+        "description": "Exclude specific data record fields (measured/observed properties) from being returned using a comma-separated list of field names.\nThe field name must be one of the fields defined in the associated data resource's logical schema.",
+        "required": false,
+        "schema": {
+          "type": "string"
+        }
+      },
+      "width": {
+        "name": "width",
+        "in": "query",
+        "description": "Number of cells across the coverage dimension corresponding to the spatial dimension represented horizontally on a map, such as longitude or easting.",
+        "required": false,
+        "style": "form",
+        "explode": false,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "height": {
+        "name": "height",
+        "in": "query",
+        "description": "Number of cells across the coverage dimension corresponding to the spatial dimension represented vertically on a 2D map, such as latitude or northing.",
+        "required": false,
+        "style": "form",
+        "explode": false,
+        "schema": {
+          "type": "integer"
+        }
+      },
+      "subset": {
+        "name": "subset",
+        "in": "query",
+        "description": "Retrieve only part of the data by slicing or trimming along one or more axis\nFor trimming: {axisAbbrev}({low}:{high}) (preserves dimensionality)\nFor slicing:  {axisAbbrev}({value})      (reduces dimensionality)\nFor multi-slicing:  {axisAbbrev}({value1},{value2}[,...])      (reduces dimensionality)\nAn asterisk (`*`) can be used instead of {low} or {high} to indicate the minimum/maximum value.\nFor a temporal dimension, a single asterisk can be used to indicate the high value.\n",
+        "style": "form",
+        "explode": false,
+        "required": false,
+        "schema": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
       "crs": {
         "name": "crs",
@@ -2963,42 +2900,6 @@
           "type": "string"
         }
       },
-      "scale-factor": {
-        "name": "scale-factor",
-        "in": "query",
-        "description": "For each axis, the returned coverage will contain the number of original\nsampled values, divided by the scale-factor.",
-        "required": false,
-        "schema": {
-          "type": "number"
-        }
-      },
-      "scale-axes": {
-        "name": "scale-axes",
-        "in": "query",
-        "description": "Returns a coverage re-scaled so as to contain `{number}` times less sample\nvalues along the corresponding axisName axis, and all original values along\nthe dimensions of unspecified axes\n```\nScalingSpec:       \"scale-axes\"=axisName({number})[,axisName({number})]*\naxisName:          {NCName}\n\nWhere:\n   {number} is an integer or floating-point number, and {axisName} is the\n   same as one of the axisLabels defined in the DomainSet\n```",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      },
-      "scale-size": {
-        "name": "scale-size",
-        "in": "query",
-        "description": "When `scale-size` is used, the returned coverage will contain exactly the\nspecified number of sample values along each axis which is specified, and\nthe original number of sample values for unspecified axes.\n```\nScalingSpec:       \"scale-size\"=axisName({number})[,axisName({number})]*\naxisName:          {text}\n\nWhere:\n   {number} is an integer or floating-point number and {axisName}\n   is the same as one of the axisLabels defined in the DomainSet\n```",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      },
-      "properties": {
-        "name": "properties",
-        "in": "query",
-        "description": "Select specific data record fields (measured/observed properties) to be returned.\n\n```\nRangeSubsetSpec:   \"properties\"=field[,fieldName]*\nfield:              {fieldName}|{fieldIndex}|\"*\"\nfieldName:          {text}\nfieldIndex:         {number}\n\nWhere:\n   {number} is an integer number, and\n   {text} is some general ASCII text.\n```\n\nThe field name must be one of the id defined in the RangeType DataRecord fields.\nThe field index must be an integer between 0 and the number of fields - 1 defined in the RangeType DataRecord fields.\nAn asterisk indicates to also include subsequent fields.",
-        "required": false,
-        "schema": {
-          "type": "string"
-        }
-      },
       "f-coverage": {
         "name": "f",
         "description": "The optional f parameter indicates the output format which the server shall provide as part of the response document. It has preference over the HTTP Accept header.",
@@ -3015,54 +2916,6 @@
             "covjson",
             "html"
           ]
-        },
-        "style": "form"
-      },
-      "f-rangeset": {
-        "name": "f",
-        "description": "The optional f parameter indicates the output format which the server shall provide as part of the response document. It has preference over the HTTP Accept header.",
-        "explode": false,
-        "in": "query",
-        "required": false,
-        "schema": {
-          "default": "json",
-          "enum": [
-            "json",
-            "html"
-          ],
-          "type": "string"
-        },
-        "style": "form"
-      },
-      "f-domainset": {
-        "name": "f",
-        "description": "The optional f parameter indicates the output format which the server shall provide as part of the response document. It has preference over the HTTP Accept header.",
-        "explode": false,
-        "in": "query",
-        "required": false,
-        "schema": {
-          "default": "json",
-          "enum": [
-            "json",
-            "html"
-          ],
-          "type": "string"
-        },
-        "style": "form"
-      },
-      "f-rangetype": {
-        "name": "f",
-        "description": "The optional f parameter indicates the output format which the server shall provide as part of the response document. It has preference over the HTTP Accept header.",
-        "explode": false,
-        "in": "query",
-        "required": false,
-        "schema": {
-          "default": "json",
-          "enum": [
-            "json",
-            "html"
-          ],
-          "type": "string"
         },
         "style": "form"
       },
@@ -3111,14 +2964,15 @@
       "f-coverageTile": {
         "name": "f",
         "in": "query",
-        "description": "The format of the coverage tile response (e.g. tiff). Accepted values are 'tiff' (GeoTIFF), 'netcdf', or 'png'.",
+        "description": "The format of the tiled coverage data response (e.g. tiff). Accepted values are 'tiff' (GeoTIFF), 'netcdf', or 'png'.",
         "required": false,
         "schema": {
           "type": "string",
           "enum": [
             "png",
             "geotiff",
-            "netcdf"
+            "netcdf",
+            "covjson"
           ]
         },
         "style": "form",
@@ -3187,7 +3041,7 @@
         }
       },
       "Exception": {
-        "description": "An error occured.",
+        "description": "An error occurred.",
         "content": {
           "application/json": {
             "schema": {
@@ -3240,7 +3094,7 @@
                   "href": "http://data.example.org/collections",
                   "rel": "http://www.opengis.net/def/rel/ogc/1.0/data",
                   "type": "application/json",
-                  "title": "Information about the collections (e.g. the coverages)"
+                  "title": "Information about the collections (i.e.,. the coverages)"
                 }
               ]
             }
@@ -3265,14 +3119,22 @@
               "example": {
                 "conformsTo": [
                   "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/core",
+                  "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/landing-page",
                   "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/json",
                   "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/html",
                   "http://www.opengis.net/spec/ogcapi-common-1/1.0/conf/oas30",
                   "http://www.opengis.net/spec/ogcapi-common-2/1.0/conf/collections",
-                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/geodata-coverage",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/core",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/subsetting",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/scaling",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/fieldselection",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/crs",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/tiles",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/netcdf",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/geotiff",
+                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/coveragejson",
                   "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/cisjson",
                   "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/html",
-                  "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/coverage-subset",
                   "http://www.opengis.net/spec/ogcapi-coverages-1/1.0/conf/oas30"
                 ]
               }
@@ -3286,6 +3148,113 @@
           "application/vnd.oai.openapi+json;version=3.0": {
             "schema": {
               "type": "object"
+            }
+          },
+          "text/html": {
+            "schema": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "Coverage": {
+        "description": "A coverage, including any self-describing information supported by the encoding.",
+        "content": {
+          "application/vnd.cov+json": {
+            "schema": {
+              "type": "string"
+            }
+          },
+          "application/json": {
+            "schema": {
+              "anyOf": [
+                {
+                  "$ref": "#/components/schemas/coverageSchema"
+                },
+                {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "example": {
+                        "temperature": 28,
+                        "relativeHumidity": 0.35
+                      }
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "anyOf": [
+                          {
+                            "type": "object",
+                            "example": {
+                              "temperature": 28,
+                              "relativeHumidity": 0.35
+                            }
+                          },
+                          {
+                            "example": 352
+                          }
+                        ]
+                      },
+                      "example": [
+                        "foxes",
+                        "wolves"
+                      ]
+                    },
+                    {
+                      "example": 352
+                    }
+                  ]
+                }
+              ]
+            }
+          },
+          "image/tiff; application=geotiff": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "application/x-netcdf": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "vnd.las": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "vnd.laszip": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "image/png": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "image/jxl": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "image/jp2": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
+            }
+          },
+          "application/x-zarr": {
+            "schema": {
+              "type": "string",
+              "format": "binary"
             }
           },
           "text/html": {
@@ -3315,22 +3284,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/collections"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "collections": {
-                      "type": "array",
-                      "items": {
-                        "$ref": "#/components/responses/Collection/content/application~1json/schema"
-                      }
-                    }
-                  }
-                }
-              ]
+              "$ref": "#/components/schemas/collections"
             },
             "example": {
               "links": [
@@ -3373,28 +3327,28 @@
                   },
                   "links": [
                     {
-                      "href": "http://data.example.org/collections/elevation/coverage/domainset",
-                      "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage-domainset",
-                      "type": "application/json",
-                      "title": "Elevation"
+                      "href": "http://data.example.org/collections/elevation/schema",
+                      "rel": "http://www.opengis.net/def/rel/ogc/1.0/schema",
+                      "type": "application/schema+json",
+                      "title": "Schema (fields)"
                     },
                     {
-                      "href": "http://data.example.org/collections/elevation/coverage/rangetype",
-                      "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage-rangetype",
-                      "type": "application/json",
-                      "title": "Elevation"
+                      "href": "http://data.example.org/collections/elevation/coverage.geotiff",
+                      "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+                      "type": "image/tiff; application=geotiff",
+                      "title": "Elevation data (as GeoTIFF)"
                     },
                     {
-                      "href": "http://data.example.org/collections/elevation/coverage",
-                      "rel": "items",
-                      "type": "application/json",
-                      "title": "Elevation"
+                      "href": "http://data.example.org/collections/elevation/coverage.covjson",
+                      "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+                      "type": "application/vnd.cov+json",
+                      "title": "Elevation data (as CoverageJSON)"
                     },
                     {
-                      "href": "http://data.example.org/collections/elevation/coverage.html",
-                      "rel": "items",
-                      "type": "text/html",
-                      "title": "Elevation"
+                      "href": "http://data.example.org/collections/elevation/coverage.cisjson",
+                      "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+                      "type": "application/json",
+                      "title": "Elevation data (as CIS JSON)"
                     },
                     {
                       "href": "https://creativecommons.org/publicdomain/zero/1.0/",
@@ -3425,118 +3379,7 @@
         "content": {
           "application/json": {
             "schema": {
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/collectionInfo"
-                },
-                {
-                  "type": "object",
-                  "required": [
-                    "extent"
-                  ],
-                  "properties": {
-                    "orderedAxes": {
-                      "type": "array",
-                      "minItems": 1,
-                      "items": {
-                        "type": "string",
-                        "description": "axis labels of all dimensions listed in CRS order. Spatial dimensions should be listed separately here."
-                      }
-                    },
-                    "domainSet": {
-                      "allOf": [
-                        {
-                          "$ref": "#/components/schemas/domainSet"
-                        }
-                      ],
-                      "example": {
-                        "type": "DomainSet",
-                        "generalGrid": {
-                          "type": "GeneralGridCoverage",
-                          "srsName": "http://www.opengis.net/def/crs/EPSG/0/4326",
-                          "axisLabels": [
-                            "Lat",
-                            "Long"
-                          ],
-                          "axis": [
-                            {
-                              "type": "RegularAxis",
-                              "axisLabel": "Lat",
-                              "lowerBound": -90,
-                              "upperBound": 90,
-                              "uomLabel": "deg",
-                              "resolution": 1
-                            },
-                            {
-                              "type": "RegularAxis",
-                              "axisLabel": "Long",
-                              "lowerBound": -180,
-                              "upperBound": 180,
-                              "uomLabel": "deg",
-                              "resolution": 1
-                            }
-                          ],
-                          "gridLimits": {
-                            "type": "GridLimits",
-                            "srsName": "http://www.opengis.net/def/crs/OGC/0/Index2D",
-                            "axisLabels": [
-                              "i",
-                              "j"
-                            ],
-                            "axis": [
-                              {
-                                "type": "IndexAxis",
-                                "axisLabel": "i",
-                                "lowerBound": 0,
-                                "upperBound": 180
-                              },
-                              {
-                                "type": "IndexAxis",
-                                "axisLabel": "j",
-                                "lowerBound": 0,
-                                "upperBound": 360
-                              }
-                            ]
-                          }
-                        }
-                      }
-                    },
-                    "rangeType": {
-                      "allOf": [
-                        {
-                          "$ref": "#/components/schemas/rangeType"
-                        }
-                      ],
-                      "example": {
-                        "type": "DataRecord",
-                        "field": {
-                          "type": "Quantity",
-                          "id": "dem_field",
-                          "name": "dem field",
-                          "definition": "unsignedInt",
-                          "uom": {
-                            "type": "UnitReference",
-                            "code": "m"
-                          },
-                          "constraint": {
-                            "type": "AllowedValues",
-                            "interval": [
-                              0,
-                              10000
-                            ]
-                          }
-                        },
-                        "interpolationRestriction": {
-                          "type": "InterpolationRestriction",
-                          "allowedInterpolation": [
-                            "linear"
-                          ]
-                        }
-                      }
-                    }
-                  }
-                }
-              ]
+              "$ref": "#/components/schemas/collectionDesc"
             },
             "example": {
               "id": "elevation",
@@ -3556,28 +3399,28 @@
               },
               "links": [
                 {
-                  "href": "http://data.example.org/collections/elevation/coverage/domainset",
-                  "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage-domainset",
-                  "type": "application/json",
-                  "title": "Elevation"
+                  "href": "http://data.example.org/collections/elevation/schema",
+                  "rel": "http://www.opengis.net/def/rel/ogc/1.0/schema",
+                  "type": "application/schema+json",
+                  "title": "Schema (fields)"
                 },
                 {
-                  "href": "http://data.example.org/collections/elevation/coverage/rangetype",
-                  "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage-rangetype",
-                  "type": "application/json",
-                  "title": "Elevation"
+                  "href": "http://data.example.org/collections/elevation/coverage.tiff",
+                  "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+                  "type": "image/tiff; application=geotiff",
+                  "title": "Elevation data (as GeoTIFF)"
                 },
                 {
-                  "href": "http://data.example.org/collections/elevation/coverage",
+                  "href": "http://data.example.org/collections/elevation/coverage.covjson",
+                  "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage",
+                  "type": "application/vnd.cov+json",
+                  "title": "Elevation data (as CoverageJSON)"
+                },
+                {
+                  "href": "http://data.example.org/collections/elevation/coverage.cisjson",
                   "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage",
                   "type": "application/json",
-                  "title": "Elevation"
-                },
-                {
-                  "href": "http://data.example.org/collections/buildings/coverage.html",
-                  "rel": "http://www.opengis.net/def/rel/ogc/1.0/coverage",
-                  "type": "text/html",
-                  "title": "Elevation"
+                  "title": "Elevation data (as CIS JSON)"
                 },
                 {
                   "href": "https://creativecommons.org/publicdomain/zero/1.0/",

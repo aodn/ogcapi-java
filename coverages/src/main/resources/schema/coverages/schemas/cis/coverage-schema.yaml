@@ -15,15 +15,15 @@ oneOf:
         enum:
           - CoverageByDomainAndRange
       envelope:
-        $ref: 'schemas/cis/envelope.yaml'
+        $ref: 'envelope.yaml'
       domainSet:
-        $ref: 'schemas/cis/domainSet.yaml'
+        $ref: 'domainSet.yaml'
       rangeSet:
-        $ref: 'schemas/cis/rangeSet.yaml'
+        $ref: 'rangeSet.yaml'
       rangeType:
-        $ref: 'schemas/cis/rangeType.yaml'
+        $ref: 'rangeType.yaml'
       metadata:
-        $ref: 'schemas/cis/metadata.yaml'
+        $ref: 'metadata.yaml'
   - required:
       - type
       - partitionSet
@@ -35,10 +35,10 @@ oneOf:
         enum:
           - CoverageByPartitioning
       envelope:
-        $ref: 'schemas/cis/envelope.yaml'
+        $ref: 'envelope.yaml'
       partitionSet:
-        $ref: 'schemas/cis/partitioningSet.yaml'
+        $ref: 'partitioningSet.yaml'
       rangeType:
-        $ref: 'schemas/cis/rangeType.yaml'
+        $ref: 'rangeType.yaml'
       metadata:
-        $ref: 'schemas/cis/metadata.yaml'
+        $ref: 'metadata.yaml'

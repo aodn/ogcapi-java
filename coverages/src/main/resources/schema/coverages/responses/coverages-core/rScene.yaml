@@ -1,0 +1,45 @@
+description: |-
+  Information about a particular scene of a coverage.
+content:
+   application/json:
+     schema:
+      $ref: '../../schemas/common-geodata/collectionDesc.yaml'
+     example:
+        id: elevation
+        title: Elevation
+        description: Elevation in the city of Bonn.
+        extent:
+          spatial:
+            bbox:
+              - - 7.01
+                - 50.63
+                - 7.22
+                - 50.78
+        links:
+          - href: http://data.example.org/collections/elevation/coverage/domainset
+            rel: http://www.opengis.net/def/rel/ogc/1.0/coverage-domainset
+            type: application/json
+            title: Elevation
+          - href: http://data.example.org/collections/elevation/coverage/rangetype
+            rel: http://www.opengis.net/def/rel/ogc/1.0/coverage-rangetype
+            type: application/json
+            title: Elevation
+          - href: http://data.example.org/collections/elevation/coverage
+            rel: http://www.opengis.net/def/rel/ogc/1.0/coverage
+            type: application/json
+            title: Elevation
+          - href: http://data.example.org/collections/buildings/coverage.html
+            rel: http://www.opengis.net/def/rel/ogc/1.0/coverage
+            type: text/html
+            title: Elevation
+          - href: https://creativecommons.org/publicdomain/zero/1.0/
+            rel: license
+            type: text/html
+            title: CC0-1.0
+          - href: https://creativecommons.org/publicdomain/zero/1.0/rdf
+            rel: license
+            type: application/rdf+xml
+            title: CC0-1.0
+   text/html:
+     schema:
+       type: string

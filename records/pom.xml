@@ -75,7 +75,7 @@
                             <modelPackage>${project.groupId}.records.model</modelPackage>
                             <apiPackage>${project.groupId}.records.api</apiPackage>
                             <invokerPackage>${project.groupId}.records.invoker</invokerPackage>
-                            <inputSpec>${project.basedir}/src/main/resources/schema/records/ogcapi-records-1.yaml</inputSpec>
+                            <inputSpec>${project.basedir}/src/main/resources/schema/records/ogcapi-records-1-building-blocks.yaml</inputSpec>
                             <output>${project.build.directory}/generated-sources</output>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>
@@ -108,7 +108,7 @@
                             <replacements>
                                 <replacement>
                                     <token>import au\.org\.aodn\.ogcapi\.records\.model\.TimeStamp;</token>
-                                    <value></value>
+                                    <value />
                                 </replacement>
                             </replacements>
                         </configuration>

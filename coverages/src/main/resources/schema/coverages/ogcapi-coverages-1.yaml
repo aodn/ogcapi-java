@@ -40,22 +40,31 @@ paths:
    # OGC API - Coverages - Part 1: Core
    /collections/{collectionId}/coverage:
       $ref: 'paths/coverages-core/pCoverage.yaml'
-   /collections/{collectionId}/coverage/domainset:
-      $ref: 'paths/coverages-core/pDomainSet.yaml'
-   /collections/{collectionId}/coverage/rangetype:
-      $ref: 'paths/coverages-core/pRangeType.yaml'
-   /collections/{collectionId}/coverage/rangeset:
-      $ref: 'paths/coverages-core/pRangeSet.yaml'
-   /collections/{collectionId}/coverage/metadata:
-      $ref: 'paths/coverages-core/pMetadata.yaml'
+   /collections/{collectionId}/schema:
+      $ref: 'paths/coverages-core/pSchema.yaml'
 
-   # Coverage Tiles
-   /collections/{collectionId}/coverage/tiles:
+   # Scenes
+   #/collections/{collectionId}/scenes:
+   #   $ref: 'paths/coverages-core/pScenesList.yaml'
+   #/collections/{collectionId}/scenes/{sceneId}:
+   #   $ref: 'paths/coverages-core/pScene.yaml'
+   #/collections/{collectionId}/scenes/{sceneId}/coverage:
+   #   $ref: 'paths/coverages-core/pSceneCoverage.yaml'
+
+   # Tiled Coverage Data
+   /collections/{collectionId}/tiles:
       $ref: 'paths/tiles-core/collection-tiles/coverage-tiles/pCollectionCoverageTileSetsList.yaml'
-   /collections/{collectionId}/coverage/tiles/{tileMatrixSetId}:
+   /collections/{collectionId}/tiles/{tileMatrixSetId}:
       $ref: 'paths/tiles-core/collection-tiles/coverage-tiles/pCollectionCoverageTileSet.yaml'
-   /collections/{collectionId}/coverage/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}:
+   /collections/{collectionId}/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}:
       $ref: 'paths/tiles-core/collection-tiles/coverage-tiles/pCollectionCoverageTile.yaml'
+
+   #/collections/{collectionId}/scenes/{sceneId}/tiles:
+   #   $ref: 'paths/coverages-core/pSceneCoverageTileSetsList.yaml'
+   #/collections/{collectionId}/scenes/{sceneId}/tiles/{tileMatrixSetId}:
+   #   $ref: 'paths/coverages-core/pSceneCoverageTileSet.yaml'
+   #/collections/{collectionId}/scenes/{sceneId}/tiles/{tileMatrixSetId}/{tileMatrix}/{tileRow}/{tileCol}:
+   #   $ref: 'paths/coverages-core/pSceneCoverageTile.yaml'
 
 components:
    schemas:
@@ -76,8 +85,8 @@ components:
       # Common - Geospatial Data
       collections:
          $ref: 'schemas/common-geodata/collections.yaml'
-      collectionInfo:
-         $ref: 'schemas/common-geodata/collectionInfo.yaml'
+      collectionDesc:
+         $ref: 'schemas/common-geodata/collectionDesc.yaml'
       extent:
          $ref: 'schemas/common-geodata/extent.yaml'
       extent-uad:
@@ -94,14 +103,10 @@ components:
          $ref: 'schemas/common-geodata/numberReturned.yaml'
       numberMatched:
          $ref: 'schemas/common-geodata/numberMatched.yaml'
+      schema:
+         $ref: 'schemas/tms/propertiesSchema.yaml'
 
       # CIS
-      domainSet:
-         $ref: 'schemas/cis/domainSet.yaml'
-      rangeType:
-         $ref: 'schemas/cis/rangeType.yaml'
-      rangeSet:
-         $ref: 'schemas/cis/rangeSet.yaml'
       coverageSchema:
          $ref: 'schemas/cis/coverage-schema.yaml'
 
@@ -140,38 +145,36 @@ components:
          $ref: 'parameters/common-geodata/collectionId-coverage.yaml'
       datetime:
          $ref: 'parameters/common-geodata/datetime.yaml'
-      subset:
-         $ref: 'parameters/common-geodata/subset.yaml'
       bbox:
          $ref: 'parameters/common-geodata/bbox.yaml'
 
-      # Common - CRS
-      crs:
-         $ref: 'parameters/common-crs/crs.yaml'
-      subset-crs:
-         $ref: 'parameters/common-crs/subset-crs.yaml'
-      bbox-crs:
-         $ref: 'parameters/common-crs/bbox-crs.yaml'
-
-      # Coverages - Core (unspecified)
-      scale-factor:
-         $ref: 'parameters/coverages-core/scale-factor.yaml'
-      scale-axes:
-         $ref: 'parameters/coverages-core/scale-axes.yaml'
-      scale-size:
-         $ref: 'parameters/coverages-core/scale-size.yaml'
+      # Coverages - Core
+      resolution:
+         $ref: 'parameters/coverages-core/resolution.yaml'
       properties:
          $ref: 'parameters/coverages-core/properties.yaml'
+      exclude-properties:
+         $ref: 'parameters/coverages-core/exclude-properties.yaml'
+      width:
+         $ref: 'parameters/coverages-core/width.yaml'
+      height:
+         $ref: 'parameters/coverages-core/height.yaml'
+      subset:
+         $ref: 'parameters/coverages-core/subset.yaml'
+      crs:
+         $ref: 'parameters/coverages-core/crs.yaml'
+      subset-crs:
+         $ref: 'parameters/coverages-core/subset-crs.yaml'
+      bbox-crs:
+         $ref: 'parameters/coverages-core/bbox-crs.yaml'
 
       # Coverages - Core (unspecified)
       f-coverage:
          $ref: 'parameters/unspecified/f-coverage.yaml'
-      f-rangeset:
-         $ref: 'parameters/unspecified/f-rangeset.yaml'
-      f-domainset:
-         $ref: 'parameters/unspecified/f-domainset.yaml'
-      f-rangetype:
-         $ref: 'parameters/unspecified/f-rangetype.yaml'
+
+      # Coverages - Scenes
+      #sceneId:
+      #   $ref: 'parameters/coverages-core/sceneId.yaml'
 
       # Tiles - Core
       tileMatrix:
@@ -207,6 +210,16 @@ components:
          $ref: 'responses/common-core/rConformance.yaml'
       API:
          $ref: 'responses/common-core/rAPI.yaml'
+
+      # Coverages - Core
+      Coverage:
+         $ref: 'responses/coverages-core/rCoverage.yaml'
+
+      # Coverages - Scenes
+      #Scene:
+      #   $ref: 'responses/coverages-core/rScene.yaml'
+      #ScenesList:
+      #   $ref: 'responses/coverages-core/rScenesList.yaml'
 
       # Dynamic enumeration of resources specific to this implementation
       Enumeration:
