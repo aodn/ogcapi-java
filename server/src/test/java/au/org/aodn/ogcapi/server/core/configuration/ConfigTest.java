@@ -8,8 +8,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mock.http.client.MockClientHttpRequest;
 import org.springframework.mock.http.client.MockClientHttpResponse;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
@@ -99,5 +101,21 @@ public class ConfigTest {
 
         assertEquals("test-secret", headers.getFirst("X-API-KEY"));
         assertNull(headers.getFirst("x-internal-das-header-secret"));
+    }
+
+    @Test
+    public void testDefaultTemplateHasShortTimeout() {
+        SimpleClientHttpRequestFactory factory = (SimpleClientHttpRequestFactory) config.createRestTemplate().getRequestFactory();
+
+        assertEquals(10000, ReflectionTestUtils.getField(factory, "connectTimeout"));
+        assertEquals(60000, ReflectionTestUtils.getField(factory, "readTimeout"));
+    }
+
+    @Test
+    public void testDownloadTemplateHasLongTimeout() {
+        SimpleClientHttpRequestFactory factory = (SimpleClientHttpRequestFactory) config.createDownloadRestTemplate().getRequestFactory();
+
+        assertEquals(1200000, ReflectionTestUtils.getField(factory, "connectTimeout"));
+        assertEquals(1200000, ReflectionTestUtils.getField(factory, "readTimeout"));
     }
 }

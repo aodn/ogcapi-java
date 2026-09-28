@@ -100,7 +100,7 @@ public class GeoServerConfig {
     @Bean
     @ConditionalOnMissingBean(DownloadWfsDataService.class)
     public DownloadWfsDataService createDownloadWfsDataService(WfsServer wfsServer,
-                                                               RestTemplate restTemplate,
+                                                               @Qualifier(Config.DOWNLOAD_REST_TEMPLATE) RestTemplate restTemplate,
                                                                @Qualifier("pretendUserEntity") HttpEntity<?> pretendUserEntity,
                                                                @Value("${app.sse.chunkSize:16384}") int chunkSize,
                                                                ObjectMapper objectMapper) {
