@@ -20,7 +20,6 @@ import reactor.core.publisher.Flux;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -39,7 +38,7 @@ public class DasService implements ApplicationInfo {
     protected final RestTemplate httpClient;
     protected final WebClient sseHttpClient;
     protected final ObjectMapper objectMapper;
-    protected final Map<String, Map<?, ?>> appInfo;
+    protected final InfoCache appInfo;
 
     public DasService(
             DasProperties dasProperties,
@@ -50,7 +49,7 @@ public class DasService implements ApplicationInfo {
         this.httpClient = httpClient;
         this.sseHttpClient = sseHttpClient;
         this.objectMapper = objectMapper;
-        this.appInfo = queryInfo(httpClient, dasProperties.host(), dasProperties.infoPath());
+        this.appInfo = new InfoCache(() -> queryInfo(httpClient, dasProperties.host(), dasProperties.infoPath()));
     }
 
     /**
@@ -217,20 +216,7 @@ public class DasService implements ApplicationInfo {
     }
 
     @Override
-    public String getName() {
-        Object name = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("name", null);
-        return name != null ? name.toString() : null;
-    }
-
-    @Override
-    public String getVersion() {
-        Object version = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("version", null);
-        return version != null ? version.toString() : null;
-    }
-
-    @Override
-    public String getDescription() {
-        Object description = this.appInfo.getOrDefault("application", Collections.emptyMap()).getOrDefault("description", null);
-        return description != null ? description.toString() : null;
+    public Map<String, Map<?, ?>> getAppInfo() {
+        return appInfo.get();
     }
 }
