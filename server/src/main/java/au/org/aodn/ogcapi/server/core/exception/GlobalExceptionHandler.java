@@ -130,6 +130,20 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.TOO_MANY_REQUESTS);
     }
 
+    @ExceptionHandler(DownloadSizeExceededException.class)
+    public ResponseEntity<ErrorResponse> handleDownloadSizeExceededException(
+            DownloadSizeExceededException ex,
+            WebRequest request) {
+        ErrorResponse errorResponse = ErrorResponse
+                .builder()
+                .timestamp(LocalDateTime.now())
+                .message(ex.getMessage())
+                .details(request.getDescription(false))
+                .build();
+
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
     @ExceptionHandler(DasUpstreamException.class)
     public ResponseEntity<ErrorResponse> handleDasUpstreamException(DasUpstreamException ex, WebRequest request) {
         ErrorResponse errorResponse = ErrorResponse

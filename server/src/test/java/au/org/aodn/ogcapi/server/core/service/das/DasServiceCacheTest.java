@@ -3,6 +3,9 @@ package au.org.aodn.ogcapi.server.core.service.das;
 import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.http.RecordingSseConnector;
 import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
+import au.org.aodn.ogcapi.server.core.util.SubsetParametersUtils;
+import au.org.aodn.ogcapi.server.processes.DownloadRequest;
+import au.org.aodn.ogcapi.server.processes.RestServices;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +16,7 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -187,5 +191,28 @@ public class DasServiceCacheTest {
 
         estimate(parameters("netcdf"), heartbeats::incrementAndGet);
         assertEquals(1, heartbeats.get(), "A cache hit never opens a stream, so nothing heartbeats");
+    }
+
+    /**
+     * The size check before a download is submitted must reuse the estimate the portal has just
+     * made for the same subset. The portal estimate builds its parameters with
+     * SubsetParametersUtils, as the SSE estimate in RestServices does.
+     */
+    @Test
+    public void testDownloadSizeCheckReusesThePortalEstimate() throws Exception {
+        ObjectMapper objectMapper = new ObjectMapper();
+        RestServices restServices = new RestServices(null, objectMapper, "test-job-definition", "test-job-queue");
+        ReflectionTestUtils.setField(restServices, "dasService", dasService);
+
+        connector.respondWith(List.of(RESULT_FRAME));
+        estimate(SubsetParametersUtils.buildSubsetParameters(objectMapper, "test-uuid", "a.zarr",
+                "2020-01-01", "2020-12-31", "non-specified", "netcdf"), freshCallback());
+
+        long bytes = restServices.estimateDownloadBytes(new DownloadRequest("test-uuid", "a.zarr",
+                "2020-01-01", "2020-12-31", "non-specified", "person@example.com", "Test Collection",
+                "https://portal.example.test/details/test-uuid", "Cite as", "netcdf"));
+
+        assertEquals(123, bytes);
+        assertEquals(1, connector.requests(), "The size check is answered from the cache, not by data-access-service");
     }
 }

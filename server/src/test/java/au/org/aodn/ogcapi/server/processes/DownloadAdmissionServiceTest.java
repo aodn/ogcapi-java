@@ -1,12 +1,14 @@
 package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
+import au.org.aodn.ogcapi.server.core.exception.DownloadSizeExceededException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.util.unit.DataSize;
 
 import java.time.Duration;
 import java.util.HashMap;
@@ -23,6 +25,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class DownloadAdmissionServiceTest {
@@ -30,6 +33,7 @@ class DownloadAdmissionServiceTest {
     private static final String RECIPIENT = "person@example.com";
     private static final String RECIPIENT_JOB_NAME = "generating-data-file-for-person-example-com";
     private static final String OTHER_RECIPIENT = "someone.else@example.com";
+    private static final long MAX_BYTES = 180L * 1024 * 1024 * 1024;
 
     @Mock
     private RestServices restServices;
@@ -55,11 +59,19 @@ class DownloadAdmissionServiceTest {
     }
 
     private DownloadAdmissionService build(DownloadLimitProperties limits) {
-        return new DownloadAdmissionService(restServices, counter, limits);
+        return build(limits, sizeLimit(true));
+    }
+
+    private DownloadAdmissionService build(DownloadLimitProperties limits, DownloadSizeLimitProperties sizeLimit) {
+        return new DownloadAdmissionService(restServices, counter, limits, sizeLimit);
     }
 
     private static DownloadLimitProperties limits(boolean enabled, int maxConcurrent) {
         return new DownloadLimitProperties(enabled, maxConcurrent, Duration.ofSeconds(15));
+    }
+
+    private static DownloadSizeLimitProperties sizeLimit(boolean enabled) {
+        return new DownloadSizeLimitProperties(enabled, DataSize.ofGigabytes(180));
     }
 
     private AtomicInteger current(String recipient) {
@@ -170,5 +182,53 @@ class DownloadAdmissionServiceTest {
                 .thenReturn(UUID.randomUUID().toString());
 
         assertNotNull(service.submit(request(RECIPIENT)));
+    }
+
+    @Test
+    void aDownloadAtTheSizeLimitIsRejectedBeforeSubmitAndEmail() throws Exception {
+        // The portal blocks at 180 GB and above, so exactly 180 GB is rejected here too.
+        when(restServices.estimateDownloadBytes(any())).thenReturn(MAX_BYTES);
+
+        DownloadSizeExceededException exception = assertThrows(
+                DownloadSizeExceededException.class, () -> service.submit(request(RECIPIENT)));
+
+        assertEquals("The selected data is too large to download (estimated 180 GB, limit 180 GB). "
+                + "Please reduce the date range or area and try again.", exception.getMessage());
+        verify(restServices, never()).submitDownloadJob(anyString(), any());
+        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void aDownloadJustUnderTheSizeLimitIsSubmitted() throws Exception {
+        when(restServices.estimateDownloadBytes(any())).thenReturn(MAX_BYTES - 1);
+
+        assertNotNull(service.submit(request(RECIPIENT)));
+        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any());
+    }
+
+    @Test
+    void aTooLargeDownloadDoesNotTakeASlot() throws Exception {
+        when(restServices.estimateDownloadBytes(any())).thenReturn(MAX_BYTES);
+
+        assertThrows(DownloadSizeExceededException.class, () -> service.submit(request(RECIPIENT)));
+
+        verify(counter, never()).refreshIfStale();
+    }
+
+    @Test
+    void aFailedEstimateStillSubmits() throws Exception {
+        // Same as the portal: no estimate means no block.
+        when(restServices.estimateDownloadBytes(any())).thenThrow(new RuntimeException("DAS is down"));
+
+        assertNotNull(service.submit(request(RECIPIENT)));
+        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any());
+    }
+
+    @Test
+    void theSizeLimitCanBeTurnedOff() throws Exception {
+        DownloadAdmissionService disabled = build(limits(true, 10), sizeLimit(false));
+
+        assertNotNull(disabled.submit(request(RECIPIENT)));
+        verify(restServices, never()).estimateDownloadBytes(any());
     }
 }

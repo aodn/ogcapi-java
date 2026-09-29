@@ -9,6 +9,7 @@ import au.org.aodn.ogcapi.processes.model.Results;
 import au.org.aodn.ogcapi.processes.model.JobList;
 import au.org.aodn.ogcapi.processes.model.StatusInfo;
 import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
+import au.org.aodn.ogcapi.server.core.exception.DownloadSizeExceededException;
 import au.org.aodn.ogcapi.server.core.model.DownloadExecutionResponse;
 import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
@@ -81,6 +82,17 @@ public class RestApi implements ProcessesApi, JobsApi {
                               "message": "You already have 10 downloads in progress. Wait for one of them to complete before starting another."
                             }
                             """)))
+    @ApiResponse(
+            responseCode = "422",
+            description = "The download is estimated at the size limit or more.",
+            content = @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = ErrorResponse.class),
+                    examples = @ExampleObject(value = """
+                            {
+                              "message": "The selected data is too large to download (estimated 250.3 GB, limit 180 GB). Please reduce the date range or area and try again."
+                            }
+                            """)))
     public ResponseEntity<InlineResponse200> execute(
             @Parameter(in = ParameterIn.PATH, required = true, schema = @Schema())
             @PathVariable("processID")
@@ -108,8 +120,9 @@ public class RestApi implements ProcessesApi, JobsApi {
                 DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, multiPolygon,
                         recipient, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
 
-                // The per-user limit is applied here: a recipient already at their limit is
-                // rejected outright, before anything is submitted to AWS Batch.
+                // The size limit and the per-user limit are applied here: a download that is too
+                // large, or a recipient already at their limit, is rejected outright, before
+                // anything is submitted to AWS Batch.
                 //
                 // The notify user email lives on this side rather than in data-access-service to
                 // make the first email faster. It is sent only once AWS Batch has accepted the
@@ -123,8 +136,8 @@ public class RestApi implements ProcessesApi, JobsApi {
 
                 return ResponseEntity.ok(results);
 
-            } catch (DownloadLimitExceededException e) {
-                // Let GlobalExceptionHandler turn this into a real 429 with a message the
+            } catch (DownloadLimitExceededException | DownloadSizeExceededException e) {
+                // Let GlobalExceptionHandler turn these into a real 429 or 422 with a message the
                 // caller can act on, instead of the generic 200-wrapped error below.
                 throw e;
             } catch (Exception e) {

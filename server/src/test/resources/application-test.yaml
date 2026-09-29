@@ -29,3 +29,6 @@ aws:
     job:
       user-limit:
         enabled: false
+      # Would call data-access-service for an estimate before each submit.
+      size-limit:
+        enabled: false
