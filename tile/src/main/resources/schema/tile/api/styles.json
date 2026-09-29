@@ -1,6 +1,6 @@
 {
-  "type" : "string",
-  "enum" : [
-    "default"
-  ]
+   "type" : "string",
+   "enum" : [
+      "default"
+   ]
 }
