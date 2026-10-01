@@ -7,9 +7,11 @@ import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.sse.SseStreamHandler;
+import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
 import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import au.org.aodn.ogcapi.server.core.util.SubsetParametersUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @Slf4j
 public class RestServices {
+
+    // Same field the portal reads to block a download that is too large.
+    private static final String ESTIMATED_OUTPUT_BYTES = "estimated_output_bytes";
 
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
@@ -116,6 +121,27 @@ public class RestServices {
     }
 
     /**
+     * Estimate how many bytes a download will produce. Uses the same uuid and subset parameters
+     * as the cloud-optimised estimate, so a subset the portal has just estimated comes from the
+     * cache instead of calling DAS again.
+     */
+    public long estimateDownloadBytes(DownloadRequest request) throws JsonProcessingException {
+        Map<String, String> parameters = SubsetParametersUtils.buildSubsetParameters(
+                objectMapper, request.uuid(), request.key(), request.startDate(), request.endDate(),
+                request.multiPolygon(), request.outputFormat());
+
+        // No client of our own to keep alive, so heartbeats are ignored.
+        String estimateJson = dasService.estimateCloudOptimisedDownloadSize(
+                request.uuid(), parameters, DasSseFrames.FrameCallback.IGNORE);
+
+        JsonNode bytes = objectMapper.readTree(estimateJson).get(ESTIMATED_OUTPUT_BYTES);
+        if (bytes == null || !bytes.isNumber()) {
+            throw new IllegalStateException("Size estimate has no " + ESTIMATED_OUTPUT_BYTES + ": " + estimateJson);
+        }
+        return bytes.longValue();
+    }
+
+    /**
      * The AWS Batch job name for a download. Note this sanitises the address, so it is not a
      * safe key for the owning user - read the recipient job parameter instead.
      */
@@ -123,7 +149,9 @@ public class RestServices {
         return "generating-data-file-for-" + recipient.replaceAll("[^a-zA-Z0-9-_]", "-");
     }
 
-    /** Submit a prepared download to the configured queue and job definition. */
+    /**
+     * Submit a prepared download to the configured queue and job definition.
+     */
     public String submitDownloadJob(String jobName, Map<String, String> parameters) {
         String jobId = submitJob(jobName, this.batchJobQueue, this.batchJobDefinition, parameters);
         log.info("Job submitted with ID: {}", jobId);

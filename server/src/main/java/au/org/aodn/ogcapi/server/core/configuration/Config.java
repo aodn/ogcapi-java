@@ -10,6 +10,7 @@ import au.org.aodn.ogcapi.server.core.util.GeometryUtils;
 import au.org.aodn.ogcapi.server.core.util.RestTemplateUtils;
 import au.org.aodn.ogcapi.server.processes.BatchJobProperties;
 import au.org.aodn.ogcapi.server.processes.DownloadLimitProperties;
+import au.org.aodn.ogcapi.server.processes.DownloadSizeLimitProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
@@ -37,6 +38,7 @@ import java.net.http.HttpClient;
         DasProperties.class,
         BatchJobProperties.class,
         DownloadLimitProperties.class,
+        DownloadSizeLimitProperties.class,
         OgcApiProperties.class
 })
 public class Config {

@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
+import au.org.aodn.ogcapi.server.core.exception.DownloadSizeExceededException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,9 +12,11 @@ import java.util.Map;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Caps how many downloads one user can have running at once. A user already at the limit is
- * rejected outright: the caller has to wait for one of their own downloads to finish and
- * try again.
+ * Decides whether a download can be submitted. Two checks run before anything goes to AWS Batch:
+ * 1. Size: a download estimated at the size limit or more is rejected, the user has to reduce
+ * the subset.
+ * 2. Concurrency: a user already at the limit is rejected outright, the caller has to wait for
+ * one of their own downloads to finish and try again.
  */
 @Slf4j
 @Service
@@ -22,6 +25,7 @@ public class DownloadAdmissionService {
     private final RestServices restServices;
     private final InFlightDownloadCounter counter;
     private final DownloadLimitProperties limits;
+    private final DownloadSizeLimitProperties sizeLimit;
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -38,20 +42,28 @@ public class DownloadAdmissionService {
     public DownloadAdmissionService(
             RestServices restServices,
             InFlightDownloadCounter counter,
-            DownloadLimitProperties limits) {
+            DownloadLimitProperties limits,
+            DownloadSizeLimitProperties sizeLimit) {
         this.restServices = restServices;
         this.counter = counter;
         this.limits = limits;
+        this.sizeLimit = sizeLimit;
     }
 
     /**
      * Submit a download to AWS Batch and return its job id.
      *
+     * @throws DownloadSizeExceededException the download is estimated at the size limit or more
      * @throws DownloadLimitExceededException the recipient already has {@code maxConcurrent}
      *                                         downloads running
      */
     public String submit(DownloadRequest request) throws JsonProcessingException {
         String key = InFlightDownloadCounter.recipientKey(request.recipient());
+
+        if (sizeLimit.enabled()) {
+            // Before the slot is reserved, so a slow estimate does not hold one.
+            rejectIfTooLarge(request);
+        }
 
         if (limits.enabled()) {
             // Outside the lock: the sweep is the only expensive step.
@@ -70,6 +82,25 @@ public class DownloadAdmissionService {
             if (limits.enabled()) {
                 releaseReservation(key);
             }
+        }
+    }
+
+    private void rejectIfTooLarge(DownloadRequest request) {
+        long estimatedBytes;
+        try {
+            estimatedBytes = restServices.estimateDownloadBytes(request);
+        } catch (Exception e) {
+            // Let it through, as the portal does when its own estimate fails. Blocking every
+            // download because DAS cannot estimate would be worse than one job running out of disk.
+            log.warn("Size estimate failed for uuid {}, submitting without the size check", request.uuid(), e);
+            return;
+        }
+
+        long maxBytes = sizeLimit.maxSize().toBytes();
+        if (estimatedBytes >= maxBytes) {
+            log.info("Rejected download for uuid {}: estimated {} bytes, limit {} bytes",
+                    request.uuid(), estimatedBytes, maxBytes);
+            throw new DownloadSizeExceededException(estimatedBytes, maxBytes);
         }
     }
 

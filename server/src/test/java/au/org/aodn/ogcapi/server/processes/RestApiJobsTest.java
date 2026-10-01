@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.processes.model.StatusInfo;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobNotFoundException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadJobStatusException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
+import au.org.aodn.ogcapi.server.core.exception.DownloadSizeExceededException;
 import au.org.aodn.ogcapi.server.core.exception.GlobalExceptionHandler;
 import au.org.aodn.ogcapi.server.core.model.DownloadJobStatusInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -88,6 +89,24 @@ class RestApiJobsTest {
                 .andExpect(status().is(429))
                 .andExpect(jsonPath("$.message").value("You already have 10 downloads in progress. "
                         + "Wait for one of them to complete before starting another."));
+    }
+
+    @Test
+    void postOverTheSizeLimitReturnsUnprocessableEntityWithAClearMessage() throws Exception {
+        long gb = 1024L * 1024 * 1024;
+        when(downloadAdmissionService.submit(any()))
+                .thenThrow(new DownloadSizeExceededException(250 * gb + gb / 4, 180 * gb));
+        String body = objectMapper.writeValueAsString(Map.of("inputs", Map.of(
+                "uuid", "collection-id",
+                "recipient", "person@example.com")));
+
+        mockMvc.perform(post("/api/v1/ogc/processes/download/execution")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(body))
+                .andExpect(status().is(422))
+                .andExpect(jsonPath("$.message").value("Download is unavailable because the selected dataset is too large "
+                        + "(estimated 250.3 GB, limit 180 GB). Please refine your selection to reduce the dataset size."));
     }
 
     @Test

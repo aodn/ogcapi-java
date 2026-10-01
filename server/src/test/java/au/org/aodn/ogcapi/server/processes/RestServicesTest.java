@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.processes;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
+import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.test.util.ReflectionTestUtils;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
@@ -17,6 +19,7 @@ import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.*;
 
 public class RestServicesTest {
@@ -145,5 +148,37 @@ public class RestServicesTest {
         assertThrows(IllegalStateException.class, () -> downloadData(
                 "test-uuid", "test-dname", "2023-01-01", "2023-01-31", "non-specified", "test@example.com",
                 "Test Ocean Data Collection", "https://metadata.imas.utas.edu.au/.../test-uuid-123", "", "geotiff"));
+    }
+
+    /**
+     * RestServices with a real ObjectMapper, so the estimate JSON is really parsed.
+     */
+    private RestServices withEstimate(String estimateJson) {
+        DasService dasService = mock(DasService.class);
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any())).thenReturn(estimateJson);
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "test-job-definition", "test-job-queue");
+        ReflectionTestUtils.setField(services, "dasService", dasService);
+        return services;
+    }
+
+    private static DownloadRequest estimateRequest() {
+        return new DownloadRequest("test-uuid", "test.zarr", "2023-01-01", "2023-01-31", "non-specified",
+                "test@example.com", "Test Ocean Data Collection", "https://portal.example.test/details/test-uuid",
+                "Cite as", "netcdf");
+    }
+
+    @Test
+    public void estimateDownloadBytesReadsTheOutputSize() throws JsonProcessingException {
+        RestServices services = withEstimate(
+                "{\"estimated_output_bytes\":193273528320,\"estimated_uncompressed_bytes\":400000000000}");
+
+        assertEquals(193273528320L, services.estimateDownloadBytes(estimateRequest()));
+    }
+
+    @Test
+    public void estimateDownloadBytesWithoutTheOutputSizeThrows() {
+        RestServices services = withEstimate("{\"estimated_uncompressed_bytes\":400000000000}");
+
+        assertThrows(IllegalStateException.class, () -> services.estimateDownloadBytes(estimateRequest()));
     }
 }

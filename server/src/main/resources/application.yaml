@@ -66,6 +66,12 @@ aws:
           max-concurrent: 10
           # How long the shared in-flight snapshot is reused before the queues are swept again.
           refresh-interval: 15s
+        # Largest download accepted. The job writes to the 200 GB Fargate disk, so a download
+        # estimated at max-size or more is rejected before it is submitted. Keep in line with
+        # EXTRA_LARGE_DOWNLOAD_BYTES in the portal.
+        size-limit:
+          enabled: true
+          max-size: 180GB
 
 wfs-default-param:
   fields:
