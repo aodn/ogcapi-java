@@ -192,8 +192,9 @@ class DownloadAdmissionServiceTest {
         DownloadSizeExceededException exception = assertThrows(
                 DownloadSizeExceededException.class, () -> service.submit(request(RECIPIENT)));
 
-        assertEquals("The selected data is too large to download (estimated 180 GB, limit 180 GB). "
-                + "Please reduce the date range or area and try again.", exception.getMessage());
+        assertEquals("Download is unavailable because the selected dataset is too large "
+                + "(estimated 180 GB, limit 180 GB). Please refine your selection to reduce the dataset size.",
+                exception.getMessage());
         verify(restServices, never()).submitDownloadJob(anyString(), any());
         verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }

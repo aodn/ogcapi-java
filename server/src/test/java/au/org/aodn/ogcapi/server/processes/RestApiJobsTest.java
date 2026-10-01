@@ -105,8 +105,8 @@ class RestApiJobsTest {
                         .accept(MediaType.APPLICATION_JSON)
                         .content(body))
                 .andExpect(status().is(422))
-                .andExpect(jsonPath("$.message").value("The selected data is too large to download "
-                        + "(estimated 250.3 GB, limit 180 GB). Please reduce the date range or area and try again."));
+                .andExpect(jsonPath("$.message").value("Download is unavailable because the selected dataset is too large "
+                        + "(estimated 250.3 GB, limit 180 GB). Please refine your selection to reduce the dataset size."));
     }
 
     @Test

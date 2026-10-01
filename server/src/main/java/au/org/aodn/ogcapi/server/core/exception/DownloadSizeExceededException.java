@@ -8,9 +8,9 @@ public class DownloadSizeExceededException extends RuntimeException {
     private static final BigDecimal BYTES_PER_GB = BigDecimal.valueOf(1024L * 1024 * 1024);
 
     public DownloadSizeExceededException(long estimatedBytes, long maxBytes) {
-        super("The selected data is too large to download (estimated " + toGb(estimatedBytes)
-                + " GB, limit " + toGb(maxBytes) + " GB). "
-                + "Please reduce the date range or area and try again.");
+        super("Download is unavailable because the selected dataset is too large (estimated "
+                + toGb(estimatedBytes) + " GB, limit " + toGb(maxBytes) + " GB). "
+                + "Please refine your selection to reduce the dataset size.");
     }
 
     private static String toGb(long bytes) {
