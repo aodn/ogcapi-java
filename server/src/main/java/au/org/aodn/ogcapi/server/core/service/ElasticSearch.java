@@ -437,24 +437,31 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
             if (isExact) {
                 // Match phrase in original title and description, not use fuzzy fields
-                should.add(CQLFields.title.getPropertyEqualToQuery(term));
-                should.add(CQLFields.description.getPropertyEqualToQuery(term));
+                should.add(bestOf(CQLFields.title, CQLFields.acronym_title, term));
+                should.add(bestOf(CQLFields.description, CQLFields.acronym_desc, term));
             }
             else {
-                should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
-                should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                should.add(bestOf(CQLFields.fuzzy_title, CQLFields.acronym_title, term));
+                should.add(bestOf(CQLFields.fuzzy_desc, CQLFields.acronym_desc, term));
             }
             should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.id.getPropertyEqualToQuery(term));
-            // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
-            should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
-            should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
             // credit_contains uses match query by default, exact match is not applied here
             should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
         }
         return should;
+    }
+
+    /**
+     * Scores only the better of a field's plain-text match and its synonym match, because words
+     * that pass through the synonym analyzer unchanged would otherwise be scored twice.
+     */
+    private static Query bestOf(CQLFields text, CQLFields synonyms, String term) {
+        return DisMaxQuery.of(d -> d
+                .queries(text.getPropertyEqualToQuery(term), synonyms.getPropertyEqualToQuery(term))
+                .tieBreaker(0.0))._toQuery();
     }
 
     /**
