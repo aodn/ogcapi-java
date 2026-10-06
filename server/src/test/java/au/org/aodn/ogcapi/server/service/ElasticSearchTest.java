@@ -37,10 +37,10 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(9, capturingSearch.should.size(),
-                "Exact match should produce 9 queries (title + description + other fields, no dataset_group)");
-        assertTrue(capturingSearch.should.get(0).isMatchPhrase(), "Title query should be MatchPhraseQuery");
-        assertTrue(capturingSearch.should.get(1).isMatchPhrase(), "Description query should be MatchPhraseQuery");
+        assertEquals(7, capturingSearch.should.size(),
+                "Exact match should produce 7 queries (two dis_max groups + other fields)");
+        assertDisMax(capturingSearch.should.get(0), "title", true, "title.synonyms");
+        assertDisMax(capturingSearch.should.get(1), "description", true, "description.synonyms");
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
     }
@@ -56,8 +56,9 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(9, capturingSearch.should.size(), "Fuzzy match should produce 9 queries");
-        assertTrue(capturingSearch.should.get(0).isMatch(), "fuzzy_title should be MatchQuery");
+        assertEquals(7, capturingSearch.should.size(), "Fuzzy match should produce 7 queries");
+        assertDisMax(capturingSearch.should.get(0), "title", false, "title.synonyms");
+        assertDisMax(capturingSearch.should.get(1), "description", false, "description.synonyms");
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
     }
@@ -122,11 +123,32 @@ public class ElasticSearchTest {
                 "title-only _source is lightweight so the larger search_after batch is used");
         assertNotNull(capturingSearch.explainRequest.query());
         assertTrue(capturingSearch.explainRequest.query().isScriptScore());
-        assertEquals(9, capturingSearch.explainRequest.query().scriptScore()
+        assertEquals(7, capturingSearch.explainRequest.query().scriptScore()
                 .query().bool().should().size());
         assertNotNull(capturingSearch.explainRequest.source());
         assertTrue(capturingSearch.explainRequest.source().isFilter());
         assertFalse(capturingSearch.explainRequest.source().filter().includes().isEmpty());
+    }
+
+    private static void assertDisMax(Query query, String plainField, boolean phrase,
+                                     String synonymField) {
+        assertTrue(query.isDisMax());
+        assertEquals(0.0, query.disMax().tieBreaker());
+        assertEquals(2, query.disMax().queries().size());
+
+        Query plain = query.disMax().queries().get(0);
+        if (phrase) {
+            assertTrue(plain.isMatchPhrase());
+            assertEquals(plainField, plain.matchPhrase().field());
+        }
+        else {
+            assertTrue(plain.isMatch());
+            assertEquals(plainField, plain.match().field());
+        }
+
+        Query synonym = query.disMax().queries().get(1);
+        assertTrue(synonym.isMatch());
+        assertEquals(synonymField, synonym.match().field());
     }
 
     @Test
