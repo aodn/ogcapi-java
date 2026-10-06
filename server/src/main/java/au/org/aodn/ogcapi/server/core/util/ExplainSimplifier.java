@@ -39,6 +39,7 @@ public class ExplainSimplifier {
     protected static final String SYNONYM_PREFIX = "Synonym(";
 
     // A dis_max (disjunction max) explanation includes every match, but only its winning child contributes.
+    // Lucene writes "max of:" only for tieBreaker 0 (see ElasticSearch.bestOf), otherwise "max plus ... of:".
     protected static final String MAX_OF_PREFIX = "max of:";
 
     protected static final String RELEVANCE_DESCRIPTION_PREFIX = "_score:";

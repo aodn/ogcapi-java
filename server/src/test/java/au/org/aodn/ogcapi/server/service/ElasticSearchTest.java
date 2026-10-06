@@ -39,8 +39,8 @@ public class ElasticSearchTest {
 
         assertEquals(7, capturingSearch.should.size(),
                 "Exact match should produce 7 queries (two dis_max groups + other fields)");
-        assertDisMax(capturingSearch.should.get(0), "title", true, "title.synonyms");
-        assertDisMax(capturingSearch.should.get(1), "description", true, "description.synonyms");
+        assertDisMax(capturingSearch.should.get(0), "title", true);
+        assertDisMax(capturingSearch.should.get(1), "description", true);
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
     }
@@ -57,8 +57,8 @@ public class ElasticSearchTest {
                 CQLCrsType.EPSG4326);
 
         assertEquals(7, capturingSearch.should.size(), "Fuzzy match should produce 7 queries");
-        assertDisMax(capturingSearch.should.get(0), "title", false, "title.synonyms");
-        assertDisMax(capturingSearch.should.get(1), "description", false, "description.synonyms");
+        assertDisMax(capturingSearch.should.get(0), "title", false);
+        assertDisMax(capturingSearch.should.get(1), "description", false);
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
     }
@@ -130,8 +130,7 @@ public class ElasticSearchTest {
         assertFalse(capturingSearch.explainRequest.source().filter().includes().isEmpty());
     }
 
-    private static void assertDisMax(Query query, String plainField, boolean phrase,
-                                     String synonymField) {
+    private static void assertDisMax(Query query, String plainField, boolean phrase) {
         assertTrue(query.isDisMax());
         assertEquals(0.0, query.disMax().tieBreaker());
         assertEquals(2, query.disMax().queries().size());
@@ -148,7 +147,7 @@ public class ElasticSearchTest {
 
         Query synonym = query.disMax().queries().get(1);
         assertTrue(synonym.isMatch());
-        assertEquals(synonymField, synonym.match().field());
+        assertEquals(plainField + ".synonyms", synonym.match().field());
     }
 
     @Test

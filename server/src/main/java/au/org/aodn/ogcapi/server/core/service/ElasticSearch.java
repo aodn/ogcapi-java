@@ -435,15 +435,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             // If search text with double quote, remove quotee, otherwise keeps same
             String term = isExact ? t.substring(1, t.length() - 1) : t;
 
-            if (isExact) {
-                // Match phrase in original title and description, not use fuzzy fields
-                should.add(bestOf(CQLFields.title, CQLFields.acronym_title, term));
-                should.add(bestOf(CQLFields.description, CQLFields.acronym_desc, term));
-            }
-            else {
-                should.add(bestOf(CQLFields.fuzzy_title, CQLFields.acronym_title, term));
-                should.add(bestOf(CQLFields.fuzzy_desc, CQLFields.acronym_desc, term));
-            }
+            // Exact: match phrase in original title and description, not use fuzzy fields
+            should.add(bestOf(isExact ? CQLFields.title : CQLFields.fuzzy_title, CQLFields.acronym_title, term));
+            should.add(bestOf(isExact ? CQLFields.description : CQLFields.fuzzy_desc, CQLFields.acronym_desc, term));
             should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
