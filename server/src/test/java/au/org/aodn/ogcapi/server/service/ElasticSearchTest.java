@@ -1,6 +1,7 @@
 package au.org.aodn.ogcapi.server.service;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
+import au.org.aodn.ogcapi.server.core.service.AcronymLookup;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -61,6 +62,49 @@ public class ElasticSearchTest {
         assertDisMax(capturingSearch.should.get(1), "description", false);
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
+    }
+
+    @Test
+    public void searchWithoutAcronymSkipsSynonymFields() throws Exception {
+        AcronymLookup lookup = mock(AcronymLookup.class);
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient, lookup);
+
+        // Ordinary words and an acronym's full name are both plain text, so title/description are matched once only
+        for (String keyword : List.of("coastal wave data", "ships of opportunity")) {
+            capturingSearch.searchByParameters(
+                    List.of(keyword),
+                    null,
+                    null,
+                    "-score,-rank",
+                    CQLCrsType.EPSG4326);
+
+            assertEquals(7, capturingSearch.should.size());
+            assertPlainMatch(capturingSearch.should.get(0), "title");
+            assertPlainMatch(capturingSearch.should.get(1), "description");
+            assertFalse(capturingSearch.should.toString().contains(".synonyms"),
+                    "'" + keyword + "' has no acronym, so the synonyms fields must not add to the score");
+        }
+    }
+
+    @Test
+    public void searchWithAcronymAndOtherWordsUsesSynonymFields() throws Exception {
+        AcronymLookup lookup = mock(AcronymLookup.class);
+        when(lookup.mayExpand("soop temperature")).thenReturn(true);
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient, lookup);
+
+        capturingSearch.searchByParameters(
+                List.of("soop temperature"),
+                null,
+                null,
+                "-score,-rank",
+                CQLCrsType.EPSG4326);
+
+        assertEquals(7, capturingSearch.should.size());
+        // ES expands the whole keyword on the synonyms field, so it is searched as "ships of opportunity temperature"
+        assertDisMax(capturingSearch.should.get(0), "title", false);
+        assertDisMax(capturingSearch.should.get(1), "description", false);
+        assertEquals("soop temperature",
+                capturingSearch.should.get(0).disMax().queries().get(1).match().query().stringValue());
     }
 
     // The portal SEO pipeline requests these in bulk to build Dataset JSON-LD
@@ -148,6 +192,11 @@ public class ElasticSearchTest {
         Query synonym = query.disMax().queries().get(1);
         assertTrue(synonym.isMatch());
         assertEquals(plainField + ".synonyms", synonym.match().field());
+    }
+
+    private static void assertPlainMatch(Query query, String plainField) {
+        assertTrue(query.isMatch(), "expected a plain match, not a dis_max with the synonyms field");
+        assertEquals(plainField, query.match().field());
     }
 
     @Test
@@ -292,6 +341,11 @@ public class ElasticSearchTest {
         private CapturingElasticSearch(ElasticsearchClient client) {
             super(client, null, new ObjectMapper(), "test-index", 100, 10000, 10);
             this.searchAfterSplitRegex = "\\|\\|";
+        }
+
+        private CapturingElasticSearch(ElasticsearchClient client, AcronymLookup acronymLookup) {
+            this(client);
+            this.acronymLookup = acronymLookup;
         }
 
         @Override

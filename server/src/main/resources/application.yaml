@@ -29,6 +29,9 @@ elasticsearch:
     name: vocabs_index
   cloud_optimized_index:
     name: es-coindexer-dev
+  # The ES synonyms set es-indexer pushes acronym rules into, e.g. "soop => ships of opportunity"
+  acronyms:
+    name: portal-acronyms-dev
   serverUrl: http://localhost:9200
   apiKey: <sample-api-key>
   search_as_you_type:

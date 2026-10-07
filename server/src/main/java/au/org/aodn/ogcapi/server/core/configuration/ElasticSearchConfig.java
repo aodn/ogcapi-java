@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.configuration;
 
+import au.org.aodn.ogcapi.server.core.service.AcronymLookup;
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.Search;
@@ -69,5 +70,16 @@ public class ElasticSearchConfig {
                                       @Value("${elasticsearch.search_as_you_type.size:10}") Integer searchAsYouTypeSize) {
 
         return new ElasticSearch(client, cacheNoLandGeometry, mapper, indexName, pageSize, lightweightPageSize, searchAsYouTypeSize);
+    }
+    /**
+     * The acronyms es-indexer pushed into the ES synonyms set, used to decide whether a keyword needs the synonyms fields
+     * @param client - The elastic search client
+     * @param synonymSetName - The ES synonyms set es-indexer writes for this environment
+     * @return The acronym lookup
+     */
+    @Bean
+    public AcronymLookup createAcronymLookup(ElasticsearchClient client,
+                                             @Value("${elasticsearch.acronyms.name}") String synonymSetName) {
+        return new AcronymLookup(client, synonymSetName);
     }
 }

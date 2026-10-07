@@ -19,6 +19,7 @@ import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.geotools.filter.text.cql2.CQLException;
 import org.opengis.filter.Filter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
@@ -73,6 +74,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
 
     @Value("${elasticsearch.semantic.max_suggestions:5}")
     protected Integer semanticMaxSuggestions;
+
+    // null when not wired, then every keyword is also scored against the synonyms fields
+    @Autowired(required = false)
+    protected AcronymLookup acronymLookup;
 
     public ElasticSearch(ElasticsearchClient client,
                          CacheNoLandGeometry cacheNoLandGeometry,
@@ -427,17 +432,22 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
      * Builds the relevance should clauses for each search keyword. Shared by searchByParameters (search) and buildParameterSearchRequestSupplier (explain) so the two align with each other.
      * These should clauses contribute to the Elasticsearch BM25 relevance score.
      */
-    private static List<Query> createKeywordShouldClauses(List<String> keywords) {
+    protected List<Query> createKeywordShouldClauses(List<String> keywords) {
         List<Query> should = new ArrayList<>();
         for (String t : keywords) {
             // If user's input (keywords) wrapped with double quot", and the text is not empty, treat the user intend to search with the exact term, so fuzzy matching not applied on title and description
             boolean isExact = t.startsWith("\"") && t.endsWith("\"") && t.length() > 2;
             // If search text with double quote, remove quotee, otherwise keeps same
             String term = isExact ? t.substring(1, t.length() - 1) : t;
+            // Only a keyword with an acronym needs the synonyms fields, e.g. "soop temperature" is searched as
+            // "ships of opportunity temperature". Plain words would just match the same text twice.
+            boolean expandAcronym = acronymLookup == null || acronymLookup.mayExpand(term);
 
             // Exact: match phrase in original title and description, not use fuzzy fields
-            should.add(bestOf(isExact ? CQLFields.title : CQLFields.fuzzy_title, CQLFields.acronym_title, term));
-            should.add(bestOf(isExact ? CQLFields.description : CQLFields.fuzzy_desc, CQLFields.acronym_desc, term));
+            CQLFields title = isExact ? CQLFields.title : CQLFields.fuzzy_title;
+            CQLFields description = isExact ? CQLFields.description : CQLFields.fuzzy_desc;
+            should.add(expandAcronym ? bestOf(title, CQLFields.acronym_title, term) : title.getPropertyEqualToQuery(term));
+            should.add(expandAcronym ? bestOf(description, CQLFields.acronym_desc, term) : description.getPropertyEqualToQuery(term));
             should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
@@ -449,8 +459,9 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     }
 
     /**
-     * Scores only the better of a field's plain-text match and its synonym match, because words
-     * that pass through the synonym analyzer unchanged would otherwise be scored twice.
+     * Scores only the better of a field's plain-text match and its synonym match, used when the keyword contains an acronym.
+     * The non-acronym words pass through the synonym analyzer unchanged, so a record with both the acronym and its full
+     * name would otherwise be scored twice.
      */
     private static Query bestOf(CQLFields text, CQLFields synonyms, String term) {
         return DisMaxQuery.of(d -> d

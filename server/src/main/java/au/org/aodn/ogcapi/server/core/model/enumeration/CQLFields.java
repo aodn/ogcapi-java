@@ -291,6 +291,7 @@ public enum CQLFields implements CQLFieldsInterface {
                 null,
                 null),
         // Acronym match on the synonyms sub-fields (search-time expansion), e.g. "SOOP" -> "ships of opportunity".
+        // Only queried when AcronymLookup finds an acronym in the keyword, plain words would match the same text twice.
         acronym_title(
                 StacBasicField.Title.searchField + ".synonyms",
                 StacBasicField.Title.displayField,
