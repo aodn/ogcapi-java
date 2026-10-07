@@ -37,11 +37,11 @@ public class AcronymLookup {
     }
 
     /**
-     * Load at startup so the first search already has the list, then reload every hour. The rules only change
-     * when es-indexer reindexes or syncs acronyms, so a new acronym is not gated in for up to an hour.
+     * Load at startup so the first search already has the list, then reload every day. The rules only change
+     * when es-indexer reindexes or syncs acronyms, so a new acronym is not gated in for up to a day.
      */
     @PostConstruct
-    @Scheduled(initialDelay = 60 * 60 * 1000, fixedRate = 60 * 60 * 1000)
+    @Scheduled(initialDelay = 24 * 60 * 60 * 1000, fixedRate = 24 * 60 * 60 * 1000)
     public void refresh() {
         try {
             acronyms = client.synonyms()
