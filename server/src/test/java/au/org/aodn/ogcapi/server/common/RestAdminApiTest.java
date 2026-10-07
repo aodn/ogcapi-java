@@ -194,7 +194,9 @@ public class RestAdminApiTest extends BaseTestClass {
                 .toList();
         assertTrue(reported.contains("title:ocean"));
         assertTrue(reported.contains("title:acidification"));
-        assertTrue(reported.size() > 2, "a multi word query hits more than one field");
+        // no acronym in the query, so the same words must not be scored again on the synonyms fields
+        assertTrue(reported.stream().noneMatch(r -> r.contains(".synonyms")),
+                "plain words must not match the synonyms fields, got: " + reported);
     }
 
     @Test

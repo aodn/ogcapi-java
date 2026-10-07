@@ -356,8 +356,10 @@ public class RestApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result with search on "dataset"
+        // 0.65 is half the old 1.3, which was set when a plain word scored on both title/description and their
+        // synonyms fields. Total is a count without min_score, so it stays 4 whatever the threshold.
         ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?q=dataset&filter=page_size=1 AND score>=1.3",
+                getBasePath() + "/collections?q=dataset&filter=page_size=1 AND score>=0.65",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {
@@ -386,7 +388,7 @@ public class RestApiTest extends BaseTestClass {
 
         // Now the same search, same page but search_after the actual cursor returned above
         collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?q=dataset&filter=page_size=6 AND score>=1.3 AND search_after=" +
+                getBasePath() + "/collections?q=dataset&filter=page_size=6 AND score>=0.65 AND search_after=" +
                         String.format("'%s|| %s || %s || %s'",
                                 collections.getBody().getSearchAfter().get(0),
                                 collections.getBody().getSearchAfter().get(1),
@@ -401,7 +403,7 @@ public class RestApiTest extends BaseTestClass {
         assertEquals(HttpStatus.OK, collections.getStatusCode(), "Get status OK");
 
         log.info("{}", collections.getBody());
-        // Remaining docs that clear min_score=1.3 after the first batch; the exact count is
+        // Remaining docs that clear min_score=0.65 after the first batch; the exact count is
         // BM25-dependent and varies by env, so accept any non-empty result up to the remaining total.
         int returnedSize = Objects.requireNonNull(collections.getBody()).getCollections().size();
         assertTrue(returnedSize >= 1 && returnedSize <= 3,
