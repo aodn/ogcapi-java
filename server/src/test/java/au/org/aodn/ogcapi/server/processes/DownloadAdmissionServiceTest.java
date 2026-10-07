@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.util.unit.DataSize;
@@ -63,7 +64,16 @@ class DownloadAdmissionServiceTest {
     }
 
     private DownloadAdmissionService build(DownloadLimitProperties limits, DownloadSizeLimitProperties sizeLimit) {
-        return new DownloadAdmissionService(restServices, counter, limits, sizeLimit);
+        return new DownloadAdmissionService(restServices, counter, limits, sizeLimit,
+                new DownloadShareProperties(DataSize.ofMegabytes(50), "small", "large"));
+    }
+
+    /** The share_identifier parameter of the one download submitted to Batch. */
+    private String submittedShare() {
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<Map<String, String>> parameters = ArgumentCaptor.forClass(Map.class);
+        verify(restServices).submitDownloadJob(anyString(), parameters.capture());
+        return parameters.getValue().get("share_identifier");
     }
 
     private static DownloadLimitProperties limits(boolean enabled, int maxConcurrent) {
@@ -230,6 +240,43 @@ class DownloadAdmissionServiceTest {
         DownloadAdmissionService disabled = build(limits(true, 10), sizeLimit(false));
 
         assertNotNull(disabled.submit(request(RECIPIENT)));
+        verify(restServices, never()).estimateDownloadBytes(any());
+    }
+
+    @Test
+    void aDownloadUnderTheShareThresholdIsTaggedSmall() throws Exception {
+        when(restServices.estimateDownloadBytes(any())).thenReturn(DataSize.ofMegabytes(50).toBytes() - 1);
+
+        service.submit(request(RECIPIENT));
+
+        assertEquals("small", submittedShare());
+    }
+
+    @Test
+    void aDownloadAtTheShareThresholdIsTaggedLarge() throws Exception {
+        when(restServices.estimateDownloadBytes(any())).thenReturn(DataSize.ofMegabytes(50).toBytes());
+
+        service.submit(request(RECIPIENT));
+
+        assertEquals("large", submittedShare());
+    }
+
+    @Test
+    void aDownloadWithAFailedEstimateIsTaggedLarge() throws Exception {
+        when(restServices.estimateDownloadBytes(any())).thenThrow(new RuntimeException("DAS is down"));
+
+        service.submit(request(RECIPIENT));
+
+        assertEquals("large", submittedShare());
+    }
+
+    @Test
+    void aDownloadIsTaggedLargeWhenTheSizeLimitIsOff() throws Exception {
+        DownloadAdmissionService disabled = build(limits(true, 10), sizeLimit(false));
+
+        disabled.submit(request(RECIPIENT));
+
+        assertEquals("large", submittedShare());
         verify(restServices, never()).estimateDownloadBytes(any());
     }
 }

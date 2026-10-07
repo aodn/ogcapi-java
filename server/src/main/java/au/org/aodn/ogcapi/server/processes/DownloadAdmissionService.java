@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.processes;
 
 import au.org.aodn.ogcapi.server.core.exception.DownloadLimitExceededException;
 import au.org.aodn.ogcapi.server.core.exception.DownloadSizeExceededException;
+import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
@@ -17,6 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * the subset.
  * 2. Concurrency: a user already at the limit is rejected outright, the caller has to wait for
  * one of their own downloads to finish and try again.
+ * An admitted download is tagged with its fair-share (small or large) from the same estimate.
  */
 @Slf4j
 @Service
@@ -26,6 +29,7 @@ public class DownloadAdmissionService {
     private final InFlightDownloadCounter counter;
     private final DownloadLimitProperties limits;
     private final DownloadSizeLimitProperties sizeLimit;
+    private final DownloadShareProperties share;
 
     private final ReentrantLock lock = new ReentrantLock();
 
@@ -43,11 +47,13 @@ public class DownloadAdmissionService {
             RestServices restServices,
             InFlightDownloadCounter counter,
             DownloadLimitProperties limits,
-            DownloadSizeLimitProperties sizeLimit) {
+            DownloadSizeLimitProperties sizeLimit,
+            DownloadShareProperties share) {
         this.restServices = restServices;
         this.counter = counter;
         this.limits = limits;
         this.sizeLimit = sizeLimit;
+        this.share = share;
     }
 
     /**
@@ -60,10 +66,8 @@ public class DownloadAdmissionService {
     public String submit(DownloadRequest request) throws JsonProcessingException {
         String key = InFlightDownloadCounter.recipientKey(request.recipient());
 
-        if (sizeLimit.enabled()) {
-            // Before the slot is reserved, so a slow estimate does not hold one.
-            rejectIfTooLarge(request);
-        }
+        // Before the slot is reserved, so a slow estimate does not hold one.
+        OptionalLong estimatedBytes = sizeLimit.enabled() ? rejectIfTooLarge(request) : OptionalLong.empty();
 
         if (limits.enabled()) {
             // Outside the lock: the sweep is the only expensive step.
@@ -73,6 +77,10 @@ public class DownloadAdmissionService {
 
         try {
             Map<String, String> parameters = restServices.buildDownloadParameters(request);
+            String shareIdentifier = shareFor(estimatedBytes);
+            log.info("Download for uuid {} estimated {} bytes, share {}", request.uuid(),
+                    estimatedBytes.isPresent() ? estimatedBytes.getAsLong() : "none", shareIdentifier);
+            parameters.put(DatasetDownloadEnums.Parameter.SHARE_IDENTIFIER.getValue(), shareIdentifier);
             String jobName = RestServices.downloadJobName(request.recipient());
             String awsJobId = restServices.submitDownloadJob(jobName, parameters);
             counter.recordSubmitted(awsJobId, request.recipient());
@@ -85,7 +93,10 @@ public class DownloadAdmissionService {
         }
     }
 
-    private void rejectIfTooLarge(DownloadRequest request) {
+    /**
+     * @return the estimate, or empty when DAS could not give one
+     */
+    private OptionalLong rejectIfTooLarge(DownloadRequest request) {
         long estimatedBytes;
         try {
             estimatedBytes = restServices.estimateDownloadBytes(request);
@@ -93,7 +104,7 @@ public class DownloadAdmissionService {
             // Let it through, as the portal does when its own estimate fails. Blocking every
             // download because DAS cannot estimate would be worse than one job running out of disk.
             log.warn("Size estimate failed for uuid {}, submitting without the size check", request.uuid(), e);
-            return;
+            return OptionalLong.empty();
         }
 
         long maxBytes = sizeLimit.maxSize().toBytes();
@@ -102,6 +113,18 @@ public class DownloadAdmissionService {
                     request.uuid(), estimatedBytes, maxBytes);
             throw new DownloadSizeExceededException(estimatedBytes, maxBytes);
         }
+        return OptionalLong.of(estimatedBytes);
+    }
+
+    /**
+     * The fair-share tag for a download: small only when it is estimated under the threshold.
+     * No estimate counts as large, so a download we know nothing about cannot take the slots
+     * kept for small ones.
+     */
+    private String shareFor(OptionalLong estimatedBytes) {
+        boolean small = estimatedBytes.isPresent()
+                && estimatedBytes.getAsLong() < share.smallMaxSize().toBytes();
+        return small ? share.small() : share.large();
     }
 
     private void reserveOrReject(DownloadRequest request, String key) {
