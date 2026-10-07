@@ -72,6 +72,13 @@ aws:
         size-limit:
           enabled: true
           max-size: 180GB
+        # Fair-share tag for a download (#9348). A download estimated under small-max-size is
+        # tagged small, anything else (including no estimate) large. For now it is only sent as
+        # the share_identifier job parameter, since the queue has no fair-share policy yet.
+        share:
+          small-max-size: 50MB
+          small: small
+          large: large
 
 wfs-default-param:
   fields:
