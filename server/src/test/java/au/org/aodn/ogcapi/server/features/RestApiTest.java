@@ -356,8 +356,6 @@ public class RestApiTest extends BaseTestClass {
                 "bf287dfe-9ce4-4969-9c59-51c39ea4d011.json");
 
         // Call rest api directly and get query result with search on "dataset"
-        // 0.65 is half the old 1.3, which was set when a plain word scored on both title/description and their
-        // synonyms fields. Total is a count without min_score, so it stays 4 whatever the threshold.
         ResponseEntity<ExtendedCollections> collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?q=dataset&filter=page_size=1 AND score>=0.65",
                 HttpMethod.GET,
