@@ -145,17 +145,27 @@ public enum CQLFields implements CQLFieldsInterface {
                                                                 "           .getAsLong()" +
                                                                 "     }"))
                                 .order(order))),
+        // Phrase match on the field and its synonyms sub-field (search-time acronym expansion), fuzziness is not allowed
+        // for type phrase. Also used for quoted keywords, see fuzzy_title for why best of the two fields is scored.
         title(
                 StacBasicField.Title.searchField,
                 StacBasicField.Title.displayField,
-                null,
+                (literal) -> MultiMatchQuery.of(m -> m
+                                .type(TextQueryType.Phrase)
+                                .fields(StacBasicField.Title.searchField + "^2", StacBasicField.Title.searchField + ".synonyms^2")
+                                .tieBreaker(0.1)
+                                .query(literal))._toQuery(),
                 null,
                 (order) -> new SortOptions.Builder()
                                 .field(f -> f.field(StacBasicField.Title.sortField).order(order))),
         description(
                 StacBasicField.Description.searchField,
                 StacBasicField.Description.displayField,
-                null,
+                (literal) -> MultiMatchQuery.of(m -> m
+                                .type(TextQueryType.Phrase)
+                                .fields(StacBasicField.Description.searchField, StacBasicField.Description.searchField + ".synonyms")
+                                .tieBreaker(0.1)
+                                .query(literal))._toQuery(),
                 null,
                 null),
         providers(
@@ -266,15 +276,18 @@ public enum CQLFields implements CQLFieldsInterface {
                 null,
                 (order) -> new SortOptions.Builder()
                                 .field(f -> f.field(StacSummeries.Score.sortField).order(order))),
+        // Fuzzy match on the field and its synonyms sub-field (search-time acronym expansion, e.g. "SOOP" -> "ships of opportunity").
+        // best_fields scores the better field plus tie_breaker times the other. Plain words pass the synonym analyzer
+        // unchanged and would otherwise be scored twice. Title fields are boosted 2, description fields 1, as before.
         fuzzy_title(
                 null,
                 StacBasicField.Title.displayField,
-                (literal) -> MatchQuery.of(m -> m
+                (literal) -> MultiMatchQuery.of(m -> m
+                                .type(TextQueryType.BestFields)
+                                .fields(StacBasicField.Title.searchField + "^2", StacBasicField.Title.searchField + ".synonyms^2")
+                                .tieBreaker(0.1)
                                 .fuzziness("AUTO")
-                                .field(StacBasicField.Title.searchField)
                                 .prefixLength(4)// Use 4 to deal with NRMN short form may match NRM records
-                                // Increase the relevance of matches in title
-                                .boost(2.0F)
                                 .operator(Operator.And)// ensure all terms are matched with fuzziness
                                 .query(literal))._toQuery(),
                 null,
@@ -282,31 +295,13 @@ public enum CQLFields implements CQLFieldsInterface {
         fuzzy_desc(
                 null,
                 StacBasicField.Description.displayField,
-                (literal) -> MatchQuery.of(m -> m
+                (literal) -> MultiMatchQuery.of(m -> m
+                                .type(TextQueryType.BestFields)
+                                .fields(StacBasicField.Description.searchField, StacBasicField.Description.searchField + ".synonyms")
+                                .tieBreaker(0.1)
                                 .fuzziness("AUTO")
-                                .field(StacBasicField.Description.searchField)
                                 .prefixLength(4)// Use 4 to deal with NRMN short form may match NRM records
                                 .operator(Operator.And)// ensure all terms are matched with fuzziness
-                                .query(literal))._toQuery(),
-                null,
-                null),
-        // Acronym match on the synonyms sub-fields (search-time expansion), e.g. "SOOP" -> "ships of opportunity".
-        acronym_title(
-                StacBasicField.Title.searchField + ".synonyms",
-                StacBasicField.Title.displayField,
-                (literal) -> MatchQuery.of(m -> m
-                                .field(StacBasicField.Title.searchField + ".synonyms")
-                                .operator(Operator.And)// all expanded terms must match
-                                .boost(2.0F)// align with fuzzy_title weighting
-                                .query(literal))._toQuery(),
-                null,
-                null),
-        acronym_desc(
-                StacBasicField.Description.searchField + ".synonyms",
-                StacBasicField.Description.displayField,
-                (literal) -> MatchQuery.of(m -> m
-                                .field(StacBasicField.Description.searchField + ".synonyms")
-                                .operator(Operator.And)
                                 .query(literal))._toQuery(),
                 null,
                 null),

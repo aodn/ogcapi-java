@@ -28,6 +28,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 import static au.org.aodn.ogcapi.server.core.configuration.CacheConfig.ELASTIC_SEARCH_UUID_ONLY;
@@ -448,9 +449,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.id.getPropertyEqualToQuery(term));
-            // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
-            should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
-            should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
             // credit_contains uses match query by default, exact match is not applied here
             should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
         }
@@ -572,6 +570,53 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 sortOptions,
                 score,
                 maxSize);
+    }
+
+    @Override
+    public void validateByParameters(List<String> keywords, String cql, List<String> properties, String sortBy, CQLCrsType coor) throws CQLException {
+        buildParameterSearchRequestSupplier(keywords, cql, properties, sortBy, coor);
+        if (cql != null) {
+            readPageSize(cql, coor);
+        }
+    }
+
+    @Override
+    public ElasticSearchBase.SearchResult<StacCollectionModel> visitByParameters(
+            List<String> keywords,
+            String cql,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor,
+            Consumer<StacCollectionModel> consumer) throws CQLException {
+
+        boolean unfiltered = (keywords == null || keywords.isEmpty()) && cql == null;
+        return visitCollectionBy(
+                buildParameterSearchRequestSupplier(keywords, cql, properties, sortBy, coor),
+                unfiltered ? null : properties,
+                unfiltered ? null : readPageSize(cql, coor),
+                consumer);
+    }
+
+    /**
+     * CQL {@code page_size} cap for {@code pageableSearch}. The request supplier applies the same cap
+     * to each batch; the iterator still needs the total cap when it is larger than one batch.
+     */
+    private Long readPageSize(String cql, CQLCrsType coor) throws CQLException {
+        if (cql == null) {
+            return null;
+        }
+        CQLToElasticFilterFactory<CQLFields> factory = new CQLToElasticFilterFactory<>(coor, CQLFields.class);
+        CompilerUtil.parseFilter(Language.ECQL, cql, factory);
+        String raw = factory.getQuerySetting().get(CQLElasticSetting.page_size);
+        if (raw == null || raw.isBlank()) {
+            return null;
+        }
+        try {
+            return Long.parseLong(raw);
+        }
+        catch (NumberFormatException pe) {
+            return null;
+        }
     }
 
     @Override

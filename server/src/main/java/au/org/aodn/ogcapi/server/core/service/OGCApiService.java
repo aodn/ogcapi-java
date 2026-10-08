@@ -1,22 +1,28 @@
 package au.org.aodn.ogcapi.server.core.service;
 
+import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.features.model.FeatureCollectionGeoJSON;
 import au.org.aodn.ogcapi.server.core.exception.CustomException;
 import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
-import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.parser.stac.CQLToStacFilterFactory;
 import au.org.aodn.ogcapi.server.tile.RestApi;
 import org.geotools.filter.text.commons.CompilerUtil;
 import org.geotools.filter.text.commons.Language;
 import org.opengis.filter.Filter;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -31,6 +37,9 @@ public abstract class OGCApiService {
     @Autowired
     protected Search search;
 
+    @Autowired
+    protected ObjectMapper mapper;
+
     /**
      * You can find conformance id
      * <a href="https://docs.ogc.org/is/19-072/19-072.html#ats_core">here</a>
@@ -41,7 +50,7 @@ public abstract class OGCApiService {
     public ResponseEntity<FeatureCollectionGeoJSON> getFeature(String collectionId,
                                                                FeatureId fid,
                                                                List<String> properties,
-                                                               String filter) throws Exception {
+                                                               String filter) {
         switch(fid) {
             default -> {
                 // Individual item
@@ -49,60 +58,68 @@ public abstract class OGCApiService {
             }
         }
     }
-
-
-    public <R> ResponseEntity<R> getCollectionList(List<String> keywords,
-                                                   String filter,
-                                                   List<String> properties,
-                                                   String sortBy,
-                                                   OGCMediaTypeMapper f,
-                                                   CQLCrsType coor,
-                                                   BiFunction<ElasticSearchBase.SearchResult<StacCollectionModel>, Filter, R> converter) {
+    /**
+     * This function is used to generate the collection list but Streaming the output, this will lower the use of memory
+     * because we do not create the whole collection in memory before writing to client.
+     */
+    public ResponseEntity<StreamingResponseBody> writeCollectionList(List<String> keywords,
+                                                                    String filter,
+                                                                    List<String> properties,
+                                                                    String sortBy,
+                                                                    CQLCrsType coor,
+                                                                    BiFunction<StacCollectionModel, Filter, Collection> toCollection) {
         try {
-            switch (f) {
-                case json -> {
-                    ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchByParameters(keywords, filter, properties, sortBy, coor);
-
-                    CQLToStacFilterFactory factory = CQLToStacFilterFactory.builder()
-                            .cqlCrsType(coor)
-                            .build();
-
-                    Filter cql = null;
-
-                    try {
-                        cql = filter != null ? CompilerUtil.parseFilter(Language.CQL, filter, factory) : null;
-                    }
-                    catch(Exception ex) {
-                        // Do nothing
-                    }
-
-                    return ResponseEntity.ok()
-                            .body(converter.apply(result, cql));
-                }
-                default -> {
-                    /*
-                     * https://opengeospatial.github.io/ogcna-auto-review/19-072.html
-                     * The OGC API — Common Standard does not mandate a specific encoding or format for
-                     * representations of resources. However, both HTML and JSON are commonly used encodings for spatial
-                     * data on the web. The HTML and JSON requirements classes specify the encoding of resource
-                     * representations using:
-                     *     HTML
-                     *     JSON
-                     * Neither of these encodings is mandatory. An implementer of the API-Common Standard may decide
-                     * to implement other encodings instead of, or in addition to, these two.
-                     */
-                    // TODO: html return
-                    return new ResponseEntity<>(HttpStatus.NOT_IMPLEMENTED);
-                }
-            }
+            search.validateByParameters(keywords, filter, properties, sortBy, coor);
         }
-        catch(IllegalArgumentException iae) {
-            // We do not need to wrap it as it is already RuntimeException
+        catch (IllegalArgumentException iae) {
             throw iae;
         }
-        catch(Exception e) {
+        catch (Exception e) {
             throw new CustomException(e.getMessage(), e);
         }
+
+        Filter cql = null;
+        try {
+            if (filter != null) {
+                CQLToStacFilterFactory factory = CQLToStacFilterFactory.builder()
+                        .cqlCrsType(coor)
+                        .build();
+                cql = CompilerUtil.parseFilter(Language.CQL, filter, factory);
+            }
+        }
+        catch (Exception ex) {
+            // Do nothing, same as getCollectionList
+        }
+        Filter itemFilter = cql;
+
+        StreamingResponseBody body = output -> {
+            try (JsonGenerator generator = CollectionsResponseWriter.open(output, mapper)) {
+                ElasticSearchBase.SearchResult<StacCollectionModel> meta;
+                try {
+                    meta = search.visitByParameters(
+                            keywords, filter, properties, sortBy, coor, model -> {
+                                try {
+                                    generator.writeObject(toCollection.apply(model, itemFilter));
+                                } catch (IOException e) {
+                                    throw new UncheckedIOException(e);
+                                }
+                            });
+                } catch (RuntimeException e) {
+                    throw e;
+                } catch (Exception e) {
+                    throw new IllegalStateException(e);
+                }
+                List<String> searchAfter = meta.getSortValues() == null
+                        ? null
+                        : meta.getSortValues().stream().map(String::valueOf).toList();
+                CollectionsResponseWriter.finish(generator, meta.getTotal(), searchAfter);
+            } catch (UncheckedIOException e) {
+                throw e.getCause();
+            }
+        };
+        return ResponseEntity.ok()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(body);
     }
     /**
      * Rewrite the datetime parameter to CQL filter as this can be handled by CQL directly.
