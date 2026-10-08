@@ -448,9 +448,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
             should.add(CQLFields.id.getPropertyEqualToQuery(term));
-            // Acronym match on the *.synonyms sub-fields, e.g. "SOOP" -> "ships of opportunity".
-            should.add(CQLFields.acronym_title.getPropertyEqualToQuery(term));
-            should.add(CQLFields.acronym_desc.getPropertyEqualToQuery(term));
             // credit_contains uses match query by default, exact match is not applied here
             should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
         }
