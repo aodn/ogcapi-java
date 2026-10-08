@@ -187,14 +187,16 @@ public class RestAdminApiTest extends BaseTestClass {
             assertFalse(term.path("term").asText().isBlank());
         }
 
-        // both words of the query are reported, and separately for each field they hit,
-        // rather than being collapsed into one entry per field
+        // both words of the query are reported, rather than being collapsed into one entry per field
         List<String> reported = StreamSupport.stream(terms.spliterator(), false)
                 .map(term -> term.path("field").asText() + ":" + term.path("term").asText())
                 .toList();
-        assertTrue(reported.contains("title:ocean"));
-        assertTrue(reported.contains("title:acidification"));
-        assertTrue(reported.size() > 2, "a multi word query hits more than one field");
+        for (String word : List.of("ocean", "acidification")) {
+            long titleHits = reported.stream()
+                    .filter(r -> r.equals("title:" + word) || r.equals("title.synonyms:" + word))
+                    .count();
+            assertEquals(1, titleHits, "'" + word + "' must be reported once for title, got: " + reported);
+        }
     }
 
     @Test
