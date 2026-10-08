@@ -13,10 +13,6 @@ elasticsearch:
   vocabs_index:
     name: test_vocabs_index
 
-  # the set is never created in tests, so no keyword expands acronyms
-  acronyms:
-    name: portal-acronyms-test
-
   search_as_you_type:
     search_suggestions:
       path: search_suggestions

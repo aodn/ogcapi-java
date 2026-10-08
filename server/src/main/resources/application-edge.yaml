@@ -15,7 +15,5 @@ ogcapi:
     elasticsearch-explain-enabled: true
 
 elasticsearch:
-  acronyms:
-    name: portal-acronyms-edge
   semantic:
     enabled: true

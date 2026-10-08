@@ -1,7 +1,6 @@
 package au.org.aodn.ogcapi.server.service;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLCrsType;
-import au.org.aodn.ogcapi.server.core.service.AcronymLookup;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
@@ -38,10 +37,10 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(7, capturingSearch.should.size(),
-                "Exact match should produce 7 queries (two dis_max groups + other fields)");
-        assertDisMax(capturingSearch.should.get(0), "title", true);
-        assertDisMax(capturingSearch.should.get(1), "description", true);
+        assertEquals(9, capturingSearch.should.size(),
+                "Exact match should produce 9 queries (title + description + other fields, no dataset_group)");
+        assertTrue(capturingSearch.should.get(0).isMatchPhrase(), "Title query should be MatchPhraseQuery");
+        assertTrue(capturingSearch.should.get(1).isMatchPhrase(), "Description query should be MatchPhraseQuery");
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
     }
@@ -57,54 +56,10 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(7, capturingSearch.should.size(), "Fuzzy match should produce 7 queries");
-        assertDisMax(capturingSearch.should.get(0), "title", false);
-        assertDisMax(capturingSearch.should.get(1), "description", false);
+        assertEquals(9, capturingSearch.should.size(), "Fuzzy match should produce 9 queries");
+        assertTrue(capturingSearch.should.get(0).isMatch(), "fuzzy_title should be MatchQuery");
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
-    }
-
-    @Test
-    public void searchWithoutAcronymSkipsSynonymFields() throws Exception {
-        AcronymLookup lookup = mock(AcronymLookup.class);
-        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient, lookup);
-
-        // Ordinary words and an acronym's full name are both plain text, so title/description are matched once only
-        for (String keyword : List.of("coastal wave data", "ships of opportunity")) {
-            capturingSearch.searchByParameters(
-                    List.of(keyword),
-                    null,
-                    null,
-                    "-score,-rank",
-                    CQLCrsType.EPSG4326);
-
-            assertEquals(7, capturingSearch.should.size());
-            assertPlainMatch(capturingSearch.should.get(0), "title");
-            assertPlainMatch(capturingSearch.should.get(1), "description");
-            assertFalse(capturingSearch.should.toString().contains(".synonyms"),
-                    "'" + keyword + "' has no acronym, so the synonyms fields must not add to the score");
-        }
-    }
-
-    @Test
-    public void searchWithAcronymAndOtherWordsUsesSynonymFields() throws Exception {
-        AcronymLookup lookup = mock(AcronymLookup.class);
-        when(lookup.mayExpand("soop temperature")).thenReturn(true);
-        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient, lookup);
-
-        capturingSearch.searchByParameters(
-                List.of("soop temperature"),
-                null,
-                null,
-                "-score,-rank",
-                CQLCrsType.EPSG4326);
-
-        assertEquals(7, capturingSearch.should.size());
-        // ES expands the whole keyword on the synonyms field, so it is searched as "ships of opportunity temperature"
-        assertDisMax(capturingSearch.should.get(0), "title", false);
-        assertDisMax(capturingSearch.should.get(1), "description", false);
-        assertEquals("soop temperature",
-                capturingSearch.should.get(0).disMax().queries().get(1).match().query().stringValue());
     }
 
     // The portal SEO pipeline requests these in bulk to build Dataset JSON-LD
@@ -167,36 +122,11 @@ public class ElasticSearchTest {
                 "title-only _source is lightweight so the larger search_after batch is used");
         assertNotNull(capturingSearch.explainRequest.query());
         assertTrue(capturingSearch.explainRequest.query().isScriptScore());
-        assertEquals(7, capturingSearch.explainRequest.query().scriptScore()
+        assertEquals(9, capturingSearch.explainRequest.query().scriptScore()
                 .query().bool().should().size());
         assertNotNull(capturingSearch.explainRequest.source());
         assertTrue(capturingSearch.explainRequest.source().isFilter());
         assertFalse(capturingSearch.explainRequest.source().filter().includes().isEmpty());
-    }
-
-    private static void assertDisMax(Query query, String plainField, boolean phrase) {
-        assertTrue(query.isDisMax());
-        assertEquals(0.0, query.disMax().tieBreaker());
-        assertEquals(2, query.disMax().queries().size());
-
-        Query plain = query.disMax().queries().get(0);
-        if (phrase) {
-            assertTrue(plain.isMatchPhrase());
-            assertEquals(plainField, plain.matchPhrase().field());
-        }
-        else {
-            assertTrue(plain.isMatch());
-            assertEquals(plainField, plain.match().field());
-        }
-
-        Query synonym = query.disMax().queries().get(1);
-        assertTrue(synonym.isMatch());
-        assertEquals(plainField + ".synonyms", synonym.match().field());
-    }
-
-    private static void assertPlainMatch(Query query, String plainField) {
-        assertTrue(query.isMatch(), "expected a plain match, not a dis_max with the synonyms field");
-        assertEquals(plainField, query.match().field());
     }
 
     @Test
@@ -341,11 +271,6 @@ public class ElasticSearchTest {
         private CapturingElasticSearch(ElasticsearchClient client) {
             super(client, null, new ObjectMapper(), "test-index", 100, 10000, 10);
             this.searchAfterSplitRegex = "\\|\\|";
-        }
-
-        private CapturingElasticSearch(ElasticsearchClient client, AcronymLookup acronymLookup) {
-            this(client);
-            this.acronymLookup = acronymLookup;
         }
 
         @Override

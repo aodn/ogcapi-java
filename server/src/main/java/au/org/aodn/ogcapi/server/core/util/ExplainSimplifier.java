@@ -38,10 +38,6 @@ public class ExplainSimplifier {
 
     protected static final String SYNONYM_PREFIX = "Synonym(";
 
-    // A dis_max (disjunction max) explanation includes every match, but only its winning child contributes.
-    // Lucene writes "max of:" only for tieBreaker 0 (see ElasticSearch.bestOf), otherwise "max plus ... of:".
-    protected static final String MAX_OF_PREFIX = "max of:";
-
     protected static final String RELEVANCE_DESCRIPTION_PREFIX = "_score:";
 
     protected static final Comparator<ExplainSimplifiedResponse.MatchedTerm> BY_SCORE_DESC =
@@ -217,17 +213,6 @@ public class ExplainSimplifier {
 
         for (ExplanationDetail detail : details) {
             String description = detail.description();
-
-            if (description != null && description.startsWith(MAX_OF_PREFIX)) {
-                if (detail.details() != null) {
-                    // the highest child, not one equal to the parent, so float rounding cannot lose the winner; a tie keeps the first
-                    detail.details().stream()
-                            .max(Comparator.comparingDouble(ExplanationDetail::value))
-                            .ifPresent(winner -> collectScoreParts(
-                                    List.of(winner), terms, filters));
-                }
-                continue;
-            }
 
             // most nodes are idf/tf breakdowns, skip the regex for them
             if (description != null && description.startsWith(WEIGHT_PREFIX)) {
