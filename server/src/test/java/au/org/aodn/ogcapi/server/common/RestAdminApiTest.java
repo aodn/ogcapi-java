@@ -228,8 +228,8 @@ public class RestAdminApiTest extends BaseTestClass {
     public void explainSimplifiedFormatReportsQuotedPhraseMatches() throws IOException {
         insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");
 
-        // a quoted query routes title and description through MatchPhraseQuery, which elastic
-        // search renders as a single weight(title:"ocean acidification" in N) leaf
+        // a quoted query routes title and description through a phrase multi_match on the field and its
+        // synonyms sub-field, each child renders as a single weight(title:"ocean acidification" in N) leaf
         URI simpleUri = explainUri("q", "\"ocean acidification\"", "format", "simple");
 
         ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
@@ -239,9 +239,11 @@ public class RestAdminApiTest extends BaseTestClass {
                 .path("hits").path(0).path("matched_terms");
 
         // the phrase is reported as one term with its quotes stripped, a term only
-        // extraction would drop this leaf entirely
+        // extraction would drop this leaf entirely. A plain phrase scores the same on title and
+        // title.synonyms, so either can win the dis_max
         assertTrue(StreamSupport.stream(terms.spliterator(), false)
-                        .anyMatch(term -> "title".equals(term.path("field").asText())
+                        .anyMatch(term -> ("title".equals(term.path("field").asText())
+                                        || "title.synonyms".equals(term.path("field").asText()))
                                 && "ocean acidification".equals(term.path("term").asText())),
                 "a quoted phrase must be reported as a single matched term");
     }
