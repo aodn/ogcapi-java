@@ -5,10 +5,12 @@ import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.ScriptSortType;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
+import co.elastic.clients.elasticsearch.core.explain.ExplanationDetail;
 import co.elastic.clients.elasticsearch.core.search.Hit;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -84,6 +86,68 @@ public class ExplainSimplifierTest {
                 ExplainSimplifier.toSimplifiedHit(hit, 1, textSearchSort());
 
         assertNull(simplified.getSortValues());
+    }
+
+    @Test
+    public void disMaxReportsOnlyOneWinnerWhenPlainAndSynonymScoresTie() {
+        List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max of:", 12.1f,
+                detail(12.1f, "weight(title:wave in 1) [BM25], result of:"),
+                detail(12.1f, "weight(title.synonyms:wave in 1) [BM25], result of:"));
+
+        assertEquals(1, terms.size());
+        assertEquals("title", terms.get(0).getField());
+        assertEquals(12.1, terms.get(0).getScore(), 0.0001);
+    }
+
+    @Test
+    public void disMaxReportsSynonymWinnerAsOneEntry() {
+        List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max of:", 12.1f,
+                detail(4.2f, "weight(title:soop in 1) [BM25], result of:"),
+                detail(12.1f, "weight(Synonym(title.synonyms:soop title.synonyms:ships "
+                        + "title.synonyms:of title.synonyms:opportunity) in 1) [BM25], result of:"));
+
+        assertEquals(1, terms.size());
+        assertEquals("title.synonyms", terms.get(0).getField());
+        assertEquals("soop ships of opportunity", terms.get(0).getTerm());
+        assertEquals(12.1, terms.get(0).getScore(), 0.0001);
+    }
+
+    @Test
+    public void disMaxReportsHighestChildWhenNoChildEqualsParent() {
+        List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max of:", 12.1f,
+                detail(12.0999f, "weight(title:wave in 1) [BM25], result of:"),
+                detail(4.0f, "weight(title.synonyms:wave in 1) [BM25], result of:"));
+
+        assertEquals(1, terms.size());
+        assertEquals("title", terms.get(0).getField());
+    }
+
+    @Test
+    public void disMaxWithTieBreakerReportsOnlyTheWinner() {
+        // best_fields multi_match with tie_breaker 0.1: 36.3 + 0.1 * 12.1
+        List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max plus 0.1 times others of:", 37.51f,
+                detail(36.3f, "weight(title:wave in 1) [BM25], result of:"),
+                detail(12.1f, "weight(title.synonyms:wave in 1) [BM25], result of:"));
+
+        assertEquals(1, terms.size());
+        assertEquals("title", terms.get(0).getField());
+        assertEquals(36.3, terms.get(0).getScore(), 0.0001);
+    }
+
+    private static List<ExplainSimplifiedResponse.MatchedTerm> collectDisMax(String description, float value,
+                                                                            ExplanationDetail... children) {
+        List<ExplainSimplifiedResponse.MatchedTerm> terms = new ArrayList<>();
+        ExplainSimplifier.collectScoreParts(
+                List.of(detail(value, description, children)), terms, new ArrayList<>());
+        return terms;
+    }
+
+    private static ExplanationDetail detail(float value, String description,
+                                            ExplanationDetail... children) {
+        return ExplanationDetail.of(d -> d
+                .value(value)
+                .description(description)
+                .details(List.of(children)));
     }
 
     private static ExplainSimplifiedResponse.SortValue sortValue(String field, Object value) {
