@@ -30,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.math.BigDecimal;
 import java.net.URI;
@@ -58,13 +59,13 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
     @Override
     public ResponseEntity<Void> apiGet(String f) {
         switch(OGCMediaTypeMapper.valueOf(f.toLowerCase())) {
-            case json: {
+            case json -> {
                 return ResponseEntity
                         .status(HttpStatus.TEMPORARY_REDIRECT)
                         .location(URI.create("/api/v1/ogc/api-docs/v3"))
                         .build();
             }
-            default: {
+            default -> {
                 return ResponseEntity
                         .status(HttpStatus.TEMPORARY_REDIRECT)
                         .location(URI.create("/api/v1/ogc/swagger-ui/index.html"))
@@ -134,7 +135,7 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
             //        "text/html"
             },
             method = RequestMethod.GET)
-    public ResponseEntity<?> getCollections(
+    public ResponseEntity<StreamingResponseBody> getCollections(
             @Parameter(in = ParameterIn.QUERY, description = "Property to be return" ,schema=@Schema())
                 @Valid @RequestParam(value = "properties", required = false) List<String> properties,
             @Parameter(in = ParameterIn.QUERY, description = "Only records that have a geometry that intersects the bounding box are selected. The bounding box is provided as four or six numbers, depending on whether the coordinate reference system includes a vertical axis (height or depth):  * Lower left corner, coordinate axis 1 * Lower left corner, coordinate axis 2 * Minimum value, coordinate axis 3 (optional) * Upper right corner, coordinate axis 1 * Upper right corner, coordinate axis 2 * Maximum value, coordinate axis 3 (optional)  The coordinate reference system of the values is WGS 84 long/lat (http://www.opengis.net/def/crs/OGC/1.3/CRS84) unless a different coordinate reference system is specified in the parameter `bbox-crs`.  For WGS 84 longitude/latitude the values are in most cases the sequence of minimum longitude, minimum latitude, maximum longitude and maximum latitude.  However, in cases where the box spans the antimeridian the first value (west-most box edge) is larger than the third value (east-most box edge).  If the vertical axis is included, the third and the sixth number are the bottom and the top of the 3-dimensional bounding box.  If a record has multiple spatial geometry properties, it is the decision of the server whether only a single spatial geometry property is used to determine the extent or all relevant geometries." ,schema=@Schema())
@@ -162,14 +163,13 @@ public class RestApi implements ApiApi, DefaultApi, ConformanceApi {
                 // the same, we append the bbox parameter to the filter in case user use this parameter
                 filter = OGCApiService.processBBoxParameter(CQLFields.geometry.name(), bbox, filter);
             }
-            return commonService.getCollectionList(
+            return commonService.writeCollectionList(
                     q,
                     filter,
                     properties,
                     sortBy,
-                    OGCMediaTypeMapper.json,
                     CQLCrsType.convertFromUrl(crs),
-                    stacToCollection::convert);
+                    stacToCollection::convertOne);
         }
         else {
             List<String> reasons = new ArrayList<>();
