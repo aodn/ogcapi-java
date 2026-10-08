@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public interface Search {
     ElasticSearchBase.SearchResult<StacCollectionModel> searchCollectionWithGeometry(List<String> ids, String sortBy) throws Exception;
@@ -22,6 +23,25 @@ public interface Search {
             List<String> properties,
             String sortBy,
             CQLCrsType coor
+    ) throws Exception;
+    /**
+     * Rejects a bad filter or property list before a response is committed.
+     */
+    void validateByParameters(
+            List<String> targets,
+            String filter,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor
+    ) throws Exception;
+
+    ElasticSearchBase.SearchResult<StacCollectionModel> visitByParameters(
+            List<String> targets,
+            String filter,
+            List<String> properties,
+            String sortBy,
+            CQLCrsType coor,
+            Consumer<StacCollectionModel> consumer
     ) throws Exception;
 
     JsonNode explainByParameters(

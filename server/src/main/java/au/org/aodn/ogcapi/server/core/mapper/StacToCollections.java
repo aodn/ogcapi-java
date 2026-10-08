@@ -23,7 +23,7 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
     public Collections convert(ElasticSearch.SearchResult<StacCollectionModel> model, Filter filter) {
 
         List<Collection> collections = model.getCollections().stream()
-                .map(m -> getCollection(m, filter, hostname))
+                .map(m -> convertOne(m, filter))
                 .toList();
 
         ExtendedCollections result = new ExtendedCollections();
@@ -35,5 +35,9 @@ public abstract class StacToCollections implements Converter<ElasticSearch.Searc
         result.setCollections(collections);
 
         return result;
+    }
+
+    public Collection convertOne(StacCollectionModel model, Filter filter) {
+        return getCollection(model, filter, hostname);
     }
 }
