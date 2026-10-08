@@ -5,7 +5,10 @@ import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
+import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
+import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,10 +40,22 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(9, capturingSearch.should.size(),
-                "Exact match should produce 9 queries (title + description + other fields, no dataset_group)");
-        assertTrue(capturingSearch.should.get(0).isMatchPhrase(), "Title query should be MatchPhraseQuery");
-        assertTrue(capturingSearch.should.get(1).isMatchPhrase(), "Description query should be MatchPhraseQuery");
+        assertEquals(7, capturingSearch.should.size(),
+                "Exact match should produce 7 queries (title + description + other fields, no dataset_group)");
+
+        MultiMatchQuery title = capturingSearch.should.get(0).multiMatch();
+        assertEquals(TextQueryType.Phrase, title.type(), "Title query should be a phrase multi_match");
+        assertEquals(List.of("title^2", "title.synonyms^2"), title.fields());
+        assertEquals(0.1, title.tieBreaker());
+        assertEquals("ocean temperature", title.query(), "quotes are removed");
+        assertNull(title.fuzziness(), "fuzziness is not allowed for a phrase");
+
+        MultiMatchQuery description = capturingSearch.should.get(1).multiMatch();
+        assertEquals(TextQueryType.Phrase, description.type(), "Description query should be a phrase multi_match");
+        assertEquals(List.of("description", "description.synonyms"), description.fields());
+        assertEquals(0.1, description.tieBreaker());
+
+        assertSynonymsOnlyInsideMultiMatch(capturingSearch.should);
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
     }
@@ -56,10 +71,38 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(9, capturingSearch.should.size(), "Fuzzy match should produce 9 queries");
-        assertTrue(capturingSearch.should.get(0).isMatch(), "fuzzy_title should be MatchQuery");
+        assertEquals(7, capturingSearch.should.size(), "Fuzzy match should produce 7 queries");
+
+        MultiMatchQuery title = capturingSearch.should.get(0).multiMatch();
+        assertEquals(TextQueryType.BestFields, title.type(), "fuzzy_title should be a best_fields multi_match");
+        assertEquals(List.of("title^2", "title.synonyms^2"), title.fields());
+        assertEquals(0.1, title.tieBreaker());
+        assertEquals("AUTO", title.fuzziness());
+        assertEquals(4, title.prefixLength());
+        assertEquals(Operator.And, title.operator());
+
+        MultiMatchQuery description = capturingSearch.should.get(1).multiMatch();
+        assertEquals(TextQueryType.BestFields, description.type(), "fuzzy_desc should be a best_fields multi_match");
+        assertEquals(List.of("description", "description.synonyms"), description.fields());
+        assertEquals(0.1, description.tieBreaker());
+        assertEquals("AUTO", description.fuzziness());
+        assertEquals(4, description.prefixLength());
+        assertEquals(Operator.And, description.operator());
+
+        assertSynonymsOnlyInsideMultiMatch(capturingSearch.should);
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
+    }
+
+    /**
+     * The synonyms sub-fields must only be scored inside the title/description multi_match, a separate clause on them
+     * would score plain words twice
+     */
+    private static void assertSynonymsOnlyInsideMultiMatch(List<Query> should) {
+        should.stream()
+                .filter(q -> !q.isMultiMatch())
+                .forEach(q -> assertFalse(q.toString().contains(".synonyms"),
+                        "unexpected clause on a synonyms field: " + q));
     }
 
     // The portal SEO pipeline requests these in bulk to build Dataset JSON-LD
@@ -122,7 +165,7 @@ public class ElasticSearchTest {
                 "title-only _source is lightweight so the larger search_after batch is used");
         assertNotNull(capturingSearch.explainRequest.query());
         assertTrue(capturingSearch.explainRequest.query().isScriptScore());
-        assertEquals(9, capturingSearch.explainRequest.query().scriptScore()
+        assertEquals(7, capturingSearch.explainRequest.query().scriptScore()
                 .query().bool().should().size());
         assertNotNull(capturingSearch.explainRequest.source());
         assertTrue(capturingSearch.explainRequest.source().isFilter());
