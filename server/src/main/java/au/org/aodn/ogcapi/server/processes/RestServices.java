@@ -151,14 +151,16 @@ public class RestServices {
 
     /**
      * Submit a prepared download to the configured queue and job definition.
+     *
+     * @param shareIdentifier the fair-share tag sent as the Batch shareIdentifier, default as false, set in application.yaml
      */
-    public String submitDownloadJob(String jobName, Map<String, String> parameters) {
-        String jobId = submitJob(jobName, this.batchJobQueue, this.batchJobDefinition, parameters);
+    public String submitDownloadJob(String jobName, Map<String, String> parameters, String shareIdentifier) {
+        String jobId = submitJob(jobName, this.batchJobQueue, this.batchJobDefinition, parameters, shareIdentifier);
         log.info("Job submitted with ID: {}", jobId);
         return jobId;
     }
 
-    private String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters) {
+    private String submitJob(String jobName, String jobQueue, String jobDefinition, Map<String, String> parameters, String shareIdentifier) {
 
         // Filter out null or empty parameter values before submitting to AWS Batch.
         // AWS Batch returns "Parameter values must be provided" when the job definition
@@ -183,6 +185,8 @@ public class RestServices {
                 .jobQueue(jobQueue)
                 .jobDefinition(jobDefinition)
                 .parameters(submitParameters)
+                // SDK v2 leaves a null field out of the request, so FIFO submits are unchanged.
+                .shareIdentifier(shareIdentifier)
                 .build();
 
         SubmitJobResponse submitJobResponse = batchClient.submitJob(submitJobRequest);
