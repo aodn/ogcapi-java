@@ -128,13 +128,13 @@ public class RestServicesTest {
         when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(submitJobResponse);
 
         // Act: submit with a non-null share, as the admission service does on a fair-share queue.
-        restServices.submitDownloadJob("test-job", new HashMap<>(), "small-downloads");
+        restServices.submitDownloadJob("test-job", new HashMap<>(), "small");
 
         // Capture the submitted request
         ArgumentCaptor<SubmitJobRequest> captor = ArgumentCaptor.forClass(SubmitJobRequest.class);
         verify(batchClient, times(1)).submitJob(captor.capture());
 
-        assertEquals("small-downloads", captor.getValue().shareIdentifier());
+        assertEquals("small", captor.getValue().shareIdentifier());
     }
 
     @Test

@@ -71,7 +71,7 @@ class DownloadAdmissionServiceTest {
     private DownloadAdmissionService build(DownloadLimitProperties limits, DownloadSizeLimitProperties sizeLimit,
                                            boolean shareEnabled) {
         return new DownloadAdmissionService(restServices, counter, limits, sizeLimit,
-                new DownloadShareProperties(shareEnabled, DataSize.ofMegabytes(50), "small-downloads", "large-downloads"));
+                new DownloadShareProperties(shareEnabled, DataSize.ofMegabytes(50), "small", "large"));
     }
 
     /** The share_identifier parameter of the one download submitted to Batch. */
