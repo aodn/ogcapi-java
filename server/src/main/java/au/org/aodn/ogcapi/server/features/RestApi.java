@@ -5,6 +5,7 @@ import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.features.model.Exception;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
+import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import io.swagger.v3.oas.annotations.Hidden;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -122,6 +123,9 @@ public class RestApi implements CollectionsApi {
                 return featuresService.getWmsFields(collectionId, request);
             }
             case wms_map_tile -> {
+                // The client end instant may move every on refresh; therefore, we are never able to cache the image
+                // due to datetime is part of the key
+                request.setDatetime(DatetimeUtils.coverWholeUtcDays(request.getDatetime()));
                 return featuresService.getWmsMapTile(collectionId, request);
             }
             case wms_legend -> {
