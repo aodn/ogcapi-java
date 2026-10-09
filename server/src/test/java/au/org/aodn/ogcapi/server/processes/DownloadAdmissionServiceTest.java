@@ -303,8 +303,8 @@ class DownloadAdmissionServiceTest {
 
         shareEnabled.submit(request(RECIPIENT));
 
-        assertEquals("small-downloads", submittedShare());
-        assertEquals("small-downloads", submittedShareIdentifier());
+        assertEquals("small", submittedShare());
+        assertEquals("small", submittedShareIdentifier());
     }
 
     @Test
@@ -316,7 +316,7 @@ class DownloadAdmissionServiceTest {
 
         service.submit(request(RECIPIENT));
 
-        assertEquals("small-downloads", submittedShare());
+        assertEquals("small", submittedShare());
         assertNull(submittedShareIdentifier());
     }
 }
