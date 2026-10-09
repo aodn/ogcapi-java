@@ -80,9 +80,11 @@ public class DownloadAdmissionService {
             String shareIdentifier = shareFor(estimatedBytes);
             log.info("Download for uuid {} estimated {} bytes, share {}", request.uuid(),
                     estimatedBytes.isPresent() ? estimatedBytes.getAsLong() : "none", shareIdentifier);
+            // The Batch shareIdentifier is only sent where the queue has a fair-share policy, otherwise AWS rejects the submit.
             parameters.put(DatasetDownloadEnums.Parameter.SHARE_IDENTIFIER.getValue(), shareIdentifier);
             String jobName = RestServices.downloadJobName(request.recipient());
-            String awsJobId = restServices.submitDownloadJob(jobName, parameters);
+            String awsJobId = restServices.submitDownloadJob(
+                    jobName, parameters, share.enabled() ? shareIdentifier : null);
             counter.recordSubmitted(awsJobId, request.recipient());
             notifyStarted(request);
             return awsJobId;

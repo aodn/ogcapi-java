@@ -73,9 +73,13 @@ aws:
           enabled: true
           max-size: 180GB
         # Fair-share tag for a download (#9348). A download estimated under small-max-size is
-        # tagged small, anything else (including no estimate) large. For now it is only sent as
-        # the share_identifier job parameter, since the queue has no fair-share policy yet.
+        # tagged small, anything else (including no estimate) large. The tag always goes out as
+        # the share_identifier job parameter. enabled also sets it as the Batch shareIdentifier;
+        # set it true only for an environment whose queue has a fair-share policy, and repoint
+        # both queue and child-queue there. child-queue is set explicitly above, so overriding
+        # queue alone leaves child-job lookups on the old queue.
         share:
+          enabled: false
           small-max-size: 50MB
           small: small
           large: large
