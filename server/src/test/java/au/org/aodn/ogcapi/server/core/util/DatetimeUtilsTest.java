@@ -40,6 +40,21 @@ public class DatetimeUtilsTest {
     }
 
     @Test
+    public void testCoverWholeUtcDays_SnapsIntervalToDayBounds() {
+        assertEquals("1970-01-01T00:00:00Z/2026-10-08T23:59:59Z",
+                DatetimeUtils.coverWholeUtcDays("1970-01-01T00:00:00Z/2026-10-08T23:46:31Z"));
+    }
+
+    @Test
+    public void testCoverWholeUtcDays_LeavesInstantAndOpenEnds() {
+        assertEquals("2022-07-13T05:30:00.000Z",
+                DatetimeUtils.coverWholeUtcDays("2022-07-13T05:30:00.000Z"));
+        assertEquals("../2026-10-08T23:59:59Z",
+                DatetimeUtils.coverWholeUtcDays("../2026-10-08T23:46:31Z"));
+        assertNull(DatetimeUtils.coverWholeUtcDays(null));
+    }
+
+    @Test
     public void testValidateAndFormatDate_ValidYYYY_MM_DD() {
         // Test valid YYYY-MM-DD format
         String result = DatetimeUtils.validateAndFormatDate("2023-01-15", true);
@@ -118,45 +133,35 @@ public class DatetimeUtilsTest {
     @Test
     public void testValidateAndFormatDate_InvalidFormat() {
         // Test invalid format throws exception
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            DatetimeUtils.validateAndFormatDate("2023/01/15", true);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> DatetimeUtils.validateAndFormatDate("2023/01/15", true));
         assertTrue(exception.getMessage().contains("Date must be in MM-YYYY or YYYY-MM-DD format"));
     }
 
     @Test
     public void testValidateAndFormatDate_InvalidMonth() {
         // Test invalid month throws exception
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            DatetimeUtils.validateAndFormatDate("13-2023", true);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> DatetimeUtils.validateAndFormatDate("13-2023", true));
         assertTrue(exception.getMessage().contains("Invalid month in date"));
     }
 
     @Test
     public void testValidateAndFormatDate_InvalidFormat_Slashes() {
         // Test date with slashes instead of dashes
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            DatetimeUtils.validateAndFormatDate("2023/02/15", true);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> DatetimeUtils.validateAndFormatDate("2023/02/15", true));
         assertTrue(exception.getMessage().contains("Date must be in MM-YYYY or YYYY-MM-DD format"));
     }
 
     @Test
     public void testValidateAndFormatDate_IncompleteDate() {
         // Test incomplete date format
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            DatetimeUtils.validateAndFormatDate("2023-01", true);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> DatetimeUtils.validateAndFormatDate("2023-01", true));
         assertTrue(exception.getMessage().contains("Date must be in MM-YYYY or YYYY-MM-DD format"));
     }
 
     @Test
     public void testValidateAndFormatDate_RandomString() {
         // Test random string throws exception
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            DatetimeUtils.validateAndFormatDate("random-text", true);
-        });
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> DatetimeUtils.validateAndFormatDate("random-text", true));
         assertTrue(exception.getMessage().contains("Date must be in MM-YYYY or YYYY-MM-DD format"));
     }
 

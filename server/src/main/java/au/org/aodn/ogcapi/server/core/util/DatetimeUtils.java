@@ -96,6 +96,40 @@ public class DatetimeUtils {
         }
     }
 
+    /**
+     * Snap an OGC interval to whole UTC days so the same calendar day is one cache key.
+     * The start becomes 00:00:00Z and the end becomes 23:59:59Z on their own days.
+     * A value that is not an interval is returned unchanged.
+     *
+     * @param datetime - An OGC datetime, for example 1970-01-01T00:00:00Z/2026-10-08T23:46:31Z
+     * @return - The same interval with both ends on day boundaries, or the original value
+     */
+    public static String coverWholeUtcDays(String datetime) {
+        if (datetime == null || !datetime.contains("/")) {
+            return datetime;
+        }
+        String[] parts = datetime.split("/", -1);
+        if (parts.length != 2) {
+            return datetime;
+        }
+        return snapToUtcDay(parts[0], false) + "/" + snapToUtcDay(parts[1], true);
+    }
+
+    private static String snapToUtcDay(String value, boolean endOfDay) {
+        if (value == null || value.isBlank() || "..".equals(value.trim())) {
+            return value == null ? "" : value;
+        }
+        try {
+            LocalDate day = OffsetDateTime.parse(value.trim()).withOffsetSameInstant(ZoneOffset.UTC).toLocalDate();
+            OffsetDateTime bound = endOfDay
+                    ? day.atTime(23, 59, 59).atOffset(ZoneOffset.UTC)
+                    : day.atStartOfDay().atOffset(ZoneOffset.UTC);
+            return DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'").format(bound);
+        } catch (DateTimeParseException e) {
+            return value;
+        }
+    }
+
     public static String formatOGCDateTime(String startDate, String endDate) {
         if(startDate == null || startDate.trim().isEmpty()) {
             startDate = "..";
