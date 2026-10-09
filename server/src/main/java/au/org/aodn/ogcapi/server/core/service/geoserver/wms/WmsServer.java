@@ -555,7 +555,7 @@ public class WmsServer {
     @Cacheable(value = CACHE_WMS_MAP_TILE)
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
         Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-        log.debug("map tile request for uuid {} layername {}", collectionId, request.getLayerName());
+        log.debug("Geoserver tile request for uuid {} request -> {}", collectionId, request);
         if (mapServerUrl.isPresent()) {
             List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
             // Try one by one, we exit when any works
@@ -563,7 +563,7 @@ public class WmsServer {
                 log.debug("map tile request for layer name {} url {} ", request.getLayerName(), url);
                 ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, byte[].class), byte[].class, pretendUserEntity);
                 if (response.getStatusCode().is2xxSuccessful()) {
-                    if (response.getHeaders().getContentType() != null && response.getHeaders().getContentType().getType().equals("image")) {
+                    if (response.getHeaders().getContentType() != null && response.getHeaders().getContentType().isCompatibleWith(MediaType.IMAGE_PNG)) {
                         return response.getBody();
                     } else {
                         // Something wrong from the server likely syntax error

@@ -170,6 +170,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
+        // Log before building the body. A later failure to write ErrorResponse (for example
+        // when the request content type is image/png) replaces this exception in the log.
+        log.error("Unhandled exception on {} parameters {}",
+                request.getDescription(false),
+                request.getParameterMap()
+                        .entrySet()
+                        .stream()
+                        .map(entry -> entry.getKey() + "=" + Arrays.toString(entry.getValue()))
+                        .collect(Collectors.joining(", ", "{", "}")),
+                ex);
+
         ErrorResponse errorResponse = ErrorResponse
                 .builder()
                 .timestamp(LocalDateTime.now())

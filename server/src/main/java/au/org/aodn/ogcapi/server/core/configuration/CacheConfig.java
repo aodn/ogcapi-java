@@ -56,14 +56,17 @@ public class CacheConfig {
         File storagePath = tempDir.toFile();
         storagePath.deleteOnExit(); // Mark the directory for deletion on JVM exit
 
+        ResourcePoolsBuilder.newResourcePoolsBuilder();
         org.ehcache.config.Configuration config = ConfigurationBuilder
                 .newConfigurationBuilder()
                 .withService(new DefaultPersistenceConfiguration(storagePath))
                 .withCache(CACHE_WMS_MAP_TILE,
+                        // Entry-counted heap. A byte-sized heap asks Ehcache to measure each PNG,
+                        // and a failed measurement rejects the put, so the tile is fetched again.
                         CacheConfigurationBuilder.newCacheConfigurationBuilder(
                                         Object.class, byte[].class,
-                                        ResourcePoolsBuilder.newResourcePoolsBuilder()
-                                                .heap(100, MemoryUnit.MB)
+                                        ResourcePoolsBuilder
+                                                .heap(2000) // 2000 entries
                                                 .disk(10, MemoryUnit.GB, true)
                                 )
                                 .withExpiry(ExpiryPolicyBuilder.timeToLiveExpiration(Duration.ofHours(24)))
