@@ -16,7 +16,10 @@ import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 
+import java.util.HashMap;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
@@ -54,7 +57,7 @@ public class RestServicesTest {
         DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, polygons, recipient,
                 collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
         return restServices.submitDownloadJob(
-                RestServices.downloadJobName(recipient), restServices.buildDownloadParameters(request));
+                RestServices.downloadJobName(recipient), restServices.buildDownloadParameters(request), null);
     }
 
     @Test
@@ -112,7 +115,26 @@ public class RestServicesTest {
         assertEquals("geotiff", captured.parameters().get("output_format"));
         assertEquals("https://metadata.imas.utas.edu.au/.../test-uuid-123",
                 captured.parameters().get("full_metadata_link"));
+        // The helper passes null as the share, so no top-level shareIdentifier goes out.
+        assertNull(captured.shareIdentifier());
         assertEquals(jobId, response);
+    }
+
+    @Test
+    public void submitDownloadJobSetsTheShareIdentifierOnTheRequest() throws JsonProcessingException {
+        // Arrange
+        String jobId = "12345";
+        SubmitJobResponse submitJobResponse = SubmitJobResponse.builder().jobId(jobId).build();
+        when(batchClient.submitJob(any(SubmitJobRequest.class))).thenReturn(submitJobResponse);
+
+        // Act: submit with a non-null share, as the admission service does on a fair-share queue.
+        restServices.submitDownloadJob("test-job", new HashMap<>(), "small-downloads");
+
+        // Capture the submitted request
+        ArgumentCaptor<SubmitJobRequest> captor = ArgumentCaptor.forClass(SubmitJobRequest.class);
+        verify(batchClient, times(1)).submitJob(captor.capture());
+
+        assertEquals("small-downloads", captor.getValue().shareIdentifier());
     }
 
     @Test

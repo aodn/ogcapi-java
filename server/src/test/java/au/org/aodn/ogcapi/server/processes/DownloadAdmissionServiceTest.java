@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -51,7 +52,7 @@ class DownloadAdmissionServiceTest {
     void setUp() throws JsonProcessingException {
         lenient().when(restServices.buildDownloadParameters(any()))
                 .thenAnswer(invocation -> new HashMap<String, String>());
-        lenient().when(restServices.submitDownloadJob(anyString(), any()))
+        lenient().when(restServices.submitDownloadJob(anyString(), any(), any()))
                 .thenAnswer(invocation -> UUID.randomUUID().toString());
         lenient().when(counter.countInFlight(anyString()))
                 .thenAnswer(invocation -> current(invocation.getArgument(0)).get());
@@ -64,16 +65,28 @@ class DownloadAdmissionServiceTest {
     }
 
     private DownloadAdmissionService build(DownloadLimitProperties limits, DownloadSizeLimitProperties sizeLimit) {
+        return build(limits, sizeLimit, false);
+    }
+
+    private DownloadAdmissionService build(DownloadLimitProperties limits, DownloadSizeLimitProperties sizeLimit,
+                                           boolean shareEnabled) {
         return new DownloadAdmissionService(restServices, counter, limits, sizeLimit,
-                new DownloadShareProperties(DataSize.ofMegabytes(50), "small", "large"));
+                new DownloadShareProperties(shareEnabled, DataSize.ofMegabytes(50), "small-downloads", "large-downloads"));
     }
 
     /** The share_identifier parameter of the one download submitted to Batch. */
     private String submittedShare() {
         @SuppressWarnings("unchecked")
         ArgumentCaptor<Map<String, String>> parameters = ArgumentCaptor.forClass(Map.class);
-        verify(restServices).submitDownloadJob(anyString(), parameters.capture());
+        verify(restServices).submitDownloadJob(anyString(), parameters.capture(), any());
         return parameters.getValue().get("share_identifier");
+    }
+
+    /** The top-level shareIdentifier argument of the one download submitted to Batch. */
+    private String submittedShareIdentifier() {
+        ArgumentCaptor<String> shareIdentifier = ArgumentCaptor.forClass(String.class);
+        verify(restServices).submitDownloadJob(anyString(), any(), shareIdentifier.capture());
+        return shareIdentifier.getValue();
     }
 
     private static DownloadLimitProperties limits(boolean enabled, int maxConcurrent) {
@@ -102,7 +115,7 @@ class DownloadAdmissionServiceTest {
         String jobId = service.submit(request(RECIPIENT));
 
         assertNotNull(jobId);
-        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any());
+        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any(), any());
         verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
@@ -112,7 +125,7 @@ class DownloadAdmissionServiceTest {
 
         assertThrows(DownloadLimitExceededException.class, () -> service.submit(request(RECIPIENT)));
 
-        verify(restServices, never()).submitDownloadJob(anyString(), any());
+        verify(restServices, never()).submitDownloadJob(anyString(), any(), any());
         // Nothing was submitted, so the user must not be told their file is being produced.
         verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
@@ -169,7 +182,7 @@ class DownloadAdmissionServiceTest {
         String jobId = disabled.submit(request(RECIPIENT));
 
         assertNotNull(jobId);
-        verify(restServices).submitDownloadJob(anyString(), any());
+        verify(restServices).submitDownloadJob(anyString(), any(), any());
         verify(counter, never()).refreshIfStale();
     }
 
@@ -178,7 +191,7 @@ class DownloadAdmissionServiceTest {
         // One slot free; the counter will not move because the submit below never actually
         // reaches AWS.
         current(RECIPIENT).set(9);
-        org.mockito.Mockito.when(restServices.submitDownloadJob(anyString(), any()))
+        org.mockito.Mockito.when(restServices.submitDownloadJob(anyString(), any(), any()))
                 .thenThrow(new IllegalStateException("AWS Batch rejected the job"));
 
         assertThrows(IllegalStateException.class, () -> service.submit(request(RECIPIENT)));
@@ -188,7 +201,7 @@ class DownloadAdmissionServiceTest {
         // failed attempt never actually started a download.
         org.mockito.Mockito.reset(restServices);
         lenient().when(restServices.buildDownloadParameters(any())).thenReturn(new HashMap<>());
-        lenient().when(restServices.submitDownloadJob(anyString(), any()))
+        lenient().when(restServices.submitDownloadJob(anyString(), any(), any()))
                 .thenReturn(UUID.randomUUID().toString());
 
         assertNotNull(service.submit(request(RECIPIENT)));
@@ -205,7 +218,7 @@ class DownloadAdmissionServiceTest {
         assertEquals("Download is unavailable because the selected dataset is too large "
                 + "(estimated 180 GB, limit 180 GB). Please refine your selection to reduce the dataset size.",
                 exception.getMessage());
-        verify(restServices, never()).submitDownloadJob(anyString(), any());
+        verify(restServices, never()).submitDownloadJob(anyString(), any(), any());
         verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
@@ -214,7 +227,7 @@ class DownloadAdmissionServiceTest {
         when(restServices.estimateDownloadBytes(any())).thenReturn(MAX_BYTES - 1);
 
         assertNotNull(service.submit(request(RECIPIENT)));
-        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any());
+        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any(), any());
     }
 
     @Test
@@ -232,7 +245,7 @@ class DownloadAdmissionServiceTest {
         when(restServices.estimateDownloadBytes(any())).thenThrow(new RuntimeException("DAS is down"));
 
         assertNotNull(service.submit(request(RECIPIENT)));
-        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any());
+        verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any(), any());
     }
 
     @Test
@@ -278,5 +291,32 @@ class DownloadAdmissionServiceTest {
 
         assertEquals("large", submittedShare());
         verify(restServices, never()).estimateDownloadBytes(any());
+    }
+
+    @Test
+    void whenShareIsEnabledTheShareIdentifierMatchesTheParameter() throws Exception {
+        // Under the threshold tags small; with the switch on, that share is also sent as the
+        // top-level Batch shareIdentifier.
+        DownloadAdmissionService shareEnabled = build(limits(true, 10), sizeLimit(true), true);
+        when(restServices.estimateDownloadBytes(any()))
+                .thenReturn(DataSize.ofMegabytes(50).toBytes() - 1);
+
+        shareEnabled.submit(request(RECIPIENT));
+
+        assertEquals("small-downloads", submittedShare());
+        assertEquals("small-downloads", submittedShareIdentifier());
+    }
+
+    @Test
+    void whenShareIsDisabledNoShareIdentifierIsSentButTheParameterRemains() throws Exception {
+        // Default build has the switch off: the share_identifier parameter still goes out for
+        // DAS, but no top-level shareIdentifier is sent so a FIFO queue does not reject it.
+        when(restServices.estimateDownloadBytes(any()))
+                .thenReturn(DataSize.ofMegabytes(50).toBytes() - 1);
+
+        service.submit(request(RECIPIENT));
+
+        assertEquals("small-downloads", submittedShare());
+        assertNull(submittedShareIdentifier());
     }
 }
