@@ -493,6 +493,8 @@ public abstract class ElasticSearchBase {
                 .index(indexName)
                 .id(id)
                 .query(searchRequest.query())
+                // Same shard copy as the search, otherwise the explained score can differ from the search score
+                .preference(searchRequest.preference())
                 .source(s -> s.fetch(false))
                 .build();
 
