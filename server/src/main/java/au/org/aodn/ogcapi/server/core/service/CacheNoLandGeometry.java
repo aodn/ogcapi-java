@@ -38,6 +38,7 @@ public class CacheNoLandGeometry {
                 null,
                 null,
                 null,
+                null,
                 null);
 
         return result.collections
