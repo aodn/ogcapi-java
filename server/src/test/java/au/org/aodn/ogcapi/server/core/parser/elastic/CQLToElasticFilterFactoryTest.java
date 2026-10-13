@@ -74,6 +74,17 @@ public class CQLToElasticFilterFactoryTest {
     }
 
     @Test
+    public void preferenceIsCollectedAsQuerySetting() throws CQLException {
+        CQLToElasticFilterFactory<CQLFields> factory = parse(
+                "preference='search-ranking-test' AND page_size=11 AND "
+                        + "(BBOX(geometry,104,-43,163,-8) OR geometry IS NULL)");
+
+        assertEquals("search-ranking-test", factory.getQuerySetting().get(CQLElasticSetting.preference),
+                "quoted literal arrives without its quotes");
+        assertEquals("11", factory.getQuerySetting().get(CQLElasticSetting.page_size));
+    }
+
+    @Test
     public void temporalDuringUsesOverlapRangeQueryAndIncludesOngoingRecords() throws CQLException {
         Filter filter = CompilerUtil.parseFilter(
                 Language.ECQL,

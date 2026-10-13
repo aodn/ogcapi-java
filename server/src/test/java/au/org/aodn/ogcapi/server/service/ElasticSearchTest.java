@@ -294,6 +294,52 @@ public class ElasticSearchTest {
                 "CQL page_size remains the upper bound even for lightweight property lists");
     }
 
+    @Test
+    public void cqlPreferenceIsSetOnNormalAndExplainRequests() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+        List<String> keywords = List.of("temperature");
+        String cql = "preference='search-ranking-test' AND page_size=3";
+
+        capturingSearch.searchByParameters(
+                keywords,
+                cql,
+                List.of("title"),
+                "-score,-rank",
+                CQLCrsType.EPSG4326);
+        SearchRequest normalRequest = capturingSearch.normalRequest;
+
+        capturingSearch.explainByParameters(
+                keywords,
+                cql,
+                List.of("title"),
+                "-score,-rank",
+                CQLCrsType.EPSG4326,
+                false);
+        SearchRequest explainRequest = capturingSearch.explainRequest;
+
+        assertEquals("search-ranking-test", normalRequest.preference(),
+                "the same preference routes identical searches to the same shard copies");
+        assertEquals(normalRequest.toString(), explainRequest.toString(),
+                "explain must be routed the same way as the search it explains");
+        assertTrue(normalRequest.query().scriptScore().query().bool().filter().isEmpty(),
+                "preference is a setting, not a filter");
+    }
+
+    @Test
+    public void noPreferenceUnlessCqlSetsIt() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+
+        capturingSearch.searchByParameters(
+                List.of("temperature"),
+                "page_size=3",
+                List.of("title"),
+                "-score,-rank",
+                CQLCrsType.EPSG4326);
+
+        assertNull(capturingSearch.normalRequest.preference(),
+                "routing is left to Elasticsearch when the caller does not opt in");
+    }
+
     private record SearchArguments(
             List<Query> queries,
             List<Query> should,
@@ -302,7 +348,8 @@ public class ElasticSearchTest {
             List<FieldValue> searchAfter,
             List<SortOptions> sortOptions,
             Double score,
-            Long maxSize) {
+            Long maxSize,
+            String preference) {
     }
 
     private static class CapturingElasticSearch extends ElasticSearch {
@@ -325,7 +372,8 @@ public class ElasticSearchTest {
                 List<FieldValue> searchAfter,
                 List<SortOptions> sortOptions,
                 Double score,
-                Long maxSize) {
+                Long maxSize,
+                String preference) {
             this.should = should;
             this.arguments = new SearchArguments(
                     queries,
@@ -335,7 +383,8 @@ public class ElasticSearchTest {
                     searchAfter,
                     sortOptions,
                     score,
-                    maxSize);
+                    maxSize,
+                    preference);
             this.normalRequest = buildCollectionSearchRequestSupplier(
                     queries,
                     should,
@@ -344,7 +393,8 @@ public class ElasticSearchTest {
                     searchAfter,
                     sortOptions,
                     score,
-                    maxSize).get().build();
+                    maxSize,
+                    preference).get().build();
             SearchResult<au.org.aodn.stac.model.StacCollectionModel> result = new SearchResult<>();
             result.setCollections(List.of());
             return result;
