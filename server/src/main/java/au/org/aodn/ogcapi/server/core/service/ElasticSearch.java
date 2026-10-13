@@ -394,6 +394,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 null,
                 createSortOptions(sortBy, CQLFields.class),
                 null,
+                null,
                 null);
     }
 
@@ -494,6 +495,7 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     null,
                     createSortOptions(sortBy, CQLFields.class),
                     null,
+                    null,
                     null);
         }
 
@@ -569,7 +571,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                 searchAfter,
                 sortOptions,
                 score,
-                maxSize);
+                maxSize,
+                setting.get(CQLElasticSetting.preference));
     }
 
     @Override
@@ -739,7 +742,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
                     searchAfter,
                     sortOptions,
                     score,
-                    maxSize
+                    maxSize,
+                    setting.get(CQLElasticSetting.preference)
             );
         }
     }
