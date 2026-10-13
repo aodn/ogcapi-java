@@ -6,7 +6,9 @@ package au.org.aodn.ogcapi.server.core.model.enumeration;
 public enum CQLElasticSetting {
     score("_score"),
     page_size("page_size"),
-    search_after("search_after");
+    search_after("search_after"),
+    // Elasticsearch search preference, the same value routes identical searches to the same shard copies so scoring stays consistent
+    preference("preference");
 
     private final String setting;
 

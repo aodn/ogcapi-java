@@ -180,6 +180,7 @@ public abstract class ElasticSearchBase {
      * @param should - This query will use in the should block of elastic search
      * @param filters - The Query coming from CQL parser
      * @param properties - The fields you want to return in the search, you can search a field but not include in the return
+     * @param preference - Elasticsearch search preference, a fixed value routes identical searches to the same shard copies so the score is consistent, null to leave routing to Elasticsearch
      * @return - The constructed builderSupplier
      */
     protected Supplier<SearchRequest.Builder> buildCollectionSearchRequestSupplier(final List<Query> queries,
@@ -189,9 +190,13 @@ public abstract class ElasticSearchBase {
                                                                                    final List<FieldValue> searchAfter,
                                                                                    final List<SortOptions> sortOptions,
                                                                                    final Double score,
-                                                                                   final Long maxSize) {
+                                                                                   final Long maxSize,
+                                                                                   final String preference) {
         return () -> {
             SearchRequest.Builder builder = new SearchRequest.Builder();
+            if (preference != null && !preference.isBlank()) {
+                builder.preference(preference);
+            }
             builder.index(indexName)
                     // If user query request a page that is smaller then the internal default, then
                     // we use the smaller one. The internal page size is used to get the result by
@@ -344,6 +349,7 @@ public abstract class ElasticSearchBase {
      * @param should - This query will use in the should block of elastic search
      * @param filters - The Query coming from CQL parser
      * @param properties - The fields you want to return in the search, you can search a field but not include in the return
+     * @param preference - Elasticsearch search preference, see buildCollectionSearchRequestSupplier
      * @return - The search result from Elastic query and format in StacCollectionModel
      */
     protected SearchResult<StacCollectionModel> searchCollectionBy(final List<Query> queries,
@@ -353,9 +359,10 @@ public abstract class ElasticSearchBase {
                                                                    final List<FieldValue> searchAfter,
                                                                    final List<SortOptions> sortOptions,
                                                                    final Double score,
-                                                                   final Long maxSize) {
+                                                                   final Long maxSize,
+                                                                   final String preference) {
         Supplier<SearchRequest.Builder> builderSupplier = buildCollectionSearchRequestSupplier(
-                queries, should, filters, properties, searchAfter, sortOptions, score, maxSize
+                queries, should, filters, properties, searchAfter, sortOptions, score, maxSize, preference
         );
 
         List<StacCollectionModel> collections = new ArrayList<>();
@@ -486,6 +493,8 @@ public abstract class ElasticSearchBase {
                 .index(indexName)
                 .id(id)
                 .query(searchRequest.query())
+                // Same shard copy as the search, otherwise the explained score can differ from the search score
+                .preference(searchRequest.preference())
                 .source(s -> s.fetch(false))
                 .build();
 
