@@ -96,6 +96,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
         defaultSetting.put(CQLElasticSetting.score, null);
         defaultSetting.put(CQLElasticSetting.page_size, null);
         defaultSetting.put(CQLElasticSetting.search_after, null);
+        defaultSetting.put(CQLElasticSetting.preference, null);
         return defaultSetting;
     }
     /**
