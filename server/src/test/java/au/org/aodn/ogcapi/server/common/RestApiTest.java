@@ -5,7 +5,10 @@ import au.org.aodn.ogcapi.server.BaseTestClass;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
+import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
+import org.json.JSONException;
 import org.junit.jupiter.api.*;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -23,6 +26,9 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)         // We need to use @BeforeAll @AfterAll with not static method
 public class RestApiTest extends BaseTestClass {
+
+    @Autowired
+    private CacheNoLandGeometry cacheNoLandGeometry;
 
     @BeforeAll
     public void beforeClass() {
@@ -841,5 +847,24 @@ public class RestApiTest extends BaseTestClass {
                 new ParameterizedTypeReference<>() {});
 
         assertNotNull(collections.getHeaders().getFirst("Cache-Control"));
+    }
+
+    @Test
+    public void verifyCentroidCalIsCorrect() throws IOException {
+        super.insertJsonToElasticRecordIndex("097a5435-91f4-4730-90aa-ddae94afcbda.json");
+        // The json is insert after cache created, we need to evit it so it can reload
+        cacheNoLandGeometry.evictAllNoLandGeometry();
+
+        String expected = """
+                {"links":[],"collections":[{"properties":{"centroid":[[136.33948,-14.54656]]},"id":"097a5435-91f4-4730-90aa-ddae94afcbda","links":[],"itemType":"Collection"}],"total":1,"search_after":["str:097a5435-91f4-4730-90aa-ddae94afcbda"]}""";
+
+        ResponseEntity<String> collections = testRestTemplate.exchange(
+                getBasePath() + "/collections?properties=id,centroid&filter=page_size=800 AND BBOX(geometry,130.57324851569425,-28.94840154686767,142.10570879176018,-11.386963065137689)&sortby=id",
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<>() {});
+
+        assertNotNull(collections.getBody());
+        assertEquals(expected, collections.getBody());
     }
 }

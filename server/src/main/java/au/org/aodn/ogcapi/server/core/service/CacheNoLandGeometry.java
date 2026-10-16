@@ -4,6 +4,7 @@ import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFields;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 
@@ -44,5 +45,13 @@ public class CacheNoLandGeometry {
         return result.collections
                 .stream()
                 .collect(Collectors.toMap(StacCollectionModel::getUuid, Function.identity()));
+    }
+    /**
+     * Call this through the Spring bean
+     * so the {@code @CacheEvict} advice runs. The next {@link #getAllNoLandGeometry()} reloads it.
+     */
+    @CacheEvict(value = ALL_NO_LAND_GEOMETRY, allEntries = true)
+    public void evictAllNoLandGeometry() {
+        log.info("Evicting cache {}", ALL_NO_LAND_GEOMETRY);
     }
 }

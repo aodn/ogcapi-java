@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.MediaType;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -206,9 +207,10 @@ public interface Converter<F, T> {
                             }
 
                             if (g != null && !g.isEmpty()) {
+                                List<List<BigDecimal>> centroid = createCentroid(g);
                                 collection.getProperties().put(
                                         CollectionProperty.centroid,
-                                        createCentroid(g)
+                                        centroid
                                 );
                             }
                         });

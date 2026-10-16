@@ -31,9 +31,11 @@ public class BBoxImpl <T extends Enum<T> & CQLFieldsInterface> implements BBOX {
         if (bounds instanceof Literal literal) {
             Object value = literal.getValue();
             if (value instanceof BoundingBox3D boundingBox3D) {
+                //TODO: Handle BoundingBox3D
             }
             else if (value instanceof Geometry g && geometry instanceof PropertyName name) {
                 if (g.getUserData() instanceof CoordinateReferenceSystem crs) {
+                    //TODO: Handle CRS
                 }
             }
         }
@@ -57,8 +59,6 @@ public class BBoxImpl <T extends Enum<T> & CQLFieldsInterface> implements BBOX {
                 catch (NoSuchAuthorityCodeException var16) {
                     crs = CRS.parseWKT(srs);
                 }
-            } else {
-                crs = null;
             }
             this.bounds = new ReferencedEnvelope(minx, maxx, miny, maxy, crs);
             this.geometry = BboxUtils.normalizeBbox(minx, maxx, miny, maxy);
