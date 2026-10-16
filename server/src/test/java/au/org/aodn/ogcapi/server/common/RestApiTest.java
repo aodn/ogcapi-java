@@ -6,7 +6,6 @@ import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.service.CacheNoLandGeometry;
-import org.json.JSONException;
 import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -856,10 +855,10 @@ public class RestApiTest extends BaseTestClass {
         cacheNoLandGeometry.evictAllNoLandGeometry();
 
         String expected = """
-                {"links":[],"collections":[{"properties":{"centroid":[[136.33948,-14.54656]]},"id":"097a5435-91f4-4730-90aa-ddae94afcbda","links":[],"itemType":"Collection"}],"total":1,"search_after":["str:097a5435-91f4-4730-90aa-ddae94afcbda"]}""";
+                {"links":[],"collections":[{"properties":{"centroid":[[129.19579,-33.09197]]},"id":"097a5435-91f4-4730-90aa-ddae94afcbda","links":[],"itemType":"Collection"}],"total":1,"search_after":["0.0","str:097a5435-91f4-4730-90aa-ddae94afcbda"]}""";
 
         ResponseEntity<String> collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?properties=id,centroid&filter=page_size=800 AND BBOX(geometry,130.57324851569425,-28.94840154686767,142.10570879176018,-11.386963065137689)&sortby=id",
+                getBasePath() + "/collections?properties=id,centroid&q=097a5435-91f4-4730-90aa-ddae94afcbda&filter=page_size=800 AND BBOX(geometry,117.21720908167362,-34.63803401514584,149.78279091832303,-16.36196598484962)&sortby=id",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});
