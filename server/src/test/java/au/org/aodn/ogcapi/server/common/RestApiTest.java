@@ -855,10 +855,10 @@ public class RestApiTest extends BaseTestClass {
         cacheNoLandGeometry.evictAllNoLandGeometry();
 
         String expected = """
-                {"links":[],"collections":[{"properties":{"centroid":[[129.19579,-33.09197]]},"id":"097a5435-91f4-4730-90aa-ddae94afcbda","links":[],"itemType":"Collection"}],"total":1,"search_after":["0.0","str:097a5435-91f4-4730-90aa-ddae94afcbda"]}""";
+               {"links":[],"collections":[{"properties":{"centroid":[[166.75446,-27.62500]]},"id":"097a5435-91f4-4730-90aa-ddae94afcbda","links":[],"itemType":"Collection"}],"total":1,"search_after":["0.0","str:097a5435-91f4-4730-90aa-ddae94afcbda"]}""";
 
         ResponseEntity<String> collections = testRestTemplate.exchange(
-                getBasePath() + "/collections?properties=id,centroid&q=097a5435-91f4-4730-90aa-ddae94afcbda&filter=page_size=800 AND BBOX(geometry,117.21720908167362,-34.63803401514584,149.78279091832303,-16.36196598484962)&sortby=id",
+                getBasePath() + "/collections?properties=id,centroid&q=097a5435-91f4-4730-90aa-ddae94afcbda&filter=page_size=800 AND BBOX(geometry,112.03097102449121,-50.499567507281824,188.89962377189153,-4.6416246696196195)&sortby=id",
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<>() {});
