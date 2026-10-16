@@ -252,10 +252,6 @@ public class BaseTestClass {
         this.insertJsonToElasticIndex(record_index_name, filenames);
     }
 
-    protected void insertJsonToElasticCODataIndex(String... filenames) throws IOException {
-        this.insertJsonToElasticIndex(co_data_index_name, filenames);
-    }
-
     protected Response getClusterHealth() throws IOException {
         return transport.restClient().performRequest(new Request("GET", "/_cluster/health"));
     }
