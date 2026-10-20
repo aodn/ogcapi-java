@@ -48,8 +48,8 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     protected static final List<String> VOCAB_TYPES =
             List.of("parameter_vocab", "platform_vocab", ORGANISATION_VOCAB_FIELD);
 
-    // Below 1 so records found only because their words are spread across fields rank below records whose title or
-    // description holds all the words. Review against the search auto-test results on edge before changing it.
+    // The fallback only applies to records the other keyword clauses do not match, so it scores on the same scale as
+    // them. Lower it if the search auto-test results on edge show records found by the fallback ranking too high.
     protected static final float ALL_WORDS_ACROSS_FIELDS_BOOST = 1F;
 
     @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
@@ -444,14 +444,12 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             List<Query> clauses = new ArrayList<>();
             if (isExact) {
                 // Match phrase in original title and description, not use fuzzy fields
-                clauses.add(bestOfTitleAndDescription(
-                        CQLFields.title.getPropertyEqualToQuery(term),
-                        CQLFields.description.getPropertyEqualToQuery(term)));
+                clauses.add(CQLFields.title.getPropertyEqualToQuery(term));
+                clauses.add(CQLFields.description.getPropertyEqualToQuery(term));
             }
             else {
-                clauses.add(bestOfTitleAndDescription(
-                        CQLFields.fuzzy_title.getPropertyEqualToQuery(term),
-                        CQLFields.fuzzy_desc.getPropertyEqualToQuery(term)));
+                clauses.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
+                clauses.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
             }
             clauses.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
             clauses.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
@@ -466,17 +464,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             }
         }
         return should;
-    }
-
-    /**
-     * Scores the better of the title and description clauses plus 0.1 times the other, the same rule as title and
-     * title.synonyms inside fuzzy_title. Added together, words found in both title and description were scored twice,
-     * e.g. a manual repeating "coastal wave data" in its title and description outranked the matching collections.
-     */
-    private static Query bestOfTitleAndDescription(Query title, Query description) {
-        return DisMaxQuery.of(d -> d
-                .queries(title, description)
-                .tieBreaker(0.1))._toQuery();
     }
 
     /**

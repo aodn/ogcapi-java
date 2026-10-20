@@ -123,33 +123,6 @@ public class ExplainSimplifierTest {
     }
 
     @Test
-    public void nestedDisMaxReportsOnlyTheWinningSideWords() {
-        // dis_max over fuzzy_title and fuzzy_desc, each a best_fields multi_match on the field and its synonyms
-        // sub-field: 20.0 + 0.1 * 9.0 for the outer, field sum plus 0.1 times the synonyms sum for each side
-        ExplanationDetail titleSide = detail(20.0f, "max plus 0.1 times others of:",
-                detail(19.5f, "sum of:",
-                        detail(12.0f, "weight(title:coastal in 1) [BM25], result of:"),
-                        detail(7.5f, "weight(title:wave in 1) [BM25], result of:")),
-                detail(5.0f, "sum of:",
-                        detail(3.0f, "weight(title.synonyms:coastal in 1) [BM25], result of:"),
-                        detail(2.0f, "weight(title.synonyms:wave in 1) [BM25], result of:")));
-        ExplanationDetail descriptionSide = detail(9.0f, "max plus 0.1 times others of:",
-                detail(8.5f, "sum of:",
-                        detail(5.0f, "weight(description:coastal in 1) [BM25], result of:"),
-                        detail(3.5f, "weight(description:wave in 1) [BM25], result of:")),
-                detail(5.0f, "sum of:",
-                        detail(3.0f, "weight(description.synonyms:coastal in 1) [BM25], result of:"),
-                        detail(2.0f, "weight(description.synonyms:wave in 1) [BM25], result of:")));
-
-        List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max plus 0.1 times others of:", 20.9f,
-                titleSide, descriptionSide);
-
-        assertEquals(List.of("title:coastal", "title:wave"),
-                terms.stream().map(term -> term.getField() + ":" + term.getTerm()).toList(),
-                "each word once, from the winning title side only");
-    }
-
-    @Test
     public void disMaxWithTieBreakerReportsOnlyTheWinner() {
         // best_fields multi_match with tie_breaker 0.1: 36.3 + 0.1 * 12.1
         List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max plus 0.1 times others of:", 37.51f,

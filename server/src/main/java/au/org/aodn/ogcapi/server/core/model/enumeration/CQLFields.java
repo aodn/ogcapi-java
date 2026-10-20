@@ -474,7 +474,8 @@ public enum CQLFields implements CQLFieldsInterface {
          * cross_fields is term-centric, so the words may come from different fields. best_fields (fuzzy_title and
          * fuzzy_desc) is field-centric, its operator AND needs all words in one field. Elastic does not allow fuzziness
          * for cross_fields, typos are still handled by fuzzy_title and fuzzy_desc.
-         * Each word scores its best field plus 0.1 times the others, the same rule as fuzzy_title and fuzzy_desc.
+         * Each word scores its best field plus 0.1 times the others, the same tie_breaker the field and synonyms
+         * multi_match queries use, applied per word across these fields.
          * The .synonyms sub-fields use another analyzer so they would form a separate group that must match all words
          * on its own, acronyms are left to fuzzy_title and fuzzy_desc. Credits is long free text that names many
          * organisations, so it is left out to avoid noise.
