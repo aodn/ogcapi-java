@@ -134,6 +134,36 @@ public class RestApiTest extends BaseTestClass {
                 "Correct UUID - 9fdb1eee-bc28-43a9-88c5-972324784837");
     }
     /**
+     * The words of one keyword may be spread across title, description and the vocab fields.
+     * ae86e2f5-eaaf-459e-a405-e654d85adb9c - 'queensland' is only in an organisation vocab, 'current velocity' is in the title
+     * 9fdb1eee-bc28-43a9-88c5-972324784837 - has none of the words
+     *
+     * @throws IOException - IO Exception
+     */
+    @Test
+    public void verifyApiCollectionsQueryWordsAcrossFields() throws IOException {
+        super.insertJsonToElasticRecordIndex(
+                "ae86e2f5-eaaf-459e-a405-e654d85adb9c.json",
+                "9fdb1eee-bc28-43a9-88c5-972324784837.json"
+        );
+
+        // No single field holds all words, only the all words across fields fallback finds it
+        ResponseEntity<ExtendedCollections> collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=queensland current velocity", ExtendedCollections.class);
+        assertEquals(1, Objects.requireNonNull(collections.getBody()).getTotal(), "Only 1 hit");
+        assertEquals(
+                "ae86e2f5-eaaf-459e-a405-e654d85adb9c",
+                collections.getBody().getCollections().get(0).getId(),
+                "Correct UUID - ae86e2f5-eaaf-459e-a405-e654d85adb9c");
+
+        // Every word must be found somewhere, 'zebra' is in no field
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=queensland current zebra", ExtendedCollections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getTotal(), "No hit when a word is missing");
+
+        // A quoted keyword is an exact phrase search, the fallback does not apply
+        collections = testRestTemplate.getForEntity(getBasePath() + "/collections?q=\"queensland current velocity\"", ExtendedCollections.class);
+        assertEquals(0, Objects.requireNonNull(collections.getBody()).getTotal(), "No hit for a quoted keyword");
+    }
+    /**
      * The datetime field after xxx/.. xxx/ etc. It uses CQL internally so no need to test Before After During in CQL
      */
     @Test

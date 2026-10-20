@@ -467,6 +467,32 @@ public enum CQLFields implements CQLFieldsInterface {
                         .build();
         }
 
+        /**
+         * Every word of the literal must appear somewhere across title, description and the vocab fields, e.g. for
+         * "coastal wave data" the word "coastal" may come from an organisation vocab, "wave" from the title and
+         * "data" from the description.
+         * cross_fields is term-centric, so the words may come from different fields. best_fields (fuzzy_title and
+         * fuzzy_desc) is field-centric, its operator AND needs all words in one field. Elastic does not allow fuzziness
+         * for cross_fields, typos are still handled by fuzzy_title and fuzzy_desc.
+         * Each word scores its best field plus 0.1 times the others, the same rule as fuzzy_title and fuzzy_desc.
+         * The .synonyms sub-fields use another analyzer so they would form a separate group that must match all words
+         * on its own, acronyms are left to fuzzy_title and fuzzy_desc. Credits is long free text that names many
+         * organisations, so it is left out to avoid noise.
+         */
+        public static Query getAllWordsAcrossFieldsQuery(String literal) {
+                return MultiMatchQuery.of(m -> m
+                                .type(TextQueryType.CrossFields)
+                                .fields(
+                                        StacBasicField.Title.searchField + "^2",
+                                        StacBasicField.Description.searchField,
+                                        StacBasicField.ParameterVocabs.searchField,
+                                        StacBasicField.PlatformVocabs.searchField,
+                                        StacBasicField.OrganisationVocabs.searchField)
+                                .tieBreaker(0.1)
+                                .operator(Operator.And)
+                                .query(literal))._toQuery();
+        }
+
         @Override
         public Query getPropertyEqualToQuery(String literal) {
                 if (getOverridePropertyEqualsToQuery() == null) {

@@ -200,6 +200,33 @@ public class RestAdminApiTest extends BaseTestClass {
     }
 
     @Test
+    public void explainSimplifiedFormatReportsWordsAcrossFields() throws IOException {
+        // 'queensland' is only in an organisation vocab and 'current velocity' is in the title, so only the
+        // all words across fields fallback matches, and each word is reported against the field it came from
+        insertRecordsWithExplicitIds("ae86e2f5-eaaf-459e-a405-e654d85adb9c.json");
+
+        URI simpleUri = explainUri("q", "queensland current velocity", "format", "simple");
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        JsonNode hit = Objects.requireNonNull(response.getBody()).path("hits").path(0);
+        assertEquals("ae86e2f5-eaaf-459e-a405-e654d85adb9c", hit.path("id").asText());
+        assertTrue(hit.path("es_relevance").asDouble() > 0.0, "the fallback scores the record");
+
+        List<String> reported = StreamSupport.stream(hit.path("matched_terms").spliterator(), false)
+                .map(term -> term.path("field").asText() + ":" + term.path("term").asText())
+                .toList();
+        assertTrue(reported.contains("summaries.organisation_vocabs:queensland"),
+                "'queensland' must be reported for the organisation vocab, got: " + reported);
+        // the best of the fields is reported, both words are in the title and may be in the description too
+        for (String word : List.of("current", "velocity")) {
+            assertTrue(reported.contains("title:" + word) || reported.contains("description:" + word),
+                    "'" + word + "' must be reported, got: " + reported);
+        }
+    }
+
+    @Test
     public void explainSimplifiedFormatReportsTheDatasetGroupPriorityInTheSortValues() throws IOException {
         // the record sits in the "imos" dataset group and its credits name IMOS, so the search recalls it on the text and the group then ranks it
         insertRecordsWithExplicitIds("7709f541-fc0c-4318-b5b9-9053aa474e0e.json");

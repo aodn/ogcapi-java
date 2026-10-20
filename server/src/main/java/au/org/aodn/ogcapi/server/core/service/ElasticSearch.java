@@ -48,6 +48,10 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     protected static final List<String> VOCAB_TYPES =
             List.of("parameter_vocab", "platform_vocab", ORGANISATION_VOCAB_FIELD);
 
+    // Below 1 so records found only because their words are spread across fields rank below records whose title or
+    // description holds all the words. Review against the search auto-test results on edge before changing it.
+    protected static final float ALL_WORDS_ACROSS_FIELDS_BOOST = 1F;
+
     @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
     protected String searchAsYouTypeFieldsPath;
 
@@ -437,23 +441,54 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             // If search text with double quote, remove quotee, otherwise keeps same
             String term = isExact ? t.substring(1, t.length() - 1) : t;
 
+            List<Query> clauses = new ArrayList<>();
             if (isExact) {
                 // Match phrase in original title and description, not use fuzzy fields
-                should.add(CQLFields.title.getPropertyEqualToQuery(term));
-                should.add(CQLFields.description.getPropertyEqualToQuery(term));
+                clauses.add(bestOfTitleAndDescription(
+                        CQLFields.title.getPropertyEqualToQuery(term),
+                        CQLFields.description.getPropertyEqualToQuery(term)));
             }
             else {
-                should.add(CQLFields.fuzzy_title.getPropertyEqualToQuery(term));
-                should.add(CQLFields.fuzzy_desc.getPropertyEqualToQuery(term));
+                clauses.add(bestOfTitleAndDescription(
+                        CQLFields.fuzzy_title.getPropertyEqualToQuery(term),
+                        CQLFields.fuzzy_desc.getPropertyEqualToQuery(term)));
             }
-            should.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
-            should.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
-            should.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
-            should.add(CQLFields.id.getPropertyEqualToQuery(term));
-            // credit_contains uses match query by default, exact match is not applied here
-            should.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
+            clauses.add(CQLFields.parameter_vocabs.getPropertyEqualToQuery(term));
+            clauses.add(CQLFields.organisation_vocabs.getPropertyEqualToQuery(term));
+            clauses.add(CQLFields.platform_vocabs.getPropertyEqualToQuery(term));
+            clauses.add(CQLFields.id.getPropertyEqualToQuery(term));
+            // credit_contains is a phrase match, the same for exact and non-exact keywords
+            clauses.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
+            should.addAll(clauses);
+
+            if (!isExact) {
+                should.add(createAllWordsAcrossFieldsFallback(term, clauses));
+            }
         }
         return should;
+    }
+
+    /**
+     * Scores the better of the title and description clauses plus 0.1 times the other, the same rule as title and
+     * title.synonyms inside fuzzy_title. Added together, words found in both title and description were scored twice,
+     * e.g. a manual repeating "coastal wave data" in its title and description outranked the matching collections.
+     */
+    private static Query bestOfTitleAndDescription(Query title, Query description) {
+        return DisMaxQuery.of(d -> d
+                .queries(title, description)
+                .tieBreaker(0.1))._toQuery();
+    }
+
+    /**
+     * Fallback for a keyword whose words are spread across fields, e.g. "coastal wave data" where "coastal" is only in
+     * an organisation vocab. It matches only records that none of the keyword's own clauses match (must_not), so the
+     * records those clauses find keep the same score and the same words are never scored twice.
+     */
+    private static Query createAllWordsAcrossFieldsFallback(String term, List<Query> keywordClauses) {
+        return BoolQuery.of(b -> b
+                .must(CQLFields.getAllWordsAcrossFieldsQuery(term))
+                .mustNot(keywordClauses)
+                .boost(ALL_WORDS_ACROSS_FIELDS_BOOST))._toQuery();
     }
 
     /**
