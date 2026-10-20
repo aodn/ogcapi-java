@@ -123,6 +123,23 @@ public class ExplainSimplifierTest {
     }
 
     @Test
+    public void disMaxOfKeywordClausesAndAcrossFieldsReportsOnlyTheWinningGroup() {
+        // a multi word keyword: dis_max of the summed keyword clauses and the cross_fields match, each a "sum of:" group
+        List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max of:", 12.0f,
+                detail(8.0f, "sum of:",
+                        detail(5.0f, "weight(description:wave in 1) [BM25], result of:"),
+                        detail(3.0f, "weight(description:data in 1) [BM25], result of:")),
+                detail(12.0f, "sum of:",
+                        detail(9.0f, "weight(title:wave in 1) [BM25], result of:"),
+                        detail(2.0f, "weight(summaries.organisation_vocabs:coastal in 1) [BM25], result of:"),
+                        detail(1.0f, "weight(description:data in 1) [BM25], result of:")));
+
+        assertEquals(List.of("title:wave", "summaries.organisation_vocabs:coastal", "description:data"),
+                terms.stream().map(term -> term.getField() + ":" + term.getTerm()).toList(),
+                "only the terms of the higher scoring group are reported");
+    }
+
+    @Test
     public void disMaxWithTieBreakerReportsOnlyTheWinner() {
         // best_fields multi_match with tie_breaker 0.1: 36.3 + 0.1 * 12.1
         List<ExplainSimplifiedResponse.MatchedTerm> terms = collectDisMax("max plus 0.1 times others of:", 37.51f,

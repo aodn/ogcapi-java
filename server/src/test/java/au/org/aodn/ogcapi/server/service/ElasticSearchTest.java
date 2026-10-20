@@ -6,6 +6,7 @@ import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch._types.FieldValue;
 import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
+import co.elastic.clients.elasticsearch._types.query_dsl.DisMaxQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -43,8 +45,8 @@ public class ElasticSearchTest {
 
         assertEquals(7, capturingSearch.should.size(),
                 "Exact match should produce 7 queries (title + description + other fields, no dataset_group, no fallback)");
-        assertTrue(capturingSearch.should.stream().noneMatch(Query::isBool),
-                "the all words across fields fallback is not used for a quoted keyword");
+        assertTrue(capturingSearch.should.stream().noneMatch(Query::isDisMax),
+                "the all words across fields match is not used for a quoted keyword");
 
         MultiMatchQuery title = capturingSearch.should.get(0).multiMatch();
         assertEquals(TextQueryType.Phrase, title.type(), "Title query should be a phrase multi_match");
@@ -74,9 +76,12 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(8, capturingSearch.should.size(), "Fuzzy match should produce 7 queries plus the fallback");
+        assertEquals(1, capturingSearch.should.size(),
+                "a multi word keyword is one dis_max of its clauses and the all words across fields match");
+        List<Query> clauses = assertBestOfClausesOrAllWordsAcrossFields(capturingSearch.should.get(0), "ocean temperature");
+        assertEquals(7, clauses.size(), "the same 7 clauses as a single word keyword");
 
-        MultiMatchQuery title = capturingSearch.should.get(0).multiMatch();
+        MultiMatchQuery title = clauses.get(0).multiMatch();
         assertEquals(TextQueryType.BestFields, title.type(), "fuzzy_title should be a best_fields multi_match");
         assertEquals(List.of("title^2", "title.synonyms^2"), title.fields());
         assertEquals(0.1, title.tieBreaker());
@@ -84,7 +89,7 @@ public class ElasticSearchTest {
         assertEquals(4, title.prefixLength());
         assertEquals(Operator.And, title.operator());
 
-        MultiMatchQuery description = capturingSearch.should.get(1).multiMatch();
+        MultiMatchQuery description = clauses.get(1).multiMatch();
         assertEquals(TextQueryType.BestFields, description.type(), "fuzzy_desc should be a best_fields multi_match");
         assertEquals(List.of("description", "description.synonyms"), description.fields());
         assertEquals(0.1, description.tieBreaker());
@@ -92,16 +97,30 @@ public class ElasticSearchTest {
         assertEquals(4, description.prefixLength());
         assertEquals(Operator.And, description.operator());
 
-        assertAllWordsAcrossFieldsFallback(capturingSearch.should.get(7), "ocean temperature",
-                capturingSearch.should.subList(0, 7));
-
         assertSynonymsOnlyInsideMultiMatch(capturingSearch.should);
         assertTrue(capturingSearch.arguments.sortOptions().get(0).isScript(),
                 "dataset_group priority sort should be the first sort key");
     }
 
     @Test
-    public void searchByParametersFallbackExcludesOnlyItsOwnKeywordClauses() throws Exception {
+    public void searchByParametersSingleWordHasNoAcrossFieldsMatch() throws Exception {
+        CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
+
+        capturingSearch.searchByParameters(
+                List.of("temperature"),
+                null,
+                null,
+                "-score,-rank",
+                CQLCrsType.EPSG4326);
+
+        assertEquals(7, capturingSearch.should.size(), "a single word keyword adds its 7 clauses one by one");
+        assertTrue(capturingSearch.should.stream().noneMatch(Query::isDisMax),
+                "a single word cannot be spread across fields");
+        assertEquals(TextQueryType.BestFields, capturingSearch.should.get(0).multiMatch().type());
+    }
+
+    @Test
+    public void searchByParametersAcrossFieldsMatchHoldsOnlyItsOwnKeywordClauses() throws Exception {
         CapturingElasticSearch capturingSearch = new CapturingElasticSearch(mockClient);
 
         capturingSearch.searchByParameters(
@@ -111,24 +130,31 @@ public class ElasticSearchTest {
                 "-score,-rank",
                 CQLCrsType.EPSG4326);
 
-        assertEquals(16, capturingSearch.should.size(), "8 queries for each of the 2 keywords");
-        assertAllWordsAcrossFieldsFallback(capturingSearch.should.get(7), "ocean temperature",
-                capturingSearch.should.subList(0, 7));
-        assertAllWordsAcrossFieldsFallback(capturingSearch.should.get(15), "wave",
-                capturingSearch.should.subList(8, 15));
+        assertEquals(8, capturingSearch.should.size(), "1 dis_max for 'ocean temperature' and 7 clauses for 'wave'");
+        List<Query> clauses = assertBestOfClausesOrAllWordsAcrossFields(capturingSearch.should.get(0), "ocean temperature");
+        assertEquals(7, clauses.size());
+        assertTrue(clauses.stream().noneMatch(q -> q.toString().contains("wave")),
+                "the dis_max must not hold the clauses of another keyword");
+        assertTrue(capturingSearch.should.subList(1, 8).stream().noneMatch(Query::isDisMax));
     }
 
     /**
-     * The fallback must score only through cross_fields over title, description and the vocab fields, and must exclude
-     * exactly the records its own keyword clauses match, otherwise the same words are scored twice
+     * A multi word keyword is a dis_max of a bool summing its clauses, as when added one by one, and the
+     * cross_fields match over title, description and the vocab fields. The record keeps the higher score.
+     * @return the keyword clauses inside the bool
      */
-    private static void assertAllWordsAcrossFieldsFallback(Query fallback, String keyword, List<Query> keywordClauses) {
-        assertTrue(fallback.isBool(), "fallback should be a bool query");
-        BoolQuery bool = fallback.bool();
-        assertEquals(CapturingElasticSearch.fallbackBoost(), bool.boost());
+    private static List<Query> assertBestOfClausesOrAllWordsAcrossFields(Query query, String keyword) {
+        assertTrue(query.isDisMax(), "should be a dis_max");
+        DisMaxQuery disMax = query.disMax();
+        assertNull(disMax.tieBreaker(), "only the higher of the two scores counts");
+        assertEquals(2, disMax.queries().size());
 
-        assertEquals(1, bool.must().size());
-        MultiMatchQuery crossFields = bool.must().get(0).multiMatch();
+        assertTrue(disMax.queries().get(0).isBool(), "the keyword clauses are summed in a bool");
+        BoolQuery clauses = disMax.queries().get(0).bool();
+        assertTrue(clauses.must().isEmpty() && clauses.mustNot().isEmpty() && clauses.filter().isEmpty(),
+                "the clauses are only should clauses, scored as before");
+
+        MultiMatchQuery crossFields = disMax.queries().get(1).multiMatch();
         assertEquals(TextQueryType.CrossFields, crossFields.type(), "words may come from different fields");
         assertEquals(Operator.And, crossFields.operator(), "every word must be found");
         assertEquals(List.of(
@@ -142,21 +168,22 @@ public class ElasticSearchTest {
         assertEquals(0.1, crossFields.tieBreaker(), "best field per word plus 0.1 times the others");
         assertEquals(keyword, crossFields.query());
 
-        assertEquals(keywordClauses.stream().map(Query::toString).toList(),
-                bool.mustNot().stream().map(Query::toString).toList(),
-                "must_not should hold exactly the clauses of its own keyword");
+        return clauses.should();
     }
 
     /**
      * The synonyms sub-fields must only be scored inside the title/description multi_match, a separate clause on them
-     * would score plain words twice. The must_not of the fallback does not score, so only its must is checked.
+     * would score plain words twice. The clauses inside a dis_max are checked the same way.
      */
     private static void assertSynonymsOnlyInsideMultiMatch(List<Query> should) {
         should.stream()
+                .flatMap(q -> q.isDisMax()
+                        ? q.disMax().queries().stream()
+                                .flatMap(child -> child.isBool() ? child.bool().should().stream() : Stream.of(child))
+                        : Stream.of(q))
                 .filter(q -> !q.isMultiMatch())
-                .map(q -> q.isBool() ? q.bool().must().toString() : q.toString())
-                .forEach(scored -> assertFalse(scored.contains(".synonyms"),
-                        "unexpected clause on a synonyms field: " + scored));
+                .forEach(q -> assertFalse(q.toString().contains(".synonyms"),
+                        "unexpected clause on a synonyms field: " + q));
     }
 
     // The portal SEO pipeline requests these in bulk to build Dataset JSON-LD
@@ -417,9 +444,6 @@ public class ElasticSearchTest {
             this.searchAfterSplitRegex = "\\|\\|";
         }
 
-        private static float fallbackBoost() {
-            return ALL_WORDS_ACROSS_FIELDS_BOOST;
-        }
 
         @Override
         protected SearchResult<au.org.aodn.stac.model.StacCollectionModel> searchCollectionBy(

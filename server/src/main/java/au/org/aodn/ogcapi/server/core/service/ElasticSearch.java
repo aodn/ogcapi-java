@@ -48,10 +48,6 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
     protected static final List<String> VOCAB_TYPES =
             List.of("parameter_vocab", "platform_vocab", ORGANISATION_VOCAB_FIELD);
 
-    // The fallback only applies to records the other keyword clauses do not match, so it scores on the same scale as
-    // them. Lower it if the search auto-test results on edge show records found by the fallback ranking too high.
-    protected static final float ALL_WORDS_ACROSS_FIELDS_BOOST = 1F;
-
     @Value("${elasticsearch.search_as_you_type.search_suggestions.path}")
     protected String searchAsYouTypeFieldsPath;
 
@@ -457,25 +453,34 @@ public class ElasticSearch extends ElasticSearchBase implements Search {
             clauses.add(CQLFields.id.getPropertyEqualToQuery(term));
             // credit_contains is a phrase match, the same for exact and non-exact keywords
             clauses.add(CQLFields.credit_contains.getPropertyEqualToQuery(term));
-            should.addAll(clauses);
-
-            if (!isExact) {
-                should.add(createAllWordsAcrossFieldsFallback(term, clauses));
+            if (!isExact && hasSeveralWords(term)) {
+                should.add(bestOfClausesOrAllWordsAcrossFields(term, clauses));
+            }
+            else {
+                should.addAll(clauses);
             }
         }
         return should;
     }
 
     /**
-     * Fallback for a keyword whose words are spread across fields, e.g. "coastal wave data" where "coastal" is only in
-     * an organisation vocab. It matches only records that none of the keyword's own clauses match (must_not), so the
-     * records those clauses find keep the same score and the same words are never scored twice.
+     * For a keyword whose words may be spread across fields, e.g. "coastal wave data" where "coastal" is only in an
+     * organisation vocab. A record matches if either the keyword's clauses or the all words across fields query
+     * matches, and keeps the higher of the two scores. The clauses are summed in a bool exactly as when they are added
+     * one by one, so a record never scores below what the clauses alone give, and each clause is evaluated once.
      */
-    private static Query createAllWordsAcrossFieldsFallback(String term, List<Query> keywordClauses) {
-        return BoolQuery.of(b -> b
-                .must(CQLFields.getAllWordsAcrossFieldsQuery(term))
-                .mustNot(keywordClauses)
-                .boost(ALL_WORDS_ACROSS_FIELDS_BOOST))._toQuery();
+    private static Query bestOfClausesOrAllWordsAcrossFields(String term, List<Query> clauses) {
+        Query keywordClauses = BoolQuery.of(b -> b.should(clauses))._toQuery();
+        return DisMaxQuery.of(d -> d
+                .queries(keywordClauses, CQLFields.getAllWordsAcrossFieldsQuery(term)))._toQuery();
+    }
+
+    /**
+     * A single word found in title, description or a vocab is already matched by fuzzy_title, fuzzy_desc or the vocab
+     * phrase clause, so matching it across fields cannot find more records.
+     */
+    private static boolean hasSeveralWords(String term) {
+        return term.trim().split("\\s+").length > 1;
     }
 
     /**
