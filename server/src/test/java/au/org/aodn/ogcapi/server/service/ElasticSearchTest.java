@@ -246,8 +246,11 @@ public class ElasticSearchTest {
                 "title-only _source is lightweight so the larger search_after batch is used");
         assertNotNull(capturingSearch.explainRequest.query());
         assertTrue(capturingSearch.explainRequest.query().isScriptScore());
-        assertEquals(8, capturingSearch.explainRequest.query().scriptScore()
-                .query().bool().should().size());
+        List<Query> should = capturingSearch.explainRequest.query().scriptScore().query().bool().should();
+        assertEquals(1, should.size(),
+                "a multi word keyword is one dis_max of its clauses and the all words across fields match");
+        assertEquals(7, assertBestOfClausesOrAllWordsAcrossFields(should.get(0), "ocean temperature").size(),
+                "the same 7 clauses as the search request");
         assertNotNull(capturingSearch.explainRequest.source());
         assertTrue(capturingSearch.explainRequest.source().isFilter());
         assertFalse(capturingSearch.explainRequest.source().filter().includes().isEmpty());
