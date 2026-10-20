@@ -219,7 +219,7 @@ public class ElasticSearchTest {
                 "title-only _source is lightweight so the larger search_after batch is used");
         assertNotNull(capturingSearch.explainRequest.query());
         assertTrue(capturingSearch.explainRequest.query().isScriptScore());
-        assertEquals(7, capturingSearch.explainRequest.query().scriptScore()
+        assertEquals(8, capturingSearch.explainRequest.query().scriptScore()
                 .query().bool().should().size());
         assertNotNull(capturingSearch.explainRequest.source());
         assertTrue(capturingSearch.explainRequest.source().isFilter());
