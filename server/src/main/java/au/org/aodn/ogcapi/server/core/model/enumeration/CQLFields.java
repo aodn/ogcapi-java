@@ -198,10 +198,16 @@ public enum CQLFields implements CQLFieldsInterface {
                 null,
                 null,
                 null),
+        // Word match instead of phrase, so word order and gaps do not matter, e.g. "imos moorings" matches
+        // "... Moorings Sub-Facility, Integrated Marine Observing System (IMOS)". 1-2 words must all match, 3+ words need 75%.
         organisation_vocabs(
                 StacBasicField.OrganisationVocabs.searchField,
                 StacBasicField.OrganisationVocabs.displayField,
-                null,
+                (literal) -> MatchQuery.of(m -> m
+                        .field(StacBasicField.OrganisationVocabs.searchField)
+                        .query(literal)
+                        .operator(Operator.Or)
+                        .minimumShouldMatch("2<75%"))._toQuery(),
                 null,
                 null),
         id(
