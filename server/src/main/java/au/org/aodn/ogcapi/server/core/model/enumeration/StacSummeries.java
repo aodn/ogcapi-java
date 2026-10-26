@@ -4,6 +4,7 @@ import java.util.List;
 
 public enum StacSummeries {
     Score("summaries.score", "summaries.score", "summaries.score", null),
+    ScoreBreakdown("summaries.score_breakdown", "summaries.score_breakdown", null, null),
     Geometry("summaries.proj:geometry","extent.bbox"),
     GeometryNoLand("summaries.proj:geometry_noland","summaries.proj:geometry_noland"),
     TemporalStart("summaries.temporal.start", ""),
