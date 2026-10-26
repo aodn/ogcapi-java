@@ -7,6 +7,8 @@ import co.elastic.clients.elasticsearch._types.SortOptions;
 import co.elastic.clients.elasticsearch._types.SortOrder;
 import co.elastic.clients.elasticsearch.core.explain.ExplanationDetail;
 import co.elastic.clients.elasticsearch.core.search.Hit;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 
@@ -14,11 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 public class ExplainSimplifierTest {
 
     private static final String UUID = "7709f541-fc0c-4318-b5b9-9053aa474e0e";
+
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private static Hit<ObjectNode> hitSortedBy(FieldValue... sort) {
         return Hit.of(h -> h
@@ -86,6 +91,63 @@ public class ExplainSimplifierTest {
                 ExplainSimplifier.toSimplifiedHit(hit, 1, textSearchSort());
 
         assertNull(simplified.getSortValues());
+    }
+
+    /**
+     * The breakdown is passed on as es-indexer stored it, every rule in its stored order, so a rule added in
+     * es-indexer shows up without a change in ogcapi.
+     */
+    @Test
+    public void simplifiedHitReportsTheScoreBreakdownAsStored() throws Exception {
+        ObjectNode source = (ObjectNode) MAPPER.readTree("""
+                {
+                  "summaries": {
+                    "score": 35,
+                    "score_breakdown": {"keywords": 15, "license": 10, "imos_ongoing": 15, "out_of_date": -5}
+                  }
+                }
+                """);
+
+        ExplainSimplifiedResponse.Hit simplified =
+                ExplainSimplifier.toSimplifiedHit(hitWithSource(source), 1, textSearchSort());
+
+        assertEquals(35.0, simplified.getInternalScore());
+
+        JsonNode breakdown = simplified.getScoreBreakdown();
+        List<String> rules = new ArrayList<>();
+        breakdown.fieldNames().forEachRemaining(rules::add);
+        assertEquals(List.of("keywords", "license", "imos_ongoing", "out_of_date"), rules);
+        assertEquals(-5, breakdown.path("out_of_date").asInt());
+
+        // the json property sits right after internal_score
+        List<String> properties = new ArrayList<>();
+        MAPPER.valueToTree(simplified).fieldNames().forEachRemaining(properties::add);
+        assertEquals(properties.indexOf("internal_score") + 1, properties.indexOf("score_breakdown"));
+    }
+
+    /**
+     * A record indexed before es-indexer stored the breakdown has none, the field is then left out of the response
+     */
+    @Test
+    public void scoreBreakdownIsLeftOutWhenTheRecordHasNone() throws Exception {
+        ObjectNode source = (ObjectNode) MAPPER.readTree("""
+                {"summaries": {"score": 64}}
+                """);
+
+        ExplainSimplifiedResponse.Hit simplified =
+                ExplainSimplifier.toSimplifiedHit(hitWithSource(source), 1, textSearchSort());
+
+        assertEquals(64.0, simplified.getInternalScore());
+        assertNull(simplified.getScoreBreakdown());
+        assertFalse(MAPPER.valueToTree(simplified).has("score_breakdown"));
+    }
+
+    private static Hit<ObjectNode> hitWithSource(ObjectNode source) {
+        return Hit.of(h -> h
+                .index("records")
+                .id(UUID)
+                .score(2.5)
+                .source(source));
     }
 
     @Test

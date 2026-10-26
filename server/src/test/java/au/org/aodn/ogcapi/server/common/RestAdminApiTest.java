@@ -278,6 +278,60 @@ public class RestAdminApiTest extends BaseTestClass {
         JsonNode body = Objects.requireNonNull(response.getBody());
         assertTrue(body.path("response").path("matched").asBoolean());
         assertTrue(body.path("response").path("explanation").has("description"));
+        // the record was indexed without a score breakdown, so none is reported
+        assertTrue(body.path("internal_score").isNumber());
+        assertFalse(body.has("score_breakdown"));
+    }
+
+    /**
+     * Every rule es-indexer stored is reported next to internal_score, and the points add up to it
+     */
+    @Test
+    public void explainSimplifiedFormatReportsTheScoreBreakdown() throws IOException {
+        String uuid = "097a5435-91f4-4730-90aa-ddae94afcbda";
+        insertRecordsWithExplicitIds(uuid + ".json");
+
+        URI simpleUri = explainUri("q", "Biogeographic", "format", "simple");
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(simpleUri, JsonNode.class);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        JsonNode hit = Objects.requireNonNull(response.getBody()).path("hits").path(0);
+        assertEquals(uuid, hit.path("id").asText());
+        assertEquals(64, hit.path("internal_score").asInt());
+
+        JsonNode breakdown = hit.path("score_breakdown");
+        assertEquals(15, breakdown.size());
+        assertEquals(0, breakdown.path("imos_ongoing").asInt());
+        assertEquals(hit.path("internal_score").asInt(), sumOf(breakdown));
+    }
+
+    @Test
+    public void explainUuidEndpointReportsTheScoreBreakdown() throws IOException {
+        String uuid = "097a5435-91f4-4730-90aa-ddae94afcbda";
+        insertRecordsWithExplicitIds(uuid + ".json");
+
+        URI explainUri = UriComponentsBuilder
+                .fromUriString(getAdminBasePath() + "/explain/" + uuid)
+                .queryParam("q", "Biogeographic")
+                .build()
+                .encode()
+                .toUri();
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(explainUri, JsonNode.class);
+
+        assertTrue(response.getStatusCode().is2xxSuccessful());
+        JsonNode body = Objects.requireNonNull(response.getBody());
+        assertEquals(64, body.path("internal_score").asInt());
+
+        JsonNode breakdown = body.path("score_breakdown");
+        assertEquals(15, breakdown.size());
+        assertEquals(64, sumOf(breakdown));
+    }
+
+    private int sumOf(JsonNode breakdown) {
+        return StreamSupport.stream(breakdown.spliterator(), false)
+                .mapToInt(JsonNode::asInt)
+                .sum();
     }
 
     private String getAdminBasePath() {
