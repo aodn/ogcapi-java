@@ -17,10 +17,13 @@ import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 
 import java.util.HashMap;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.*;
@@ -202,5 +205,38 @@ public class RestServicesTest {
         RestServices services = withEstimate("{\"estimated_uncompressed_bytes\":400000000000}");
 
         assertThrows(IllegalStateException.class, () -> services.estimateDownloadBytes(estimateRequest()));
+    }
+
+    /**
+     * Regression guard for aodn/backlog#9241: the download confirmation email template used to
+     * carry a hardcoded paragraph with citation requirements for the Ningaloo (TAN100) and Ocean
+     * Reference Station 65m (ORS065) moorings, so it went out with every download regardless of
+     * dataset. That paragraph has been removed; the generic IMOS acknowledgement and the IMOS
+     * "as is" disclaimer must stay.
+     */
+    @Test
+    public void generatedEmailHasNoHardcodedMooringCitation() {
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "test-job-definition", "test-job-queue");
+
+        String html = services.generateStartedEmailContent(
+                "test-uuid", "test-dname", "non-specified", "non-specified", "non-specified",
+                "Test Ocean Data Collection", "https://portal.example.test/details/test-uuid",
+                "Cite this dataset as X.", "netcdf");
+
+        // The mooring-specific text must no longer appear in any email.
+        for (String marker : List.of("TAN100", "ORS065", "Ningaloo", "Ocean Reference Station",
+                "Sydney Water Corporation", "If using data from")) {
+            assertFalse(html.contains(marker), "email should not contain hardcoded mooring text: " + marker);
+        }
+
+        // The generic IMOS acknowledgement and the "as is" disclaimer must remain.
+        assertTrue(html.contains("Any users of IMOS data are required to clearly acknowledge"),
+                "generic IMOS acknowledgement must stay");
+        assertTrue(html.contains("Data, products and services from IMOS are provided \"as is\" without any warranty"),
+                "IMOS disclaimer must stay");
+
+        // The suggested citation placeholder is still populated and no template markers leak.
+        assertTrue(html.contains("Cite this dataset as X."), "suggested citation must still render");
+        assertFalse(html.contains("{{suggestedCitation}}"), "suggestedCitation placeholder must be substituted");
     }
 }
