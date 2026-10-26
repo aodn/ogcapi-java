@@ -443,7 +443,8 @@ public abstract class ElasticSearchBase {
                 .source(s -> simplified
                         ? s.filter(f -> f.includes(
                                 StacBasicField.Title.searchField,
-                                StacSummeries.Score.searchField))
+                                StacSummeries.Score.searchField,
+                                StacSummeries.ScoreBreakdown.searchField))
                         : s.fetch(false))
                 .build();
 
@@ -495,7 +496,10 @@ public abstract class ElasticSearchBase {
                 .query(searchRequest.query())
                 // Same shard copy as the search, otherwise the explained score can differ from the search score
                 .preference(searchRequest.preference())
-                .source(s -> s.fetch(false))
+                // Only the internal score and its breakdown, so the explain shows how summaries.score was made up
+                .sourceIncludes(
+                        StacSummeries.Score.searchField,
+                        StacSummeries.ScoreBreakdown.searchField)
                 .build();
 
         log.debug("Final elastic search explain by id payload {}", request);
@@ -504,6 +508,18 @@ public abstract class ElasticSearchBase {
         ObjectNode result = mapper.createObjectNode();
         result.set("request", toJsonNode(request));
         result.set("response", toJsonNode(response));
+
+        ObjectNode source = response.get() != null ? response.get().source() : null;
+
+        Double internalScore = ExplainSimplifier.internalScoreOf(source);
+        if (internalScore != null) {
+            result.put("internal_score", internalScore);
+        }
+
+        JsonNode scoreBreakdown = ExplainSimplifier.scoreBreakdownOf(source);
+        if (scoreBreakdown != null) {
+            result.set("score_breakdown", scoreBreakdown);
+        }
 
         return result;
     }
