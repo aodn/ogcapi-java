@@ -9,12 +9,18 @@ import co.elastic.clients.elasticsearch._types.query_dsl.MultiMatchQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Operator;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
 import co.elastic.clients.elasticsearch._types.query_dsl.TextQueryType;
+import co.elastic.clients.elasticsearch.core.ExplainRequest;
+import co.elastic.clients.elasticsearch.core.ExplainResponse;
 import co.elastic.clients.elasticsearch.core.SearchRequest;
+import co.elastic.clients.elasticsearch.core.SearchResponse;
+import co.elastic.clients.json.jackson.JacksonJsonpMapper;
+import co.elastic.clients.transport.ElasticsearchTransport;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -170,6 +176,65 @@ public class ElasticSearchTest {
         assertNotNull(capturingSearch.explainRequest.source());
         assertTrue(capturingSearch.explainRequest.source().isFilter());
         assertFalse(capturingSearch.explainRequest.source().filter().includes().isEmpty());
+    }
+
+    /**
+     * The simplified explain reads the score breakdown from _source next to the score, so both must be fetched
+     */
+    @Test
+    public void explainSimplifiedFetchesTheScoreBreakdown() throws Exception {
+        ElasticSearch search = new ElasticSearch(mockClient, null, new ObjectMapper(), "test-index", 100, 10000, 10);
+        when(mockClient.search(any(SearchRequest.class), eq(ObjectNode.class)))
+                .thenReturn(SearchResponse.of(r -> r
+                        .took(1)
+                        .timedOut(false)
+                        .shards(s -> s.total(1).successful(1).failed(0))
+                        .hits(h -> h.hits(List.of()))));
+
+        search.explainByParameters(List.of("ocean"), null, null, "-score,-rank", CQLCrsType.EPSG4326, true);
+
+        ArgumentCaptor<SearchRequest> captor = ArgumentCaptor.forClass(SearchRequest.class);
+        verify(mockClient).search(captor.capture(), eq(ObjectNode.class));
+        List<String> includes = captor.getValue().source().filter().includes();
+        assertTrue(includes.contains("summaries.score"));
+        assertTrue(includes.contains("summaries.score_breakdown"));
+    }
+
+    /**
+     * The explain by uuid fetches the score and its breakdown and lifts them to the top of the result
+     */
+    @Test
+    public void explainByUuidReportsTheScoreBreakdown() throws Exception {
+        String uuid = "097a5435-91f4-4730-90aa-ddae94afcbda";
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectNode source = (ObjectNode) mapper.readTree("""
+                {"summaries": {"score": 25, "score_breakdown": {"keywords": 15, "license": 10, "imos_ongoing": 0}}}
+                """);
+
+        // the explain result echoes the request and response, which serialise through the client's json mapper
+        ElasticsearchTransport transport = mock(ElasticsearchTransport.class);
+        when(transport.jsonpMapper()).thenReturn(new JacksonJsonpMapper(mapper));
+        when(mockClient._transport()).thenReturn(transport);
+        when(mockClient.explain(any(ExplainRequest.class), eq(ObjectNode.class)))
+                .thenReturn(ExplainResponse.of(r -> r
+                        .index("test-index")
+                        .id(uuid)
+                        .matched(true)
+                        .get(g -> g.found(true).source(source))));
+
+        ElasticSearch search = new ElasticSearch(mockClient, null, mapper, "test-index", 100, 10000, 10);
+        JsonNode result = search.explainByUuid(uuid, List.of("ocean"), null, null, "-score,-rank", CQLCrsType.EPSG4326);
+
+        ArgumentCaptor<ExplainRequest> captor = ArgumentCaptor.forClass(ExplainRequest.class);
+        verify(mockClient).explain(captor.capture(), eq(ObjectNode.class));
+        assertEquals(List.of("summaries.score", "summaries.score_breakdown"), captor.getValue().sourceIncludes());
+
+        assertEquals(25, result.path("internal_score").asInt());
+        assertEquals(mapper.readTree("""
+                {"keywords": 15, "license": 10, "imos_ongoing": 0}
+                """), result.path("score_breakdown"));
+        assertTrue(result.has("request"));
+        assertTrue(result.has("response"));
     }
 
     @Test

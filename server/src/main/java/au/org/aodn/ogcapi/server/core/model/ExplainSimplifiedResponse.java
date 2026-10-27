@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.model;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import com.fasterxml.jackson.databind.JsonNode;
 import lombok.Builder;
 import lombok.Data;
 
@@ -33,7 +34,7 @@ public class ExplainSimplifiedResponse {
     @Builder
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @JsonPropertyOrder({
-            "rank", "id", "title", "final_score", "es_relevance", "internal_score",
+            "rank", "id", "title", "final_score", "es_relevance", "internal_score", "score_breakdown",
             "quality_multiplier", "sort_values", "matched_terms", "filters"
     })
     public static class Hit {
@@ -51,6 +52,13 @@ public class ExplainSimplifiedResponse {
         /** The stored summaries.score of the document */
         @JsonProperty("internal_score")
         private Double internalScore;
+
+        /**
+         * The points each ranking rule added to internal_score, keyed by rule name, e.g. {"keywords": 15, "license": 10}.
+         * Kept as the raw json so new rules added in es-indexer pass through
+         */
+        @JsonProperty("score_breakdown")
+        private JsonNode scoreBreakdown;
 
         /** The normalised internalscore (summaries.score / total) */
         @JsonProperty("quality_multiplier")

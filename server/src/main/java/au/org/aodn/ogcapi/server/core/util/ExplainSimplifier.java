@@ -125,7 +125,8 @@ public class ExplainSimplifier {
                 .title(stringField(hit.source(), StacBasicField.Title.searchField))
                 .finalScore(finalScore)
                 .esRelevance(esRelevance)
-                .internalScore(doubleField(hit.source(), StacSummeries.Score.searchField))
+                .internalScore(internalScoreOf(hit.source()))
+                .scoreBreakdown(scoreBreakdownOf(hit.source()))
                 .qualityMultiplier(qualityMultiplier)
                 .sortValues(sortValuesOf(hit.sort(), sortOptions))
                 .matchedTerms(terms)
@@ -306,6 +307,23 @@ public class ExplainSimplifier {
     protected static Double doubleField(ObjectNode source, String path) {
         JsonNode node = valueAt(source, path);
         return node.isNumber() ? node.asDouble() : null;
+    }
+
+    /**
+     * The stored summaries.score of the document, null when it was not fetched
+     */
+    public static Double internalScoreOf(ObjectNode source) {
+        return doubleField(source, StacSummeries.Score.searchField);
+    }
+
+    /**
+     * The points each ranking rule added to summaries.score, keyed by rule name, as es-indexer stored them.
+     * The map is passed on as is, so a rule added in es-indexer shows up without a change here.
+     * Null for a record indexed before es-indexer wrote the breakdown.
+     */
+    public static JsonNode scoreBreakdownOf(ObjectNode source) {
+        JsonNode node = valueAt(source, StacSummeries.ScoreBreakdown.searchField);
+        return node.isObject() ? node : null;
     }
 
     /**

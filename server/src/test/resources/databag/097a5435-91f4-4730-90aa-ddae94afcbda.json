@@ -50,7 +50,8 @@
       "out_of_date": 0,
       "document": 0,
       "imos_facility": 0,
-      "imos_collection": 0
+      "imos_collection": 0,
+      "imos_ongoing": 0
     },
     "ai:description": "Ocean Biogeographic Information System (OBIS) is a marine biogeographic information system. It concentrates on datasets that record particular species (or higher taxonomic groups) from particular marine locations, at particular times. At present, OBIS can only publish data where the locations are recorded as latitude and longitude, not as place names. The focus is on high taxonomic quality, therefore datasets where organisms have been identified by professional or trained biologists are available online. This link provides a gateway to many datasets containing information on where and when marine species have been recorded. The datasets are integrated so you can search them all seamlessly by species name, higher taxonomic level, geographic area, depth, and time; and then map and find environmental data related to the locations. Currrently it stores over 16.4 million records of 104 000 species from 492 databases.",
     "ai:update_frequency": "other",
