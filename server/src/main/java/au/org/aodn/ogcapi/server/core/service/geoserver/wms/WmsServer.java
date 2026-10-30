@@ -787,9 +787,15 @@ public class WmsServer {
                         && capabilitiesResponse.getCapability().getRootLayer() != null
                         && capabilitiesResponse.getCapability().getRootLayer().getLayers() != null) {
 
-                    List<LayerInfo> layers = capabilitiesResponse.getCapability()
+                    List<LayerInfo> rootLayers = capabilitiesResponse.getCapability()
                             .getRootLayer()
                             .getLayers();
+
+                    // WMS layers are hierarchical - flatten the tree and keep only
+                    // layers that have a <Name> (container layers without a name are
+                    // not individually requestable).
+                    List<LayerInfo> layers = new ArrayList<>();
+                    flattenLayers(rootLayers, layers);
 
                     log.info("Fetched and cached {} get-capabilities layers for {}", layers.size(), wmsServerUrl);
                     return layers;
@@ -801,6 +807,29 @@ public class WmsServer {
         }
 
         return Collections.emptyList();
+    }
+
+    /**
+     * Recursively flatten the hierarchical WMS layer tree into a flat list,
+     * keeping only layers that have a non-blank {@code <Name>} (named layers are
+     * the ones individually requestable; unnamed layers are grouping containers).
+     *
+     * @param layers - Layers at the current level (may be null)
+     * @param out    - Accumulator receiving all named layers in the tree
+     */
+    protected void flattenLayers(List<LayerInfo> layers, List<LayerInfo> out) {
+        if (layers == null) {
+            return;
+        }
+        for (LayerInfo layer : layers) {
+            if (layer == null) {
+                continue;
+            }
+            if (layer.getName() != null && !layer.getName().isBlank()) {
+                out.add(layer);
+            }
+            flattenLayers(layer.getLayers(), out);
+        }
     }
 
     /**
@@ -843,6 +872,20 @@ public class WmsServer {
         if (request != null && request.getLayerName() != null && !request.getLayerName().isEmpty()) {
             log.debug("=== Starting to match {} layers by layername {} ===", layers.size(), request.getLayerName());
             String requestLayerName = request.getLayerName();
+
+            // Prefer exact matches (full name incl. namespace prefix). Only if there
+            // is no exact match do we fall back to the rough/namespace-insensitive match.
+            List<LayerInfo> exactMatches = layers.stream()
+                    .filter(layer ->
+                            exactMatch(requestLayerName, layer.getName()) ||
+                                    exactMatch(requestLayerName, layer.getTitle()))
+                    .toList();
+            if (!exactMatches.isEmpty()) {
+                log.debug("Found {} exact match(es) for layername '{}', ignoring partial matches",
+                        exactMatches.size(), requestLayerName);
+                return exactMatches;
+            }
+
             return layers.stream()
                     .filter(layer ->
                             roughlyMatch(requestLayerName, layer.getName()) ||
@@ -859,25 +902,28 @@ public class WmsServer {
             boolean matched = false;
 
             for (LinkModel wmsLink : wmsLinks) {
-                // Primary match: link.title matches layer.name OR layer.title
+                // Primary match: link.title matches layer.name OR layer.title.
+                // Prefer an exact match (full name incl. namespace prefix) so that a
+                // title like 'ea:GBR_GBRMPA_GBR-dry-reef' matches only the 'ea:'
+                // layer and not 'ea-be:GBR_GBRMPA_GBR-dry-reef'.
                 if (wmsLink.getTitle() != null) {
-                    if (roughlyMatch(wmsLink.getTitle(), layer.getName()) ||
-                            roughlyMatch(wmsLink.getTitle(), layer.getTitle())) {
-                        log.debug("  ✓ Primary match found - WMS title '{}' matches layer '{}'",
+                    if (exactMatch(wmsLink.getTitle(), layer.getName()) ||
+                            exactMatch(wmsLink.getTitle(), layer.getTitle())) {
+                        log.debug("  ✓ Primary exact match found - WMS title '{}' matches layer '{}'",
                                 wmsLink.getTitle(), layer.getName());
                         matched = true;
-                        break;  // This will skip the next if block
+                        break;
                     }
                 }
 
                 // Sometimes the wms link.title is wrong but the link.url contains all information
-                // Fallback match: extract layername from link URI
+                // Fallback match: extract layername from link URI (exact)
                 if (wmsLink.getHref() != null) {
                     Optional<String> layername = extractLayernameOrTypenameFromUrl(wmsLink.getHref());
                     if (layername.isPresent()) {
-                        if (roughlyMatch(layername.get(), layer.getName()) ||
-                                roughlyMatch(layername.get(), layer.getTitle())) {
-                            log.debug("  ✓ Fallback match found - layername '{}' matches layer '{}'",
+                        if (exactMatch(layername.get(), layer.getName()) ||
+                                exactMatch(layername.get(), layer.getTitle())) {
+                            log.debug("  ✓ Fallback exact match found - layername '{}' matches layer '{}'",
                                     layername.get(), layer.getName());
                             matched = true;
                             break;
@@ -888,6 +934,45 @@ public class WmsServer {
 
             if (matched) {
                 filteredLayers.add(layer);
+            }
+        }
+
+        // Only if no layer matched exactly do we fall back to the rough
+        // (namespace-insensitive) matching, to avoid returning layers from a
+        // different workspace when an exact match exists.
+        if (filteredLayers.isEmpty()) {
+            log.debug("=== No exact match; falling back to rough matching for {} layers ===", layers.size());
+            for (LayerInfo layer : layers) {
+                boolean matched = false;
+
+                for (LinkModel wmsLink : wmsLinks) {
+                    if (wmsLink.getTitle() != null) {
+                        if (roughlyMatch(wmsLink.getTitle(), layer.getName()) ||
+                                roughlyMatch(wmsLink.getTitle(), layer.getTitle())) {
+                            log.debug("  ✓ Primary rough match found - WMS title '{}' matches layer '{}'",
+                                    wmsLink.getTitle(), layer.getName());
+                            matched = true;
+                            break;
+                        }
+                    }
+
+                    if (wmsLink.getHref() != null) {
+                        Optional<String> layername = extractLayernameOrTypenameFromUrl(wmsLink.getHref());
+                        if (layername.isPresent()) {
+                            if (roughlyMatch(layername.get(), layer.getName()) ||
+                                    roughlyMatch(layername.get(), layer.getTitle())) {
+                                log.debug("  ✓ Fallback rough match found - layername '{}' matches layer '{}'",
+                                        layername.get(), layer.getName());
+                                matched = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                if (matched) {
+                    filteredLayers.add(layer);
+                }
             }
         }
 
@@ -934,7 +1019,7 @@ public class WmsServer {
      * Sometimes the URL provided by WMS link is not optimal, for example
      * <a href="https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27FR199410%27">...</a>
      * will result in timeout due to too big query, if layername inside request have format xxx:yyyy then
-     * we can use xxx as the workspace name and rewrite the URL to https://www.cmar.csiro.au/geoserver/xxx/wms
+     * we can use xxx as the workspace name and rewrite the URL to <a href="https://www.cmar.csiro.au/geoserver/xxx/wms">...</a>
      *
      * @param collectionId - The uuid
      * @param request      - The request param (can be null)
