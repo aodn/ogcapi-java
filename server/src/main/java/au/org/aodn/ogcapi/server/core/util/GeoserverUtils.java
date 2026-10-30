@@ -64,6 +64,22 @@ public class GeoserverUtils {
     }
 
     /**
+     * Strict match utility that compares the full names including any namespace
+     * prefix. Unlike {@link #roughlyMatch(String, String)}, this does NOT strip
+     * the namespace prefix, so "ea:GBR" matches "ea:GBR" but not "ea-be:GBR".
+     *
+     * @param text1 - First text to compare
+     * @param text2 - Second text to compare
+     * @return true if the two texts are equal
+     */
+    public static boolean exactMatch(String text1, String text2) {
+        if (text1 == null || text2 == null) {
+            return false;
+        }
+        return text1.equals(text2);
+    }
+
+    /**
      * Extract typename from WFS or WMS URL query parameters.
      * For WFS URLs, looks for typeName/TYPENAME/typename parameter.
      * For WMS URLs, looks for layers/LAYERS parameter.

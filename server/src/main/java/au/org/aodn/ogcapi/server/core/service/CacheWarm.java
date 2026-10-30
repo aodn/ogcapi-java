@@ -37,7 +37,8 @@ public class CacheWarm {
             "https://www.cmar.csiro.au/geoserver/nerp/wms",
             "https://www.cmar.csiro.au/geoserver/AusSeabed/wms",
             "https://geoserver.apps.aims.gov.au/aims/wms",
-            "https://geoserver.apps.aims.gov.au/reefcloud/wms"
+            "https://geoserver.apps.aims.gov.au/reefcloud/wms",
+            "https://maps.eatlas.org.au/maps/wms"
     );
 
     // WFS server URLs for cache warming - using /ows endpoint which supports both WMS and WFS

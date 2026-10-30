@@ -49,5 +49,14 @@ public class LayerInfo {
     @JacksonXmlProperty(localName = "Style")
     private Style style;
 
+    /**
+     * Nested child layers. WMS GetCapabilities layers are hierarchical: a layer
+     * can contain sub-layers, which can contain further sub-layers. This field
+     * lets Jackson deserialize that nesting so the full tree can be traversed.
+     */
+    @JacksonXmlElementWrapper(useWrapping = false)
+    @JacksonXmlProperty(localName = "Layer")
+    private List<LayerInfo> layers;
+
     protected NcWmsLayerInfo ncWmsLayerInfo;
 }
