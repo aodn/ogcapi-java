@@ -20,6 +20,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * 2. Concurrency: a user already at the limit is rejected outright, the caller has to wait for
  * one of their own downloads to finish and try again.
  * An admitted download is tagged with its fair-share (small or large) from the same estimate.
+ * The original NetCDF files list has no estimate, it skips the size check and is always small.
  */
 @Slf4j
 @Service
@@ -59,15 +60,21 @@ public class DownloadAdmissionService {
     /**
      * Submit a download to AWS Batch and return its job id.
      *
-     * @throws DownloadSizeExceededException the download is estimated at the size limit or more
+     * @throws DownloadSizeExceededException  the download is estimated at the size limit or more
      * @throws DownloadLimitExceededException the recipient already has {@code maxConcurrent}
-     *                                         downloads running
+     *                                        downloads running
      */
     public String submit(DownloadRequest request) throws JsonProcessingException {
         String key = InFlightDownloadCounter.recipientKey(request.recipient());
 
+        // The original NetCDF files list is a small CSV of links. Estimation is not implemented yet,
+        // so skip the size check and tag it small.
+        boolean originalNetcdfs = request.isOriginalNetcdfs();
+
         // Before the slot is reserved, so a slow estimate does not hold one.
-        OptionalLong estimatedBytes = sizeLimit.enabled() ? rejectIfTooLarge(request) : OptionalLong.empty();
+        OptionalLong estimatedBytes = sizeLimit.enabled() && !originalNetcdfs
+                ? rejectIfTooLarge(request)
+                : OptionalLong.empty();
 
         if (limits.enabled()) {
             // Outside the lock: the sweep is the only expensive step.
@@ -77,7 +84,7 @@ public class DownloadAdmissionService {
 
         try {
             Map<String, String> parameters = restServices.buildDownloadParameters(request);
-            String shareIdentifier = shareFor(estimatedBytes);
+            String shareIdentifier = originalNetcdfs ? share.small() : shareFor(estimatedBytes);
             log.info("Download for uuid {} estimated {} bytes, share {}", request.uuid(),
                     estimatedBytes.isPresent() ? estimatedBytes.getAsLong() : "none", shareIdentifier);
             // The Batch shareIdentifier is only sent where the queue has a fair-share policy, otherwise AWS rejects the submit.

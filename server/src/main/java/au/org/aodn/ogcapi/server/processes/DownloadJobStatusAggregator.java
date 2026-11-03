@@ -13,7 +13,8 @@ import java.util.stream.Stream;
 public class DownloadJobStatusAggregator {
 
     public enum WorkflowMode {
-        EXPLICIT_ZARR,
+        // The init job does all the work and starts no child job, e.g. zarr keys or the original NetCDF files list
+        INIT_ONLY,
         CHILD_DISCOVERY_REQUIRED
     }
 
@@ -63,7 +64,7 @@ public class DownloadJobStatusAggregator {
             case SUBMITTED, PENDING, RUNNABLE -> StatusCode.ACCEPTED;
             case STARTING, RUNNING -> StatusCode.RUNNING;
             case SUCCEEDED -> {
-                if (snapshot.workflowMode() == WorkflowMode.EXPLICIT_ZARR
+                if (snapshot.workflowMode() == WorkflowMode.INIT_ONLY
                         || snapshot.discoveryWindowExpired()) {
                     yield StatusCode.SUCCESSFUL;
                 }
