@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.model.enumeration;
 
+import au.org.aodn.stac.model.AssetModel;
 import co.elastic.clients.elasticsearch._types.*;
 import co.elastic.clients.elasticsearch._types.query_dsl.*;
 import co.elastic.clients.json.JsonData;
@@ -311,13 +312,26 @@ public enum CQLFields implements CQLFieldsInterface {
                                 .query(literal))._toQuery(),
                 null,
                 null),
-        // Contains cloud-optimized data
+        // Contains cloud-optimized data. The assets field can also have the original NetCDF files list
+        // (role FILE_LIST) of a collection with no cloud-optimized data, so check the SUMMARY role,
+        // not only if assets exist.
         assets_summary(
                 StacBasicField.AssetsSummary.searchField,
                 StacBasicField.AssetsSummary.displayField,
                 null,
                 null,
-                null),
+                null) {
+            @Override
+            public Query getIsNullQuery() {
+                // assets is a flattened field, a term query on it matches any value inside, here the role
+                Query hasSummary = TermQuery.of(t -> t
+                                .field(StacBasicField.AssetsSummary.searchField)
+                                .value(AssetModel.Role.SUMMARY.name()))._toQuery();
+
+                return BoolQuery.of(b -> b
+                                .mustNot(hasSummary))._toQuery();
+            }
+        },
         // Fields for training ML keyword classification model and delivery mode
         // classification model
         themes(
