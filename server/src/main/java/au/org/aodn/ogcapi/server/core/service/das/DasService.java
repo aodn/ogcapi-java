@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.core.service.das;
 import au.org.aodn.ogcapi.server.core.configuration.CacheConfig;
 import au.org.aodn.ogcapi.server.core.configuration.Config;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
+import au.org.aodn.ogcapi.server.core.model.enumeration.DasSiteProduct;
 import au.org.aodn.ogcapi.server.core.service.ApplicationInfo;
 import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -33,6 +34,8 @@ public class DasService implements ApplicationInfo {
             };
 
     private static final int MAX_UPSTREAM_DETAIL_CHARS = 200;
+
+    private static final String FEATURE_COLLECTION_PATH = "/api/v1/das/data/feature-collection/{product}";
 
     protected final DasProperties dasProperties;
     protected final RestTemplate httpClient;
@@ -74,36 +77,16 @@ public class DasService implements ApplicationInfo {
         return httpClient.getForEntity(url, byte[].class, params);
     }
 
-    public ResponseEntity<byte[]> getWaveBuoysBetweenDates(String start, String end) {
-        return getFeatureCollection("/api/v1/das/data/feature-collection/wave-buoy", start, end, Map.of());
+    public ResponseEntity<byte[]> getSitesBetweenDates(DasSiteProduct product, String start, String end) {
+        return getFeatureCollection(FEATURE_COLLECTION_PATH, start, end, Map.of("product", product.path));
     }
 
-    public ResponseEntity<byte[]> getWaveBuoysLatestAvailableDate() {
-        String waveBuoysUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/wave-buoy/latest")
-                .encode()
-                .toUriString();
-
-        return httpClient.getForEntity(waveBuoysUrlTemplate, byte[].class);
+    public ResponseEntity<byte[]> getLatestAvailableDate(DasSiteProduct product) {
+        return getFeatureCollection(FEATURE_COLLECTION_PATH + "/latest", null, null, Map.of("product", product.path));
     }
 
-    public ResponseEntity<byte[]> getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
-        return getFeatureCollection("/api/v1/das/data/feature-collection/wave-buoy/{buoy}", startDateTime, endDateTime, Map.of("buoy", buoy));
-    }
-
-    public ResponseEntity<byte[]> getMooringsBetweenDates(String start, String end) {
-        return getFeatureCollection("/api/v1/das/data/feature-collection/mooring", start, end, Map.of());
-    }
-
-    public ResponseEntity<byte[]> getMooringsLatestAvailableDate() {
-        String mooringsUrlTemplate = UriComponentsBuilder.fromUriString(dasProperties.host() + "/api/v1/das/data/feature-collection/mooring/latest")
-                .encode()
-                .toUriString();
-
-        return httpClient.getForEntity(mooringsUrlTemplate, byte[].class);
-    }
-
-    public ResponseEntity<byte[]> getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
-        return getFeatureCollection("/api/v1/das/data/feature-collection/mooring/{mooring}", startDateTime, endDateTime, Map.of("mooring", mooring));
+    public ResponseEntity<byte[]> getSiteDetailsBetweenDates(DasSiteProduct product, String startDateTime, String endDateTime, String site) {
+        return getFeatureCollection(FEATURE_COLLECTION_PATH + "/{site}", startDateTime, endDateTime, Map.of("product", product.path, "site", site));
     }
 
     /**

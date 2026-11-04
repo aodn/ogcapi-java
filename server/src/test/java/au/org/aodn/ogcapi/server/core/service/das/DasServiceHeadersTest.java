@@ -1,12 +1,15 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
 import au.org.aodn.ogcapi.server.core.configuration.Config;
+import au.org.aodn.ogcapi.server.core.model.enumeration.DasSiteProduct;
 import au.org.aodn.ogcapi.server.core.http.RecordingSseConnector;
 import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -101,7 +104,32 @@ public class DasServiceHeadersTest {
                 .andExpect(header("x-internal-das-header-secret", "internal-secret"))
                 .andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
 
-        dasService.getWaveBuoysLatestAvailableDate();
+        dasService.getLatestAvailableDate(DasSiteProduct.WAVE_BUOY);
+
+        server.verify();
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "WAVE_BUOY, wave-buoy",
+            "MOORING, mooring",
+            "MOORING_ESTUARINE_WATER_QUALITY, mooring-estuarine-water-quality"
+    })
+    public void testSiteProductUrlsOnTheWire(DasSiteProduct product, String path) {
+        String base = "http://localhost:5000/api/v1/das/data/feature-collection/" + path;
+        String dates = "?start_date=2024-01-01T00:00:00Z&end_date=2024-01-02T00:00:00Z";
+        server.expect(requestTo(base)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(base + dates)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(base + "/latest")).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+        // The space shows the site is encoded exactly once
+        server.expect(requestTo(base + "/Apollo%20Bay")).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+        server.expect(requestTo(base + "/Apollo%20Bay" + dates)).andRespond(withSuccess("{}", MediaType.APPLICATION_JSON));
+
+        dasService.getSitesBetweenDates(product, null, null);
+        dasService.getSitesBetweenDates(product, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z");
+        dasService.getLatestAvailableDate(product);
+        dasService.getSiteDetailsBetweenDates(product, null, null, "Apollo Bay");
+        dasService.getSiteDetailsBetweenDates(product, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "Apollo Bay");
 
         server.verify();
     }
@@ -123,7 +151,7 @@ public class DasServiceHeadersTest {
         DasService service = new DasService(
                 noInternal, noInternalTemplate, sseClientOn(noInternal, connector), new ObjectMapper());
 
-        service.getWaveBuoysLatestAvailableDate();
+        service.getLatestAvailableDate(DasSiteProduct.WAVE_BUOY);
         noInternalServer.verify();
 
         // The streamed client is built from the same properties, so it must leave it off too.

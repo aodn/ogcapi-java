@@ -2,6 +2,7 @@ package au.org.aodn.ogcapi.server.features;
 
 import au.org.aodn.ogcapi.features.model.Collection;
 import au.org.aodn.ogcapi.server.core.model.DatasetMetadata;
+import au.org.aodn.ogcapi.server.core.model.enumeration.DasSiteProduct;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.FeatureTypeInfo;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
@@ -40,6 +41,7 @@ import java.io.StringReader;
 import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.*;
+import java.util.function.Supplier;
 
 @Slf4j
 @Service("FeaturesRestService")
@@ -318,137 +320,59 @@ public class RestServices extends OGCApiService {
     }
 
     /**
-     * Returns wave buoy sites recorded within the given UTC date range.
+     * Calls DAS and forwards its response, or its error status/headers/body if DAS rejected the call.
+     *
+     * @param description what is being fetched, for the log message.
+     */
+    private ResponseEntity<?> forwardDas(String description, Supplier<ResponseEntity<byte[]>> dasCall) {
+        try {
+            return forwardDasResponse(dasCall.get());
+
+        } catch (HttpStatusCodeException e) {
+            log.error("DAS returned an error fetching {}: {}", description, e.getStatusCode());
+            return forwardDasError(e);
+        } catch (Exception e) {
+            log.error("Error fetching {}: {}", description, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * Returns the sites of a DAS product recorded within the given UTC date range.
      *
      * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
      */
-    public ResponseEntity<?> getWaveBuoysBetweenDates(String startDateTime, String endDateTime) {
+    public ResponseEntity<?> getSitesBetweenDates(DasSiteProduct product, String startDateTime, String endDateTime) {
         Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
         if (validationError.isPresent()) {
             return validationError.get();
         }
 
-        try {
-            return forwardDasResponse(dasService.getWaveBuoysBetweenDates(startDateTime, endDateTime));
-
-        } catch (HttpStatusCodeException e) {
-            log.error("DAS returned an error fetching wave buoys data: {}", e.getStatusCode());
-            return forwardDasError(e);
-        } catch (Exception e) {
-            log.error("Error fetching wave buoys data: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
-
+        return forwardDas(product.label + "s data", () -> dasService.getSitesBetweenDates(product, startDateTime, endDateTime));
     }
 
-
     /**
-     * Returns detailed data for a single wave buoy within the given UTC date range.
+     * Returns detailed data for a single site of a DAS product within the given UTC date range.
      *
      * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
-     * @param buoy the wave buoy identifier; required.
+     * @param site the site identifier; required.
      */
-    public ResponseEntity<?> getWaveBuoyDetailsBetweenDates(String startDateTime, String endDateTime, String buoy) {
+    public ResponseEntity<?> getSiteDetailsBetweenDates(DasSiteProduct product, String startDateTime, String endDateTime, String site) {
         Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
         if (validationError.isPresent()) {
             return validationError.get();
         }
-        if (buoy == null) {
-            return ResponseEntity.badRequest().body("Parameter 'waveBuoy' is required");
+        if (site == null) {
+            return ResponseEntity.badRequest().body("Parameter '" + product.siteParameter + "' is required");
         }
 
-        try {
-            return forwardDasResponse(dasService.getWaveBuoyDetailsBetweenDates(startDateTime, endDateTime, buoy));
-
-        } catch (HttpStatusCodeException e) {
-            log.error("DAS returned an error fetching wave buoy historical data: {}", e.getStatusCode());
-            return forwardDasError(e);
-        } catch (Exception e) {
-            log.error("Error fetching wave buoy historical data: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-
-    /**
-     * Returns the latest date for which wave buoy data is available.
-     */
-    public ResponseEntity<?> getWaveBuoysLatestAvailableDate() {
-        try {
-            return forwardDasResponse(dasService.getWaveBuoysLatestAvailableDate());
-
-        } catch (HttpStatusCodeException e) {
-            log.error("DAS returned an error fetching wave buoys latest date: {}", e.getStatusCode());
-            return forwardDasError(e);
-        } catch (Exception e) {
-            log.error("Error fetching wave buoys latest date: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
+        return forwardDas(product.label + " historical data", () -> dasService.getSiteDetailsBetweenDates(product, startDateTime, endDateTime, site));
     }
 
     /**
-     * Returns mooring observations recorded within the given UTC date range.
-     *
-     * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
+     * Returns the latest date for which data of a DAS product is available.
      */
-    public ResponseEntity<?> getMooringsBetweenDates(String startDateTime, String endDateTime) {
-        Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
-        if (validationError.isPresent()) {
-            return validationError.get();
-        }
-
-        try {
-            return forwardDasResponse(dasService.getMooringsBetweenDates(startDateTime, endDateTime));
-
-        } catch (HttpStatusCodeException e) {
-            log.error("DAS returned an error fetching moorings data: {}", e.getStatusCode());
-            return forwardDasError(e);
-        } catch (Exception e) {
-            log.error("Error fetching moorings data: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    /**
-     * Returns detailed observations for a single mooring within the given UTC date range.
-     *
-     * @param startDateTime,endDateTime must be UTC or null, since the underlying DAS service expects UTC only.
-     * @param mooring the mooring identifier; required.
-     */
-    public ResponseEntity<?> getMooringDetailsBetweenDates(String startDateTime, String endDateTime, String mooring) {
-        Optional<ResponseEntity<?>> validationError = validateUtcDateRange(startDateTime, endDateTime);
-        if (validationError.isPresent()) {
-            return validationError.get();
-        }
-        if (mooring == null) {
-            return ResponseEntity.badRequest().body("Parameter 'mooring' is required");
-        }
-
-        try {
-            return forwardDasResponse(dasService.getMooringDetailsBetweenDates(startDateTime, endDateTime, mooring));
-
-        } catch (HttpStatusCodeException e) {
-            log.error("DAS returned an error fetching mooring historical data: {}", e.getStatusCode());
-            return forwardDasError(e);
-        } catch (Exception e) {
-            log.error("Error fetching mooring historical data: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
-    }
-
-    /**
-     * Returns the latest date for which mooring data is available.
-     */
-    public ResponseEntity<?> getMooringsLatestAvailableDate() {
-        try {
-            return forwardDasResponse(dasService.getMooringsLatestAvailableDate());
-
-        } catch (HttpStatusCodeException e) {
-            log.error("DAS returned an error fetching moorings latest date: {}", e.getStatusCode());
-            return forwardDasError(e);
-        } catch (Exception e) {
-            log.error("Error fetching moorings latest date: {}", e.getMessage());
-            return ResponseEntity.internalServerError().build();
-        }
+    public ResponseEntity<?> getLatestAvailableDate(DasSiteProduct product) {
+        return forwardDas(product.label + "s latest date", () -> dasService.getLatestAvailableDate(product));
     }
 }

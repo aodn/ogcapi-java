@@ -33,7 +33,7 @@ import java.util.Set;
  * <p>
  * Product ids contain {@code :}/{@code +} (e.g. {@code model_sea_level_anomaly_gridded_realtime:gsla}),
  * so URL building always goes through {@link UriComponentsBuilder} path-variable expansion
- * (mirrors {@link DasService#getWaveBuoyDetailsBetweenDates}) rather than string concatenation.
+ * (mirrors {@link DasService#getSiteDetailsBetweenDates}) rather than string concatenation.
  */
 @Slf4j
 @Service("DasTilerService")

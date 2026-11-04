@@ -3,6 +3,7 @@ package au.org.aodn.ogcapi.server.features;
 import au.org.aodn.ogcapi.features.api.CollectionsApi;
 import au.org.aodn.ogcapi.features.model.*;
 import au.org.aodn.ogcapi.features.model.Exception;
+import au.org.aodn.ogcapi.server.core.model.enumeration.DasSiteProduct;
 import au.org.aodn.ogcapi.server.core.model.enumeration.FeatureId;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
@@ -96,22 +97,31 @@ public class RestApi implements CollectionsApi {
                 return featuresService.getDatasetMetadata(collectionId);
             }
             case wave_buoys_between_dates -> {
-                return featuresService.getWaveBuoysBetweenDates( request.getStartDateTime(), request.getEndDateTime());
+                return featuresService.getSitesBetweenDates(DasSiteProduct.WAVE_BUOY, request.getStartDateTime(), request.getEndDateTime());
             }
             case wave_buoys_latest_available_date -> {
-                return featuresService.getWaveBuoysLatestAvailableDate();
+                return featuresService.getLatestAvailableDate(DasSiteProduct.WAVE_BUOY);
             }
             case wave_buoy_details_between_dates -> {
-                return featuresService.getWaveBuoyDetailsBetweenDates(request.getStartDateTime(), request.getEndDateTime(), request.getWaveBuoy());
+                return featuresService.getSiteDetailsBetweenDates(DasSiteProduct.WAVE_BUOY, request.getStartDateTime(), request.getEndDateTime(), request.getWaveBuoy());
             }
             case moorings_between_dates -> {
-                return featuresService.getMooringsBetweenDates(request.getStartDateTime(), request.getEndDateTime());
+                return featuresService.getSitesBetweenDates(DasSiteProduct.MOORING, request.getStartDateTime(), request.getEndDateTime());
             }
             case moorings_latest_available_date -> {
-                return featuresService.getMooringsLatestAvailableDate();
+                return featuresService.getLatestAvailableDate(DasSiteProduct.MOORING);
             }
             case mooring_details_between_dates -> {
-                return featuresService.getMooringDetailsBetweenDates(request.getStartDateTime(), request.getEndDateTime(), request.getMooring());
+                return featuresService.getSiteDetailsBetweenDates(DasSiteProduct.MOORING, request.getStartDateTime(), request.getEndDateTime(), request.getMooring());
+            }
+            case mooring_estuarine_water_quality_between_dates -> {
+                return featuresService.getSitesBetweenDates(DasSiteProduct.MOORING_ESTUARINE_WATER_QUALITY, request.getStartDateTime(), request.getEndDateTime());
+            }
+            case mooring_estuarine_water_quality_latest_available_date -> {
+                return featuresService.getLatestAvailableDate(DasSiteProduct.MOORING_ESTUARINE_WATER_QUALITY);
+            }
+            case mooring_estuarine_water_quality_details_between_dates -> {
+                return featuresService.getSiteDetailsBetweenDates(DasSiteProduct.MOORING_ESTUARINE_WATER_QUALITY, request.getStartDateTime(), request.getEndDateTime(), request.getMooring());
             }
             case wfs_fields -> {
                 return featuresService.getWfsFields(collectionId, request);
