@@ -294,6 +294,18 @@ class DownloadAdmissionServiceTest {
     }
 
     @Test
+    void anOriginalNetcdfsDownloadSkipsTheEstimateAndIsTaggedSmall() throws Exception {
+        DownloadRequest request = new DownloadRequest("collection-id", "original_netcdfs",
+                "2023-01-01", "2023-01-31", "non-specified", RECIPIENT, "Test Collection",
+                "https://portal.example.test/details/collection-id", "Cite as", "csv");
+
+        assertNotNull(service.submit(request));
+
+        verify(restServices, never()).estimateDownloadBytes(any());
+        assertEquals("small", submittedShare());
+    }
+
+    @Test
     void whenShareIsEnabledTheShareIdentifierMatchesTheParameter() throws Exception {
         // Under the threshold tags small; with the switch on, that share is also sent as the
         // top-level Batch shareIdentifier.

@@ -92,8 +92,8 @@ public class DownloadJobStatusService {
                     COLLECT_NAME_PREFIX + jobId, jobId, COLLECT_TYPE);
 
             boolean discoveryWindowExpired = discoveryWindowExpired(initial);
-            DownloadJobStatusAggregator.WorkflowMode workflowMode = isExplicitZarr(initial.parameters())
-                    ? DownloadJobStatusAggregator.WorkflowMode.EXPLICIT_ZARR
+            DownloadJobStatusAggregator.WorkflowMode workflowMode = isInitOnly(initial.parameters())
+                    ? DownloadJobStatusAggregator.WorkflowMode.INIT_ONLY
                     : DownloadJobStatusAggregator.WorkflowMode.CHILD_DISCOVERY_REQUIRED;
 
             StatusCode status = aggregator.aggregate(new DownloadJobStatusAggregator.Snapshot(
@@ -204,10 +204,18 @@ public class DownloadJobStatusService {
                 && !clock.instant().isBefore(Instant.ofEpochMilli(stoppedAt).plus(CHILD_DISCOVERY_WINDOW));
     }
 
-    private boolean isExplicitZarr(Map<String, String> parameters) {
+    /**
+     * True when the init job does all the work and starts no child job:
+     * 1. All keys are zarr
+     * 2. The key is the original NetCDF files list
+     */
+    private boolean isInitOnly(Map<String, String> parameters) {
         String keys = parameters.get(DatasetDownloadEnums.Parameter.KEY.getValue());
         if (keys == null || keys.isBlank()) {
             return false;
+        }
+        if (DatasetDownloadEnums.ORIGINAL_NETCDFS_KEY.equals(keys.trim())) {
+            return true;
         }
         String[] splitKeys = keys.split(",", -1);
         for (String key : splitKeys) {

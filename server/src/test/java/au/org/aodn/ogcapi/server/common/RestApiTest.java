@@ -691,7 +691,8 @@ public class RestApiTest extends BaseTestClass {
                 "5c418118-2581-4936-b6fd-d6bedfe74f62.json",
                 "19da2ce7-138f-4427-89de-a50c724f5f54.json",
                 "516811d7-cd1e-207a-e0440003ba8c79dd.json",
-                "35234913-aa3c-48ec-b9a4-77f822f66ef8.json" // This one have cloud optimized index, that is assets.summary value
+                "35234913-aa3c-48ec-b9a4-77f822f66ef8.json", // This one have cloud optimized index, that is assets.summary value
+                "f3c6e2a1-7b4d-4e8f-9a2c-5d1b0e6f8a37.json" // This one have assets, but only the original NetCDF files list, not cloud optimized
         );
 
         ResponseEntity<Collections> collections = testRestTemplate.exchange(
@@ -700,7 +701,15 @@ public class RestApiTest extends BaseTestClass {
                 null,
                 new ParameterizedTypeReference<>() {});
 
-        assertEquals(4, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 4");
+        assertEquals(5, Objects.requireNonNull(collections.getBody()).getCollections().size(), "hit 5");
+
+        // The original NetCDF files list asset is returned as a file-list link, not a summary link
+        var fileListRecord = Objects.requireNonNull(collections.getBody()).getCollections().stream()
+                .filter(c -> "f3c6e2a1-7b4d-4e8f-9a2c-5d1b0e6f8a37".equals(c.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertTrue(fileListRecord.getLinks().stream().anyMatch(l -> "file-list".equals(l.getRel())), "file-list link exist");
+        assertTrue(fileListRecord.getLinks().stream().noneMatch(l -> "summary".equals(l.getRel())), "no summary link");
 
         collections = testRestTemplate.exchange(
                 getBasePath() + "/collections?filter=(assets_summary IS NOT NULL)&sortby=-temporal",
