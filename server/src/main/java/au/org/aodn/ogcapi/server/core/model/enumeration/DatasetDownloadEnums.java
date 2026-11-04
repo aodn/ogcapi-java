@@ -10,6 +10,10 @@ import java.util.List;
  */
 public class DatasetDownloadEnums {
 
+    // Key of the original NetCDF files list, for a collection with no cloud-optimised data.
+    // The batch init job does all the work: it emails a CSV of the file links and starts no child job.
+    public static final String ORIGINAL_NETCDFS_KEY = "original_netcdfs";
+
     @Getter
     public enum Parameter {
         UUID("uuid"),

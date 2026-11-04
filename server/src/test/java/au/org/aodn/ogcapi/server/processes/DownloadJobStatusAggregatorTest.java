@@ -5,7 +5,7 @@ import org.junit.jupiter.api.Test;
 import software.amazon.awssdk.services.batch.model.JobStatus;
 
 import static au.org.aodn.ogcapi.server.processes.DownloadJobStatusAggregator.WorkflowMode.CHILD_DISCOVERY_REQUIRED;
-import static au.org.aodn.ogcapi.server.processes.DownloadJobStatusAggregator.WorkflowMode.EXPLICIT_ZARR;
+import static au.org.aodn.ogcapi.server.processes.DownloadJobStatusAggregator.WorkflowMode.INIT_ONLY;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
@@ -60,9 +60,9 @@ class DownloadJobStatusAggregatorTest {
     }
 
     @Test
-    void explicitZarrWithoutChildrenSucceedsImmediately() {
+    void initOnlyWithoutChildrenSucceedsImmediately() {
         assertEquals(StatusCode.SUCCESSFUL,
-                aggregate(JobStatus.SUCCEEDED, null, null, EXPLICIT_ZARR, false));
+                aggregate(JobStatus.SUCCEEDED, null, null, INIT_ONLY, false));
     }
 
     @Test

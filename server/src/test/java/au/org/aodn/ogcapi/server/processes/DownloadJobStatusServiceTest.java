@@ -191,6 +191,13 @@ class DownloadJobStatusServiceTest {
     }
 
     @Test
+    void originalNetcdfsWithoutChildrenSucceedsImmediately() {
+        // The init job writes the file list itself, there is no child job to wait for
+        describedJobs.put(JOB_ID, initial(JobStatus.SUCCEEDED, "original_netcdfs", NOW.minusSeconds(1)));
+        assertEquals(StatusCode.SUCCESSFUL, service.getStatus(JOB_ID).getStatus());
+    }
+
+    @Test
     void listJobsPaginatesAndAppliesExactCaseSensitiveNameCheck() {
         JobDetail initial = initial(JobStatus.SUCCEEDED, "dataset.parquet", NOW.minusSeconds(5));
         describedJobs.put(JOB_ID, initial);
