@@ -11,6 +11,7 @@ import java.io.StringReader;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.Arrays;
 import java.util.Locale;
@@ -320,18 +321,16 @@ public enum CQLFields implements CQLFieldsInterface {
                 StacBasicField.AssetsSummary.displayField,
                 null,
                 null,
-                null) {
-            @Override
-            public Query getIsNullQuery() {
-                // assets is a flattened field, a term query on it matches any value inside, here the role
-                Query hasSummary = TermQuery.of(t -> t
-                                .field(StacBasicField.AssetsSummary.searchField)
-                                .value(AssetModel.Role.SUMMARY.name()))._toQuery();
+                null,
+                () -> {
+                    // assets is a flattened field, a term query on it matches any value inside, here the role
+                    Query hasSummary = TermQuery.of(t -> t
+                                    .field(StacBasicField.AssetsSummary.searchField)
+                                    .value(AssetModel.Role.SUMMARY.name()))._toQuery();
 
-                return BoolQuery.of(b -> b
-                                .mustNot(hasSummary))._toQuery();
-            }
-        },
+                    return BoolQuery.of(b -> b
+                                    .mustNot(hasSummary))._toQuery();
+                }),
         // Fields for training ML keyword classification model and delivery mode
         // classification model
         themes(
@@ -389,6 +388,11 @@ public enum CQLFields implements CQLFieldsInterface {
          */
         @Getter
         private final Function<List<String>, Query> overridePropertyInQuery;
+        /*
+         * Override the default query for this field in getIsNullQuery(), e.g. assets_summary needs to check the SUMMARY role, not only if the field exists
+         */
+        @Getter
+        private final Supplier<Query> overrideIsNullQuery;
 
         @Getter
         private final List<String> displayField;
@@ -399,7 +403,17 @@ public enum CQLFields implements CQLFieldsInterface {
                   Function<List<String>, Query> overridePropertyInQuery,
                   Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
-                this(fields, List.of(displayField), overridePropertyEqualsToQuery, overridePropertyInQuery, sortBuilder);
+                this(fields, List.of(displayField), overridePropertyEqualsToQuery, overridePropertyInQuery, sortBuilder, null);
+        }
+
+        CQLFields(String fields,
+                  String displayField,
+                  Function<String, Query> overridePropertyEqualsToQuery,
+                  Function<List<String>, Query> overridePropertyInQuery,
+                  Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder,
+                  Supplier<Query> overrideIsNullQuery) {
+
+                this(fields, List.of(displayField), overridePropertyEqualsToQuery, overridePropertyInQuery, sortBuilder, overrideIsNullQuery);
         }
 
         CQLFields(String fields,
@@ -408,11 +422,22 @@ public enum CQLFields implements CQLFieldsInterface {
                   Function<List<String>, Query> overridePropertyInQuery,
                   Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder) {
 
+                this(fields, displayField, overridePropertyEqualsToQuery, overridePropertyInQuery, sortBuilder, null);
+        }
+
+        CQLFields(String fields,
+                  List<String> displayField,
+                  Function<String, Query> overridePropertyEqualsToQuery,
+                  Function<List<String>, Query> overridePropertyInQuery,
+                  Function<SortOrder, ObjectBuilder<SortOptions>> sortBuilder,
+                  Supplier<Query> overrideIsNullQuery) {
+
                 this.searchField = fields;
                 this.displayField = displayField;
                 this.overridePropertyEqualsToQuery = overridePropertyEqualsToQuery;
                 this.overridePropertyInQuery = overridePropertyInQuery;
                 this.sortBuilder = sortBuilder;
+                this.overrideIsNullQuery = overrideIsNullQuery;
         }
 
         private static Function<SortOrder, ObjectBuilder<SortOptions>> vocabPrioritySortBuilder(String vocabField) {
@@ -540,6 +565,10 @@ public enum CQLFields implements CQLFieldsInterface {
 
         @Override
         public Query getIsNullQuery() {
+                if (getOverrideIsNullQuery() != null) {
+                        return getOverrideIsNullQuery().get();
+                }
+
                 Query fieldExist = ExistsQuery.of(f -> f
                                 .field(this.searchField))._toQuery();
 
