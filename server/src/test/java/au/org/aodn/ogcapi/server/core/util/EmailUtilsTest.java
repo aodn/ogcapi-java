@@ -241,7 +241,7 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Subsetting for this collection"));
+        assertTrue(result.contains("Subsetting:"));
         assertTrue(result.contains("Bounding Box"));
         assertTrue(result.contains("Date Range"));
     }
@@ -256,7 +256,7 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Subsetting for this collection"));
+        assertTrue(result.contains("Subsetting:"));
         assertTrue(result.contains("Date Range"));
         assertFalse(result.contains("Bounding Box"));
     }
@@ -327,7 +327,7 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Subsetting for this collection"));
+        assertTrue(result.contains("Subsetting:"));
         assertTrue(result.contains("Bounding Box"));
         assertFalse(result.contains("Date Range"));
     }
@@ -436,7 +436,7 @@ public class EmailUtilsTest {
         );
 
         assertFalse(result.isEmpty());
-        assertTrue(result.contains("Subsetting for this collection"));
+        assertTrue(result.contains("Subsetting:"));
         assertTrue(result.contains("Polygon Selection"));
         assertFalse(result.contains("Bounding Box"));
     }
