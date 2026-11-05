@@ -12,6 +12,9 @@ public enum FeatureId {
     moorings_between_dates("moorings_between_dates"),
     moorings_latest_available_date("moorings_latest_available_date"),
     mooring_details_between_dates("mooring_details_between_dates"),
+    mooring_estuarine_water_quality_between_dates("mooring_estuarine_water_quality_between_dates"),
+    mooring_estuarine_water_quality_latest_available_date("mooring_estuarine_water_quality_latest_available_date"),
+    mooring_estuarine_water_quality_details_between_dates("mooring_estuarine_water_quality_details_between_dates"),
     wms_map_tile("wms_map_tile"),
     wms_legend("wms_legend"), // Get the WMS GetLegendGraphic image (image/png) for a layer
     wms_map_feature("wms_map_feature"),

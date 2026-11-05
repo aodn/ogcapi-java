@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.core.service.das;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.DasSiteProduct;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -21,7 +22,7 @@ import static org.mockito.Mockito.when;
 
 /**
  * Unit tests for DasService URL building: null date params are omitted so they never reach URI
- * template expansion, and buoy/mooring ids go as path variables so they are encoded once. The API
+ * template expansion, and product/site ids go as path variables so they are encoded once. The API
  * key is attached by the RestTemplate bean, so ConfigTest covers it, and the streamed size
  * estimate has its own DasServiceEstimateStreamTest.
  */
@@ -45,8 +46,6 @@ public class DasServiceTest {
 
         when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
                 .thenReturn(ResponseEntity.ok("ok".getBytes()));
-        when(httpClient.getForEntity(anyString(), eq(byte[].class)))
-                .thenReturn(ResponseEntity.ok("ok".getBytes()));
     }
 
     @SuppressWarnings("unchecked")
@@ -59,10 +58,11 @@ public class DasServiceTest {
 
     @Test
     public void testBetweenDatesIncludesBothDateParams() {
-        dasService.getWaveBuoysBetweenDates("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z");
+        dasService.getSitesBetweenDates(DasSiteProduct.WAVE_BUOY, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z");
 
         CapturedRequest captured = captureMapRequest();
-        assertTrue(captured.url.startsWith(HOST + "/api/v1/das/data/feature-collection/wave-buoy"));
+        assertTrue(captured.url.startsWith(HOST + "/api/v1/das/data/feature-collection/{product}"));
+        assertEquals("wave-buoy", captured.params.get("product"));
         assertTrue(captured.url.contains("start_date={start_date}"));
         assertTrue(captured.url.contains("end_date={end_date}"));
         assertEquals("2024-01-01T00:00:00Z", captured.params.get("start_date"));
@@ -71,7 +71,7 @@ public class DasServiceTest {
 
     @Test
     public void testBetweenDatesOmitsNullStart() {
-        dasService.getWaveBuoysBetweenDates(null, "2024-01-02T00:00:00Z");
+        dasService.getSitesBetweenDates(DasSiteProduct.WAVE_BUOY, null, "2024-01-02T00:00:00Z");
 
         CapturedRequest captured = captureMapRequest();
         assertFalse(captured.url.contains("start_date"), "null start_date must not appear in URL");
@@ -82,40 +82,32 @@ public class DasServiceTest {
 
     @Test
     public void testBetweenDatesOmitsBothNullDates() {
-        dasService.getWaveBuoysBetweenDates(null, null);
+        dasService.getSitesBetweenDates(DasSiteProduct.WAVE_BUOY, null, null);
 
         CapturedRequest captured = captureMapRequest();
         // No query string at all when both dates are absent
         assertFalse(captured.url.contains("?"), "no query params expected, got: " + captured.url);
-        assertTrue(captured.params.isEmpty());
+        assertEquals(Map.of("product", "wave-buoy"), captured.params);
     }
 
     @Test
-    public void testBuoyDetailsSendsRawBuoyAsPathVariable() {
-        // A buoy name with a space must be passed raw; RestTemplate encodes the path variable once.
-        dasService.getWaveBuoyDetailsBetweenDates("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "Apollo Bay");
+    public void testSiteDetailsSendsRawSiteAsPathVariable() {
+        // A site name with a space must be passed raw; RestTemplate encodes the path variable once.
+        dasService.getSiteDetailsBetweenDates(DasSiteProduct.WAVE_BUOY, "2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "Apollo Bay");
 
         CapturedRequest captured = captureMapRequest();
-        assertTrue(captured.url.contains("/wave-buoy/{buoy}"), "buoy must be a path variable, got: " + captured.url);
-        assertEquals("Apollo Bay", captured.params.get("buoy"));
+        assertTrue(captured.url.contains("/{product}/{site}"), "site must be a path variable, got: " + captured.url);
+        assertEquals("Apollo Bay", captured.params.get("site"));
+        assertEquals("wave-buoy", captured.params.get("product"));
     }
 
     @Test
-    public void testMooringDetailsSendsRawMooringAsPathVariable() {
-        dasService.getMooringDetailsBetweenDates("2024-01-01T00:00:00Z", "2024-01-02T00:00:00Z", "Mooring 1");
+    public void testLatestAvailableDateSendsNoDates() {
+        dasService.getLatestAvailableDate(DasSiteProduct.WAVE_BUOY);
 
         CapturedRequest captured = captureMapRequest();
-        assertTrue(captured.url.contains("/mooring/{mooring}"), "mooring must be a path variable, got: " + captured.url);
-        assertEquals("Mooring 1", captured.params.get("mooring"));
-    }
-
-    @Test
-    public void testLatestAvailableDateUsesNoUriVariables() {
-        dasService.getWaveBuoysLatestAvailableDate();
-
-        ArgumentCaptor<String> urlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(httpClient).getForEntity(urlCaptor.capture(), eq(byte[].class));
-        assertEquals(HOST + "/api/v1/das/data/feature-collection/wave-buoy/latest", urlCaptor.getValue());
+        assertEquals(HOST + "/api/v1/das/data/feature-collection/{product}/latest", captured.url);
+        assertEquals(Map.of("product", "wave-buoy"), captured.params);
     }
 
     private record CapturedRequest(String url, Map<String, String> params) {

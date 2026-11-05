@@ -1,5 +1,6 @@
 package au.org.aodn.ogcapi.server.features;
 
+import au.org.aodn.ogcapi.server.core.model.enumeration.DasSiteProduct;
 import au.org.aodn.ogcapi.server.core.model.ogc.FeatureRequest;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsField;
 import au.org.aodn.ogcapi.server.core.model.ogc.wfs.WfsFields;
@@ -10,6 +11,9 @@ import au.org.aodn.ogcapi.server.core.service.Search;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -61,237 +65,207 @@ public class RestServicesTest {
     private static final String VALID_START = "2024-01-01T00:00:00Z";
     private static final String VALID_END = "2024-01-02T00:00:00Z";
 
-    // ----- wave_buoys_between_dates -----
+    private static HttpClientErrorException dasBadGateway(byte[] errorBody) {
+        HttpHeaders dasErrorHeaders = new HttpHeaders();
+        dasErrorHeaders.set("Content-Type", "application/json");
+        return HttpClientErrorException.create(HttpStatus.BAD_GATEWAY, "Bad Gateway", dasErrorHeaders, errorBody, null);
+    }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesSuccess() {
+    // ----- sites between dates -----
+
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesSuccess(DasSiteProduct product) {
         byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenReturn(ResponseEntity.ok(body));
+        when(dasService.getSitesBetweenDates(product, VALID_START, VALID_END)).thenReturn(ResponseEntity.ok(body));
 
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, VALID_START, VALID_END);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(body, response.getBody());
     }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesForwardsDasHeaders() {
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesForwardsDasHeaders(DasSiteProduct product) {
         // Headers set by DAS (e.g. caching/rate-limit headers) must reach the client, not just the body.
         byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
         ResponseEntity<byte[]> dasResponse = ResponseEntity.ok().header("X-Custom-Header", "das-value").body(body);
-        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenReturn(dasResponse);
+        when(dasService.getSitesBetweenDates(product, VALID_START, VALID_END)).thenReturn(dasResponse);
 
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, VALID_START, VALID_END);
 
         assertEquals("das-value", response.getHeaders().getFirst("X-Custom-Header"));
     }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesNullDatesPassThrough() {
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesNullDatesPassThrough(DasSiteProduct product) {
         // Both dates null is allowed; the service is still called (with nulls) and the result returned
         byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getWaveBuoysBetweenDates(null, null)).thenReturn(ResponseEntity.ok(body));
+        when(dasService.getSitesBetweenDates(product, null, null)).thenReturn(ResponseEntity.ok(body));
 
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(null, null);
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, null, null);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
-        verify(dasService).getWaveBuoysBetweenDates(null, null);
+        verify(dasService).getSitesBetweenDates(product, null, null);
     }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesNonUtcRejected() {
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates("2024-01-01T00:00:00+10:00", VALID_END);
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesNonUtcRejected(DasSiteProduct product) {
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, "2024-01-01T00:00:00+10:00", VALID_END);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(dasService, never()).getWaveBuoysBetweenDates(anyString(), anyString());
+        verify(dasService, never()).getSitesBetweenDates(any(), any(), any());
     }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesMalformedRejected() {
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates("not-a-date", VALID_END);
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesMalformedRejected(DasSiteProduct product) {
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, "not-a-date", VALID_END);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(dasService, never()).getWaveBuoysBetweenDates(anyString(), anyString());
+        verify(dasService, never()).getSitesBetweenDates(any(), any(), any());
     }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesStartAfterEndRejected() {
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_END, VALID_START);
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesStartAfterEndRejected(DasSiteProduct product) {
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, VALID_END, VALID_START);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(dasService, never()).getWaveBuoysBetweenDates(anyString(), anyString());
+        verify(dasService, never()).getSitesBetweenDates(any(), any(), any());
     }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesServiceError() {
-        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END))
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesServiceError(DasSiteProduct product) {
+        when(dasService.getSitesBetweenDates(product, VALID_START, VALID_END))
                 .thenThrow(new RuntimeException("Connection refused"));
 
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, VALID_START, VALID_END);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
-    @Test
-    public void testGetWaveBuoysBetweenDatesDasErrorIsForwardedNotMaskedAs500() {
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSitesBetweenDatesDasErrorIsForwardedNotMaskedAs500(DasSiteProduct product) {
         // DAS itself returning e.g. a 404/502 must reach the client as that status with its
         // body, not get collapsed into a generic 500 by the catch-all error handler.
         byte[] errorBody = "{\"message\":\"upstream unavailable\"}".getBytes();
-        HttpHeaders dasErrorHeaders = new HttpHeaders();
-        dasErrorHeaders.set("Content-Type", "application/json");
-        HttpClientErrorException dasError = HttpClientErrorException.create(
-                HttpStatus.BAD_GATEWAY, "Bad Gateway", dasErrorHeaders, errorBody, null);
-        when(dasService.getWaveBuoysBetweenDates(VALID_START, VALID_END)).thenThrow(dasError);
+        when(dasService.getSitesBetweenDates(product, VALID_START, VALID_END)).thenThrow(dasBadGateway(errorBody));
 
-        ResponseEntity<?> response = restServices.getWaveBuoysBetweenDates(VALID_START, VALID_END);
+        ResponseEntity<?> response = restServices.getSitesBetweenDates(product, VALID_START, VALID_END);
 
         assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
         assertArrayEquals(errorBody, (byte[]) response.getBody());
     }
 
-    // ----- wave_buoys_latest_available_date -----
+    // ----- latest available date -----
 
-    @Test
-    public void testGetWaveBuoysLatestAvailableDateSuccess() {
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetLatestAvailableDateSuccess(DasSiteProduct product) {
         byte[] body = "{\"latest_date\":\"2024-01-01\"}".getBytes();
-        when(dasService.getWaveBuoysLatestAvailableDate()).thenReturn(ResponseEntity.ok(body));
+        when(dasService.getLatestAvailableDate(product)).thenReturn(ResponseEntity.ok(body));
 
-        ResponseEntity<?> response = restServices.getWaveBuoysLatestAvailableDate();
+        ResponseEntity<?> response = restServices.getLatestAvailableDate(product);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(body, response.getBody());
     }
 
-    @Test
-    public void testGetWaveBuoysLatestAvailableDateServiceError() {
-        when(dasService.getWaveBuoysLatestAvailableDate()).thenThrow(new RuntimeException("Connection refused"));
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetLatestAvailableDateServiceError(DasSiteProduct product) {
+        when(dasService.getLatestAvailableDate(product)).thenThrow(new RuntimeException("Connection refused"));
 
-        ResponseEntity<?> response = restServices.getWaveBuoysLatestAvailableDate();
+        ResponseEntity<?> response = restServices.getLatestAvailableDate(product);
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
-    // ----- wave_buoy_details_between_dates -----
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetLatestAvailableDateDasErrorIsForwarded(DasSiteProduct product) {
+        byte[] errorBody = "{\"message\":\"upstream unavailable\"}".getBytes();
+        when(dasService.getLatestAvailableDate(product)).thenThrow(dasBadGateway(errorBody));
 
-    @Test
-    public void testGetWaveBuoyDetailsBetweenDatesSuccess() {
+        ResponseEntity<?> response = restServices.getLatestAvailableDate(product);
+
+        assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
+        assertArrayEquals(errorBody, (byte[]) response.getBody());
+    }
+
+    // ----- site details between dates -----
+
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSiteDetailsBetweenDatesSuccess(DasSiteProduct product) {
         byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1")).thenReturn(ResponseEntity.ok(body));
+        when(dasService.getSiteDetailsBetweenDates(product, VALID_START, VALID_END, "SITE-1")).thenReturn(ResponseEntity.ok(body));
 
-        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1");
+        ResponseEntity<?> response = restServices.getSiteDetailsBetweenDates(product, VALID_START, VALID_END, "SITE-1");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals(body, response.getBody());
     }
 
-    @Test
-    public void testGetWaveBuoyDetailsBetweenDatesNullBuoyRejected() {
-        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, null);
+    @ParameterizedTest
+    @CsvSource({
+            "WAVE_BUOY, waveBuoy",
+            "MOORING, mooring",
+            "MOORING_ESTUARINE_WATER_QUALITY, mooring"
+    })
+    public void testGetSiteDetailsBetweenDatesNullSiteRejected(DasSiteProduct product, String parameter) {
+        ResponseEntity<?> response = restServices.getSiteDetailsBetweenDates(product, VALID_START, VALID_END, null);
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(dasService, never()).getWaveBuoyDetailsBetweenDates(anyString(), anyString(), any());
+        assertEquals("Parameter '" + parameter + "' is required", response.getBody());
+        verify(dasService, never()).getSiteDetailsBetweenDates(any(), any(), any(), any());
     }
 
-    @Test
-    public void testGetWaveBuoyDetailsBetweenDatesInvalidDateRejected() {
-        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates("not-a-date", VALID_END, "BUOY-1");
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSiteDetailsBetweenDatesInvalidDateRejected(DasSiteProduct product) {
+        ResponseEntity<?> response = restServices.getSiteDetailsBetweenDates(product, "not-a-date", VALID_END, "SITE-1");
 
         assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(dasService, never()).getWaveBuoyDetailsBetweenDates(anyString(), anyString(), any());
+        verify(dasService, never()).getSiteDetailsBetweenDates(any(), any(), any(), any());
     }
 
-    @Test
-    public void testGetWaveBuoyDetailsBetweenDatesServiceError() {
-        when(dasService.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1"))
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSiteDetailsBetweenDatesStartAfterEndRejected(DasSiteProduct product) {
+        ResponseEntity<?> response = restServices.getSiteDetailsBetweenDates(product, VALID_END, VALID_START, "SITE-1");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        verify(dasService, never()).getSiteDetailsBetweenDates(any(), any(), any(), any());
+    }
+
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSiteDetailsBetweenDatesServiceError(DasSiteProduct product) {
+        when(dasService.getSiteDetailsBetweenDates(product, VALID_START, VALID_END, "SITE-1"))
                 .thenThrow(new RuntimeException("Connection refused"));
 
-        ResponseEntity<?> response = restServices.getWaveBuoyDetailsBetweenDates(VALID_START, VALID_END, "BUOY-1");
+        ResponseEntity<?> response = restServices.getSiteDetailsBetweenDates(product, VALID_START, VALID_END, "SITE-1");
 
         assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
     }
 
-    // ----- moorings_between_dates -----
+    @ParameterizedTest
+    @EnumSource(DasSiteProduct.class)
+    public void testGetSiteDetailsBetweenDatesDasErrorIsForwarded(DasSiteProduct product) {
+        byte[] errorBody = "{\"message\":\"upstream unavailable\"}".getBytes();
+        when(dasService.getSiteDetailsBetweenDates(product, VALID_START, VALID_END, "SITE-1")).thenThrow(dasBadGateway(errorBody));
 
-    @Test
-    public void testGetMooringsBetweenDatesSuccess() {
-        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getMooringsBetweenDates(VALID_START, VALID_END)).thenReturn(ResponseEntity.ok(body));
+        ResponseEntity<?> response = restServices.getSiteDetailsBetweenDates(product, VALID_START, VALID_END, "SITE-1");
 
-        ResponseEntity<?> response = restServices.getMooringsBetweenDates(VALID_START, VALID_END);
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(body, response.getBody());
-    }
-
-    @Test
-    public void testGetMooringsBetweenDatesStartAfterEndRejected() {
-        ResponseEntity<?> response = restServices.getMooringsBetweenDates(VALID_END, VALID_START);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(dasService, never()).getMooringsBetweenDates(anyString(), anyString());
-    }
-
-    @Test
-    public void testGetMooringsBetweenDatesServiceError() {
-        when(dasService.getMooringsBetweenDates(VALID_START, VALID_END))
-                .thenThrow(new RuntimeException("Connection refused"));
-
-        ResponseEntity<?> response = restServices.getMooringsBetweenDates(VALID_START, VALID_END);
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    }
-
-    // ----- moorings_latest_available_date -----
-
-    @Test
-    public void testGetMooringsLatestAvailableDateSuccess() {
-        byte[] body = "{\"latest_date\":\"2024-01-01\"}".getBytes();
-        when(dasService.getMooringsLatestAvailableDate()).thenReturn(ResponseEntity.ok(body));
-
-        ResponseEntity<?> response = restServices.getMooringsLatestAvailableDate();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(body, response.getBody());
-    }
-
-    @Test
-    public void testGetMooringsLatestAvailableDateServiceError() {
-        when(dasService.getMooringsLatestAvailableDate()).thenThrow(new RuntimeException("Connection refused"));
-
-        ResponseEntity<?> response = restServices.getMooringsLatestAvailableDate();
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-    }
-
-    // ----- mooring_details_between_dates -----
-
-    @Test
-    public void testGetMooringDetailsBetweenDatesSuccess() {
-        byte[] body = "{\"type\":\"FeatureCollection\"}".getBytes();
-        when(dasService.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1")).thenReturn(ResponseEntity.ok(body));
-
-        ResponseEntity<?> response = restServices.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1");
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(body, response.getBody());
-    }
-
-    @Test
-    public void testGetMooringDetailsBetweenDatesNullMooringRejected() {
-        ResponseEntity<?> response = restServices.getMooringDetailsBetweenDates(VALID_START, VALID_END, null);
-
-        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
-        verify(dasService, never()).getMooringDetailsBetweenDates(anyString(), anyString(), any());
-    }
-
-    @Test
-    public void testGetMooringDetailsBetweenDatesServiceError() {
-        when(dasService.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1"))
-                .thenThrow(new RuntimeException("Connection refused"));
-
-        ResponseEntity<?> response = restServices.getMooringDetailsBetweenDates(VALID_START, VALID_END, "MOORING-1");
-
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(HttpStatus.BAD_GATEWAY, response.getStatusCode());
+        assertArrayEquals(errorBody, (byte[]) response.getBody());
     }
 
     @Test
