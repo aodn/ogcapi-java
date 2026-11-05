@@ -16,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import org.springframework.web.util.HtmlUtils;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
@@ -26,10 +27,12 @@ import java.io.InputStream;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class RestServices {
@@ -230,13 +233,22 @@ public class RestServices {
             );
 
             // Keys arrive comma-separated; show one per line. Absent means "all files".
-            String keysDisplay = (key != null && !key.isBlank()) ? key.replace(",", "<br>") : "*";
+            String keysDisplay = (key != null && !key.isBlank())
+                    ? Arrays.stream(key.split(",", -1))
+                            .map(value -> value.replaceFirst("\\.(parquet|zarr)$", ""))
+                            .map(HtmlUtils::htmlEscape)
+                            .collect(Collectors.joining("<br>"))
+                    : "*";
+            String titleDisplay = HtmlUtils.htmlEscape(collectionTitle != null ? collectionTitle : "");
+            if (fullMetadataLink != null && !fullMetadataLink.isBlank()) {
+                titleDisplay = "<a href=\"" + HtmlUtils.htmlEscape(fullMetadataLink)
+                        + "\" style=\"color:#2571e9;text-decoration:underline;\">" + titleDisplay + "</a>";
+            }
 
             // Replace all variables in one chain
             return template
                     .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
-                    .replace("{{collectionTitle}}", collectionTitle != null ? collectionTitle : "")
-                    .replace("{{uuid}}", uuid != null ? uuid : "")
+                    .replace("{{collectionTitle}}", titleDisplay)
                     .replace("{{keys}}", keysDisplay)
                     .replace("{{outputFormat}}", outputFormat != null ? outputFormat.toUpperCase() : "")
                     .replace("{{subsettingSection}}", subsettingSection)
@@ -244,7 +256,6 @@ public class RestServices {
                     .replace("{{POLYGON_IMG}}", EmailUtils.readBase64Image("polygon.txt"))
                     .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
                     .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
-                    .replace("{{fullMetadataLink}}", fullMetadataLink != null ? fullMetadataLink : "")
                     .replace("{{suggestedCitation}}", suggestedCitation != null ? suggestedCitation : "")
                     .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
                     .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))

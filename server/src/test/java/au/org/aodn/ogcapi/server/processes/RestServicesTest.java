@@ -207,6 +207,41 @@ public class RestServicesTest {
         assertThrows(IllegalStateException.class, () -> services.estimateDownloadBytes(estimateRequest()));
     }
 
+    @Test
+    public void startedEmailUsesSharedDatasetLayout() {
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
+        String html = services.generateStartedEmailContent(
+                "test-uuid", "slocum_glider_delayed_qc.parquet,ocean_temperature.zarr",
+                "non-specified", "non-specified", null, "Test Collection Title",
+                "https://example.com/metadata", "Citation", "csv");
+
+        for (String text : List.of("Dataset:", "Data Selection:", "Format:", "Suggested Citation:",
+                "Usage Constraints:", "CSV", "slocum_glider_delayed_qc<br>ocean_temperature")) {
+            assertTrue(html.contains(text), text);
+        }
+        assertTrue(html.contains("href=\"https://example.com/metadata\" style=\"color:#2571e9;text-decoration:underline;\">Test Collection Title</a>"));
+        for (String text : List.of("slocum_glider_delayed_qc.parquet", "ocean_temperature.zarr",
+                ">Metadata</p>", "UUID:", "Collection</p>", "{{")) {
+            assertFalse(html.contains(text), text);
+        }
+    }
+
+    @Test
+    public void startedEmailEscapesTitleLinkAndKeysAndHandlesMissingValues() {
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
+        String html = services.generateStartedEmailContent(
+                "uuid", "a&<b>.parquet", null, null, null, "A & B <x>",
+                "https://example.com/?a=1&b=\"x\"", "", "csv");
+        assertTrue(html.contains("A &amp; B &lt;x&gt;"));
+        assertTrue(html.contains("a&amp;&lt;b&gt;"));
+        assertTrue(html.contains("a=1&amp;b=&quot;x&quot;"));
+
+        String fallback = services.generateStartedEmailContent(
+                "uuid", " ", null, null, null, "Title", " ", "", "csv");
+        assertTrue(fallback.contains(">Title</p>"));
+        assertTrue(fallback.contains(">*</p>"));
+    }
+
     /**
      * Regression guard for aodn/backlog#9241: the download confirmation email template used to
      * carry a hardcoded paragraph with citation requirements for the Ningaloo (TAN100) and Ocean

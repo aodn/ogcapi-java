@@ -33,7 +33,7 @@ public class JobStartedEmailPreview {
         Object multiPolygon = objectMapper.readValue(SAMPLE_MULTI_POLYGON, Map.class);
         String html = services.generateStartedEmailContent(
                 "test-uuid-1234",
-                "slocum_glider_delayed_qc",
+                "slocum_glider_delayed_qc.zarr",
                 "2020-01-01",
                 "2020-06-30",
                 multiPolygon,

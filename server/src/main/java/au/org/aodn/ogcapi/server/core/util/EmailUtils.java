@@ -23,6 +23,9 @@ import java.util.Set;
 @Slf4j
 public class EmailUtils {
 
+    private static final String SECTION_HEADING_STYLE = "color:#090C02;font-family:'Open Sans',Arial,sans-serif;"
+            + "font-size:18px;font-style:normal;font-weight:500;line-height:24px;";
+
     /**
      * Read a base64 encoded image from resources
      *
@@ -427,8 +430,8 @@ public class EmailUtils {
                 "<table border=\"0\" cellpadding=\"0\" cellspacing=\"0\" width=\"100%\">" +
                 "<tr>" +
                 "<td align=\"left\" width=\"100%\">" +
-                "<div style=\"font-family: 'Open Sans', 'Arial', sans-serif; font-size: 17px; font-weight: 500; line-height: 141%; text-align: left; color: #090c02\">" +
-                "<p style=\"Margin:0;mso-line-height-alt:24px;font-size:17px;line-height:141%;\">Subsetting for this collection</p>" +
+                "<div style=\"" + SECTION_HEADING_STYLE + "text-align:left;\">" +
+                "<p style=\"Margin:0;mso-line-height-alt:24px;" + SECTION_HEADING_STYLE + "\">Subsetting:</p>" +
                 "</div>" +
                 "</td>" +
                 "</tr>" +
