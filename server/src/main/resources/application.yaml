@@ -510,6 +510,8 @@ wms-default-param:
     - 75fc95bf-e4b4-4d39-9ac3-0433669648de
     - caf7220a-19e0-4a7f-9af6-eade6c79a47a
     - 8f007712-6a2b-4007-9529-9bd72dd37ca0
+    - cdaf5407-b99c-402b-8c3c-1e2e6fd776e7
+    - 034ce816-0777-4bbd-aefc-8b73bd540245
 
 api:
   host: http://localhost:${server.port}
