@@ -15,6 +15,7 @@ on:
           - edge
           - staging
           - production
+          - dr-production
       digest:
         required: false
         description: The image digest to pass to the deploy job.
