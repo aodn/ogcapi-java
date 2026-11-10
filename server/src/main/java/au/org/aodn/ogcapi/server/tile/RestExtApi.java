@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -52,7 +53,10 @@ public class RestExtApi {
                     "capability carries its own template(s): `visual_tile_url_template` + `legend_url` when " +
                     "`\"visual\"` is present, `data_tile_url_template` + `data_manifest_url_template` when " +
                     "`\"data\"` is present. For two-variable products the `variable` array order (e.g. " +
-                    "`[\"UCUR\", \"VCUR\"]`) is the R/G channel order the data-tile shader decodes. A " +
+                    "`[\"UCUR\", \"VCUR\"]`) is the R/G channel order the data-tile shader decodes. " +
+                    "`categorical` is `true` when the variable holds discrete flag values (use a categorical " +
+                    "colormap, and omit `rescale`/`labels` on the legend), `false` when continuous, and " +
+                    "`null` when DAS cannot tell yet (store not loaded, or an older DAS). A " +
                     "collection with no tiler products returns 200 with an empty array."
     )
     @ApiResponses(value = {
@@ -66,6 +70,7 @@ public class RestExtApi {
                                           "id": "model_sea_level_anomaly_gridded_realtime:gsla",
                                           "variable": "GSLA",
                                           "tile_types": ["visual", "data"],
+                                          "categorical": false,
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "visual_tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
@@ -77,6 +82,7 @@ public class RestExtApi {
                                           "id": "model_sea_level_anomaly_gridded_realtime:ucur+vcur",
                                           "variable": ["UCUR", "VCUR"],
                                           "tile_types": ["data"],
+                                          "categorical": false,
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=ucur%2Bvcur&datetime={datetime}",
@@ -86,6 +92,7 @@ public class RestExtApi {
                                           "id": "model_sea_level_anomaly_gridded_realtime:wdir",
                                           "variable": "WDIR",
                                           "tile_types": ["data"],
+                                          "categorical": false,
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=wdir&datetime={datetime}",
@@ -144,6 +151,9 @@ public class RestExtApi {
                 tileTypes.add("data");
             }
             entry.set("tile_types", tileTypes);
+
+            JsonNode categorical = product.path("categorical");
+            entry.set("categorical", categorical.isBoolean() ? categorical : NullNode.getInstance());
 
             JsonNode availability = manifestProducts != null ? manifestProducts.path(id) : null;
             entry.set("available_dates", availability != null && !availability.isMissingNode()
@@ -554,15 +564,16 @@ public class RestExtApi {
 
     @Operation(
             summary = "Render a colour legend for a colormap",
-            description = "Renders a PNG colour bar for use as a map legend. Pass the same `rescale` used on " +
-                    "the tile request to get tick labels; without it only the bare bar is drawn."
+            description = "Renders a PNG colour bar for use as a map legend. By default only the bare bar is " +
+                    "drawn. For tick labels pass `labels=true` together with the same `rescale` used on the " +
+                    "tile request."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The rendered legend image.",
                     content = @Content(mediaType = "image/png",
                             schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "400", description = "`rescale` is malformed, or was supplied for a " +
-                    "categorical colormap.",
+            @ApiResponse(responseCode = "400", description = "`rescale` is malformed, was supplied for a " +
+                    "categorical colormap, or `labels=true` was given without `rescale`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", description = "No colormap exists with that name.",
@@ -589,9 +600,15 @@ public class RestExtApi {
             @PathVariable String name,
 
             @Parameter(in = ParameterIn.QUERY,
-                    description = "Value range to label the bar with, as `min,max`. Rejected for categorical colormaps.",
+                    description = "Value range for the tick labels, as `min,max`. Only drawn when `labels=true`. " +
+                            "Rejected for categorical colormaps.",
                     example = "-1,1")
             @RequestParam(required = false) String rescale,
+
+            @Parameter(in = ParameterIn.QUERY,
+                    description = "Draw lo/mid/hi tick labels alongside the bar. Requires `rescale`.",
+                    schema = @Schema(type = "boolean", defaultValue = "false"))
+            @RequestParam(required = false) Boolean labels,
 
             @Parameter(in = ParameterIn.QUERY, description = "Image width in pixels.",
                     schema = @Schema(type = "integer", minimum = "10", maximum = "2048", defaultValue = "256"))
@@ -607,7 +624,7 @@ public class RestExtApi {
                     schema = @Schema(allowableValues = {"horizontal", "vertical"}, defaultValue = "horizontal"))
             @RequestParam(required = false) String orientation) {
 
-        DasTilerService.DasTileResult legend = dasTilerService.getLegend(name, rescale, width, height, orientation);
+        DasTilerService.DasTileResult legend = dasTilerService.getLegend(name, rescale, labels, width, height, orientation);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(legend.contentType()));

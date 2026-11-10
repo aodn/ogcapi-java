@@ -120,6 +120,34 @@ public class RestExtApiTest extends BaseTestClass {
     }
 
     @Test
+    public void verifyCollectionProductsPassesThroughCategorical() {
+        ObjectNode categorical = (ObjectNode) singleVariableProduct("ds:mcs", "uuid-a", "MCS");
+        categorical.put("categorical", true);
+        ObjectNode continuous = (ObjectNode) singleVariableProduct("ds:sst", "uuid-a", "SST");
+        continuous.put("categorical", false);
+        ObjectNode unknown = (ObjectNode) singleVariableProduct("ds:unk", "uuid-a", "UNK");
+        unknown.putNull("categorical");
+        JsonNode olderDas = singleVariableProduct("ds:old", "uuid-a", "OLD");
+        when(dasTilerService.productsForCollection("uuid-a"))
+                .thenReturn(List.of(categorical, continuous, unknown, olderDas));
+        when(dasTilerService.getManifest(anyString())).thenReturn(emptyManifest());
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/products", JsonNode.class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        JsonNode products = response.getBody().get("products");
+        Assertions.assertEquals(4, products.size());
+        Assertions.assertTrue(products.get(0).get("categorical").asBoolean());
+        Assertions.assertTrue(products.get(1).get("categorical").isBoolean());
+        Assertions.assertFalse(products.get(1).get("categorical").asBoolean());
+        Assertions.assertTrue(products.get(2).get("categorical").isNull(), "DAS null stays null");
+        Assertions.assertTrue(products.get(3).has("categorical"), "field is always present");
+        Assertions.assertTrue(products.get(3).get("categorical").isNull(), "older DAS without the field -> null");
+    }
+
+    @Test
     public void verifyScalarProductAdvertisesVisualAndDataTileTypes() {
         when(dasTilerService.productsForCollection("uuid-a")).thenReturn(
                 List.of(singleVariableProduct("model_sla:gsla", "uuid-a", "GSLA"))
@@ -572,7 +600,7 @@ public class RestExtApiTest extends BaseTestClass {
 
     @Test
     public void verifyColormapLegendReturnsImage() {
-        when(dasTilerService.getLegend("viridis", null, null, null, null))
+        when(dasTilerService.getLegend("viridis", null, null, null, null, null))
                 .thenReturn(new DasTilerService.DasTileResult(
                         "legend-bytes".getBytes(), "image/png", "public, max-age=31536000, immutable"));
 
@@ -584,6 +612,20 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertArrayEquals("legend-bytes".getBytes(), response.getBody());
     }
 
+    @Test
+    public void verifyColormapLegendForwardsLabelsAndRescale() {
+        when(dasTilerService.getLegend("viridis", "-1,1", true, null, null, null))
+                .thenReturn(new DasTilerService.DasTileResult(
+                        "labelled-legend".getBytes(), "image/png", "public, max-age=31536000, immutable"));
+
+        ResponseEntity<byte[]> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/colormaps/viridis/legend?rescale=-1,1&labels=true", byte[].class
+        );
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertArrayEquals("labelled-legend".getBytes(), response.getBody());
+    }
+
     /**
      * These routes surface upstream failures through GlobalExceptionHandler, so the body is the
      * service-wide ErrorResponse envelope — which is what the @ApiResponse schemas on RestExtApi
@@ -591,7 +633,7 @@ public class RestExtApiTest extends BaseTestClass {
      */
     @Test
     public void verifyUpstreamErrorUsesErrorResponseEnvelope() {
-        when(dasTilerService.getLegend("nosuch", null, null, null, null))
+        when(dasTilerService.getLegend("nosuch", null, null, null, null, null))
                 .thenThrow(new DasUpstreamException(HttpStatus.NOT_FOUND, "no such colormap"));
 
         ResponseEntity<ErrorResponse> response = testRestTemplate.getForEntity(

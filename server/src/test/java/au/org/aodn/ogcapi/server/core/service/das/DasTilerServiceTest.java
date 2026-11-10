@@ -447,6 +447,37 @@ public class DasTilerServiceTest {
     }
 
     @Test
+    public void testGetLegendOmitsNullParams() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("legend".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        service.getLegend("viridis", null, null, null, null, null);
+
+        CapturedRequest captured = captureImageRequest();
+        assertTrue(captured.url.contains("/colormaps/{name}/legend"), "got: " + captured.url);
+        assertEquals("viridis", captured.params.get("name"));
+        assertFalse(captured.url.contains("rescale"), "null rescale must not appear in URL");
+        assertFalse(captured.url.contains("labels"), "null labels must not appear in URL");
+    }
+
+    @Test
+    public void testGetLegendForwardsLabelsAndRescale() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("legend".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        service.getLegend("viridis", "-1,1", true, 256, 60, "horizontal");
+
+        CapturedRequest captured = captureImageRequest();
+        assertTrue(captured.url.contains("rescale={rescale}"), "got: " + captured.url);
+        assertTrue(captured.url.contains("labels={labels}"), "got: " + captured.url);
+        assertEquals("-1,1", captured.params.get("rescale"));
+        assertEquals(true, captured.params.get("labels"));
+        assertEquals(256, captured.params.get("width"));
+        assertEquals(60, captured.params.get("height"));
+        assertEquals("horizontal", captured.params.get("orientation"));
+    }
+
+    @Test
     public void testProductsForCollectionFiltersByMetadataUuid() {
         ObjectMapper mapper = new ObjectMapper();
         JsonNode products = mapper.createArrayNode()
