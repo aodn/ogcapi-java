@@ -15,6 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -454,8 +455,8 @@ public class DasTilerServiceTest {
         service.getLegend("viridis", null, null, null, null, null);
 
         CapturedRequest captured = captureImageRequest();
-        assertTrue(captured.url.contains("/colormaps/{name}/legend"), "got: " + captured.url);
-        assertEquals("viridis", captured.params.get("name"));
+        assertTrue(captured.url.contains("/colormaps/legend?colormap={colormap}"), "got: " + captured.url);
+        assertEquals("viridis", captured.params.get("colormap"));
         assertFalse(captured.url.contains("rescale"), "null rescale must not appear in URL");
         assertFalse(captured.url.contains("labels"), "null labels must not appear in URL");
     }
@@ -475,6 +476,40 @@ public class DasTilerServiceTest {
         assertEquals(256, captured.params.get("width"));
         assertEquals(60, captured.params.get("height"));
         assertEquals("horizontal", captured.params.get("orientation"));
+    }
+
+    /**
+     * An inline JSON colormap must reach DAS URL-encoded. Expands the captured template the way the
+     * DAS RestTemplate does (default DefaultUriBuilderFactory) to check what goes on the wire.
+     */
+    @Test
+    public void testGetLegendEncodesInlineColormap() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("legend".getBytes(), imageHeaders(), HttpStatus.OK));
+        String inline = "{\"mode\":\"categorical\",\"values\":[0,1],\"colors\":[\"#8c0000\",\"#ff9701\"]}";
+
+        service.getLegend(inline, null, null, null, null, null);
+
+        CapturedRequest captured = captureImageRequest();
+        assertEquals(inline, captured.params.get("colormap"), "inline JSON must be passed raw as a template variable");
+        String wire = new DefaultUriBuilderFactory().expand(captured.url, captured.params).toString();
+        assertTrue(wire.contains("colormap=%7B%22mode%22%3A%22categorical%22"), "got: " + wire);
+        assertTrue(wire.contains("%238c0000"), "'#' must be encoded, not start a fragment; got: " + wire);
+        assertFalse(wire.contains("#"), "got: " + wire);
+    }
+
+    @Test
+    public void testGetVisualTileEncodesInlineColormap() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
+        String inline = "{\"mode\":\"ramp\",\"colors\":[\"#000000\",\"#ff0000\"]}";
+
+        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", inline, null);
+
+        CapturedRequest captured = captureImageRequest();
+        String wire = new DefaultUriBuilderFactory().expand(captured.url, captured.params).toString();
+        assertTrue(wire.contains("colormap=%7B%22mode%22%3A%22ramp%22"), "got: " + wire);
+        assertFalse(wire.contains("#"), "got: " + wire);
     }
 
     @Test

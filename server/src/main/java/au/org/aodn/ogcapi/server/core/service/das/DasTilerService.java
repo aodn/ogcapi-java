@@ -205,15 +205,18 @@ public class DasTilerService {
     }
 
     /**
-     * Fetches a colormap legend PNG. Tick labels are opt-in: DAS draws them only when
-     * {@code labels} is true, and then requires {@code rescale} for the label values.
+     * Fetches a colormap legend PNG. {@code colormap} is a colormap name or an inline JSON
+     * colormap; it goes in the query string so the JSON is URL-encoded like any other value.
+     * Tick labels are opt-in: DAS draws them only when {@code labels} is true, and then requires
+     * {@code rescale} for the label values.
      */
-    public DasTileResult getLegend(String name, String rescale, Boolean labels, Integer width,
+    public DasTileResult getLegend(String colormap, String rescale, Boolean labels, Integer width,
                                     Integer height, String orientation) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/colormaps/{name}/legend");
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/colormaps/legend")
+                .queryParam("colormap", "{colormap}");
         Map<String, Object> params = new HashMap<>();
-        params.put("name", name);
+        params.put("colormap", colormap);
 
         if (rescale != null) {
             builder.queryParam("rescale", "{rescale}");
