@@ -603,7 +603,7 @@ public class RestExtApi {
                     description = "Colormap name, as listed by `GET /api/v1/ogc/ext/tiles/colormaps`. " +
                             INLINE_COLORMAP_DOC,
                     example = "viridis")
-            @RequestParam String colormap,
+            @RequestParam(required = false) String colormap,
 
             @Parameter(in = ParameterIn.QUERY,
                     description = "Value range for the tick labels, as `min,max`. Only drawn when `labels=true`. " +
@@ -629,6 +629,12 @@ public class RestExtApi {
                             "(top to bottom).",
                     schema = @Schema(allowableValues = {"horizontal", "vertical"}, defaultValue = "horizontal"))
             @RequestParam(required = false) String orientation) {
+
+        // Validated here rather than via required=true: GlobalExceptionHandler's catch-all would turn
+        // Spring's MissingServletRequestParameterException into a 500.
+        if (colormap == null || colormap.isBlank()) {
+            throw new InvalidParameterException("colormap is required");
+        }
 
         DasTilerService.DasTileResult legend = dasTilerService.getLegend(colormap, rescale, labels, width, height, orientation);
 

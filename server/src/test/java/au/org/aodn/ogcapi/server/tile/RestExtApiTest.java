@@ -651,6 +651,11 @@ public class RestExtApiTest extends BaseTestClass {
         );
 
         Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+
+        ResponseEntity<String> blank = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/colormaps/legend?colormap=", String.class
+        );
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, blank.getStatusCode());
         verifyNoInteractions(dasTilerService);
     }
 
