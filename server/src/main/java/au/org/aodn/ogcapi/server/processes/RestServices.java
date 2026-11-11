@@ -40,7 +40,8 @@ public class RestServices {
     // Same field the portal reads to block a download that is too large.
     private static final String ESTIMATED_OUTPUT_BYTES = "estimated_output_bytes";
 
-    static final String USAGE_CONSTRAINTS_NOT_AVAILABLE = "Usage Constraints not available";
+    // Shown when a dataset has no suggested citation or no usage constraints.
+    static final String UNAVAILABLE = "unavailable";
 
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
@@ -185,7 +186,7 @@ public class RestServices {
             if (suggestedCitation == null || suggestedCitation.isEmpty()) {
                 log.warn("Suggested citation is null or empty for job '{}'. Submitting with unavailable as value.", jobName);
                 submitParameters = new HashMap<>(parameters);
-                submitParameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), "unavailable");
+                submitParameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), UNAVAILABLE);
             }
         }
 
@@ -263,7 +264,7 @@ public class RestServices {
                     .replace("{{POLYGON_IMG}}", EmailUtils.readBase64Image("polygon.txt"))
                     .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
                     .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
-                    .replace("{{suggestedCitation}}", suggestedCitation != null ? suggestedCitation : "")
+                    .replace("{{suggestedCitation}}", suggestedCitation == null || suggestedCitation.isBlank() ? UNAVAILABLE : suggestedCitation)
                     .replace("{{usageConstraints}}", usageConstraintsHtml(usageConstraints))
                     .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
                     .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
@@ -279,11 +280,11 @@ public class RestServices {
     /**
      * The Usage Constraints paragraphs, the same as the portal dialog shows.
      * 1. A list: one paragraph per item, escaped.
-     * 2. An empty list or null: "Usage Constraints not available".
+     * 2. An empty list or null: "unavailable".
      */
     static String usageConstraintsHtml(List<String> usageConstraints) {
         List<String> paragraphs = usageConstraints == null || usageConstraints.isEmpty()
-                ? List.of(USAGE_CONSTRAINTS_NOT_AVAILABLE)
+                ? List.of(UNAVAILABLE)
                 : usageConstraints.stream().map(HtmlUtils::htmlEscape).toList();
 
         StringBuilder html = new StringBuilder();
