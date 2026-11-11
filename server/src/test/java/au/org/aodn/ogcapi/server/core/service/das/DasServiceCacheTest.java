@@ -210,7 +210,7 @@ public class DasServiceCacheTest {
 
         long bytes = restServices.estimateDownloadBytes(new DownloadRequest("test-uuid", "a.zarr",
                 "2020-01-01", "2020-12-31", "non-specified", "person@example.com", "Test Collection",
-                "https://portal.example.test/details/test-uuid", "Cite as", "netcdf"));
+                "https://portal.example.test/details/test-uuid", "Cite as", null, "netcdf"));
 
         assertEquals(123, bytes);
         assertEquals(1, connector.requests(), "The size check is answered from the cache, not by data-access-service");

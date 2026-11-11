@@ -40,6 +40,8 @@ public class RestServices {
     // Same field the portal reads to block a download that is too large.
     private static final String ESTIMATED_OUTPUT_BYTES = "estimated_output_bytes";
 
+    static final String USAGE_CONSTRAINTS_NOT_AVAILABLE = "Usage Constraints not available";
+
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
     private final String batchJobDefinition;
@@ -70,13 +72,14 @@ public class RestServices {
     public void notifyUser(String recipient, String uuid, String key, String startDate, String endDate, Object multiPolygon, String collectionTitle,
                            String fullMetadataLink,
                            String suggestedCitation,
+                           List<String> usageConstraints,
                            String outputFormat) {
 
         String aodnInfoSender = "no.reply@aodn.org.au";
 
         try (SesClient ses = SesClient.builder().build()) {
             var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
-            var content = Content.builder().data(generateStartedEmailContent(uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat)).build();
+            var content = Content.builder().data(generateStartedEmailContent(uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, usageConstraints, outputFormat)).build();
             var destination = Destination.builder().toAddresses(recipient).build();
 
             var body = Body.builder().html(content).build();
@@ -116,6 +119,9 @@ public class RestServices {
         parameters.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), request.collectionTitle());
         parameters.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), request.fullMetadataLink());
         parameters.put(DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue(), request.suggestedCitation());
+        // Sent as a JSON list, so an empty list is "[]". AWS Batch rejects an empty value.
+        parameters.put(DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getValue(),
+                objectMapper.writeValueAsString(request.usageConstraints()));
         parameters.put(
                 DatasetDownloadEnums.Parameter.TYPE.getValue(),
                 DatasetDownloadEnums.Type.SUB_SETTING.getValue()
@@ -213,6 +219,7 @@ public class RestServices {
             String collectionTitle,
             String fullMetadataLink,
             String suggestedCitation,
+            List<String> usageConstraints,
             String outputFormat
     ) {
         try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
@@ -257,6 +264,7 @@ public class RestServices {
                     .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
                     .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
                     .replace("{{suggestedCitation}}", suggestedCitation != null ? suggestedCitation : "")
+                    .replace("{{usageConstraints}}", usageConstraintsHtml(usageConstraints))
                     .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
                     .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
                     .replace("{{BLUESKY_IMG}}", EmailUtils.readBase64Image("bluesky.txt"))
@@ -266,6 +274,28 @@ public class RestServices {
             log.error("Failed to load email template", e);
             throw new RuntimeException("Failed to load email template", e);
         }
+    }
+
+    /**
+     * The Usage Constraints paragraphs, the same as the portal dialog shows.
+     * 1. A list: one paragraph per item, escaped.
+     * 2. An empty list or null: "Usage Constraints not available".
+     */
+    static String usageConstraintsHtml(List<String> usageConstraints) {
+        List<String> paragraphs = usageConstraints == null || usageConstraints.isEmpty()
+                ? List.of(USAGE_CONSTRAINTS_NOT_AVAILABLE)
+                : usageConstraints.stream().map(HtmlUtils::htmlEscape).toList();
+
+        StringBuilder html = new StringBuilder();
+        for (int i = 0; i < paragraphs.size(); i++) {
+            // 8px between paragraphs, the same gap as the DAS emails
+            String margin = i == 0 ? "0" : "8px 0 0 0";
+            html.append("<p style=\"Margin:").append(margin)
+                    .append(";mso-line-height-alt:24px;font-size:16px;line-height:150%;\">")
+                    .append(paragraphs.get(i))
+                    .append("</p>");
+        }
+        return html.toString();
     }
 
     public SseEmitter downloadWfsDataWithSse(String uuid,

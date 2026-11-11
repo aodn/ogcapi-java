@@ -4,16 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Renders the job-started email template to an HTML file for browser preview.
  * No AWS needed - it calls the template rendering directly.
- *
+ * <p>
  * Run from the repo root:
- *   ./mvnw-ca -q -pl server -am test-compile exec:java \
- *     -Dexec.classpathScope=test \
- *     -Dexec.mainClass=au.org.aodn.ogcapi.server.processes.JobStartedEmailPreview
+ * ./mvnw-ca -q -pl server -am test-compile exec:java \
+ * -Dexec.classpathScope=test \
+ * -Dexec.mainClass=au.org.aodn.ogcapi.server.processes.JobStartedEmailPreview
  */
 public class JobStartedEmailPreview {
 
@@ -40,6 +41,7 @@ public class JobStartedEmailPreview {
                 "Test Collection Title",
                 "https://example.com/metadata",
                 "Suggested citation goes here.",
+                List.of("First usage constraint goes here.", "Second usage constraint goes here."),
                 "csv"
         );
 

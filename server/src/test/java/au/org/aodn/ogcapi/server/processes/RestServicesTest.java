@@ -16,8 +16,10 @@ import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -58,7 +60,7 @@ public class RestServicesTest {
                                 String recipient, String collectionTitle, String fullMetadataLink,
                                 String suggestedCitation, String outputFormat) throws JsonProcessingException {
         DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, polygons, recipient,
-                collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+                collectionTitle, fullMetadataLink, suggestedCitation, null, outputFormat);
         return restServices.submitDownloadJob(
                 RestServices.downloadJobName(recipient), restServices.buildDownloadParameters(request), null);
     }
@@ -189,7 +191,7 @@ public class RestServicesTest {
     private static DownloadRequest estimateRequest() {
         return new DownloadRequest("test-uuid", "test.zarr", "2023-01-01", "2023-01-31", "non-specified",
                 "test@example.com", "Test Ocean Data Collection", "https://portal.example.test/details/test-uuid",
-                "Cite as", "netcdf");
+                "Cite as", null, "netcdf");
     }
 
     @Test
@@ -213,7 +215,7 @@ public class RestServicesTest {
         String html = services.generateStartedEmailContent(
                 "test-uuid", "slocum_glider_delayed_qc.parquet,ocean_temperature.zarr",
                 "non-specified", "non-specified", null, "Test Collection Title",
-                "https://example.com/metadata", "Citation", "csv");
+                "https://example.com/metadata", "Citation", null, "csv");
 
         for (String text : List.of("Dataset:", "Data Selection:", "Format:", "Suggested Citation:",
                 "Usage Constraints:", "CSV", "slocum_glider_delayed_qc<br>ocean_temperature")) {
@@ -231,13 +233,13 @@ public class RestServicesTest {
         RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
         String html = services.generateStartedEmailContent(
                 "uuid", "a&<b>.parquet", null, null, null, "A & B <x>",
-                "https://example.com/?a=1&b=\"x\"", "", "csv");
+                "https://example.com/?a=1&b=\"x\"", "", null, "csv");
         assertTrue(html.contains("A &amp; B &lt;x&gt;"));
         assertTrue(html.contains("a&amp;&lt;b&gt;"));
         assertTrue(html.contains("a=1&amp;b=&quot;x&quot;"));
 
         String fallback = services.generateStartedEmailContent(
-                "uuid", " ", null, null, null, "Title", " ", "", "csv");
+                "uuid", " ", null, null, null, "Title", " ", "", null, "csv");
         assertTrue(fallback.contains(">Title</p>"));
         assertTrue(fallback.contains(">*</p>"));
     }
@@ -246,8 +248,7 @@ public class RestServicesTest {
      * Regression guard for aodn/backlog#9241: the download confirmation email template used to
      * carry a hardcoded paragraph with citation requirements for the Ningaloo (TAN100) and Ocean
      * Reference Station 65m (ORS065) moorings, so it went out with every download regardless of
-     * dataset. That paragraph has been removed; the generic IMOS acknowledgement and the IMOS
-     * "as is" disclaimer must stay.
+     * dataset. That paragraph has been removed.
      */
     @Test
     public void generatedEmailHasNoHardcodedMooringCitation() {
@@ -256,7 +257,7 @@ public class RestServicesTest {
         String html = services.generateStartedEmailContent(
                 "test-uuid", "test-dname", "non-specified", "non-specified", "non-specified",
                 "Test Ocean Data Collection", "https://portal.example.test/details/test-uuid",
-                "Cite this dataset as X.", "netcdf");
+                "Cite this dataset as X.", null, "netcdf");
 
         // The mooring-specific text must no longer appear in any email.
         for (String marker : List.of("TAN100", "ORS065", "Ningaloo", "Ocean Reference Station",
@@ -264,14 +265,80 @@ public class RestServicesTest {
             assertFalse(html.contains(marker), "email should not contain hardcoded mooring text: " + marker);
         }
 
-        // The generic IMOS acknowledgement and the "as is" disclaimer must remain.
-        assertTrue(html.contains("Any users of IMOS data are required to clearly acknowledge"),
-                "generic IMOS acknowledgement must stay");
-        assertTrue(html.contains("Data, products and services from IMOS are provided \"as is\" without any warranty"),
-                "IMOS disclaimer must stay");
-
         // The suggested citation placeholder is still populated and no template markers leak.
         assertTrue(html.contains("Cite this dataset as X."), "suggested citation must still render");
         assertFalse(html.contains("{{suggestedCitation}}"), "suggestedCitation placeholder must be substituted");
+    }
+
+    private String startedEmail(List<String> usageConstraints) {
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
+        return services.generateStartedEmailContent("uuid", "a.parquet", null, null, null, "Title",
+                null, "Citation", usageConstraints, "csv");
+    }
+
+    @Test
+    public void startedEmailNeverShowsTheFixedImosText() {
+        // Arrays.asList, since List.of does not allow null
+        for (List<String> usageConstraints : Arrays.asList(List.of("Credit CSIRO"), List.<String>of(), null)) {
+            String html = startedEmail(usageConstraints);
+
+            assertFalse(html.contains("Any users of IMOS data"));
+            assertFalse(html.contains("Data, products and services from IMOS"));
+        }
+    }
+
+    @Test
+    public void startedEmailShowsOneEscapedParagraphPerUsageConstraint() {
+        String html = startedEmail(List.of("Credit CSIRO & partners", "Use <b>with</b> care"));
+
+        int first = html.indexOf(">Credit CSIRO &amp; partners</p>");
+        int second = html.indexOf(">Use &lt;b&gt;with&lt;/b&gt; care</p>");
+        assertTrue(first >= 0 && second > first, "one paragraph per item, in order");
+        assertFalse(html.contains(RestServices.USAGE_CONSTRAINTS_NOT_AVAILABLE));
+        assertFalse(html.contains("{{"));
+    }
+
+    @Test
+    public void startedEmailWithEmptyUsageConstraintsSaysNotAvailable() {
+        String html = startedEmail(List.of());
+
+        assertTrue(html.contains(">Usage Constraints not available</p>"));
+    }
+
+    @Test
+    public void startedEmailWithMissingUsageConstraintsSaysNotAvailable() {
+        String html = startedEmail(null);
+
+        assertTrue(html.contains(">Usage Constraints not available</p>"));
+    }
+
+    private Map<String, String> downloadParameters(List<String> usageConstraints) throws JsonProcessingException {
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
+        return services.buildDownloadParameters(new DownloadRequest("test-uuid", "test.zarr", "2023-01-01",
+                "2023-01-31", "non-specified", "test@example.com", "Title", "https://example.com/metadata",
+                "Cite as", usageConstraints, "csv"));
+    }
+
+    @Test
+    public void downloadParametersSendUsageConstraintsAsJson() throws JsonProcessingException {
+        Map<String, String> parameters = downloadParameters(List.of("Credit CSIRO", "Use \"with\" care"));
+
+        assertEquals("[\"Credit CSIRO\",\"Use \\\"with\\\" care\"]",
+                parameters.get(DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getValue()));
+    }
+
+    @Test
+    public void downloadParametersSendEmptyUsageConstraintsAsEmptyJsonList() throws JsonProcessingException {
+        // "[]", never "": AWS Batch rejects an empty value
+        Map<String, String> parameters = downloadParameters(List.of());
+
+        assertEquals("[]", parameters.get(DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getValue()));
+    }
+
+    @Test
+    public void downloadParametersSendMissingUsageConstraintsAsEmptyJsonList() throws JsonProcessingException {
+        Map<String, String> parameters = downloadParameters(null);
+
+        assertEquals("[]", parameters.get(DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getValue()));
     }
 }
