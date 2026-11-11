@@ -169,6 +169,7 @@ public class DownloadAdmissionService {
                 request.collectionTitle(),
                 request.fullMetadataLink(),
                 request.suggestedCitation(),
+                request.usageConstraints(),
                 request.outputFormat());
     }
 }
