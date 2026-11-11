@@ -294,22 +294,34 @@ public class RestServicesTest {
         int first = html.indexOf(">Credit CSIRO &amp; partners</p>");
         int second = html.indexOf(">Use &lt;b&gt;with&lt;/b&gt; care</p>");
         assertTrue(first >= 0 && second > first, "one paragraph per item, in order");
-        assertFalse(html.contains(RestServices.USAGE_CONSTRAINTS_NOT_AVAILABLE));
+        assertFalse(html.contains(">" + RestServices.UNAVAILABLE + "</p>"));
         assertFalse(html.contains("{{"));
     }
 
     @Test
-    public void startedEmailWithEmptyUsageConstraintsSaysNotAvailable() {
+    public void startedEmailWithEmptyUsageConstraintsSaysUnavailable() {
         String html = startedEmail(List.of());
 
-        assertTrue(html.contains(">Usage Constraints not available</p>"));
+        assertTrue(html.contains(">unavailable</p>"));
     }
 
     @Test
-    public void startedEmailWithMissingUsageConstraintsSaysNotAvailable() {
+    public void startedEmailWithMissingUsageConstraintsSaysUnavailable() {
         String html = startedEmail(null);
 
-        assertTrue(html.contains(">Usage Constraints not available</p>"));
+        assertTrue(html.contains(">unavailable</p>"));
+    }
+
+    @Test
+    public void startedEmailWithoutSuggestedCitationSaysUnavailable() {
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
+        // Arrays.asList, since List.of does not allow null
+        for (String suggestedCitation : Arrays.asList(null, "", " ")) {
+            String html = services.generateStartedEmailContent("uuid", "a.parquet", null, null, null, "Title",
+                    null, suggestedCitation, List.of("Credit CSIRO"), "csv");
+
+            assertTrue(html.contains(">unavailable</p>"));
+        }
     }
 
     private Map<String, String> downloadParameters(List<String> usageConstraints) throws JsonProcessingException {
