@@ -27,6 +27,7 @@ public class DatasetDownloadEnums {
         COLLECTION_TITLE("collection_title"),
         FULL_METADATA_LINK("full_metadata_link"),
         SUGGESTED_CITATION("suggested_citation"),
+        USAGE_CONSTRAINTS("usage_constraints"),
         KEY("key"),
         OUTPUT_FORMAT("output_format"),
         SHARE_IDENTIFIER("share_identifier");

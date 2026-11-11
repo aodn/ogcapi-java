@@ -107,7 +107,7 @@ class DownloadAdmissionServiceTest {
     private DownloadRequest request(String recipient) {
         return new DownloadRequest("collection-id", "key.zarr", "2023-01-01", "2023-01-31",
                 "non-specified", recipient, "Test Collection",
-                "https://portal.example.test/details/collection-id", "Cite as", "netcdf");
+                "https://portal.example.test/details/collection-id", "Cite as", null, "netcdf");
     }
 
     @Test
@@ -116,7 +116,7 @@ class DownloadAdmissionServiceTest {
 
         assertNotNull(jobId);
         verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any(), any());
-        verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -127,7 +127,7 @@ class DownloadAdmissionServiceTest {
 
         verify(restServices, never()).submitDownloadJob(anyString(), any(), any());
         // Nothing was submitted, so the user must not be told their file is being produced.
-        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -219,7 +219,7 @@ class DownloadAdmissionServiceTest {
                 + "(estimated 180 GB, limit 180 GB). Please refine your selection to reduce the dataset size.",
                 exception.getMessage());
         verify(restServices, never()).submitDownloadJob(anyString(), any(), any());
-        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -297,7 +297,7 @@ class DownloadAdmissionServiceTest {
     void anOriginalNetcdfsDownloadSkipsTheEstimateAndIsTaggedSmall() throws Exception {
         DownloadRequest request = new DownloadRequest("collection-id", "original_netcdfs",
                 "2023-01-01", "2023-01-31", "non-specified", RECIPIENT, "Test Collection",
-                "https://portal.example.test/details/collection-id", "Cite as", "csv");
+                "https://portal.example.test/details/collection-id", "Cite as", null, "csv");
 
         assertNotNull(service.submit(request));
 

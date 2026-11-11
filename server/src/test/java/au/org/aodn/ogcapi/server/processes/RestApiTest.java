@@ -20,6 +20,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,6 +92,27 @@ public class RestApiTest {
     }
 
     @Test
+    public void testExecutePassesUsageConstraintsToAdmission() throws JsonProcessingException {
+        executeRequest.getInputs().put(DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getValue(),
+                List.of("Credit CSIRO", "Use with care"));
+
+        restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
+
+        ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
+        verify(downloadAdmissionService).submit(captor.capture());
+        assertEquals(List.of("Credit CSIRO", "Use with care"), captor.getValue().usageConstraints());
+    }
+
+    @Test
+    public void testExecuteWithoutUsageConstraintsPassesEmptyList() throws JsonProcessingException {
+        restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
+
+        ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
+        verify(downloadAdmissionService).submit(captor.capture());
+        assertEquals(List.of(), captor.getValue().usageConstraints());
+    }
+
+    @Test
     public void testExecuteDownloadDatasetError() throws JsonProcessingException {
         when(downloadAdmissionService.submit(any()))
                 .thenThrow(new RuntimeException("Error while getting dataset"));
@@ -105,7 +127,7 @@ public class RestApiTest {
 
         // No job was submitted, so the user must not be told their data is being processed.
         // The admission service owns that email now, so nothing here may send one either.
-        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
+        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

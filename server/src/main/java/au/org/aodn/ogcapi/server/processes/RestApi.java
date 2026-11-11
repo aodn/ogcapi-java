@@ -114,11 +114,13 @@ public class RestApi implements ProcessesApi, JobsApi {
                 String collectionTitle = DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getStringInput(body);
                 String fullMetadataLink = DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getStringInput(body);
                 String suggestedCitation = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getStringInput(body);
+                List<String> usageConstraints = DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getListInput(body);
                 String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
                 Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
 
                 DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, multiPolygon,
-                        recipient, collectionTitle, fullMetadataLink, suggestedCitation, outputFormat);
+                        recipient, collectionTitle, fullMetadataLink, suggestedCitation, usageConstraints,
+                        outputFormat);
 
                 // The size limit and the per-user limit are applied here: a download that is too
                 // large, or a recipient already at their limit, is rejected outright, before
