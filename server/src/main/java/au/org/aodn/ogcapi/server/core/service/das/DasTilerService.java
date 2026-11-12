@@ -150,8 +150,21 @@ public class DasTilerService {
      * {@code Cache-Control}.
      */
     public DasJsonResult getDataManifest(String productId, String date) {
+        return getTileManifest(DATA_TILES_BASE, productId, date);
+    }
+
+    /**
+     * Fetches the per-date visual-tile manifest. DAS serves the same body as the data-tile
+     * manifest; for visual tiles {@code valueRange} is the range tiles are coloured by when
+     * {@code rescale} is omitted, and {@code valueUnit} labels the legend.
+     */
+    public DasJsonResult getVisualManifest(String productId, String date) {
+        return getTileManifest(VISUAL_TILES_BASE, productId, date);
+    }
+
+    private DasJsonResult getTileManifest(String base, String productId, String date) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/manifest.json")
+                .fromUriString(dasProperties.host() + base + "/{product}/manifest.json")
                 .queryParam("date", "{date}");
         Map<String, Object> params = new HashMap<>();
         params.put("product", productId);
@@ -204,16 +217,27 @@ public class DasTilerService {
         }
     }
 
-    public DasTileResult getLegend(String name, String rescale, Integer width, Integer height,
-                                    String orientation) {
+    /**
+     * Fetches a colormap legend PNG. {@code colormap} is a colormap name or an inline JSON
+     * colormap; it goes in the query string so the JSON is URL-encoded like any other value.
+     * Tick labels are opt-in: DAS draws them only when {@code labels} is true, and then requires
+     * {@code rescale} for the label values.
+     */
+    public DasTileResult getLegend(String colormap, String rescale, Boolean labels, Integer width,
+                                    Integer height, String orientation) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/colormaps/{name}/legend");
+                .fromUriString(dasProperties.host() + VISUAL_TILES_BASE + "/colormaps/legend")
+                .queryParam("colormap", "{colormap}");
         Map<String, Object> params = new HashMap<>();
-        params.put("name", name);
+        params.put("colormap", colormap);
 
         if (rescale != null) {
             builder.queryParam("rescale", "{rescale}");
             params.put("rescale", rescale);
+        }
+        if (labels != null) {
+            builder.queryParam("labels", "{labels}");
+            params.put("labels", labels);
         }
         if (width != null) {
             builder.queryParam("width", "{width}");

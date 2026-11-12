@@ -172,7 +172,8 @@ public class RestApi implements CollectionsApi, MapApi, StylesApi, TileMatrixSet
             @RequestParam(required = false) String datetime,
 
             @Parameter(in = ParameterIn.QUERY,
-                    description = "Colormap name. Omit to use the product's default.",
+                    description = "Colormap name. Omit to use the product's default. A continuous " +
+                            "colormap on a categorical product is rejected. " + RestExtApi.INLINE_COLORMAP_DOC,
                     example = "viridis")
             @RequestParam(required = false) String colormap,
 

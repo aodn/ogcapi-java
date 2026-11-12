@@ -7,6 +7,7 @@ import au.org.aodn.ogcapi.server.core.util.DatetimeUtils;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -32,6 +33,11 @@ import java.util.List;
 @RequestMapping(value = "/api/v1/ogc/ext/tiles")
 public class RestExtApi {
 
+    /** Shared doc text for every {@code colormap} param DAS accepts (tile and legend routes). */
+    static final String INLINE_COLORMAP_DOC = "Or an inline colormap: a URL-encoded JSON object in the DAS " +
+            "colormaps.json entry format, e.g. `{\"mode\":\"ramp\",\"colors\":[\"#000000\",\"#ff0000\"]}` or " +
+            "`{\"mode\":\"categorical\",\"values\":[0,1],\"colors\":[\"#8c0000\",\"#ff9701\"]}`.";
+
     @Autowired
     protected DasTilerService dasTilerService;
 
@@ -49,10 +55,14 @@ public class RestExtApi {
                     "colourised — and a single-variable product may be `[\"data\"]` too when its variable is " +
                     "not renderable. Variable arity is used only as a fallback against an older DAS that does " +
                     "not report capability. Each " +
-                    "capability carries its own template(s): `visual_tile_url_template` + `legend_url` when " +
+                    "capability carries its own template(s): `visual_tile_url_template` + `legend_url` + " +
+                    "`visual_manifest_url_template` + `point_url_template` when " +
                     "`\"visual\"` is present, `data_tile_url_template` + `data_manifest_url_template` when " +
                     "`\"data\"` is present. For two-variable products the `variable` array order (e.g. " +
-                    "`[\"UCUR\", \"VCUR\"]`) is the R/G channel order the data-tile shader decodes. A " +
+                    "`[\"UCUR\", \"VCUR\"]`) is the R/G channel order the data-tile shader decodes. " +
+                    "`categorical` is `true` when the variable holds discrete flag values (use a categorical " +
+                    "colormap, and omit `rescale`/`labels` on the legend), `false` when continuous, and " +
+                    "`null` when DAS cannot tell yet (store not loaded, or an older DAS). A " +
                     "collection with no tiler products returns 200 with an empty array."
     )
     @ApiResponses(value = {
@@ -66,10 +76,13 @@ public class RestExtApi {
                                           "id": "model_sea_level_anomaly_gridded_realtime:gsla",
                                           "variable": "GSLA",
                                           "tile_types": ["visual", "data"],
+                                          "categorical": false,
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "visual_tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
-                                          "legend_url": "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend",
+                                          "legend_url": "/api/v1/ogc/ext/tiles/colormaps/legend?colormap={colormap}",
+                                          "visual_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/visual_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}",
+                                          "point_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/point?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&lat={lat}&lon={lon}",
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}",
                                           "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}"
                                         },
@@ -77,6 +90,7 @@ public class RestExtApi {
                                           "id": "model_sea_level_anomaly_gridded_realtime:ucur+vcur",
                                           "variable": ["UCUR", "VCUR"],
                                           "tile_types": ["data"],
+                                          "categorical": false,
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=ucur%2Bvcur&datetime={datetime}",
@@ -86,6 +100,7 @@ public class RestExtApi {
                                           "id": "model_sea_level_anomaly_gridded_realtime:wdir",
                                           "variable": "WDIR",
                                           "tile_types": ["data"],
+                                          "categorical": false,
                                           "available_dates": ["2024-01-01", "2024-01-02"],
                                           "full_date_range": {"start": "2020-01-01", "end": "2024-01-02"},
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=wdir&datetime={datetime}",
@@ -145,6 +160,9 @@ public class RestExtApi {
             }
             entry.set("tile_types", tileTypes);
 
+            JsonNode categorical = product.path("categorical");
+            entry.set("categorical", categorical.isBoolean() ? categorical : NullNode.getInstance());
+
             JsonNode availability = manifestProducts != null ? manifestProducts.path(id) : null;
             entry.set("available_dates", availability != null && !availability.isMissingNode()
                     ? availability.path("available_dates") : mapper.createArrayNode());
@@ -167,7 +185,15 @@ public class RestExtApi {
                         "/api/v1/ogc/collections/" + collectionId + "/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}"
                                 + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
                                 + "&datetime={datetime}&f=png");
-                entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/{colormap}/legend");
+                entry.put("legend_url", "/api/v1/ogc/ext/tiles/colormaps/legend?colormap={colormap}");
+                entry.put("visual_manifest_url_template",
+                        "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/visual_tiles/manifest"
+                                + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
+                                + "&datetime={datetime}");
+                entry.put("point_url_template",
+                        "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/data_tiles/point"
+                                + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
+                                + "&datetime={datetime}&lat={lat}&lon={lon}");
             }
 
             if (canData) {
@@ -320,7 +346,8 @@ public class RestExtApi {
                     "Useful for point queries (e.g. a click on the map) without fetching and decoding a whole " +
                     "tile.\n\n" +
                     "Valid `dataset`, `variable` and `datetime` values come from " +
-                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products`.",
+                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products` — use each product's " +
+                    "ready-made `point_url_template`.",
             tags = {"Data Tiles"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The decoded value(s) at the point.",
@@ -416,7 +443,9 @@ public class RestExtApi {
             description = "Returns the per-date manifest a client must fetch **before** requesting data " +
                     "tiles: `bounds`, per-LOD `grid`/`chunkPx`/`storedPx`/`padding`/`zoomThreshold`, and the " +
                     "decode ranges — `valueRange` for a scalar product, or `uRange`+`vRange` for a " +
-                    "two-variable product, plus `flagValues`/`flagMeanings` for a categorical product. These " +
+                    "two-variable product, plus `flagValues`/`flagMeanings` for a categorical product. " +
+                    "`valueUnit` (`uUnit`/`vUnit` for a two-variable product) carries the variable's units " +
+                    "when DAS knows them; it is absent for categorical or unitless variables. These " +
                     "values and the tile byte layout are a `CACHE_VERSION`-versioned DAS↔shader contract; " +
                     "forward them unchanged.\n\n" +
                     "Valid `dataset`, `variable` and `datetime` values come from " +
@@ -480,8 +509,77 @@ public class RestExtApi {
         validateProductParams(dataset, variable, datetime);
 
         String product = dataset + ":" + variable;
-        DasTilerService.DasJsonResult manifest = dasTilerService.getDataManifest(product, datetime);
+        return manifestResponse(dasTilerService.getDataManifest(product, datetime));
+    }
 
+    @Operation(
+            summary = "Retrieve the visual-tile manifest for a product",
+            description = "Returns the same per-date manifest as `data_tiles/manifest` (`bounds`, per-LOD " +
+                    "geometry, value ranges, units and categorical flags), for clients rendering visual tiles. " +
+                    "`valueRange` is the range visual tiles are coloured by when `rescale` is omitted, so it " +
+                    "can drive the legend's `rescale`; `valueUnit` is the variable's units for the legend " +
+                    "title (absent for categorical or unitless variables). Categorical products also return " +
+                    "`flagValues` and, when available, `flagMeanings`.\n\n" +
+                    "Valid `dataset`, `variable` and `datetime` values come from " +
+                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products` — use each product's " +
+                    "ready-made `visual_manifest_url_template`.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "The visual-tile manifest.",
+                    content = @Content(mediaType = "application/json")),
+            @ApiResponse(responseCode = "400", description = "`dataset` or `variable` missing, `variable` " +
+                    "containing a space (an unencoded `+`), or `datetime` not a full UTC ISO-8601 timestamp.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", description = "DAS reported an unknown product " +
+                    "(`{dataset}:{variable}`) or an unavailable date.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "422", description = "DAS could not process the request (e.g. a " +
+                    "malformed date).",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "429", description = "Upstream rate limit reached.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "502", description = "The tile service is unavailable.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "503", description = "DAS is still warming up.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ErrorResponse.class)))})
+    @GetMapping("/collections/{collectionId}/visual_tiles/manifest")
+    public ResponseEntity<JsonNode> getCollectionVisualManifest(
+            @Parameter(in = ParameterIn.PATH, required = true,
+                    description = "The metadata record UUID.",
+                    example = "0c9eb39c-9cbe-4c6a-8a10-5867087e703a")
+            @PathVariable String collectionId,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Dataset name — the `{dataset}` half of a DAS product id.",
+                    example = "model_sea_level_anomaly_gridded_realtime")
+            @RequestParam(required = false) String dataset,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Variable name — the `{variable}` half of a DAS product id.",
+                    example = "gsla")
+            @RequestParam(required = false) String variable,
+
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Date, a full UTC ISO-8601 timestamp (offset `Z`). Must be one of the " +
+                            "product's `available_dates`.",
+                    example = "2024-01-01T00:00:00Z")
+            @RequestParam(required = false) String datetime) {
+
+        validateProductParams(dataset, variable, datetime);
+
+        String product = dataset + ":" + variable;
+        return manifestResponse(dasTilerService.getVisualManifest(product, datetime));
+    }
+
+    private static ResponseEntity<JsonNode> manifestResponse(DasTilerService.DasJsonResult manifest) {
         ResponseEntity.BodyBuilder response = ResponseEntity.ok();
         if (manifest.cacheControl() != null) {
             response.header(HttpHeaders.CACHE_CONTROL, manifest.cacheControl());
@@ -524,7 +622,8 @@ public class RestExtApi {
 
     @Operation(
             summary = "List the available colormaps",
-            description = "Names accepted by the tile route's `colormap` parameter and the legend endpoint. " +
+            description = "Names accepted by the tile route's `colormap` parameter and the legend endpoint " +
+                    "(both also take an inline JSON colormap instead of a name). " +
                     "A `custom` colormap with `mode: categorical` maps discrete flag values to fixed colours " +
                     "and rejects `rescale`."
     )
@@ -554,18 +653,18 @@ public class RestExtApi {
 
     @Operation(
             summary = "Render a colour legend for a colormap",
-            description = "Renders a PNG colour bar for use as a map legend. Pass the same `rescale` used on " +
-                    "the tile request to get tick labels; without it only the bare bar is drawn."
+            description = "Renders a PNG colour bar for use as a map legend. Pass the same `colormap` used on " +
+                    "the tile request — a name or an inline JSON colormap. By default only the bare bar is " +
+                    "drawn. For tick labels pass `labels=true` together with the same `rescale` used on the " +
+                    "tile request."
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The rendered legend image.",
                     content = @Content(mediaType = "image/png",
                             schema = @Schema(type = "string", format = "binary"))),
-            @ApiResponse(responseCode = "400", description = "`rescale` is malformed, or was supplied for a " +
-                    "categorical colormap.",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", description = "No colormap exists with that name.",
+            @ApiResponse(responseCode = "400", description = "`colormap` is missing, unknown, or an invalid " +
+                    "inline colormap; `rescale` is malformed or was supplied for a categorical colormap; or " +
+                    "`labels=true` was given without `rescale`.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "422", description = "`width`/`height` outside 10-2048, or " +
@@ -581,17 +680,24 @@ public class RestExtApi {
             @ApiResponse(responseCode = "504", description = "DAS did not respond in time.",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = ErrorResponse.class)))})
-    @GetMapping("/colormaps/{name}/legend")
+    @GetMapping("/colormaps/legend")
     public ResponseEntity<byte[]> getColormapLegend(
-            @Parameter(in = ParameterIn.PATH, required = true,
-                    description = "Colormap name, as listed by `GET /api/v1/ogc/ext/tiles/colormaps`.",
+            @Parameter(in = ParameterIn.QUERY, required = true,
+                    description = "Colormap name, as listed by `GET /api/v1/ogc/ext/tiles/colormaps`. " +
+                            INLINE_COLORMAP_DOC,
                     example = "viridis")
-            @PathVariable String name,
+            @RequestParam(required = false) String colormap,
 
             @Parameter(in = ParameterIn.QUERY,
-                    description = "Value range to label the bar with, as `min,max`. Rejected for categorical colormaps.",
+                    description = "Value range for the tick labels, as `min,max`. Only drawn when `labels=true`. " +
+                            "Rejected for categorical colormaps.",
                     example = "-1,1")
             @RequestParam(required = false) String rescale,
+
+            @Parameter(in = ParameterIn.QUERY,
+                    description = "Draw lo/mid/hi tick labels alongside the bar. Requires `rescale`.",
+                    schema = @Schema(type = "boolean", defaultValue = "false"))
+            @RequestParam(required = false) Boolean labels,
 
             @Parameter(in = ParameterIn.QUERY, description = "Image width in pixels.",
                     schema = @Schema(type = "integer", minimum = "10", maximum = "2048", defaultValue = "256"))
@@ -607,7 +713,13 @@ public class RestExtApi {
                     schema = @Schema(allowableValues = {"horizontal", "vertical"}, defaultValue = "horizontal"))
             @RequestParam(required = false) String orientation) {
 
-        DasTilerService.DasTileResult legend = dasTilerService.getLegend(name, rescale, width, height, orientation);
+        // Validated here rather than via required=true: GlobalExceptionHandler's catch-all would turn
+        // Spring's MissingServletRequestParameterException into a 500.
+        if (colormap == null || colormap.isBlank()) {
+            throw new InvalidParameterException("colormap is required");
+        }
+
+        DasTilerService.DasTileResult legend = dasTilerService.getLegend(colormap, rescale, labels, width, height, orientation);
 
         ResponseEntity.BodyBuilder response = ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(legend.contentType()));

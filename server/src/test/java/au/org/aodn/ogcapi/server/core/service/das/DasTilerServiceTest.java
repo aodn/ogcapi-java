@@ -15,6 +15,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.DefaultUriBuilderFactory;
 
 import java.net.SocketTimeoutException;
 import java.time.Duration;
@@ -273,6 +274,28 @@ public class DasTilerServiceTest {
     }
 
     @Test
+    public void testGetVisualManifestBuildsUrlAndForwardsCacheControl() {
+        ObjectNode manifestBody = new ObjectMapper().createObjectNode();
+        manifestBody.put("valueUnit", "m");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable");
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenReturn(new ResponseEntity<>(manifestBody, headers, HttpStatus.OK));
+
+        DasTilerService.DasJsonResult result = service.getVisualManifest(PRODUCT_ID, "2024-01-01");
+
+        CapturedRequest captured = captureJsonRequest();
+        assertTrue(captured.url.contains("/visual_tiles/{product}/manifest.json"),
+                "visual manifest must hit the visual_tiles route, got: " + captured.url);
+        assertTrue(captured.url.contains("date={date}"), "date must be a query param, got: " + captured.url);
+        assertEquals(PRODUCT_ID, captured.params.get("product"));
+        assertEquals("2024-01-01", captured.params.get("date"));
+        assertEquals(manifestBody, result.body());
+        assertEquals("public, max-age=31536000, immutable", result.cacheControl());
+    }
+
+    @Test
     public void testGetDataManifestNotFoundMirroredWithDetail() {
         when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
                 .thenThrow(HttpClientErrorException.create(
@@ -444,6 +467,71 @@ public class DasTilerServiceTest {
         DasUpstreamException ex = assertThrows(DasUpstreamException.class, () -> service.getManifest(null));
 
         assertEquals(HttpStatus.BAD_GATEWAY, ex.getStatus());
+    }
+
+    @Test
+    public void testGetLegendOmitsNullParams() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("legend".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        service.getLegend("viridis", null, null, null, null, null);
+
+        CapturedRequest captured = captureImageRequest();
+        assertTrue(captured.url.contains("/colormaps/legend?colormap={colormap}"), "got: " + captured.url);
+        assertEquals("viridis", captured.params.get("colormap"));
+        assertFalse(captured.url.contains("rescale"), "null rescale must not appear in URL");
+        assertFalse(captured.url.contains("labels"), "null labels must not appear in URL");
+    }
+
+    @Test
+    public void testGetLegendForwardsLabelsAndRescale() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("legend".getBytes(), imageHeaders(), HttpStatus.OK));
+
+        service.getLegend("viridis", "-1,1", true, 256, 60, "horizontal");
+
+        CapturedRequest captured = captureImageRequest();
+        assertTrue(captured.url.contains("rescale={rescale}"), "got: " + captured.url);
+        assertTrue(captured.url.contains("labels={labels}"), "got: " + captured.url);
+        assertEquals("-1,1", captured.params.get("rescale"));
+        assertEquals(true, captured.params.get("labels"));
+        assertEquals(256, captured.params.get("width"));
+        assertEquals(60, captured.params.get("height"));
+        assertEquals("horizontal", captured.params.get("orientation"));
+    }
+
+    /**
+     * An inline JSON colormap must reach DAS URL-encoded. Expands the captured template the way the
+     * DAS RestTemplate does (default DefaultUriBuilderFactory) to check what goes on the wire.
+     */
+    @Test
+    public void testGetLegendEncodesInlineColormap() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("legend".getBytes(), imageHeaders(), HttpStatus.OK));
+        String inline = "{\"mode\":\"categorical\",\"values\":[0,1],\"colors\":[\"#8c0000\",\"#ff9701\"]}";
+
+        service.getLegend(inline, null, null, null, null, null);
+
+        CapturedRequest captured = captureImageRequest();
+        assertEquals(inline, captured.params.get("colormap"), "inline JSON must be passed raw as a template variable");
+        String wire = new DefaultUriBuilderFactory().expand(captured.url, captured.params).toString();
+        assertTrue(wire.contains("colormap=%7B%22mode%22%3A%22categorical%22"), "got: " + wire);
+        assertTrue(wire.contains("%238c0000"), "'#' must be encoded, not start a fragment; got: " + wire);
+        assertFalse(wire.contains("#"), "got: " + wire);
+    }
+
+    @Test
+    public void testGetVisualTileEncodesInlineColormap() {
+        when(httpClient.getForEntity(anyString(), eq(byte[].class), anyMap()))
+                .thenReturn(new ResponseEntity<>("tile-bytes".getBytes(), imageHeaders(), HttpStatus.OK));
+        String inline = "{\"mode\":\"ramp\",\"colors\":[\"#000000\",\"#ff0000\"]}";
+
+        service.getVisualTile(PRODUCT_ID, "2024-01-01", 2, 1, 1, "png", inline, null);
+
+        CapturedRequest captured = captureImageRequest();
+        String wire = new DefaultUriBuilderFactory().expand(captured.url, captured.params).toString();
+        assertTrue(wire.contains("colormap=%7B%22mode%22%3A%22ramp%22"), "got: " + wire);
+        assertFalse(wire.contains("#"), "got: " + wire);
     }
 
     @Test
