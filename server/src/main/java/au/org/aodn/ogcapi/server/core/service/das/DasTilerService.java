@@ -150,8 +150,21 @@ public class DasTilerService {
      * {@code Cache-Control}.
      */
     public DasJsonResult getDataManifest(String productId, String date) {
+        return getTileManifest(DATA_TILES_BASE, productId, date);
+    }
+
+    /**
+     * Fetches the per-date visual-tile manifest. DAS serves the same body as the data-tile
+     * manifest; for visual tiles {@code valueRange} is the range tiles are coloured by when
+     * {@code rescale} is omitted, and {@code valueUnit} labels the legend.
+     */
+    public DasJsonResult getVisualManifest(String productId, String date) {
+        return getTileManifest(VISUAL_TILES_BASE, productId, date);
+    }
+
+    private DasJsonResult getTileManifest(String base, String productId, String date) {
         UriComponentsBuilder builder = UriComponentsBuilder
-                .fromUriString(dasProperties.host() + DATA_TILES_BASE + "/{product}/manifest.json")
+                .fromUriString(dasProperties.host() + base + "/{product}/manifest.json")
                 .queryParam("date", "{date}");
         Map<String, Object> params = new HashMap<>();
         params.put("product", productId);

@@ -274,6 +274,28 @@ public class DasTilerServiceTest {
     }
 
     @Test
+    public void testGetVisualManifestBuildsUrlAndForwardsCacheControl() {
+        ObjectNode manifestBody = new ObjectMapper().createObjectNode();
+        manifestBody.put("valueUnit", "m");
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set(HttpHeaders.CACHE_CONTROL, "public, max-age=31536000, immutable");
+        when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
+                .thenReturn(new ResponseEntity<>(manifestBody, headers, HttpStatus.OK));
+
+        DasTilerService.DasJsonResult result = service.getVisualManifest(PRODUCT_ID, "2024-01-01");
+
+        CapturedRequest captured = captureJsonRequest();
+        assertTrue(captured.url.contains("/visual_tiles/{product}/manifest.json"),
+                "visual manifest must hit the visual_tiles route, got: " + captured.url);
+        assertTrue(captured.url.contains("date={date}"), "date must be a query param, got: " + captured.url);
+        assertEquals(PRODUCT_ID, captured.params.get("product"));
+        assertEquals("2024-01-01", captured.params.get("date"));
+        assertEquals(manifestBody, result.body());
+        assertEquals("public, max-age=31536000, immutable", result.cacheControl());
+    }
+
+    @Test
     public void testGetDataManifestNotFoundMirroredWithDetail() {
         when(httpClient.getForEntity(anyString(), eq(JsonNode.class), anyMap()))
                 .thenThrow(HttpClientErrorException.create(

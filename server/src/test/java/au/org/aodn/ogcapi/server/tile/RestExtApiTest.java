@@ -180,6 +180,9 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertTrue(dataTemplate.contains("variable=gsla"), "got: " + dataTemplate);
         String manifestTemplate = entry.get("data_manifest_url_template").asText();
         Assertions.assertTrue(manifestTemplate.contains("/data_tiles/manifest"), "got: " + manifestTemplate);
+        String visualManifestTemplate = entry.get("visual_manifest_url_template").asText();
+        Assertions.assertEquals("/api/v1/ogc/ext/tiles/collections/uuid-a/visual_tiles/manifest"
+                + "?dataset=model_sla&variable=gsla&datetime={datetime}", visualManifestTemplate);
     }
 
     @Test
@@ -585,6 +588,30 @@ public class RestExtApiTest extends BaseTestClass {
         Assertions.assertEquals(HttpStatus.NOT_FOUND, response.getStatusCode());
         Assertions.assertEquals("Unknown product: wrong:gsla", response.getBody().getMessage());
         verify(dasTilerService).getDataManifest("wrong:gsla", "2024-01-01T00:00:00Z");
+    }
+
+    @Test
+    public void verifyVisualManifestPassesThroughValueUnitWithCacheControl() {
+        ObjectNode manifestBody = mapper.createObjectNode();
+        manifestBody.putArray("valueRange").add(-1.0).add(1.0);
+        manifestBody.put("valueUnit", "m");
+        when(dasTilerService.getVisualManifest("model_sla:gsla", "2024-01-01T00:00:00Z"))
+                .thenReturn(new DasTilerService.DasJsonResult(manifestBody, "public, max-age=31536000, immutable"));
+
+        ResponseEntity<JsonNode> response = testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/visual_tiles/manifest"
+                        + "?dataset=model_sla&variable=gsla&datetime=2024-01-01T00:00:00Z", JsonNode.class);
+
+        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assertions.assertEquals("m", response.getBody().get("valueUnit").asText());
+        Assertions.assertEquals("public, max-age=31536000, immutable", response.getHeaders().getCacheControl());
+    }
+
+    @Test
+    public void verifyVisualManifestRejectsMissingParams() {
+        Assertions.assertEquals(HttpStatus.BAD_REQUEST, testRestTemplate.getForEntity(
+                getExternalBasePath() + "/tiles/collections/uuid-a/visual_tiles/manifest"
+                        + "?variable=gsla&datetime=2024-01-01T00:00:00Z", ErrorResponse.class).getStatusCode());
     }
 
     @Test
