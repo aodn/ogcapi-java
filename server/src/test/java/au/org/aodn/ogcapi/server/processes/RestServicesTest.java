@@ -143,7 +143,7 @@ public class RestServicesTest {
     }
 
     @Test
-    public void submitJobReplacesEmptySuggestedCitationWithUnavailable() throws JsonProcessingException {
+    public void submitJobReplacesEmptySuggestedCitationWithNotAvailable() throws JsonProcessingException {
         // Arrange
         String jobId = "67890";
         SubmitJobResponse submitJobResponse = SubmitJobResponse.builder().jobId(jobId).build();
@@ -161,7 +161,7 @@ public class RestServicesTest {
         SubmitJobRequest captured = captor.getValue();
 
         String suggestedKey = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getValue();
-        assertEquals("unavailable", captured.parameters().get(suggestedKey));
+        assertEquals("Suggested Citation not available", captured.parameters().get(suggestedKey));
         assertEquals(jobId, response);
     }
 
@@ -294,34 +294,44 @@ public class RestServicesTest {
         int first = html.indexOf(">Credit CSIRO &amp; partners</p>");
         int second = html.indexOf(">Use &lt;b&gt;with&lt;/b&gt; care</p>");
         assertTrue(first >= 0 && second > first, "one paragraph per item, in order");
-        assertFalse(html.contains(">" + RestServices.UNAVAILABLE + "</p>"));
+        assertFalse(html.contains(">" + RestServices.USAGE_CONSTRAINTS_NOT_AVAILABLE + "</p>"));
         assertFalse(html.contains("{{"));
     }
 
     @Test
-    public void startedEmailWithEmptyUsageConstraintsSaysUnavailable() {
+    public void startedEmailWithEmptyUsageConstraintsSaysNotAvailable() {
         String html = startedEmail(List.of());
 
-        assertTrue(html.contains(">unavailable</p>"));
+        assertTrue(html.contains(">Usage Constraints not available</p>"));
     }
 
     @Test
-    public void startedEmailWithMissingUsageConstraintsSaysUnavailable() {
+    public void startedEmailWithMissingUsageConstraintsSaysNotAvailable() {
         String html = startedEmail(null);
 
-        assertTrue(html.contains(">unavailable</p>"));
+        assertTrue(html.contains(">Usage Constraints not available</p>"));
     }
 
     @Test
-    public void startedEmailWithoutSuggestedCitationSaysUnavailable() {
+    public void startedEmailWithoutSuggestedCitationSaysNotAvailable() {
         RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
         // Arrays.asList, since List.of does not allow null
         for (String suggestedCitation : Arrays.asList(null, "", " ")) {
             String html = services.generateStartedEmailContent("uuid", "a.parquet", null, null, null, "Title",
                     null, suggestedCitation, List.of("Credit CSIRO"), "csv");
 
-            assertTrue(html.contains(">unavailable</p>"));
+            assertTrue(html.contains(">Suggested Citation not available</p>"));
         }
+    }
+
+    @Test
+    public void startedEmailShowsEscapedSuggestedCitation() {
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
+        String html = services.generateStartedEmailContent("uuid", "a.parquet", null, null, null, "Title",
+                null, "CSIRO & <b>partners</b>", List.of("Credit CSIRO"), "csv");
+
+        assertTrue(html.contains(">CSIRO &amp; &lt;b&gt;partners&lt;/b&gt;</p>"));
+        assertFalse(html.contains(RestServices.SUGGESTED_CITATION_NOT_AVAILABLE));
     }
 
     private Map<String, String> downloadParameters(List<String> usageConstraints) throws JsonProcessingException {
