@@ -56,7 +56,7 @@ public class RestExtApi {
                     "not renderable. Variable arity is used only as a fallback against an older DAS that does " +
                     "not report capability. Each " +
                     "capability carries its own template(s): `visual_tile_url_template` + `legend_url` + " +
-                    "`visual_manifest_url_template` when " +
+                    "`visual_manifest_url_template` + `point_url_template` when " +
                     "`\"visual\"` is present, `data_tile_url_template` + `data_manifest_url_template` when " +
                     "`\"data\"` is present. For two-variable products the `variable` array order (e.g. " +
                     "`[\"UCUR\", \"VCUR\"]`) is the R/G channel order the data-tile shader decodes. " +
@@ -82,6 +82,7 @@ public class RestExtApi {
                                           "visual_tile_url_template": "/api/v1/ogc/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/map/tiles/WebMercatorQuad/{z}/{tileRow}/{tileCol}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&f=png",
                                           "legend_url": "/api/v1/ogc/ext/tiles/colormaps/legend?colormap={colormap}",
                                           "visual_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/visual_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}",
+                                          "point_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/point?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}&lat={lat}&lon={lon}",
                                           "data_tile_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/{lod}/{x}/{y}?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}",
                                           "data_manifest_url_template": "/api/v1/ogc/ext/tiles/collections/0c9eb39c-9cbe-4c6a-8a10-5867087e703a/data_tiles/manifest?dataset=model_sea_level_anomaly_gridded_realtime&variable=gsla&datetime={datetime}"
                                         },
@@ -189,6 +190,10 @@ public class RestExtApi {
                         "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/visual_tiles/manifest"
                                 + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
                                 + "&datetime={datetime}");
+                entry.put("point_url_template",
+                        "/api/v1/ogc/ext/tiles/collections/" + collectionId + "/data_tiles/point"
+                                + "?dataset=" + encodedDataset + "&variable=" + encodedVariable
+                                + "&datetime={datetime}&lat={lat}&lon={lon}");
             }
 
             if (canData) {
@@ -341,7 +346,8 @@ public class RestExtApi {
                     "Useful for point queries (e.g. a click on the map) without fetching and decoding a whole " +
                     "tile.\n\n" +
                     "Valid `dataset`, `variable` and `datetime` values come from " +
-                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products`.",
+                    "`GET /api/v1/ogc/ext/tiles/collections/{collectionId}/products` — use each product's " +
+                    "ready-made `point_url_template`.",
             tags = {"Data Tiles"})
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "The decoded value(s) at the point.",

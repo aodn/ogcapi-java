@@ -183,6 +183,9 @@ public class RestExtApiTest extends BaseTestClass {
         String visualManifestTemplate = entry.get("visual_manifest_url_template").asText();
         Assertions.assertEquals("/api/v1/ogc/ext/tiles/collections/uuid-a/visual_tiles/manifest"
                 + "?dataset=model_sla&variable=gsla&datetime={datetime}", visualManifestTemplate);
+        Assertions.assertEquals("/api/v1/ogc/ext/tiles/collections/uuid-a/data_tiles/point"
+                        + "?dataset=model_sla&variable=gsla&datetime={datetime}&lat={lat}&lon={lon}",
+                entry.get("point_url_template").asText());
     }
 
     @Test
