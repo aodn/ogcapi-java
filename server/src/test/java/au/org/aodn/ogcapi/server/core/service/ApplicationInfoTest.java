@@ -13,7 +13,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -45,20 +45,29 @@ public class ApplicationInfoTest {
     }
 
     @Test
-    public void testServiceDownReturnNull() {
+    @SuppressWarnings("unchecked")
+    public void testEveryCallFetchesAgain() {
+        Map<String, Map<?, ?>> newInfo = Map.of(
+                "application", Map.of("name", "dda", "version", "1.1", "description", "desc"));
+
         RestTemplate template = mock(RestTemplate.class);
-        whenExchange(template).thenThrow(new ResourceAccessException("Connect timed out"));
+        whenExchange(template)
+                .thenReturn(ResponseEntity.ok(INFO))
+                .thenReturn(ResponseEntity.ok(newInfo));
 
         DdaService service = new DdaService(PROPERTIES, template);
 
-        assertNull(service.getName());
-        assertNull(service.getVersion());
-        assertNull(service.getDescription());
+        // 1. First call gets the version that runs now
+        assertEquals("1.0", service.getAppInfo().get("application").get("version"));
+        // 2. Service redeployed, the next call must show the new version, nothing is cached
+        assertEquals("1.1", service.getAppInfo().get("application").get("version"));
+
+        verify(template, times(2)).exchange(anyString(), eq(HttpMethod.GET), any(), any(ParameterizedTypeReference.class));
     }
 
     @Test
     @SuppressWarnings("unchecked")
-    public void testRetryAfterFailAndCacheAfterSuccess() {
+    public void testServiceDownReturnEmptyAndRetry() {
         RestTemplate template = mock(RestTemplate.class);
         whenExchange(template)
                 .thenThrow(new ResourceAccessException("Connect timed out"))
@@ -66,13 +75,10 @@ public class ApplicationInfoTest {
 
         DdaService service = new DdaService(PROPERTIES, template);
 
-        // 1. Service down, nothing cached
-        assertNull(service.getName());
-        // 2. Service up, info loaded
-        assertEquals("dda", service.getName());
-        // 3. Info from cache, no more call
-        assertEquals("1.0", service.getVersion());
-        assertEquals("desc", service.getDescription());
+        // 1. Service down, empty map and no exception
+        assertTrue(service.getAppInfo().isEmpty());
+        // 2. Service up again, the next call tries again
+        assertEquals(INFO, service.getAppInfo());
 
         verify(template, times(2)).exchange(anyString(), eq(HttpMethod.GET), any(), any(ParameterizedTypeReference.class));
     }

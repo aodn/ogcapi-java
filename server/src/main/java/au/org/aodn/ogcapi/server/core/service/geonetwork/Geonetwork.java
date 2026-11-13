@@ -10,14 +10,16 @@ import java.util.Map;
  */
 public class Geonetwork implements ApplicationInfo {
 
-    protected final InfoCache appInfo;
+    protected final GNProperties properties;
+    protected final RestTemplate template;
 
     public Geonetwork(GNProperties properties, RestTemplate template) {
-        this.appInfo = new InfoCache(() -> queryInfo(template, properties.host(), properties.infoPath()));
+        this.properties = properties;
+        this.template = template;
     }
 
     @Override
     public Map<String, Map<?,?>> getAppInfo() {
-        return appInfo.get();
+        return queryInfo(template, properties.host(), properties.infoPath());
     }
 }

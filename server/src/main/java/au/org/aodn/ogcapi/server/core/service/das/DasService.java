@@ -41,7 +41,6 @@ public class DasService implements ApplicationInfo {
     protected final RestTemplate httpClient;
     protected final WebClient sseHttpClient;
     protected final ObjectMapper objectMapper;
-    protected final InfoCache appInfo;
 
     public DasService(
             DasProperties dasProperties,
@@ -52,7 +51,6 @@ public class DasService implements ApplicationInfo {
         this.httpClient = httpClient;
         this.sseHttpClient = sseHttpClient;
         this.objectMapper = objectMapper;
-        this.appInfo = new InfoCache(() -> queryInfo(httpClient, dasProperties.host(), dasProperties.infoPath()));
     }
 
     /**
@@ -200,6 +198,6 @@ public class DasService implements ApplicationInfo {
 
     @Override
     public Map<String, Map<?, ?>> getAppInfo() {
-        return appInfo.get();
+        return queryInfo(httpClient, dasProperties.host(), dasProperties.infoPath());
     }
 }
