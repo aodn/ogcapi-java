@@ -8,36 +8,11 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.Collections;
 import java.util.Map;
-import java.util.function.Supplier;
 
 public interface ApplicationInfo {
     @Slf4j
     class LogHolder {
         // Lombok injects the logger here inside the static inner class
-    }
-
-    /**
-     * Load the info on first use, not at startup, so a down service cannot block startup.
-     * Only a good result is kept, an empty result is retried on the next call.
-     */
-    class InfoCache {
-        protected final Supplier<Map<String, Map<?,?>>> loader;
-        protected volatile Map<String, Map<?,?>> info;
-
-        public InfoCache(Supplier<Map<String, Map<?,?>>> loader) {
-            this.loader = loader;
-        }
-
-        public Map<String, Map<?,?>> get() {
-            if (info == null) {
-                Map<String, Map<?,?>> result = loader.get();
-                if (result == null || result.isEmpty()) {
-                    return Collections.emptyMap();
-                }
-                info = result;
-            }
-            return info;
-        }
     }
 
     /**
@@ -74,24 +49,11 @@ public interface ApplicationInfo {
     }
 
     /**
+     * Fetch the info from the service on every call. Do not cache it, a cached version goes
+     * stale when the service is redeployed.
+     * 1. Each call is one HTTP call, so call it one time and read all values from the result.
+     * 2. No call is made at startup, so a down service cannot block startup.
      * @return - The info of the service, empty map if the service cannot be reached
      */
     Map<String, Map<?,?>> getAppInfo();
-
-    default String getName() {
-        return getApplicationValue("name");
-    }
-
-    default String getVersion() {
-        return getApplicationValue("version");
-    }
-
-    default String getDescription() {
-        return getApplicationValue("description");
-    }
-
-    private String getApplicationValue(String key) {
-        Object value = getAppInfo().getOrDefault("application", Collections.emptyMap()).getOrDefault(key, null);
-        return value != null ? value.toString() : null;
-    }
 }

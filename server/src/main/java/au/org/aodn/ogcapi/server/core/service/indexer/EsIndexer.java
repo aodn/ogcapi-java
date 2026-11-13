@@ -7,14 +7,16 @@ import java.util.Map;
 
 public class EsIndexer implements ApplicationInfo {
 
-    protected final InfoCache appInfo;
+    protected final IndexerProperties properties;
+    protected final RestTemplate template;
 
     public EsIndexer(IndexerProperties properties, RestTemplate template) {
-        this.appInfo = new InfoCache(() -> queryInfo(template, properties.host(), properties.infoPath()));
+        this.properties = properties;
+        this.template = template;
     }
 
     @Override
     public Map<String, Map<?,?>> getAppInfo() {
-        return appInfo.get();
+        return queryInfo(template, properties.host(), properties.infoPath());
     }
 }
