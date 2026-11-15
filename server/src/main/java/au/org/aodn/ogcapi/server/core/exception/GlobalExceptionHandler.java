@@ -168,6 +168,16 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
 
+    /**
+     * Unknown paths (for example internet scanner probes) are a client error, not a server error.
+     * Return an empty 404 so it works for any Accept header, and avoid ERROR level logging.
+     */
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<Void> handleUnknownPath(Exception ex, WebRequest request) {
+        log.warn("Unknown path {}", request.getDescription(false));
+        return ResponseEntity.notFound().build();
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex, WebRequest request) {
         // Log before building the body. A later failure to write ErrorResponse (for example
