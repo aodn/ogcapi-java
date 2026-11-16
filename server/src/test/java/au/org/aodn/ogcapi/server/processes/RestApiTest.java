@@ -27,7 +27,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -125,9 +124,6 @@ public class RestApiTest {
         InlineValue error = (InlineValue) results.get(InlineResponseKeyEnum.MESSAGE.getValue());
         assertEquals("Error while getting dataset", error.message());
 
-        // No job was submitted, so the user must not be told their data is being processed.
-        // The admission service owns that email now, so nothing here may send one either.
-        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test

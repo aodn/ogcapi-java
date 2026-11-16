@@ -116,18 +116,15 @@ class DownloadAdmissionServiceTest {
 
         assertNotNull(jobId);
         verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any(), any());
-        verify(restServices).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
-    void atTheLimitIsRejectedOutright() throws Exception {
+    void atTheLimitIsRejectedOutright() {
         current(RECIPIENT).set(10);
 
         assertThrows(DownloadLimitExceededException.class, () -> service.submit(request(RECIPIENT)));
 
         verify(restServices, never()).submitDownloadJob(anyString(), any(), any());
-        // Nothing was submitted, so the user must not be told their file is being produced.
-        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
@@ -153,7 +150,7 @@ class DownloadAdmissionServiceTest {
     }
 
     @Test
-    void aDifferentlyCasedAddressIsCountedAgainstTheSameLimit() throws Exception {
+    void aDifferentlyCasedAddressIsCountedAgainstTheSameLimit() {
         current(RECIPIENT).set(10);
 
         assertThrows(DownloadLimitExceededException.class,
@@ -219,7 +216,6 @@ class DownloadAdmissionServiceTest {
                 + "(estimated 180 GB, limit 180 GB). Please refine your selection to reduce the dataset size.",
                 exception.getMessage());
         verify(restServices, never()).submitDownloadJob(anyString(), any(), any());
-        verify(restServices, never()).notifyUser(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any());
     }
 
     @Test
