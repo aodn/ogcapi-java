@@ -21,9 +21,9 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryCollection;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.io.ParseException;
-import org.opengis.filter.Filter;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
+import org.geotools.api.filter.Filter;
+import org.geotools.api.referencing.FactoryException;
+import org.geotools.api.referencing.operation.TransformException;
 
 import java.io.IOException;
 import java.util.Map;
@@ -56,7 +56,7 @@ public class ParserTest {
      * @throws ParseException - Will not throw
      */
     @Test
-    public void verifyBBoxWorks1() throws CQLException, IOException, FactoryException, TransformException, ParseException {
+    public void verifyBBoxWorks1() throws CQLException, IOException, ParseException, FactoryException, TransformException {
         // Assume we have the following CQL
         Converter.Param param = Converter.Param.builder()
                 .coordinationSystem(CQLCrsType.EPSG4326)

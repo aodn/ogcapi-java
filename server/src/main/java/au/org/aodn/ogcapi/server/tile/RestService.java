@@ -3,7 +3,7 @@ package au.org.aodn.ogcapi.server.tile;
 import au.org.aodn.ogcapi.server.core.model.enumeration.OGCMediaTypeMapper;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.server.core.service.OGCApiService;
-import org.opengis.filter.Filter;
+import org.geotools.api.filter.Filter;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;

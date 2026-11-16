@@ -11,8 +11,8 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.WKTReader;
-import org.opengis.referencing.FactoryException;
-import org.opengis.referencing.operation.TransformException;
+import org.geotools.api.referencing.FactoryException;
+import org.geotools.api.referencing.operation.TransformException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
