@@ -93,7 +93,6 @@ public class DownloadAdmissionService {
             String awsJobId = restServices.submitDownloadJob(
                     jobName, parameters, share.enabled() ? shareIdentifier : null);
             counter.recordSubmitted(awsJobId, request.recipient());
-            notifyStarted(request);
             return awsJobId;
         } finally {
             if (limits.enabled()) {
@@ -156,20 +155,5 @@ public class DownloadAdmissionService {
         } finally {
             lock.unlock();
         }
-    }
-
-    private void notifyStarted(DownloadRequest request) {
-        restServices.notifyUser(
-                request.recipient(),
-                request.uuid(),
-                request.key(),
-                request.startDate(),
-                request.endDate(),
-                request.multiPolygon(),
-                request.collectionTitle(),
-                request.fullMetadataLink(),
-                request.suggestedCitation(),
-                request.usageConstraints(),
-                request.outputFormat());
     }
 }

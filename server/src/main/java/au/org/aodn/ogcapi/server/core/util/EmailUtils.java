@@ -311,18 +311,14 @@ public class EmailUtils {
                     return true;
                 }
 
-                if (coords instanceof List) {
-                    List<?> coordsList = (List<?>) coords;
+                if (coords instanceof List<?> coordsList) {
                     // Empty coordinates
                     if (coordsList.isEmpty()) {
                         return true;
                     }
                     // Full world bbox
-                    if (isFullWorldBbox(coordsList)) {
-                        return true;
-                    }
+                    return isFullWorldBbox(coordsList);
                     // Has valid coordinates
-                    return false;
                 } else {
                     // coordinates exists but is not a List
                     return true;
