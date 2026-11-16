@@ -56,7 +56,7 @@ public class ParserTest {
      * @throws ParseException - Will not throw
      */
     @Test
-    public void verifyBBoxWorks1() throws CQLException, IOException, FactoryException, TransformException, ParseException {
+    public void verifyBBoxWorks1() throws CQLException, IOException, ParseException, FactoryException, TransformException {
         // Assume we have the following CQL
         Converter.Param param = Converter.Param.builder()
                 .coordinationSystem(CQLCrsType.EPSG4326)
