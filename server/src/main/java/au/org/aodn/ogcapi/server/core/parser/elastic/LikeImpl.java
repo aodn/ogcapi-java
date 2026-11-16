@@ -4,9 +4,9 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import lombok.Setter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LikeToRegexConverter;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.PropertyIsLike;
-import org.opengis.filter.expression.Expression;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.PropertyIsLike;
+import org.geotools.api.filter.expression.Expression;
 
 public class LikeImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsLike {
 

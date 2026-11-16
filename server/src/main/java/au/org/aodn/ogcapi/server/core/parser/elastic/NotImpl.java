@@ -1,9 +1,9 @@
 package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
-import org.opengis.filter.Filter;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.Not;
+import org.geotools.api.filter.Filter;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.Not;
 
 public class NotImpl extends QueryHandler implements Not {
 

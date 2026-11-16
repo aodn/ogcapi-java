@@ -6,7 +6,7 @@ import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.tile.model.InlineResponse2002;
 import au.org.aodn.ogcapi.tile.model.TileSetItem;
 import org.mapstruct.Mapper;
-import org.opengis.filter.Filter;
+import org.geotools.api.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

@@ -13,32 +13,32 @@ import org.geotools.filter.identity.FeatureIdImpl;
 import org.geotools.filter.identity.FeatureIdVersionedImpl;
 import org.geotools.filter.identity.GmlObjectIdImpl;
 import org.geotools.filter.identity.ResourceIdImpl;
-import org.opengis.feature.type.Name;
-import org.opengis.filter.*;
-import org.opengis.filter.capability.*;
-import org.opengis.filter.capability.SpatialOperator;
-import org.opengis.filter.expression.*;
-import org.opengis.filter.identity.*;
-import org.opengis.filter.sort.SortBy;
-import org.opengis.filter.sort.SortOrder;
-import org.opengis.filter.spatial.BBOX;
-import org.opengis.filter.spatial.BBOX3D;
-import org.opengis.filter.spatial.Beyond;
-import org.opengis.filter.spatial.Contains;
-import org.opengis.filter.spatial.Crosses;
-import org.opengis.filter.spatial.Intersects;
-import org.opengis.filter.spatial.Equals;
-import org.opengis.filter.spatial.Disjoint;
-import org.opengis.filter.spatial.DWithin;
-import org.opengis.filter.spatial.Within;
-import org.opengis.filter.spatial.Overlaps;
-import org.opengis.filter.spatial.Touches;
+import org.geotools.api.feature.type.Name;
+import org.geotools.api.filter.*;
+import org.geotools.api.filter.capability.*;
+import org.geotools.api.filter.capability.SpatialOperator;
+import org.geotools.api.filter.expression.*;
+import org.geotools.api.filter.identity.*;
+import org.geotools.api.filter.sort.SortBy;
+import org.geotools.api.filter.sort.SortOrder;
+import org.geotools.api.filter.spatial.BBOX;
+import org.geotools.api.filter.spatial.BBOX3D;
+import org.geotools.api.filter.spatial.Beyond;
+import org.geotools.api.filter.spatial.Contains;
+import org.geotools.api.filter.spatial.Crosses;
+import org.geotools.api.filter.spatial.Intersects;
+import org.geotools.api.filter.spatial.Equals;
+import org.geotools.api.filter.spatial.Disjoint;
+import org.geotools.api.filter.spatial.DWithin;
+import org.geotools.api.filter.spatial.Within;
+import org.geotools.api.filter.spatial.Overlaps;
+import org.geotools.api.filter.spatial.Touches;
 
-import org.opengis.filter.temporal.*;
-import org.opengis.geometry.BoundingBox;
-import org.opengis.geometry.BoundingBox3D;
-import org.opengis.parameter.Parameter;
-import org.opengis.util.InternationalString;
+import org.geotools.api.filter.temporal.*;
+import org.geotools.api.geometry.BoundingBox;
+import org.geotools.api.geometry.BoundingBox3D;
+import org.geotools.api.parameter.Parameter;
+import org.geotools.api.util.InternationalString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,12 +48,12 @@ import org.xml.sax.helpers.NamespaceSupport;
 
 /**
  * Here we use the CQL parser from org.geotools, but the default CQL parser do not fit our purpose. So we need to implement
- * FilterFactory2 and add the needed items for our purpose. Some call is copy from FilterFactoryImpl, those with
+ * FilterFactory and add the needed items for our purpose. Some call is copy from FilterFactoryImpl, those with
  * Elastic Query are customized function.
  * Not thread-safe, please create factory each time before compile
  * TODO: Need to implement all functions later, right now only a small amount of functions is done.
  */
-public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> implements FilterFactory2 {
+public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> implements FilterFactory {
 
     protected Logger logger = LoggerFactory.getLogger(CQLToElasticFilterFactory.class);
 
@@ -118,13 +118,13 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
-    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry) {
+    public Intersects intersects(String s, org.locationtech.jts.geom.Geometry geometry) {
         logger.debug("INTERSECTS with geometry {}, {}", s, geometry);
         return null;
     }
 
     @Override
-    public Intersects intersects(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Intersects intersects(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         logger.debug("INTERSECTS {}, {} {}", s, geometry, matchAction);
         return null;
     }
@@ -136,7 +136,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
 
     @Override
     public <T> Parameter<T> parameter(String name, Class<T> type, InternationalString title, InternationalString description, boolean required, int minOccurs, int maxOccurs, T defaultValue) {
-        return new org.geotools.data.Parameter<>(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, null);
+        return new org.geotools.api.data.Parameter<>(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, null);
     }
 
     @Override
@@ -488,92 +488,92 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
     }
 
     @Override
-    public Beyond beyond(String s, org.opengis.geometry.Geometry geometry, double v, String s1) {
+    public Beyond beyond(String s, org.locationtech.jts.geom.Geometry geometry, double v, String s1) {
         return null;
     }
 
     @Override
-    public Beyond beyond(String s, org.opengis.geometry.Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
+    public Beyond beyond(String s, org.locationtech.jts.geom.Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Contains contains(String s, org.opengis.geometry.Geometry geometry) {
+    public Contains contains(String s, org.locationtech.jts.geom.Geometry geometry) {
         return null;
     }
 
     @Override
-    public Contains contains(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Contains contains(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Crosses crosses(String s, org.opengis.geometry.Geometry geometry) {
+    public Crosses crosses(String s, org.locationtech.jts.geom.Geometry geometry) {
         return null;
     }
 
     @Override
-    public Crosses crosses(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Crosses crosses(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Disjoint disjoint(String s, org.opengis.geometry.Geometry geometry) {
+    public Disjoint disjoint(String s, org.locationtech.jts.geom.Geometry geometry) {
         return null;
     }
 
     @Override
-    public Disjoint disjoint(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Disjoint disjoint(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public DWithin dwithin(String s, org.opengis.geometry.Geometry geometry, double v, String s1) {
+    public DWithin dwithin(String s, org.locationtech.jts.geom.Geometry geometry, double v, String s1) {
         return null;
     }
 
     @Override
-    public DWithin dwithin(String s, org.opengis.geometry.Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
+    public DWithin dwithin(String s, org.locationtech.jts.geom.Geometry geometry, double v, String s1, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Equals equals(String s, org.opengis.geometry.Geometry geometry) {
+    public Equals equals(String s, org.locationtech.jts.geom.Geometry geometry) {
         return null;
     }
 
     @Override
-    public Equals equals(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Equals equals(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Overlaps overlaps(String s, org.opengis.geometry.Geometry geometry) {
+    public Overlaps overlaps(String s, org.locationtech.jts.geom.Geometry geometry) {
         return null;
     }
 
     @Override
-    public Overlaps overlaps(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Overlaps overlaps(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Touches touches(String s, org.opengis.geometry.Geometry geometry) {
+    public Touches touches(String s, org.locationtech.jts.geom.Geometry geometry) {
         return null;
     }
 
     @Override
-    public Touches touches(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Touches touches(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
     @Override
-    public Within within(String s, org.opengis.geometry.Geometry geometry) {
+    public Within within(String s, org.locationtech.jts.geom.Geometry geometry) {
         return null;
     }
 
     @Override
-    public Within within(String s, org.opengis.geometry.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
+    public Within within(String s, org.locationtech.jts.geom.Geometry geometry, MultiValuedFilter.MatchAction matchAction) {
         return null;
     }
 
@@ -748,7 +748,7 @@ public class CQLToElasticFilterFactory<T extends Enum<T> & CQLFieldsInterface> i
         if(name.getLocalPart().equals(IBoundaryFunction.NAME.getFunctionName().getLocalPart())) {
             return new IBoundaryFunction(List.of(expressions), null);
         }
-        return CommonFactoryFinder.getFilterFactory2().function(name, expressions);
+        return CommonFactoryFinder.getFilterFactory().function(name, expressions);
     }
 
     @Override

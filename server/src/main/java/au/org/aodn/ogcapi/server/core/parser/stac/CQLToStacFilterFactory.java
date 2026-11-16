@@ -12,21 +12,21 @@ import org.geotools.filter.identity.FeatureIdImpl;
 import org.geotools.filter.identity.FeatureIdVersionedImpl;
 import org.geotools.filter.identity.GmlObjectIdImpl;
 import org.geotools.filter.identity.ResourceIdImpl;
-import org.opengis.feature.type.Name;
-import org.opengis.filter.*;
-import org.opengis.filter.capability.*;
-import org.opengis.filter.capability.SpatialOperator;
-import org.opengis.filter.expression.*;
-import org.opengis.filter.identity.*;
-import org.opengis.filter.sort.SortBy;
-import org.opengis.filter.sort.SortOrder;
-import org.opengis.filter.spatial.*;
-import org.opengis.filter.temporal.*;
-import org.opengis.geometry.BoundingBox;
-import org.opengis.geometry.BoundingBox3D;
-import org.opengis.geometry.Geometry;
-import org.opengis.parameter.Parameter;
-import org.opengis.util.InternationalString;
+import org.geotools.api.feature.type.Name;
+import org.geotools.api.filter.*;
+import org.geotools.api.filter.capability.*;
+import org.geotools.api.filter.capability.SpatialOperator;
+import org.geotools.api.filter.expression.*;
+import org.geotools.api.filter.identity.*;
+import org.geotools.api.filter.sort.SortBy;
+import org.geotools.api.filter.sort.SortOrder;
+import org.geotools.api.filter.spatial.*;
+import org.geotools.api.filter.temporal.*;
+import org.geotools.api.geometry.BoundingBox;
+import org.geotools.api.geometry.BoundingBox3D;
+import org.locationtech.jts.geom.Geometry;
+import org.geotools.api.parameter.Parameter;
+import org.geotools.api.util.InternationalString;
 import org.xml.sax.helpers.NamespaceSupport;
 
 import java.util.Date;
@@ -37,13 +37,13 @@ import java.util.Set;
 @Getter
 @Builder
 @Slf4j
-public class CQLToStacFilterFactory implements FilterFactory2 {
+public class CQLToStacFilterFactory implements FilterFactory {
 
     protected CQLCrsType cqlCrsType;
 
     @Override
     public <T> Parameter<T> parameter(String name, Class<T> type, InternationalString title, InternationalString description, boolean required, int minOccurs, int maxOccurs, T defaultValue) {
-        return new org.geotools.data.Parameter<>(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, null);
+        return new org.geotools.api.data.Parameter<>(name, type, title, description, required, minOccurs, maxOccurs, defaultValue, null);
     }
 
     @Override

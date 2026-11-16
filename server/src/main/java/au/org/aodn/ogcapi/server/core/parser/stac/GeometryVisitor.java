@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.geotools.filter.visitor.DefaultFilterVisitor;
 import org.locationtech.jts.geom.*;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
-import org.opengis.filter.spatial.*;
+import org.geotools.api.filter.spatial.*;
 
 @Slf4j
 @Builder

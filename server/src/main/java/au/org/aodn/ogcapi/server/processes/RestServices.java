@@ -8,7 +8,6 @@ import au.org.aodn.ogcapi.server.core.service.das.DasService;
 import au.org.aodn.ogcapi.server.core.service.geoserver.wfs.DownloadWfsDataService;
 import au.org.aodn.ogcapi.server.core.service.sse.SseStreamHandler;
 import au.org.aodn.ogcapi.server.core.util.DasSseFrames;
-import au.org.aodn.ogcapi.server.core.util.EmailUtils;
 import au.org.aodn.ogcapi.server.core.util.SubsetParametersUtils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,23 +15,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
-import org.springframework.web.util.HtmlUtils;
 import software.amazon.awssdk.services.batch.BatchClient;
 import software.amazon.awssdk.services.batch.model.SubmitJobRequest;
 import software.amazon.awssdk.services.batch.model.SubmitJobResponse;
-import software.amazon.awssdk.services.ses.SesClient;
-import software.amazon.awssdk.services.ses.model.*;
 
-import java.io.InputStream;
-import java.io.IOException;
 import java.math.BigInteger;
-import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 @Slf4j
 public class RestServices {
@@ -40,10 +31,8 @@ public class RestServices {
     // Same field the portal reads to block a download that is too large.
     private static final String ESTIMATED_OUTPUT_BYTES = "estimated_output_bytes";
 
-    // Shown when a dataset has no suggested citation or no usage constraints.
-    // Same wording as the portal download dialog.
+    // Submitted in place of a missing suggested citation, since AWS Batch rejects empty values.
     static final String SUGGESTED_CITATION_NOT_AVAILABLE = "Suggested Citation not available";
-    static final String USAGE_CONSTRAINTS_NOT_AVAILABLE = "Usage Constraints not available";
 
     private final BatchClient batchClient;
     private final ObjectMapper objectMapper;
@@ -55,8 +44,9 @@ public class RestServices {
     // CloudFront allows 30s between packets - so a DAS that fails without ever answering cannot
     // leave the connection quiet long enough to be dropped before the failure is reported.
     // Nothing else emits keep-alive on this stream, so this is the rate the client sees, and it
-    // does not matter that it happens to match the DAS heartbeat. Lowered in tests to keep them
-    // fast.
+    // does not matter that it happens to match the DAS heartbeat. Not final: a final field
+    // initialized with a constant is inlined, so the test that lowers this would keep the
+    // production interval. Lowered in tests to keep them fast.
     private long estimateKeepAliveSeconds = 5;
 
     @Autowired
@@ -70,40 +60,6 @@ public class RestServices {
         this.objectMapper = objectMapper;
         this.batchJobDefinition = batchJobDefinition;
         this.batchJobQueue = batchJobQueue;
-    }
-
-    public void notifyUser(String recipient, String uuid, String key, String startDate, String endDate, Object multiPolygon, String collectionTitle,
-                           String fullMetadataLink,
-                           String suggestedCitation,
-                           List<String> usageConstraints,
-                           String outputFormat) {
-
-        String aodnInfoSender = "no.reply@aodn.org.au";
-
-        try (SesClient ses = SesClient.builder().build()) {
-            var subject = Content.builder().data("Start processing data file whose uuid is: " + uuid).build();
-            var content = Content.builder().data(generateStartedEmailContent(uuid, key, startDate, endDate, multiPolygon, collectionTitle, fullMetadataLink, suggestedCitation, usageConstraints, outputFormat)).build();
-            var destination = Destination.builder().toAddresses(recipient).build();
-
-            var body = Body.builder().html(content).build();
-            var message = Message.builder()
-                    .subject(subject)
-                    .body(body)
-                    .build();
-
-            SendEmailRequest request = SendEmailRequest.builder()
-                    .message(message)
-                    .source(aodnInfoSender)
-                    .destination(destination)
-                    .build();
-
-            ses.sendEmail(request);
-
-        } catch (Exception e) {
-            // Best effort: this runs after the batch job was accepted, so a failure to notify
-            // must not surface as a failed download request for a job that is already running.
-            log.error("Error sending email: {}", e.getMessage());
-        }
     }
 
     /**
@@ -210,106 +166,6 @@ public class RestServices {
             throw new IllegalStateException("AWS Batch did not return a job id for job '" + jobName + "'");
         }
         return jobId;
-    }
-
-    // package-private so JobStartedEmailPreview (test scope) can render it
-    String generateStartedEmailContent(
-            String uuid,
-            String key,
-            String startDate,
-            String endDate,
-            Object multipolygon,
-            String collectionTitle,
-            String fullMetadataLink,
-            String suggestedCitation,
-            List<String> usageConstraints,
-            String outputFormat
-    ) {
-        try (InputStream inputStream = getClass().getResourceAsStream("/job-started-email.html")) {
-
-            if (inputStream == null) {
-                log.error("Email template not found");
-                throw new RuntimeException("Email template not found");
-            }
-
-            String template = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-
-            // Generate subsetting section (returns empty string if no subsetting)
-            String subsettingSection = EmailUtils.generateSubsettingSection(
-                    startDate,
-                    endDate,
-                    multipolygon,
-                    objectMapper
-            );
-
-            // Keys arrive comma-separated; show one per line. Absent means "all files".
-            String keysDisplay = (key != null && !key.isBlank())
-                    ? Arrays.stream(key.split(",", -1))
-                            .map(value -> value.replaceFirst("\\.(parquet|zarr)$", ""))
-                            .map(HtmlUtils::htmlEscape)
-                            .collect(Collectors.joining("<br>"))
-                    : "*";
-            String titleDisplay = HtmlUtils.htmlEscape(collectionTitle != null ? collectionTitle : "");
-            if (fullMetadataLink != null && !fullMetadataLink.isBlank()) {
-                titleDisplay = "<a href=\"" + HtmlUtils.htmlEscape(fullMetadataLink)
-                        + "\" style=\"color:#2571e9;text-decoration:underline;\">" + titleDisplay + "</a>";
-            }
-
-            // Replace all variables in one chain
-            return template
-                    .replace("{{HEADER_IMG}}", EmailUtils.readBase64Image("header.txt"))
-                    .replace("{{collectionTitle}}", titleDisplay)
-                    .replace("{{keys}}", keysDisplay)
-                    .replace("{{outputFormat}}", outputFormat != null ? outputFormat.toUpperCase() : "")
-                    .replace("{{subsettingSection}}", subsettingSection)
-                    .replace("{{BBOX_IMG}}", EmailUtils.readBase64Image("bbox.txt"))
-                    .replace("{{POLYGON_IMG}}", EmailUtils.readBase64Image("polygon.txt"))
-                    .replace("{{TIME_RANGE_IMG}}", EmailUtils.readBase64Image("time-range.txt"))
-                    .replace("{{ATTRIBUTES_IMG}}", EmailUtils.readBase64Image("attributes.txt"))
-                    .replace("{{suggestedCitation}}", suggestedCitationHtml(suggestedCitation))
-                    .replace("{{usageConstraints}}", usageConstraintsHtml(usageConstraints))
-                    .replace("{{INSTAGRAM_IMG}}", EmailUtils.readBase64Image("instagram.txt"))
-                    .replace("{{FACEBOOK_IMG}}", EmailUtils.readBase64Image("facebook.txt"))
-                    .replace("{{BLUESKY_IMG}}", EmailUtils.readBase64Image("bluesky.txt"))
-                    .replace("{{LINKEDIN_IMG}}", EmailUtils.readBase64Image("linkedin.txt"));
-
-        } catch (IOException e) {
-            log.error("Failed to load email template", e);
-            throw new RuntimeException("Failed to load email template", e);
-        }
-    }
-
-    /**
-     * The Suggested Citation text, the same as the portal dialog shows.
-     * 1. A citation: the text, escaped.
-     * 2. Null or blank: "Suggested Citation not available".
-     */
-    static String suggestedCitationHtml(String suggestedCitation) {
-        return suggestedCitation == null || suggestedCitation.isBlank()
-                ? SUGGESTED_CITATION_NOT_AVAILABLE
-                : HtmlUtils.htmlEscape(suggestedCitation);
-    }
-
-    /**
-     * The Usage Constraints paragraphs, the same as the portal dialog shows.
-     * 1. A list: one paragraph per item, escaped.
-     * 2. An empty list or null: "Usage Constraints not available".
-     */
-    static String usageConstraintsHtml(List<String> usageConstraints) {
-        List<String> paragraphs = usageConstraints == null || usageConstraints.isEmpty()
-                ? List.of(USAGE_CONSTRAINTS_NOT_AVAILABLE)
-                : usageConstraints.stream().map(HtmlUtils::htmlEscape).toList();
-
-        StringBuilder html = new StringBuilder();
-        for (int i = 0; i < paragraphs.size(); i++) {
-            // 8px between paragraphs, the same gap as the DAS emails
-            String margin = i == 0 ? "0" : "8px 0 0 0";
-            html.append("<p style=\"Margin:").append(margin)
-                    .append(";mso-line-height-alt:24px;font-size:16px;line-height:150%;\">")
-                    .append(paragraphs.get(i))
-                    .append("</p>");
-        }
-        return html.toString();
     }
 
     public SseEmitter downloadWfsDataWithSse(String uuid,
