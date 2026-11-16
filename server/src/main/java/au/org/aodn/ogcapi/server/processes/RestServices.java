@@ -44,9 +44,10 @@ public class RestServices {
     // CloudFront allows 30s between packets - so a DAS that fails without ever answering cannot
     // leave the connection quiet long enough to be dropped before the failure is reported.
     // Nothing else emits keep-alive on this stream, so this is the rate the client sees, and it
-    // does not matter that it happens to match the DAS heartbeat. Lowered in tests to keep them
-    // fast.
-    private final long estimateKeepAliveSeconds = 5;
+    // does not matter that it happens to match the DAS heartbeat. Not final: a final field
+    // initialized with a constant is inlined, so the test that lowers this would keep the
+    // production interval. Lowered in tests to keep them fast.
+    private long estimateKeepAliveSeconds = 5;
 
     @Autowired
     private DownloadWfsDataService downloadWfsDataService;
