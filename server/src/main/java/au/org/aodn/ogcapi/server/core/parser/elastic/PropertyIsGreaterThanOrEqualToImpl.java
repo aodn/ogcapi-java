@@ -3,10 +3,10 @@ package au.org.aodn.ogcapi.server.core.parser.elastic;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.MultiValuedFilter;
-import org.opengis.filter.PropertyIsGreaterThanOrEqualTo;
-import org.opengis.filter.expression.Expression;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.MultiValuedFilter;
+import org.geotools.api.filter.PropertyIsGreaterThanOrEqualTo;
+import org.geotools.api.filter.expression.Expression;
 
 public class PropertyIsGreaterThanOrEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsGreaterThanOrEqualTo {
 

@@ -6,7 +6,7 @@ import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import au.org.aodn.ogcapi.tile.model.TileSet;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.mapstruct.Mapper;
-import org.opengis.filter.Filter;
+import org.geotools.api.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

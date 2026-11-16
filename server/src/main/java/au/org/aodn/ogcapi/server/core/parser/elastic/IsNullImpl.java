@@ -1,9 +1,9 @@
 package au.org.aodn.ogcapi.server.core.parser.elastic;
 
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.PropertyIsNull;
-import org.opengis.filter.expression.Expression;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.PropertyIsNull;
+import org.geotools.api.filter.expression.Expression;
 
 public class IsNullImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsNull {
 

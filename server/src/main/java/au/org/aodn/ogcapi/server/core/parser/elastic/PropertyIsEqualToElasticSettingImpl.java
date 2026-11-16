@@ -4,9 +4,9 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLElasticSetting;
 import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.PropertyIsEqualTo;
-import org.opengis.filter.expression.Expression;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.PropertyIsEqualTo;
+import org.geotools.api.filter.expression.Expression;
 
 /**
  * Some property is elastic setting not search field of STAC

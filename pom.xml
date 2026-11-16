@@ -22,7 +22,7 @@
         <org.projectlombok.version>1.18.30</org.projectlombok.version>
         <org.projectlombok.binding>0.2.0</org.projectlombok.binding>
         <swagger.codegen.version>3.0.82</swagger.codegen.version>
-        <org.geotools.version>29.6</org.geotools.version>
+        <org.geotools.version>31.7</org.geotools.version>
         <maven.deploy.skip>true</maven.deploy.skip>
         <versioning.updatePom>true</versioning.updatePom>
         <aws.sdk.version>2.29.52</aws.sdk.version>

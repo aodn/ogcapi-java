@@ -3,9 +3,9 @@ package au.org.aodn.ogcapi.server.core.parser.elastic;
 import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import co.elastic.clients.elasticsearch._types.query_dsl.BoolQuery;
 import co.elastic.clients.elasticsearch._types.query_dsl.Query;
-import org.opengis.filter.Filter;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.Or;
+import org.geotools.api.filter.Filter;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.Or;
 
 import java.util.ArrayList;
 import java.util.List;

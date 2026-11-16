@@ -6,7 +6,7 @@ import au.org.aodn.ogcapi.server.core.model.ExtendedCollections;
 import au.org.aodn.stac.model.StacCollectionModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import org.mapstruct.Mapper;
-import org.opengis.filter.Filter;
+import org.geotools.api.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

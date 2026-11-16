@@ -8,9 +8,9 @@ import co.elastic.clients.elasticsearch._types.query_dsl.NestedQuery;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
 import org.geotools.filter.text.cql2.CQLException;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.expression.Expression;
-import org.opengis.filter.temporal.Before;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.expression.Expression;
+import org.geotools.api.filter.temporal.Before;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

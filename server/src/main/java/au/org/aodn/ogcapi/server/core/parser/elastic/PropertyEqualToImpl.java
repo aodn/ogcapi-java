@@ -4,10 +4,10 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.CQLFieldsInterface;
 import lombok.Getter;
 import org.geotools.filter.AttributeExpressionImpl;
 import org.geotools.filter.LiteralExpressionImpl;
-import org.opengis.filter.FilterVisitor;
-import org.opengis.filter.MultiValuedFilter;
-import org.opengis.filter.PropertyIsEqualTo;
-import org.opengis.filter.expression.Expression;
+import org.geotools.api.filter.FilterVisitor;
+import org.geotools.api.filter.MultiValuedFilter;
+import org.geotools.api.filter.PropertyIsEqualTo;
+import org.geotools.api.filter.expression.Expression;
 
 public class PropertyEqualToImpl<T extends Enum<T> & CQLFieldsInterface> extends QueryHandler implements PropertyIsEqualTo {
 

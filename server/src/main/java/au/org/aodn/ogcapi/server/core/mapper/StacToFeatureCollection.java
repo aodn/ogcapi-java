@@ -7,7 +7,7 @@ import au.org.aodn.stac.model.StacItemModel;
 import au.org.aodn.ogcapi.server.core.service.ElasticSearch;
 import org.mapstruct.Mapper;
 import org.openapitools.jackson.nullable.JsonNullable;
-import org.opengis.filter.Filter;
+import org.geotools.api.filter.Filter;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
