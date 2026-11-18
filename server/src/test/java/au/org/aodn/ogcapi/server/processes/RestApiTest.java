@@ -25,6 +25,7 @@ import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
@@ -100,6 +101,27 @@ public class RestApiTest {
         ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
         verify(downloadAdmissionService).submit(captor.capture());
         assertEquals(List.of("Credit CSIRO", "Use with care"), captor.getValue().usageConstraints());
+    }
+
+    @Test
+    public void testExecutePassesEstimatedSizeToAdmission() throws JsonProcessingException {
+        // JSON numbers arrive as Integer or Long, depending on the size
+        executeRequest.getInputs().put(DatasetDownloadEnums.Parameter.ESTIMATED_SIZE_BYTES.getValue(), 1048576);
+
+        restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
+
+        ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
+        verify(downloadAdmissionService).submit(captor.capture());
+        assertEquals(1048576L, captor.getValue().estimatedSizeBytes());
+    }
+
+    @Test
+    public void testExecuteWithoutEstimatedSizePassesNull() throws JsonProcessingException {
+        restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
+
+        ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
+        verify(downloadAdmissionService).submit(captor.capture());
+        assertNull(captor.getValue().estimatedSizeBytes());
     }
 
     @Test

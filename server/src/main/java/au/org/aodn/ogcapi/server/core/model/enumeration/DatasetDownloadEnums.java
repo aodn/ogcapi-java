@@ -30,7 +30,8 @@ public class DatasetDownloadEnums {
         USAGE_CONSTRAINTS("usage_constraints"),
         KEY("key"),
         OUTPUT_FORMAT("output_format"),
-        SHARE_IDENTIFIER("share_identifier");
+        SHARE_IDENTIFIER("share_identifier"),
+        ESTIMATED_SIZE_BYTES("estimated_size_bytes");
 
         private final String value;
 
@@ -43,16 +44,24 @@ public class DatasetDownloadEnums {
             return value == null ? null : value.toString();
         }
 
+        // Null when the input is missing or is not a whole number.
+        public Long getLongInput(Execute input) {
+            Object value = input.getInputs().get(getValue());
+            if (value instanceof Number number && number.doubleValue() == number.longValue()) {
+                return number.longValue();
+            }
+            return null;
+        }
+
         public Object getObjectInput(Execute input) {
             return input.getInputs().get(getValue());
         }
 
         public List<String> getListInput(Execute input) {
             Object value = input.getInputs().get(getValue());
-            if(value instanceof List<?> list) {
+            if (value instanceof List<?> list) {
                 return list.stream().map(String::valueOf).toList();
-            }
-            else {
+            } else {
                 return null;
             }
         }
@@ -63,6 +72,7 @@ public class DatasetDownloadEnums {
         SUB_SETTING("sub-setting"),
         ;
         private final String value;
+
         Type(String value) {
             this.value = value;
         }

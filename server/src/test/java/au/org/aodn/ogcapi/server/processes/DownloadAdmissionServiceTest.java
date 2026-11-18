@@ -244,6 +244,39 @@ class DownloadAdmissionServiceTest {
         verify(restServices).submitDownloadJob(eq(RECIPIENT_JOB_NAME), any(), any());
     }
 
+    private DownloadRequest requestWithSize(Long estimatedSizeBytes) {
+        return new DownloadRequest("collection-id", "key.parquet", "2023-01-01", "2023-01-31",
+                "non-specified", RECIPIENT, "Test Collection",
+                "https://portal.example.test/details/collection-id", "Cite as", null, "excel",
+                estimatedSizeBytes);
+    }
+
+    @Test
+    void aSizeCarriedInTheRequestSkipsTheEstimate() throws Exception {
+        assertNotNull(service.submit(requestWithSize(DataSize.ofMegabytes(50).toBytes() - 1)));
+
+        verify(restServices, never()).estimateDownloadBytes(any());
+        assertEquals("small", submittedShare());
+    }
+
+    @Test
+    void aSizeCarriedInTheRequestAtTheLimitIsRejected() throws Exception {
+        assertThrows(DownloadSizeExceededException.class, () -> service.submit(requestWithSize(MAX_BYTES)));
+
+        verify(restServices, never()).estimateDownloadBytes(any());
+        verify(restServices, never()).submitDownloadJob(anyString(), any(), any());
+    }
+
+    @Test
+    void aNegativeSizeInTheRequestFallsBackToTheEstimate() throws Exception {
+        when(restServices.estimateDownloadBytes(any())).thenReturn(DataSize.ofMegabytes(50).toBytes());
+
+        service.submit(requestWithSize(-1L));
+
+        verify(restServices).estimateDownloadBytes(any());
+        assertEquals("large", submittedShare());
+    }
+
     @Test
     void theSizeLimitCanBeTurnedOff() throws Exception {
         DownloadAdmissionService disabled = build(limits(true, 10), sizeLimit(false));
