@@ -49,6 +49,9 @@ public class RestApi implements ProcessesApi, JobsApi {
     @Autowired
     private DownloadAdmissionService downloadAdmissionService;
 
+    @Autowired
+    private DownloadCitationService downloadCitationService;
+
     @Override
     // because the produces value in the interface declaration includes "/_" which may
     // cause exception thrown sometimes. So i re-declared the produces value here
@@ -113,14 +116,19 @@ public class RestApi implements ProcessesApi, JobsApi {
                 String recipient = DatasetDownloadEnums.Parameter.RECIPIENT.getStringInput(body);
                 String collectionTitle = DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getStringInput(body);
                 String fullMetadataLink = DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getStringInput(body);
-                String suggestedCitation = DatasetDownloadEnums.Parameter.SUGGESTED_CITATION.getStringInput(body);
-                List<String> usageConstraints = DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getListInput(body);
                 String outputFormat = DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getStringInput(body);
                 Object multiPolygon = DatasetDownloadEnums.Parameter.MULTI_POLYGON.getObjectInput(body);
                 Long estimatedSizeBytes = DatasetDownloadEnums.Parameter.ESTIMATED_SIZE_BYTES.getLongInput(body);
 
+                // The citation and constraints are long text, so they come from the Elasticsearch
+                // record, not from the request. A uuid that is not in Elasticsearch throws, so
+                // nothing is submitted.
+                DownloadCitationService.DownloadCitation citation =
+                        downloadCitationService.lookup(uuid, fullMetadataLink);
+
                 DownloadRequest request = new DownloadRequest(uuid, key, startDate, endDate, multiPolygon,
-                        recipient, collectionTitle, fullMetadataLink, suggestedCitation, usageConstraints,
+                        recipient, collectionTitle, fullMetadataLink,
+                        citation.suggestedCitation(), citation.usageConstraints(),
                         outputFormat, estimatedSizeBytes);
 
                 // The size limit and the per-user limit are applied here: a download that is too

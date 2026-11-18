@@ -19,9 +19,11 @@ import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.List;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -43,6 +45,9 @@ class RestApiJobsTest {
     @Mock
     private DownloadAdmissionService downloadAdmissionService;
 
+    @Mock
+    private DownloadCitationService downloadCitationService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
     private MockMvc mockMvc;
 
@@ -52,6 +57,10 @@ class RestApiJobsTest {
         ReflectionTestUtils.setField(restApi, "restServices", restServices);
         ReflectionTestUtils.setField(restApi, "downloadJobStatusService", downloadJobStatusService);
         ReflectionTestUtils.setField(restApi, "downloadAdmissionService", downloadAdmissionService);
+        ReflectionTestUtils.setField(restApi, "downloadCitationService", downloadCitationService);
+        // Lenient: the status and dismiss tests never look up the record
+        lenient().when(downloadCitationService.lookup("collection-id", null)).thenReturn(
+                new DownloadCitationService.DownloadCitation("Citation", List.of()));
         mockMvc = MockMvcBuilders.standaloneSetup(restApi)
                 .setControllerAdvice(new GlobalExceptionHandler())
                 .build();

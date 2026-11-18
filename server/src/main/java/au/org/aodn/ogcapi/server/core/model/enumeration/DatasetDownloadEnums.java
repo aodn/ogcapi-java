@@ -26,6 +26,8 @@ public class DatasetDownloadEnums {
         LAYER_NAME("layer_name"),
         COLLECTION_TITLE("collection_title"),
         FULL_METADATA_LINK("full_metadata_link"),
+        // These two are Batch parameters only, not request inputs. Filled from the
+        // Elasticsearch record (DownloadCitationService).
         SUGGESTED_CITATION("suggested_citation"),
         USAGE_CONSTRAINTS("usage_constraints"),
         KEY("key"),
