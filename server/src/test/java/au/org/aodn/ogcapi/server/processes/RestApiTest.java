@@ -22,12 +22,15 @@ import org.springframework.http.ResponseEntity;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,8 +40,17 @@ public class RestApiTest {
     @Mock
     private RestServices restServices;
 
+    private static final String METADATA_LINK = "https://portal.example.test/details/test-uuid";
+
+    private static final DownloadCitationService.DownloadCitation CITATION = new DownloadCitationService.DownloadCitation(
+            "Test citation",
+            List.of("Credit CSIRO"));
+
     @Mock
     private DownloadAdmissionService downloadAdmissionService;
+
+    @Mock
+    private DownloadCitationService downloadCitationService;
 
     @InjectMocks
     private RestApi restApi;
@@ -47,6 +59,9 @@ public class RestApiTest {
 
     @BeforeEach
     public void setUp() {
+        // Lenient: the unknown process id test never looks up the record
+        lenient().when(downloadCitationService.lookup("test-uuid", METADATA_LINK)).thenReturn(CITATION);
+
         executeRequest = new Execute();
         Map<String, Object> inputs = new HashMap<>();
         inputs.put(DatasetDownloadEnums.Parameter.UUID.getValue(), "test-uuid");
@@ -54,6 +69,8 @@ public class RestApiTest {
         inputs.put(DatasetDownloadEnums.Parameter.END_DATE.getValue(), "2023-01-31");
         inputs.put(DatasetDownloadEnums.Parameter.MULTI_POLYGON.getValue(), "test-multipolygon");
         inputs.put(DatasetDownloadEnums.Parameter.RECIPIENT.getValue(), "test@example.com");
+        inputs.put(DatasetDownloadEnums.Parameter.COLLECTION_TITLE.getValue(), "Test Ocean Data Collection");
+        inputs.put(DatasetDownloadEnums.Parameter.FULL_METADATA_LINK.getValue(), METADATA_LINK);
         inputs.put(DatasetDownloadEnums.Parameter.TYPE.getValue(), DatasetDownloadEnums.Type.SUB_SETTING.getValue());
         executeRequest.setInputs(inputs);
     }
@@ -89,18 +106,34 @@ public class RestApiTest {
         assertEquals("2023-01-31", request.endDate());
         assertEquals("test-multipolygon", request.multiPolygon());
         assertEquals("test@example.com", request.recipient());
+        assertEquals("Test Ocean Data Collection", request.collectionTitle());
+        assertEquals(METADATA_LINK, request.fullMetadataLink());
     }
 
     @Test
-    public void testExecutePassesUsageConstraintsToAdmission() throws JsonProcessingException {
-        executeRequest.getInputs().put(DatasetDownloadEnums.Parameter.USAGE_CONSTRAINTS.getValue(),
-                List.of("Credit CSIRO", "Use with care"));
-
+    public void testExecuteUsesCitationFromElasticsearch() throws JsonProcessingException {
         restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
 
         ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
         verify(downloadAdmissionService).submit(captor.capture());
-        assertEquals(List.of("Credit CSIRO", "Use with care"), captor.getValue().usageConstraints());
+        DownloadRequest request = captor.getValue();
+        assertEquals(CITATION.suggestedCitation(), request.suggestedCitation());
+        assertEquals(CITATION.usageConstraints(), request.usageConstraints());
+    }
+
+    @Test
+    public void testExecuteUuidNotInElasticsearchSubmitsNothing() throws JsonProcessingException {
+        when(downloadCitationService.lookup("test-uuid", METADATA_LINK))
+                .thenThrow(new NoSuchElementException("No collection found for uuid test-uuid"));
+
+        ResponseEntity<InlineResponse200> response = restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
+
+        assertInstanceOf(Results.class, response.getBody());
+        Results results = (Results) response.getBody();
+        assert results != null;
+        InlineValue status = (InlineValue) results.get(InlineResponseKeyEnum.STATUS.getValue());
+        assertEquals("400", status.message());
+        verify(downloadAdmissionService, never()).submit(any());
     }
 
     @Test
@@ -122,15 +155,6 @@ public class RestApiTest {
         ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
         verify(downloadAdmissionService).submit(captor.capture());
         assertNull(captor.getValue().estimatedSizeBytes());
-    }
-
-    @Test
-    public void testExecuteWithoutUsageConstraintsPassesEmptyList() throws JsonProcessingException {
-        restApi.execute(ProcessIdEnum.DOWNLOAD_DATASET.getValue(), executeRequest);
-
-        ArgumentCaptor<DownloadRequest> captor = ArgumentCaptor.forClass(DownloadRequest.class);
-        verify(downloadAdmissionService).submit(captor.capture());
-        assertEquals(List.of(), captor.getValue().usageConstraints());
     }
 
     @Test

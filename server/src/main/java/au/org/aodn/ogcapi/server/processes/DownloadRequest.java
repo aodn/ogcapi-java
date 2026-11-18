@@ -5,11 +5,9 @@ import au.org.aodn.ogcapi.server.core.model.enumeration.DatasetDownloadEnums;
 import java.util.List;
 
 /**
- * The inputs of one {@code download} execute request, as extracted from the OGC Execute
- * body. Carried as a unit so a request that has to wait for a free slot can be submitted
- * later exactly as it arrived.
- * <p>
- * Empty when the dataset has none, or when the input is missing.
+ * One download execute request. Most values come from the OGC Execute body. The citation and
+ * constraints come from the Elasticsearch record (DownloadCitationService). Carried as a unit
+ * so a request that has to wait for a free slot can be submitted later exactly as it arrived.
  */
 public record DownloadRequest(
         String uuid,
@@ -27,7 +25,7 @@ public record DownloadRequest(
         Long estimatedSizeBytes
 ) {
     public DownloadRequest {
-        // A missing input means no constraints to show
+        // Null means no constraints to show
         usageConstraints = usageConstraints == null ? List.of() : usageConstraints;
         // A negative size is not a real estimate, treat it as missing
         estimatedSizeBytes = estimatedSizeBytes != null && estimatedSizeBytes < 0 ? null : estimatedSizeBytes;
