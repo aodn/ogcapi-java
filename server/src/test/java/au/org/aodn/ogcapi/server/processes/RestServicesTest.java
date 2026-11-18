@@ -206,6 +206,47 @@ public class RestServicesTest {
         assertThrows(IllegalStateException.class, () -> services.estimateDownloadBytes(estimateRequest()));
     }
 
+    // The output format the estimate sends to DAS for a download in the given format
+    @SuppressWarnings("unchecked")
+    private String estimateFormatFor(String outputFormat) throws JsonProcessingException {
+        DasService dasService = mock(DasService.class);
+        when(dasService.estimateCloudOptimisedDownloadSize(any(), anyMap(), any()))
+                .thenReturn("{\"estimated_output_bytes\":1024}");
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "test-job-definition", "test-job-queue");
+        ReflectionTestUtils.setField(services, "dasService", dasService);
+
+        services.estimateDownloadBytes(new DownloadRequest("test-uuid", "test.parquet", "2023-01-01", "2023-01-31",
+                "non-specified", "test@example.com", "Test Ocean Data Collection",
+                "https://portal.example.test/details/test-uuid", "Cite as", null, outputFormat));
+
+        ArgumentCaptor<Map<String, String>> captor = ArgumentCaptor.forClass(Map.class);
+        verify(dasService).estimateCloudOptimisedDownloadSize(eq("test-uuid"), captor.capture(), any());
+        return captor.getValue().get(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue());
+    }
+
+    @Test
+    public void estimateDownloadBytesUsesTheCsvEstimateForExcel() throws JsonProcessingException {
+        // DAS gives no size for Excel, so ask for CSV, as the portal does
+        assertEquals("csv", estimateFormatFor("excel"));
+    }
+
+    @Test
+    public void estimateDownloadBytesKeepsOtherFormats() throws JsonProcessingException {
+        assertEquals("csv", estimateFormatFor("csv"));
+        assertEquals("netcdf", estimateFormatFor("netcdf"));
+    }
+
+    @Test
+    public void downloadParametersKeepExcel() throws JsonProcessingException {
+        // Only the estimate uses CSV, the download itself still asks for Excel
+        RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
+        Map<String, String> parameters = services.buildDownloadParameters(new DownloadRequest("test-uuid",
+                "test.parquet", "2023-01-01", "2023-01-31", "non-specified", "test@example.com", "Title",
+                "https://example.com/metadata", "Cite as", null, "excel"));
+
+        assertEquals("excel", parameters.get(DatasetDownloadEnums.Parameter.OUTPUT_FORMAT.getValue()));
+    }
+
     private Map<String, String> downloadParameters(List<String> usageConstraints) throws JsonProcessingException {
         RestServices services = new RestServices(batchClient, new ObjectMapper(), "definition", "queue");
         return services.buildDownloadParameters(new DownloadRequest("test-uuid", "test.zarr", "2023-01-01",

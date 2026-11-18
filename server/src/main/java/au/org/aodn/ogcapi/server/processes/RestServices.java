@@ -31,6 +31,10 @@ public class RestServices {
     // Same field the portal reads to block a download that is too large.
     private static final String ESTIMATED_OUTPUT_BYTES = "estimated_output_bytes";
 
+    // DAS gives no size estimate for Excel yet, so an Excel download is estimated as CSV.
+    private static final String EXCEL_FORMAT = "excel";
+    private static final String CSV_FORMAT = "csv";
+
     // Submitted in place of a missing suggested citation, since AWS Batch rejects empty values.
     static final String SUGGESTED_CITATION_NOT_AVAILABLE = "Suggested Citation not available";
 
@@ -92,11 +96,16 @@ public class RestServices {
      * Estimate how many bytes a download will produce. Uses the same uuid and subset parameters
      * as the cloud-optimised estimate, so a subset the portal has just estimated comes from the
      * cache instead of calling DAS again.
+     * An Excel download uses the CSV estimate, the same as the portal does for now. Only the
+     * estimate changes, the download itself still asks for Excel.
      */
     public long estimateDownloadBytes(DownloadRequest request) throws JsonProcessingException {
+        String estimateFormat = EXCEL_FORMAT.equalsIgnoreCase(request.outputFormat())
+                ? CSV_FORMAT
+                : request.outputFormat();
         Map<String, String> parameters = SubsetParametersUtils.buildSubsetParameters(
                 objectMapper, request.uuid(), request.key(), request.startDate(), request.endDate(),
-                request.multiPolygon(), request.outputFormat());
+                request.multiPolygon(), estimateFormat);
 
         // No client of our own to keep alive, so heartbeats are ignored.
         String estimateJson = dasService.estimateCloudOptimisedDownloadSize(
