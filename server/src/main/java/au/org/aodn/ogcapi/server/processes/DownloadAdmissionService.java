@@ -105,16 +105,12 @@ public class DownloadAdmissionService {
      * @return the estimate, or empty when DAS could not give one
      */
     private OptionalLong rejectIfTooLarge(DownloadRequest request) {
-        long estimatedBytes;
-        try {
-            estimatedBytes = restServices.estimateDownloadBytes(request);
-        } catch (Exception e) {
-            // Let it through, as the portal does when its own estimate fails. Blocking every
-            // download because DAS cannot estimate would be worse than one job running out of disk.
-            log.warn("Size estimate failed for uuid {}, submitting without the size check", request.uuid(), e);
-            return OptionalLong.empty();
+        OptionalLong estimate = estimateBytes(request);
+        if (estimate.isEmpty()) {
+            return estimate;
         }
 
+        long estimatedBytes = estimate.getAsLong();
         long maxBytes = sizeLimit.maxSize().toBytes();
         if (estimatedBytes >= maxBytes) {
             log.info("Rejected download for uuid {}: estimated {} bytes, limit {} bytes",
@@ -122,6 +118,30 @@ public class DownloadAdmissionService {
             throw new DownloadSizeExceededException(estimatedBytes, maxBytes);
         }
         return OptionalLong.of(estimatedBytes);
+    }
+
+    /**
+     * The estimated size of a download. Two sources, in this order:
+     * 1. The size carried in the request. The portal has already estimated it, so asking DAS
+     * again only makes the user wait.
+     * 2. A DAS estimate, only when the request carries no size.
+     *
+     * @return the estimate, or empty when there is none
+     */
+    private OptionalLong estimateBytes(DownloadRequest request) {
+        Long fromRequest = request.estimatedSizeBytes();
+        if (fromRequest != null) {
+            return OptionalLong.of(fromRequest);
+        }
+
+        try {
+            return OptionalLong.of(restServices.estimateDownloadBytes(request));
+        } catch (Exception e) {
+            // Let it through, as the portal does when its own estimate fails. Blocking every
+            // download because DAS cannot estimate would be worse than one job running out of disk.
+            log.warn("Size estimate failed for uuid {}, submitting without the size check", request.uuid(), e);
+            return OptionalLong.empty();
+        }
     }
 
     /**

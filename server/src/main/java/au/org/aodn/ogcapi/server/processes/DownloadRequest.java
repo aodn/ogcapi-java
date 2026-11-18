@@ -22,11 +22,23 @@ public record DownloadRequest(
         String fullMetadataLink,
         String suggestedCitation,
         List<String> usageConstraints,
-        String outputFormat
+        String outputFormat,
+        // Size the portal already estimated, null when the request did not carry one
+        Long estimatedSizeBytes
 ) {
     public DownloadRequest {
         // A missing input means no constraints to show
         usageConstraints = usageConstraints == null ? List.of() : usageConstraints;
+        // A negative size is not a real estimate, treat it as missing
+        estimatedSizeBytes = estimatedSizeBytes != null && estimatedSizeBytes < 0 ? null : estimatedSizeBytes;
+    }
+
+    // A request that carries no estimated size
+    public DownloadRequest(String uuid, String key, String startDate, String endDate, Object multiPolygon,
+                           String recipient, String collectionTitle, String fullMetadataLink,
+                           String suggestedCitation, List<String> usageConstraints, String outputFormat) {
+        this(uuid, key, startDate, endDate, multiPolygon, recipient, collectionTitle, fullMetadataLink,
+                suggestedCitation, usageConstraints, outputFormat, null);
     }
 
     // True for the original NetCDF files list download
