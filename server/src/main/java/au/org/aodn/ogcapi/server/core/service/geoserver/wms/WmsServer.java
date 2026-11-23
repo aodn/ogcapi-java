@@ -159,7 +159,7 @@ public class WmsServer {
                         return "".equalsIgnoreCase(cql) ? timeCql : timeCql + " AND " + cql;
                     }
                 }
-                log.error("No date time field found for uuid {}, result will not be bounded by date time even specified", uuid);
+                log.warn("No date time field found for uuid {}, result will not be bounded by date time even specified", uuid);
             } catch (GeoserverFieldsNotFoundException dfnf) {
                 // Without field, we cannot create a valid CQL filte targeting a dateTime, so just return existing CQL if exist
             }
