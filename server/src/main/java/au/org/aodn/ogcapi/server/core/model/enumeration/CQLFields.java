@@ -68,6 +68,12 @@ public enum CQLFields implements CQLFieldsInterface {
                 null,
                 null,
                 null),
+        ai_description(
+                StacSummeries.AiDescription.searchField,
+                StacSummeries.AiDescription.displayField,
+                null,
+                null,
+                null),
         geometry(
                 StacSummeries.Geometry.searchField,
                 StacSummeries.Geometry.searchField,
@@ -342,6 +348,12 @@ public enum CQLFields implements CQLFieldsInterface {
         statement(
                 StacSummeries.Statement.searchField,
                 StacSummeries.Statement.displayField,
+                null,
+                null,
+                null),
+        contacts(
+                StacBasicField.Contacts.searchField,
+                StacBasicField.Contacts.displayField,
                 null,
                 null,
                 null),
