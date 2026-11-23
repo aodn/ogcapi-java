@@ -105,7 +105,12 @@ public class RestServices extends OGCApiService {
                         response.getHtml() == null ? 0 : response.getHtml().length(),
                         response.getFeatureInfo() == null ? 0 : response.getFeatureInfo().size());
             }
-            return ResponseEntity.ok().body(response);
+            // The shared items mapping also produces text/html. A browser Accept
+            // header then selects text/html, and Spring has no converter for this
+            // type. The portal reads JSON (including the html field).
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body(response);
         } catch (JsonProcessingException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
