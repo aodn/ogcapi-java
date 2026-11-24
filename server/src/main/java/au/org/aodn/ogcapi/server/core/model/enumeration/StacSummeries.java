@@ -14,6 +14,7 @@ public enum StacSummeries {
     Revision("summaries.revision", "summaries.revision"),
     UpdateFrequency("summaries.update_frequency", "summaries.update_frequency"),
     AiUpdateFrequency("summaries.ai:update_frequency", "summaries.ai:update_frequency"),
+    AiDescription("summaries.ai:description", "summaries.ai:description"),
     DatasetProvider("summaries.dataset_provider", "summaries.dataset_provider"),
     DatasetGroup("summaries.dataset_group", "summaries.dataset_group"),
     Status("summaries.status", "summaries.status"),
