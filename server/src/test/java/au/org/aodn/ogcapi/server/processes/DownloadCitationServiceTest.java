@@ -61,6 +61,23 @@ public class DownloadCitationServiceTest {
     }
 
     @Test
+    public void testLookupFillsUrlAndDownloadDateInBothAttributionBlocks() throws JsonProcessingException {
+        String citation = "Before 1 July 2024: UNSW Sydney [year-of-data-download]. "
+                + "Downloaded from [url] on [date-of-download].\n\n"
+                + "After 1 July 2024: UNSW Sydney; IMOS [year-of-data-download]. "
+                + "Downloaded from [URL] on [Date-of-Download].";
+        givenRecord(StacCollectionModel.builder().uuid(UUID).title(TITLE)
+                .citation(citationJson(citation, null, null)).build());
+
+        String url = METADATA_LINK + "?tab=summary";
+        assertEquals("Before 1 July 2024: UNSW Sydney 2026. "
+                        + "Downloaded from " + url + " on 18-Nov-2026.\n\n"
+                        + "After 1 July 2024: UNSW Sydney; IMOS 2026. "
+                        + "Downloaded from " + url + " on 18-Nov-2026.",
+                service.lookup(UUID, METADATA_LINK).suggestedCitation());
+    }
+
+    @Test
     public void testLookupWithoutMetadataLinkLeavesAccessUrlEmpty() throws JsonProcessingException {
         givenRecord(StacCollectionModel.builder().uuid(UUID).title(TITLE)
                 .citation(citationJson("Accessed at [data-access-url].", null, null)).build());

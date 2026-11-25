@@ -38,9 +38,9 @@ public class DownloadCitationService {
     private static final Pattern TITLE_PLACEHOLDER =
             Pattern.compile("\\[title]", Pattern.CASE_INSENSITIVE);
     private static final Pattern ACCESS_URL_PLACEHOLDER =
-            Pattern.compile("\\[data-access-url]", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("\\[(?:data-access-url|url)]", Pattern.CASE_INSENSITIVE);
     private static final Pattern ACCESS_DATE_PLACEHOLDER =
-            Pattern.compile("\\[date-of-access]", Pattern.CASE_INSENSITIVE);
+            Pattern.compile("\\[(?:date-of-access|date-of-download)]", Pattern.CASE_INSENSITIVE);
 
     private static final DateTimeFormatter ACCESS_DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd-MMM-yyyy", Locale.ENGLISH);
