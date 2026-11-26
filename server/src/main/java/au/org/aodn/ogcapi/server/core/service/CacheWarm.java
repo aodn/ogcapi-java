@@ -88,8 +88,10 @@ public class CacheWarm {
     public void evictAndWarmWfsCache() {
         // Evict and warm WFS cache entries one by one
         getWfsCapabilitiesUrls.forEach(url -> {
-            self.evictWfsGetCapabilities(url);
-            self.warmWfsGetCapabilities(url);
+            // The cache key is the request URL, must be the same one as the lookup in WfsServer
+            String capabilitiesUrl = wfsServer.createCapabilitiesQueryUrl(url);
+            self.evictWfsGetCapabilities(capabilitiesUrl);
+            self.warmWfsGetCapabilities(capabilitiesUrl);
         });
     }
 
@@ -131,13 +133,13 @@ public class CacheWarm {
     }
 
     @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    protected void warmWfsGetCapabilities(String url) {
+    protected void warmWfsGetCapabilities(String capabilitiesUrl) {
         try {
             // Call and warm cache
-            wfsServer.fetchCapabilitiesFeatureTypesByUrl(url);
-            log.info("WFS Cache GetCapabilities warm success for {}", url);
+            wfsServer.fetchCapabilitiesFeatureTypesByUrl(capabilitiesUrl);
+            log.info("WFS Cache GetCapabilities warm success for {}", capabilitiesUrl);
         } catch (RuntimeException rte) {
-            log.warn("WFS Cache GetCapabilities warm failed for {}, call will be slow", url);
+            log.warn("WFS Cache GetCapabilities warm failed for {}, call will be slow", capabilitiesUrl);
         }
     }
 }

@@ -225,7 +225,15 @@ public class WfsServer implements Server {
                 .toList();
     }
 
-    protected String createCapabilitiesQueryUrl(String wfsServerUrl) {
+    /**
+     * Build the GetCapabilities request URL for a WFS link. The query string of the link is dropped and https is
+     * forced, so different links to the same server end up with the same URL. This URL is also the cache key of
+     * {@link #fetchCapabilitiesFeatureTypesByUrl(String)}.
+     *
+     * @param wfsServerUrl - The WFS link or server base URL
+     * @return - The GetCapabilities request URL
+     */
+    public String createCapabilitiesQueryUrl(String wfsServerUrl) {
         // Parse the base URL to construct GetCapabilities request
         UriComponents components = UriComponentsBuilder.fromUriString(wfsServerUrl).build();
 
@@ -549,20 +557,20 @@ public class WfsServer implements Server {
     }
 
     /**
-     * Fetch raw feature types from WFS GetCapabilities - cached by URL.
+     * Fetch raw feature types from WFS GetCapabilities - cached by the request URL.
      * This allows multiple collections sharing the same WFS server to use cached results.
      *
-     * @param wfsServerUrl - The WFS server base URL
+     * @param capabilitiesUrl - The request URL from {@link #createCapabilitiesQueryUrl(String)}, not a raw WFS link,
+     *                        otherwise links that only differ in query string do not share a cache entry
      * @return - List of all FeatureTypeInfo objects from GetCapabilities (unfiltered)
      */
     @Cacheable(value = GET_CAPABILITIES_WFS_FEATURE_TYPES)
-    public List<FeatureTypeInfo> fetchCapabilitiesFeatureTypesByUrl(String wfsServerUrl) {
+    public List<FeatureTypeInfo> fetchCapabilitiesFeatureTypesByUrl(String capabilitiesUrl) {
         try {
-            String url = createCapabilitiesQueryUrl(wfsServerUrl);
-            log.debug("WFS GetCapabilities URL: {}", url);
+            log.debug("WFS GetCapabilities URL: {}", capabilitiesUrl);
 
             // Make the HTTPS call
-            ResponseEntity<String> response = restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, String.class);
+            ResponseEntity<String> response = restTemplate.exchange(capabilitiesUrl, HttpMethod.GET, pretendUserEntity, String.class);
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 // Parse XML response
@@ -583,7 +591,7 @@ public class WfsServer implements Server {
                 }
             }
         } catch (RestClientException | JsonProcessingException e) {
-            log.error("Error fetching WFS GetCapabilities for URL: {}", wfsServerUrl, e);
+            log.error("Error fetching WFS GetCapabilities for URL: {}", capabilitiesUrl, e);
             throw new RuntimeException(e);
         }
 
@@ -675,8 +683,10 @@ public class WfsServer implements Server {
             // Use the first WFS server URL
             String wfsServerUrl = wfsServerUrls.get().get(0);
 
-            // Fetch all feature types from GetCapabilities (this call is cached by URL)
-            List<FeatureTypeInfo> allFeatureTypes = self.fetchCapabilitiesFeatureTypesByUrl(wfsServerUrl);
+            // Fetch all feature types from GetCapabilities (this call is cached by the request URL)
+            List<FeatureTypeInfo> allFeatureTypes = self.fetchCapabilitiesFeatureTypesByUrl(
+                    createCapabilitiesQueryUrl(wfsServerUrl)
+            );
 
             if (!allFeatureTypes.isEmpty()) {
                 // Filter feature types based on WFS link matching
