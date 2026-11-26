@@ -248,7 +248,7 @@ public class RestServices extends OGCApiService {
      * This is used to get all available layers from WMS GetCapabilities
      *
      * @param collectionId - The uuid of dataset
-     * @param request      - Request to get layers
+     * @param request      - Request to get layers, the layername should be null to get all layers
      * @return - List of available layers with name, title, and serverUrl
      */
     public ResponseEntity<?> getWmsLayers(String collectionId, FeatureRequest request) {
