@@ -376,7 +376,6 @@ public class WmsServer {
         }
         return null;
     }
-
     /**
      * Find the wms server url from the metadata based on uuid, this for sure we will not redirect call to some
      * unknown place
@@ -391,7 +390,6 @@ public class WmsServer {
         if (result != null && result.getCollections() != null && !result.getCollections().isEmpty()) {
             StacCollectionModel model = result.getCollections().get(0);
 
-            String layerName = request != null ? request.getLayerName() : null;
             // Filter WMS links by ai:group marker, falling back to rel="wms"
             List<LinkModel> wmsLinks = model.getLinks()
                     .stream()
@@ -404,7 +402,7 @@ public class WmsServer {
             }
 
             Optional<String> matchedUrl;
-
+            String layerName = request != null ? request.getLayerName() : null;
             if (layerName != null && !layerName.isEmpty()) {
                 // If layer name provided, try to match by layer name
                 matchedUrl = wmsLinks.stream()
@@ -416,17 +414,15 @@ public class WmsServer {
                     log.debug("Found WMS link matching layer name: '{}'", layerName);
                     return matchedUrl;
                 }
-            } else {
-                log.debug("No layer name provided, using first WMS link");
             }
 
             // Fallback: return the first WMS link
+            log.debug("No layer name provided, using first WMS link");
             return wmsLinks.stream()
                     .map(LinkModel::getHref)
                     .findFirst();
-        } else {
-            return Optional.empty();
         }
+        return Optional.empty();
     }
 
     public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException, URISyntaxException {
