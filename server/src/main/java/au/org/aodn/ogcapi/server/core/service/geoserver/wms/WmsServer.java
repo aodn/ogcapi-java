@@ -378,13 +378,13 @@ public class WmsServer {
     }
     /**
      * Find the wms server url from the metadata based on uuid, this for sure we will not redirect call to some
-     * unknown place
+     * unknown place because we pass the url from argument
      *
      * @param collectionId - The uuid
-     * @param request      - The request containing optional layer name
+     * @param request      - Filter result based on the request layername, if null return all layer of the collection
      * @return - The wms server link.
      */
-    protected Optional<String> getMapServerUrl(String collectionId, FeatureRequest request) {
+    protected List<LinkModel> getMapServerUrl(String collectionId, FeatureRequest request) {
         // Get the record contains the map feature, given one uuid , 1 result expected
         ElasticSearchBase.SearchResult<StacCollectionModel> result = search.searchCollections(collectionId);
         if (result != null && result.getCollections() != null && !result.getCollections().isEmpty()) {
@@ -398,46 +398,55 @@ public class WmsServer {
 
             if (wmsLinks.isEmpty()) {
                 log.warn("No WMS links found for collectionId: {}", collectionId);
-                return Optional.empty();
+                return wmsLinks;
             }
 
-            Optional<String> matchedUrl;
             String layerName = request != null ? request.getLayerName() : null;
             if (layerName != null && !layerName.isEmpty()) {
                 // If layer name provided, try to match by layer name
-                matchedUrl = wmsLinks.stream()
+                List<LinkModel> matchedUrl = wmsLinks.stream()
                         .filter(link -> link.getTitle() != null && link.getTitle().equalsIgnoreCase(layerName))
-                        .map(LinkModel::getHref)
-                        .findFirst();
+                        .toList();
 
-                if (matchedUrl.isPresent()) {
+                if (!matchedUrl.isEmpty()) {
                     log.debug("Found WMS link matching layer name: '{}'", layerName);
                     return matchedUrl;
                 }
             }
 
             // Fallback: return the first WMS link
-            log.debug("No layer name provided, using first WMS link");
-            return wmsLinks.stream()
-                    .map(LinkModel::getHref)
-                    .findFirst();
+            log.debug("No layer name provided, return all layer of {}", collectionId);
+            return wmsLinks;
         }
-        return Optional.empty();
+        return Collections.emptyList();
     }
-
+    /**
+     *
+     * @param collectionId
+     * @param request
+     * @return
+     * @throws JsonProcessingException
+     * @throws URISyntaxException
+     */
     public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException, URISyntaxException {
 
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-
-        if (mapServerUrl.isEmpty()) {
-            log.warn("GetFeatureInfo no wms server url for uuid {} layer {}", collectionId, request.getLayerName());
+        if (request == null || request.getLayerName() == null || request.getLayerName().isEmpty()) {
+            log.warn("GetFeatureInfo missing layername for uuid {}", collectionId);
             return null;
         }
 
-        List<String> urls = createMapFeatureQueryUrl(mapServerUrl.get(), collectionId, request);
+        List<LinkModel> mapServerUrls = getMapServerUrl(collectionId, request);
+
+        if (mapServerUrls.isEmpty()) {
+            log.warn("GetFeatureInfo no wms server url for uuid {} layer {}", collectionId, request.getLayerName());
+            return null;
+        }
+        // Given layer name, we should get 1 value in list
+        String wmsUrl = mapServerUrls.get(0).getHref();
+        List<String> urls = createMapFeatureQueryUrl(wmsUrl, collectionId, request);
 
         if (urls == null || urls.isEmpty()) {
-            log.warn("GetFeatureInfo cannot build query url from {} for uuid {} layer {}", mapServerUrl.get(), collectionId, request.getLayerName());
+            log.warn("GetFeatureInfo cannot build query url from {} for uuid {} layer {}", wmsUrl, collectionId, request.getLayerName());
             return null;
         }
 
@@ -550,10 +559,18 @@ public class WmsServer {
      */
     @Cacheable(value = CACHE_WMS_MAP_TILE)
     public byte[] getMapTile(String collectionId, FeatureRequest request) throws URISyntaxException {
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+
+        if (request == null || request.getLayerName() == null || request.getLayerName().isEmpty()) {
+            throw new IllegalArgumentException("Missing layername for uuid " + collectionId);
+        }
+
         log.debug("Geoserver tile request for uuid {} request -> {}", collectionId, request);
-        if (mapServerUrl.isPresent()) {
-            List<String> urls = createMapQueryUrl(mapServerUrl.get(), collectionId, request);
+        List<LinkModel> mapServerUrls = getMapServerUrl(collectionId, request);
+
+        if (!mapServerUrls.isEmpty()) {
+            // With layer name, we should get 1 value in list
+            List<String> urls = createMapQueryUrl(mapServerUrls.get(0).getHref(), collectionId, request);
+
             // Try one by one, we exit when any works
             for (String url : urls) {
                 log.debug("map tile request for layer name {} url {} ", request.getLayerName(), url);
@@ -580,12 +597,19 @@ public class WmsServer {
      * @throws URISyntaxException - Not expected
      */
     public byte[] getLegend(String collectionId, FeatureRequest request) throws URISyntaxException {
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+
+        if (request == null || request.getLayerName() == null || request.getLayerName().isEmpty()) {
+            throw new IllegalArgumentException("Missing layername for uuid " + collectionId);
+        }
+
         log.debug("legend request for uuid {} layername {}", collectionId, request.getLayerName());
-        if (mapServerUrl.isPresent()) {
+        List<LinkModel> mapServerUrls = getMapServerUrl(collectionId, request);
+
+        if (!mapServerUrls.isEmpty()) {
             // createLegendUrl validates the user-supplied layer name (SSRF guard) and
             // returns null when it is unsafe.
-            String url = createLegendUrl(mapServerUrl.get(), request);
+            // With layer name, we should get 1 value in list
+            String url = createLegendUrl(mapServerUrls.get(0).getHref(), request);
             if (url != null) {
                 log.debug("legend request for layer name {} url {} ", request.getLayerName(), url);
                 ResponseEntity<byte[]> response = restTemplateUtils.handleRedirect(url, restTemplate.exchange(url, HttpMethod.GET, pretendUserEntity, byte[].class), byte[].class, pretendUserEntity);
@@ -650,9 +674,14 @@ public class WmsServer {
      * @return - DescribeLayerResponse containing the layer and associated wfs info, this is used to find the real layer name and wfs server url for the field query
      */
     public DescribeLayerResponse describeLayer(String collectionId, FeatureRequest request) {
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
-        if (mapServerUrl.isPresent()) {
-            List<String> urls = createMapDescribeUrl(mapServerUrl.get(), collectionId, request);
+        if (request == null || request.getLayerName() == null || request.getLayerName().isEmpty()) {
+            throw new IllegalArgumentException("Missing layername for uuid " + collectionId);
+        }
+        List<LinkModel> mapServerUrls = getMapServerUrl(collectionId, request);
+
+        if (!mapServerUrls.isEmpty()) {
+            // With layer name, we should get 1 value in list
+            List<String> urls = createMapDescribeUrl(mapServerUrls.get(0).getHref(), collectionId, request);
             // Try one by one, we exit when any works
             for (String url : urls) {
                 try {
@@ -1008,13 +1037,11 @@ public class WmsServer {
 
         return Optional.empty();
     }
-
     /**
-     * Get filtered layers from WMS GetCapabilities for a specific collection
-     * First fetches all layers (cached by URL), then filters by WMS links
+     * Get all layers from WMS GetCapabilities for a specific collection, it supports diff geoservers link for same uuid
      * Sometimes the URL provided by WMS link is not optimal, for example
      * <a href="https://www.cmar.csiro.au/geoserver/wms?&CQL_FILTER=SURVEY_NAME%20%3D%20%27FR199410%27">...</a>
-     * will result in timeout due to too big query, if layername inside request have format xxx:yyyy then
+     * will result in timeout due to too big query, if layername inside request have format xxx:yyyy or layname in the title then
      * we can use xxx as the workspace name and rewrite the URL to <a href="https://www.cmar.csiro.au/geoserver/xxx/wms">...</a>
      *
      * @param collectionId - The uuid
@@ -1022,19 +1049,26 @@ public class WmsServer {
      * @return - List of LayerInfo objects filtered by WMS link matching
      */
     public List<LayerInfo> getCapabilitiesLayers(String collectionId, FeatureRequest request) {
-        Optional<String> mapServerUrl = getMapServerUrl(collectionId, request);
+        List<LinkModel> mapServerUrls = getMapServerUrl(collectionId, request);
+        List<LayerInfo> results = new ArrayList<>();
 
-        if (mapServerUrl.isPresent()) {
+        for (LinkModel model : mapServerUrls) {
             // Fetch all layers from GetCapabilities (this call is cached by URL)
             // Special rewrite to speed up query
-            String url = rewriteUrlWithWorkSpace(mapServerUrl.get(), request);
+            String url = rewriteUrlWithWorkSpace(
+                    model.getHref(),
+                    // We take user setting as higher priority, if it is null then use want to get all layer
+                    // however this call need a layer name to rewrite, so if user do not set it we can find the value
+                    // in the LinkModel title, this is because each wms link is for a specific layer, and layer name is
+                    // the title of the link
+                    request.getLayerName() != null ? request : FeatureRequest.builder().layerName(model.getTitle()).build()
+            );
 
             List<LayerInfo> allLayers = self.fetchCapabilitiesLayersByUrl(url);
-
             List<LayerInfo> filteredLayers = filterLayers(collectionId, request, allLayers);
 
             // Special case for NCWMS layer where we need to call GetMetadata to find the related points for gridded data
-            if (mapServerUrl.get().contains("/ncwms")) {
+            if (model.getHref().contains("/ncwms")) {
                 if (filteredLayers.isEmpty()) {
                     // Most of the time the NCWMS layer does not match any WMS capability layers,
                     // we trust the NCWMS layernames from the metadata and try fetching NCWMS metadata for each
@@ -1043,7 +1077,7 @@ public class WmsServer {
                         Optional<String> layerName = extractLayernameOrTypenameFromLink(wmsLink);
 
                         if (layerName.isPresent()) {
-                            Optional<NcWmsLayerInfo> ncWmsLayerInfo = fetchNCWMSMetadata(mapServerUrl.get(), layerName.get());
+                            Optional<NcWmsLayerInfo> ncWmsLayerInfo = fetchNCWMSMetadata(model.getHref(), layerName.get());
 
                             // Build LayerInfo with ncWmsLayerInfo
                             if (ncWmsLayerInfo.isPresent()) {
@@ -1062,7 +1096,7 @@ public class WmsServer {
 
                 filteredLayers.forEach(layer -> {
                     // For each ncwms layer, we attach the metadata
-                    Optional<NcWmsLayerInfo> ncWmsLayerInfo = fetchNCWMSMetadata(mapServerUrl.get(), layer.getName());
+                    Optional<NcWmsLayerInfo> ncWmsLayerInfo = fetchNCWMSMetadata(model.getHref(), layer.getName());
                     ncWmsLayerInfo.ifPresent(layer::setNcWmsLayerInfo);
                 });
             }
@@ -1072,10 +1106,15 @@ public class WmsServer {
                 throw new GeoserverLayersNotFoundException("No WMS layer is found for uuid " + collectionId);
             }
 
-            log.debug("Returning layers {}", filteredLayers);
-            return filteredLayers;
+            results.addAll(filteredLayers);
         }
 
-        throw new GeoserverLayersNotFoundException("No valid WMS server url is found for uuid " + collectionId);
+        if(results.isEmpty()) {
+            throw new GeoserverLayersNotFoundException("No valid WMS server url is found for uuid " + collectionId);
+        }
+        else {
+            log.debug("Returning layers {}", results);
+            return results;
+        }
     }
 }
