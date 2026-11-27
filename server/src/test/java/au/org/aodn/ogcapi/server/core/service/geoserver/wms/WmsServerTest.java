@@ -694,6 +694,108 @@ public class WmsServerTest {
         assertEquals("https://example.com/geoserver/xxx/wfs", result4);
     }
 
+    private FeatureRequest mapTileRequest(String layer) {
+        return FeatureRequest.builder()
+                .layerName(layer)
+                .bbox(List.of(BigDecimal.valueOf(-10), BigDecimal.valueOf(-20), BigDecimal.valueOf(10), BigDecimal.valueOf(20)))
+                .build();
+    }
+
+    private void stubWmsLink(String uuid, FeatureRequest request, String href) {
+        ElasticSearchBase.SearchResult<StacCollectionModel> stac = new ElasticSearchBase.SearchResult<>();
+        stac.setCollections(new ArrayList<>());
+        stac.getCollections().add(
+                StacCollectionModel.builder()
+                        .links(List.of(
+                                LinkModel.builder()
+                                        .href(href)
+                                        .title(request.getLayerName())
+                                        .aiGroup(WMS_LINK_MARKER)
+                                        .build()))
+                        .build()
+        );
+        when(search.searchCollections(eq(uuid))).thenReturn(stac);
+    }
+
+    /**
+     * A CQL_FILTER inside the WMS link of the metadata must be url decoded and passed to the GetMap url,
+     * so "/" and quotes reach geoserver as is instead of %2F, %27.
+     */
+    @Test
+    public void verifyCreateMapQueryUrlDecodesCqlFilterInLink() {
+        String uuid = "uuid1";
+        FeatureRequest request = mapTileRequest("imos:argo_profile_map");
+        String href = "http://geoserver-123.aodn.org.au/geoserver/wms?CQL_FILTER=platform%3D%27a%2Fb%27";
+        stubWmsLink(uuid, request, href);
+
+        List<String> urls = wmsServer.createMapQueryUrl(href, uuid, request);
+
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        String url = urls.get(0);
+        assertTrue(url.startsWith("https://geoserver-123.aodn.org.au/geoserver/wms?"), url);
+        assertTrue(url.contains("CQL_FILTER=platform='a/b'"), url);
+        assertFalse(url.contains("%2F"), url);
+        assertFalse(url.contains("%27"), url);
+        assertTrue(url.contains("LAYERS=imos:argo_profile_map"), url);
+    }
+
+    /**
+     * The CQL_FILTER key in the link is matched ignoring case.
+     */
+    @Test
+    public void verifyCreateMapQueryUrlCqlFilterKeyCaseInsensitive() {
+        String uuid = "uuid1";
+        FeatureRequest request = mapTileRequest("imos:argo_profile_map");
+        String href = "http://geoserver-123.aodn.org.au/geoserver/wms?cql_filter=set_code%3D1234";
+        stubWmsLink(uuid, request, href);
+
+        List<String> urls = wmsServer.createMapQueryUrl(href, uuid, request);
+
+        assertNotNull(urls);
+        assertTrue(urls.get(0).contains("CQL_FILTER=set_code=1234"), urls.get(0));
+    }
+
+    /**
+     * Without CQL in the link, no CQL_FILTER is added by the link handling.
+     */
+    @Test
+    public void verifyCreateMapQueryUrlWithoutCqlInLink() {
+        String uuid = "uuid1";
+        FeatureRequest request = mapTileRequest("imos:argo_profile_map");
+        String href = "http://geoserver-123.aodn.org.au/geoserver/wms";
+        stubWmsLink(uuid, request, href);
+
+        List<String> urls = wmsServer.createMapQueryUrl(href, uuid, request);
+
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        assertFalse(urls.get(0).contains("CQL_FILTER"), urls.get(0));
+        assertTrue(urls.get(0).contains("BBOX=-10,-20,10,20"), urls.get(0));
+    }
+
+    /**
+     * ncWMS does not support CQL, so the link CQL is still collected but the url must not carry the
+     * wms only cql appended at the end. Verify url is built and keeps TIME.
+     */
+    @Test
+    public void verifyCreateMapQueryUrlNcwmsKeepsTime() {
+        String uuid = "uuid1";
+        FeatureRequest request = FeatureRequest.builder()
+                .layerName("srs_ghrsst_l4_gamssa_url/analysed_sst")
+                .datetime("2023-01-01/2023-12-31")
+                .bbox(List.of(BigDecimal.valueOf(-10), BigDecimal.valueOf(-20), BigDecimal.valueOf(10), BigDecimal.valueOf(20)))
+                .build();
+        String href = "http://geoserver-123.aodn.org.au/geoserver/ncwms";
+
+        List<String> urls = wmsServer.createMapQueryUrl(href, uuid, request);
+
+        assertNotNull(urls);
+        assertEquals(1, urls.size());
+        assertTrue(urls.get(0).contains("SERVICE=ncwms"), urls.get(0));
+        assertTrue(urls.get(0).contains("TIME=2023-01-01/2023-12-31"), urls.get(0));
+    }
+
     @Test
     public void verifyLegendUrlGenCorrect() {
         FeatureRequest request = FeatureRequest.builder()

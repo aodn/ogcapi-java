@@ -30,6 +30,7 @@ public class CacheWarm {
     protected List<String> getWmsCapabilitiesUrls = List.of(
             "https://data.aad.gov.au/geoserver/underway/wms",
             "https://www.cmar.csiro.au/geoserver/caab/wms",
+            "https://www.cmar.csiro.au/geoserver/cmar/wms",
             "https://www.cmar.csiro.au/geoserver/ereefs/wms",
             "https://www.cmar.csiro.au/geoserver/ea-be/wms",
             "https://www.cmar.csiro.au/geoserver/gsfm/wms",
