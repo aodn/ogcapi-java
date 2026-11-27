@@ -30,6 +30,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -193,6 +194,12 @@ public class WmsServer {
                         }
                     }
 
+                    // In case url contains CQL
+                    components.getQueryParams().entrySet().stream()
+                            .filter(entry -> "CQL_FILTER".equalsIgnoreCase(entry.getKey()))
+                            .findFirst()
+                            .map(entry -> entry.getValue().get(0)).ifPresent(cql -> param.put("CQL_FILTER", URLDecoder.decode(cql, StandardCharsets.UTF_8)));
+
                     // Now we add the missing argument from the request
                     param.put("LAYERS", request.getLayerName());
                     param.put("BBOX", request.getBbox().stream().map(BigDecimal::toString).collect(Collectors.joining(",")));
@@ -223,7 +230,7 @@ public class WmsServer {
                         // but server must use "/" in param and cannot encode it to %2F, so to avoid exception in the
                         // build() call, we append the cql after the construction.
                         String target = String.join("&", builder.build().toUriString(), createCQLFilter(uuid, request));
-                        log.debug("Url to wms geoserver {}", target);
+                        log.debug("Map url to wms geoserver {}", target);
                         urls.add(target);
                     }
 
