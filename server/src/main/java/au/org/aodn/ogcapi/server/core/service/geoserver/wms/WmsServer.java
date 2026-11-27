@@ -422,11 +422,11 @@ public class WmsServer {
     }
     /**
      *
-     * @param collectionId
-     * @param request
-     * @return
-     * @throws JsonProcessingException
-     * @throws URISyntaxException
+     * @param collectionId - collection id
+     * @param request - feature request
+     * @return feature info response
+     * @throws JsonProcessingException - json processing exception
+     * @throws URISyntaxException - uri syntax exception
      */
     public FeatureInfoResponse getMapFeatures(String collectionId, FeatureRequest request) throws JsonProcessingException, URISyntaxException {
 
