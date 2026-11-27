@@ -128,7 +128,7 @@ public class CacheWarm {
 
     @Recover
     protected void recoverWmsGetCapabilities(RuntimeException rte, String url) {
-        log.warn("WMS Cache GetCapabilities warm failed for {} after retries, call will be slow", url);
+        log.warn("WMS Cache GetCapabilities warm failed for {} after retries, call will be slow: {}", url, rte.getMessage());
     }
 
     // ==================== WFS Cache Methods ====================
@@ -152,6 +152,7 @@ public class CacheWarm {
 
     @Recover
     protected void recoverWfsGetCapabilities(RuntimeException rte, String url) {
-        log.warn("WFS Cache GetCapabilities warm failed for {} after retries, call will be slow", url);
+        // Only the message: for HTTP and XML errors, the fetch already logs the stack trace on each attempt
+        log.warn("WFS Cache GetCapabilities warm failed for {} after retries, call will be slow: {}", url, rte.getMessage());
     }
 }
