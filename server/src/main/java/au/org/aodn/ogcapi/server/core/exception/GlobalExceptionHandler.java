@@ -6,6 +6,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.servlet.NoHandlerFoundException;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import au.org.aodn.ogcapi.server.core.model.ErrorResponse;
 
 import java.time.LocalDateTime;
@@ -166,6 +168,16 @@ public class GlobalExceptionHandler {
                 .build();
 
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+
+    /**
+     * Unknown paths (for example internet scanner probes) are a client error, not a server error.
+     * Return an empty 404 so it works for any Accept header, and avoid ERROR level logging.
+     */
+    @ExceptionHandler({NoResourceFoundException.class, NoHandlerFoundException.class})
+    public ResponseEntity<Void> handleUnknownPath(Exception ex, WebRequest request) {
+        log.warn("Unknown path {}", request.getDescription(false));
+        return ResponseEntity.notFound().build();
     }
 
     @ExceptionHandler(Exception.class)
