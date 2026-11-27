@@ -15,6 +15,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.jcache.JCacheCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.retry.annotation.EnableRetry;
 
 import javax.cache.CacheManager;
 import javax.cache.Caching;
@@ -27,6 +28,7 @@ import java.time.Duration;
 
 @Configuration
 @EnableCaching
+@EnableRetry
 public class CacheConfig {
 
     public static final String CACHE_WMS_MAP_TILE = "cache-wms-map_tile";

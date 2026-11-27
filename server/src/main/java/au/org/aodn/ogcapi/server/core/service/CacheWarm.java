@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Recover;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.scheduling.annotation.Scheduled;
 
@@ -89,8 +90,10 @@ public class CacheWarm {
     public void evictAndWarmWfsCache() {
         // Evict and warm WFS cache entries one by one
         getWfsCapabilitiesUrls.forEach(url -> {
-            self.evictWfsGetCapabilities(url);
-            self.warmWfsGetCapabilities(url);
+            // The cache key is the request URL, must be the same one as the lookup in WfsServer
+            String capabilitiesUrl = wfsServer.createCapabilitiesQueryUrl(url);
+            self.evictWfsGetCapabilities(capabilitiesUrl);
+            self.warmWfsGetCapabilities(capabilitiesUrl);
         });
     }
 
@@ -112,15 +115,21 @@ public class CacheWarm {
         log.info("Evicting WMS cache {} for key {}", GET_CAPABILITIES_WMS_LAYERS, key);
     }
 
-    @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000))
+    /**
+     * Must let the exception propagate, otherwise @Retryable never sees a failure to retry.
+     * After the last attempt fails, recoverWmsGetCapabilities is called instead. The recover method
+     * must be named explicitly: WMS/WFS recover methods share a signature, so matching by type is ambiguous.
+     */
+    @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000), recover = "recoverWmsGetCapabilities")
     protected void warmWmsGetCapabilities(String url) {
-        try {
-            // Call and warm cache
-            wmsServer.fetchCapabilitiesLayersByUrl(url);
-            log.info("WMS Cache GetCapabilities warm success for {}", url);
-        } catch (RuntimeException rte) {
-            log.warn("WMS Cache GetCapabilities warm failed for {}, call will be slow", url);
-        }
+        // Call and warm cache
+        wmsServer.fetchCapabilitiesLayersByUrl(url);
+        log.info("WMS Cache GetCapabilities warm success for {}", url);
+    }
+
+    @Recover
+    protected void recoverWmsGetCapabilities(RuntimeException rte, String url) {
+        log.warn("WMS Cache GetCapabilities warm failed for {} after retries, call will be slow: {}", url, rte.getMessage());
     }
 
     // ==================== WFS Cache Methods ====================
@@ -131,14 +140,20 @@ public class CacheWarm {
         log.info("Evicting WFS cache {} for key {}", GET_CAPABILITIES_WFS_FEATURE_TYPES, key);
     }
 
-    @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000))
-    protected void warmWfsGetCapabilities(String url) {
-        try {
-            // Call and warm cache
-            wfsServer.fetchCapabilitiesFeatureTypesByUrl(url);
-            log.info("WFS Cache GetCapabilities warm success for {}", url);
-        } catch (RuntimeException rte) {
-            log.warn("WFS Cache GetCapabilities warm failed for {}, call will be slow", url);
-        }
+    /**
+     * Must let the exception propagate, otherwise @Retryable never sees a failure to retry.
+     * After the last attempt fails, recoverWfsGetCapabilities is called instead (named explicitly, see WMS above).
+     */
+    @Retryable(maxAttempts = 5, backoff = @Backoff(delay = 1000), recover = "recoverWfsGetCapabilities")
+    protected void warmWfsGetCapabilities(String capabilitiesUrl) {
+        // Call and warm cache
+        wfsServer.fetchCapabilitiesFeatureTypesByUrl(capabilitiesUrl);
+        log.info("WFS Cache GetCapabilities warm success for {}", capabilitiesUrl);
+    }
+
+    @Recover
+    protected void recoverWfsGetCapabilities(RuntimeException rte, String url) {
+        // Only the message: for HTTP and XML errors, the fetch already logs the stack trace on each attempt
+        log.warn("WFS Cache GetCapabilities warm failed for {} after retries, call will be slow: {}", url, rte.getMessage());
     }
 }
